@@ -6,12 +6,12 @@ import Team from "@/models/Team";
 import Chatbot from "@/models/Chatbot";
 import DashboardNav from "@/components/DashboardNav";
 import ChatbotTabs from "@/components/chatbot/ChatbotTabs";
-import Playground from "@/components/chatbot/playground/Playground";
+import Activity from "@/components/chatbot/activity/Activity";
 
-export default async function ChatbotPage({ 
+export default async function ActivityPage({ 
   params 
 }: { 
-  params: { teamId: string; chatbotId: string } 
+  params: { teamId: string; chatbotId: string; subTab: string } 
 }) {
   const session = await getServerSession(authOptions);
   
@@ -32,7 +32,7 @@ export default async function ChatbotPage({
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <Playground />
+        <Activity teamId={params.teamId} chatbotId={params.chatbotId} />
       </main>
     </>
   );
