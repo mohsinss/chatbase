@@ -30,21 +30,21 @@ export const authOptions: NextAuthOptionsExtended = {
     }),
     // Follow the "Login with Email" tutorial to set up your email server
     // Requires a MongoDB database. Set MONOGODB_URI env variable.
-    ...(connectMongo
-      ? [
-          EmailProvider({
-            server: {
-              host: "smtp.resend.com",
-              port: 465,
-              auth: {
-                user: "resend",
-                pass: process.env.RESEND_API_KEY,
-              },
-            },
-            from: config.resend.fromNoReply,
-          }),
-        ]
-      : []),
+    // ...(connectMongo
+    //   ? [
+    //       EmailProvider({
+    //         server: {
+    //           host: "smtp.resend.com",
+    //           port: 465,
+    //           auth: {
+    //             user: "resend",
+    //             pass: process.env.RESEND_API_KEY,
+    //           },
+    //         },
+    //         from: config.resend.fromNoReply,
+    //       }),
+    //     ]
+    //   : []),
   ],
   // New users will be saved in Database (MongoDB Atlas). Each user (model) has some fields like name, email, image, etc..
   // Requires a MongoDB database. Set MONOGODB_URI env variable.
