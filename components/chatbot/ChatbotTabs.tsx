@@ -26,7 +26,11 @@ const TABS = [
   { id: "sources", label: "Sources" },
   { id: "actions", label: "Actions", badge: "New" },
   { id: "connect", label: "Connect" },
-  { id: "settings", label: "Settings" },
+  { 
+    id: "settings", 
+    label: "Settings",
+    defaultSubRoute: "general"
+  },
 ] as const;
 
 export type TabId = typeof TABS[number]["id"];
@@ -51,6 +55,10 @@ const ChatbotTabs = ({
     if (tab.subRoutes) {
       const defaultSubRoute = tab.id === 'activity' ? 'chat-logs' : 'chats';
       return `/dashboard/${teamId}/chatbot/${chatbotId}/${tab.id}/${defaultSubRoute}`;
+    }
+
+    if (tab.defaultSubRoute) {
+      return `/dashboard/${teamId}/chatbot/${chatbotId}/${tab.id}/${tab.defaultSubRoute}`;
     }
     
     return `/dashboard/${teamId}/chatbot/${chatbotId}/${tab.id}`;
