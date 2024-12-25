@@ -3,21 +3,45 @@
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { nanoid } from 'nanoid';
+import { toast } from "react-hot-toast";
 
 const ConfigPanel = ({ teamId }: { teamId: string }) => {
   const router = useRouter();
 
   const handleCreateChatbot = async () => {
-    // Generate a unique chatbot ID using nanoid
-    const chatbotId = nanoid();
-    
     try {
-      // Here you would typically make an API call to create the chatbot
-      // For now, we'll just navigate to the new URL
-      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}`);
-    } catch (error) {
+      console.log("Creating chatbot for team:", teamId); // Debug log
+      
+      // Make API call to create chatbot
+      const response = await fetch("/api/chatbot/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          teamId: teamId, // Make sure teamId is included
+          sources: [], // Add your sources data here
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create chatbot");
+      }
+
+      const data = await response.json();
+      
+      if (!data.chatbotId) {
+        throw new Error("No chatbot ID returned from server");
+      }
+
+      // Navigate to the new chatbot page
+      router.push(`/dashboard/${teamId}/chatbot/${data.chatbotId}`);
+      toast.success("Chatbot created successfully!");
+      
+    } catch (error: any) {
       console.error('Failed to create chatbot:', error);
+      toast.error(error.message || "Failed to create chatbot");
     }
   };
 

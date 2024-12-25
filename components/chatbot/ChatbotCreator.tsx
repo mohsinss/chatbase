@@ -44,7 +44,7 @@ const ChatbotCreator = ({ teamId }: { teamId: string }) => {
       <div className="flex">
         <SideNav activeItem={activeItem} onItemClick={setActiveItem} />
         {renderContent()}
-        <ConfigPanel />
+        <ConfigPanel teamId={teamId} />
       </div>
     </div>
   );

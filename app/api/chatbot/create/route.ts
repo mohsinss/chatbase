@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
+import Chatbot from "@/models/Chatbot";
 import { nanoid } from 'nanoid';
 
 export async function POST(req: Request) {
@@ -16,15 +17,15 @@ export async function POST(req: Request) {
     const chatbotId = nanoid();
 
     await connectMongo();
-    // Create chatbot in database
-    // const chatbot = await Chatbot.create({
-    //   chatbotId,
-    //   teamId,
-    //   sources,
-    //   createdBy: session.user.id
-    // });
+    
+    const chatbot = await Chatbot.create({
+      chatbotId,
+      teamId,
+      sources,
+      createdBy: session.user.id
+    });
 
-    return NextResponse.json({ chatbotId });
+    return NextResponse.json({ chatbotId: chatbot.chatbotId });
 
   } catch (error: any) {
     console.error("Chatbot creation error:", error);

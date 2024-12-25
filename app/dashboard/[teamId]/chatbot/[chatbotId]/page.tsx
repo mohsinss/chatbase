@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
 import Team from "@/models/Team";
+import Chatbot from "@/models/Chatbot";
 import DashboardNav from "@/components/DashboardNav";
 
 export default async function ChatbotPage({ 
@@ -18,8 +19,9 @@ export default async function ChatbotPage({
 
   await connectMongo();
   const team = await Team.findOne({ teamId: params.teamId });
+  const chatbot = await Chatbot.findOne({ chatbotId: params.chatbotId });
 
-  if (!team) {
+  if (!team || !chatbot) {
     redirect("/dashboard");
   }
 
@@ -28,7 +30,7 @@ export default async function ChatbotPage({
       <DashboardNav teamId={params.teamId} />
       <main className="min-h-screen p-8">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">Chatbot Settings</h1>
+          <h1 className="text-2xl font-bold mb-6">{chatbot.name}</h1>
           {/* Add your chatbot settings UI here */}
         </div>
       </main>
