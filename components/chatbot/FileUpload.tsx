@@ -1,69 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
+import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
 import { IconUpload } from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
 
-const FileUpload = () => {
-  const [dragActive, setDragActive] = useState(false);
+interface FileUploadProps {
+  onFileSelect: (file: File) => void;
+}
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      onFileSelect(acceptedFiles[0]);
     }
-  };
+  }, [onFileSelect]);
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    // Handle the files
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      // At least one file has been dropped
-      handleFiles(e.dataTransfer.files);
-    }
-  };
-
-  const handleFiles = (files: FileList) => {
-    // Handle file upload logic here
-    console.log("Files to upload:", files);
-  };
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    multiple: false,
+    onDragEnter: () => setIsDragging(true),
+    onDragLeave: () => setIsDragging(false),
+  });
 
   return (
-    <div className="flex-1 p-6">
-      <div
-        className={`border-2 border-dashed rounded-lg p-8 text-center ${
-          dragActive ? "border-primary bg-primary/5" : "border-base-300"
-        }`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-      >
-        <div className="flex flex-col items-center gap-4">
-          <div className="p-4 bg-base-200 rounded-full">
-            <IconUpload className="w-8 h-8" />
-          </div>
-          <div>
-            <p className="font-medium mb-1">Drop your files here</p>
-            <p className="text-sm text-base-content/70">
-              or click to browse (PDF, TXT, DOCX)
-            </p>
-          </div>
-          <input
-            type="file"
-            multiple
-            className="hidden"
-            onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          />
-          <button className="btn btn-primary">
-            Choose Files
-          </button>
-        </div>
-      </div>
+    <div
+      {...getRootProps()}
+      className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+        ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}`}
+    >
+      <input {...getInputProps()} />
+      <IconUpload className="mx-auto h-12 w-12 text-gray-400" />
+      <p className="mt-2 text-sm text-gray-600">
+        Drag and drop your file here, or click to select a file
+      </p>
+      <Button variant="outline" className="mt-4">
+        Select File
+      </Button>
     </div>
   );
 };

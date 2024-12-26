@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
 import { IconFile, IconAlignLeft, IconGlobe, IconMessageQuestion, IconBrandNotion } from "@tabler/icons-react";
 
 type NavItem = {
@@ -37,10 +37,12 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-const SideNav = ({ activeItem, onItemClick }: { 
+interface SideNavProps {
   activeItem: string;
   onItemClick: (id: string) => void;
-}) => {
+}
+
+const SideNav = ({ activeItem, onItemClick }: SideNavProps) => {
   return (
     <div className="w-48 border-r bg-base-100 h-[calc(100vh-4rem)]">
       <nav className="p-4 space-y-2">

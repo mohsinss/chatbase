@@ -15,10 +15,15 @@ const NotionInput = dynamic(() => import('./NotionInput'));
 const ChatbotCreator = ({ teamId }: { teamId: string }) => {
   const [activeItem, setActiveItem] = useState("files");
 
+  const handleFileSelect = (file: File) => {
+    // Handle single file
+    console.log(file);
+  };
+
   const renderContent = () => {
     switch (activeItem) {
       case "files":
-        return <FileUpload />;
+        return <FileUpload onFileSelect={handleFileSelect} />;
       case "text":
         return <TextInput />;
       case "website":
