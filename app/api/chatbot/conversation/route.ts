@@ -9,14 +9,17 @@ export async function POST(req: NextRequest) {
 
     let conversation;
 
+    // Only create or update if there are actual messages
+    const hasValidMessages = messages && messages.some((m: any) => m.content?.trim());
+
     if (createNew) {
-      // Create a new conversation
+      // Create a new conversation only if needed
       conversation = await ChatbotConversation.create({
         chatbotId,
         messages: [],
       });
-    } else if (conversationId) {
-      // Update existing conversation
+    } else if (conversationId && hasValidMessages) {
+      // Update existing conversation only if there are valid messages
       conversation = await ChatbotConversation.findByIdAndUpdate(
         conversationId,
         { messages },
@@ -40,11 +43,18 @@ export async function GET(req: NextRequest) {
     const chatbotId = req.nextUrl.searchParams.get('chatbotId');
     await connectMongo();
 
-    // Find all conversations for this chatbot, sorted by latest first
-    const conversations = await ChatbotConversation.find({ chatbotId })
-      .sort({ updatedAt: -1 });
+    // Find all conversations with actual messages
+    const conversations = await ChatbotConversation.find({
+      chatbotId,
+      'messages.0': { $exists: true }, // Has at least one message
+    }).sort({ updatedAt: -1 });
 
-    return new Response(JSON.stringify(conversations), {
+    // Additional filter for conversations with non-empty messages
+    const validConversations = conversations.filter(conv => 
+      conv.messages.some(m => m.content?.trim())
+    );
+
+    return new Response(JSON.stringify(validConversations), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {

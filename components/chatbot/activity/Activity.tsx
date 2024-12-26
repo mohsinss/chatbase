@@ -42,7 +42,11 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
       const response = await fetch(`/api/chatbot/conversation?chatbotId=${chatbotId}`);
       if (response.ok) {
         const data = await response.json();
-        setConversations(Array.isArray(data) ? data : [data].filter(Boolean));
+        const validConversations = Array.isArray(data) ? data.filter(conv => 
+          conv.messages.length > 0 && 
+          conv.messages.some(m => m.content?.trim())
+        ) : [];
+        setConversations(validConversations);
       }
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
