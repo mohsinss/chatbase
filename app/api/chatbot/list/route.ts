@@ -24,7 +24,9 @@ export async function GET(req: Request) {
     const chatbots = await Chatbot.find({ 
       teamId,
       createdBy: session.user.id 
-    }).select('chatbotId name');
+    }).select('chatbotId name createdAt').sort({ createdAt: -1 });
+
+    console.log('Found chatbots:', chatbots); // Debug log
 
     return NextResponse.json({ chatbots });
 

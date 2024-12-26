@@ -7,6 +7,11 @@ const ChatbotSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    name: {
+      type: String,
+      required: true,
+      default: () => `Chatbot ${new Date().toLocaleString()}`,
+    },
     teamId: {
       type: String,
       required: true,
@@ -18,10 +23,6 @@ const ChatbotSchema = new mongoose.Schema(
     sources: {
       type: Array,
       default: [],
-    },
-    name: {
-      type: String,
-      default: "New Chatbot",
     },
   },
   {

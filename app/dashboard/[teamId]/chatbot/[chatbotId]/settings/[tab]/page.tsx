@@ -8,11 +8,15 @@ import DashboardNav from "@/components/DashboardNav";
 import ChatbotTabs from "@/components/chatbot/ChatbotTabs";
 import Settings from "@/components/chatbot/settings/Settings";
 
-export default async function SettingsPage({ 
-  params 
-}: { 
-  params: { teamId: string; chatbotId: string; tab: string } 
-}) {
+interface PageProps {
+  params: {
+    teamId: string;
+    chatbotId: string;
+    tab: string;
+  };
+}
+
+export default async function SettingsPage({ params }: PageProps) {
   const session = await getServerSession(authOptions);
   
   if (!session?.user?.id) {

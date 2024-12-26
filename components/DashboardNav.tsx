@@ -17,20 +17,26 @@ const DashboardNav = ({ teamId }: { teamId: string }) => {
   const [isChatbotMenuOpen, setIsChatbotMenuOpen] = useState(false);
   const [chatbots, setChatbots] = useState<Chatbot[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Fetch chatbots when component mounts
+  // Fetch chatbots when component mounts or teamId changes
   useEffect(() => {
     const fetchChatbots = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/chatbot/list?teamId=${teamId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setChatbots(data.chatbots);
+        if (!response.ok) {
+          throw new Error('Failed to fetch chatbots');
         }
+        const data = await response.json();
+        console.log('Fetched chatbots:', data.chatbots); // Debug log
+        setChatbots(data.chatbots || []);
       } catch (error) {
         console.error("Failed to fetch chatbots:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -218,23 +224,33 @@ const DashboardNav = ({ teamId }: { teamId: string }) => {
                   <div className="max-h-64 overflow-y-auto">
                     <div className="px-2 py-1">
                       <p className="px-2 py-1 text-sm text-base-content/70">Chatbots</p>
-                      {filteredChatbots.map((chatbot) => (
-                        <button
-                          key={chatbot.chatbotId}
-                          onClick={() => {
-                            router.push(`/dashboard/${teamId}/chatbot/${chatbot.chatbotId}`);
-                            setIsChatbotMenuOpen(false);
-                          }}
-                          className="w-full px-2 py-2 text-left rounded-md hover:bg-base-200 flex items-center justify-between group"
-                        >
-                          <span className="text-sm font-medium">{chatbot.name}</span>
-                          {currentChatbotId === chatbot.chatbotId && (
-                            <svg className="w-4 h-4 text-primary" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </button>
-                      ))}
+                      {isLoading ? (
+                        <div className="p-4 text-center">
+                          <span className="loading loading-spinner loading-sm"></span>
+                        </div>
+                      ) : chatbots.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-gray-500">
+                          No chatbots found
+                        </div>
+                      ) : (
+                        filteredChatbots.map((chatbot) => (
+                          <button
+                            key={chatbot.chatbotId}
+                            onClick={() => {
+                              router.push(`/dashboard/${teamId}/chatbot/${chatbot.chatbotId}`);
+                              setIsChatbotMenuOpen(false);
+                            }}
+                            className="w-full px-2 py-2 text-left rounded-md hover:bg-base-200 flex items-center justify-between group"
+                          >
+                            <span className="text-sm font-medium">{chatbot.name}</span>
+                            {currentChatbotId === chatbot.chatbotId && (
+                              <svg className="w-4 h-4 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
+                        ))
+                      )}
                     </div>
                   </div>
 

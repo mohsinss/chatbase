@@ -4,7 +4,35 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const TABS = [
+// Base interface for common properties
+interface TabCommon {
+  id: string;
+  label: string;
+  badge?: string;
+}
+
+// Type for tabs with subroutes
+interface TabWithSubRoutes extends TabCommon {
+  subRoutes: ReadonlyArray<{ id: string; label: string }>;
+  defaultSubRoute?: undefined;
+}
+
+// Type for tabs with default subroute
+interface TabWithDefaultSubRoute extends TabCommon {
+  defaultSubRoute: string;
+  subRoutes?: undefined;
+}
+
+// Type for simple tabs
+interface SimpleTab extends TabCommon {
+  subRoutes?: undefined;
+  defaultSubRoute?: undefined;
+}
+
+// Union type for all possible tab types
+type Tab = TabWithSubRoutes | TabWithDefaultSubRoute | SimpleTab;
+
+const TABS: ReadonlyArray<Tab> = [
   { id: "playground", label: "Playground" },
   { 
     id: "activity", 
@@ -33,7 +61,7 @@ const TABS = [
   },
 ] as const;
 
-export type TabId = typeof TABS[number]["id"];
+export type TabId = (typeof TABS)[number]["id"];
 
 const ChatbotTabs = ({ 
   teamId, 
@@ -47,17 +75,17 @@ const ChatbotTabs = ({
   const currentTab = pathParts[pathParts.length - 2] || 'playground';
   const currentSubRoute = pathParts[pathParts.length - 1];
 
-  const getTabHref = (tab: typeof TABS[number]) => {
+  const getTabHref = (tab: Tab): string => {
     if (tab.id === 'playground') {
       return `/dashboard/${teamId}/chatbot/${chatbotId}`;
     }
     
-    if (tab.subRoutes) {
+    if ('subRoutes' in tab && tab.subRoutes) {
       const defaultSubRoute = tab.id === 'activity' ? 'chat-logs' : 'chats';
       return `/dashboard/${teamId}/chatbot/${chatbotId}/${tab.id}/${defaultSubRoute}`;
     }
 
-    if (tab.defaultSubRoute) {
+    if ('defaultSubRoute' in tab && tab.defaultSubRoute) {
       return `/dashboard/${teamId}/chatbot/${chatbotId}/${tab.id}/${tab.defaultSubRoute}`;
     }
     
@@ -66,8 +94,8 @@ const ChatbotTabs = ({
 
   return (
     <div className="border-b">
-      <div className="max-w-screen-2xl mx-auto">
-        <div className="flex space-x-1">
+      <div className="max-w-6xl mx-auto px-8">
+        <div className="flex justify-center space-x-1">
           {TABS.map((tab) => (
             <Link
               key={tab.id}
@@ -92,4 +120,4 @@ const ChatbotTabs = ({
   );
 };
 
-export default ChatbotTabs; 
+export default ChatbotTabs;
