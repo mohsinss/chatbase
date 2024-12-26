@@ -41,6 +41,13 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
     setIsLoading(true);
 
     try {
+      console.log('Chatbot settings:', {
+        model: chatbot.settings?.model || 'gpt-3.5-turbo (default)',
+        temperature: chatbot.settings?.temperature || '0.7 (default)',
+        maxTokens: chatbot.settings?.maxTokens || '500 (default)',
+        systemPrompt: chatbot.settings?.systemPrompt || 'default system prompt',
+      });
+
       console.log('Sending request:', {
         messages: [...messages, userMessage],
         chatbotId: chatbot.id,
@@ -84,8 +91,13 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
           
           for (const line of lines) {
             if (line.startsWith('data: ')) {
-              const data = line.slice(5);
-              if (data === '[DONE]') continue;
+              const data = line.slice(5).trim();
+              
+              // Skip if it's the [DONE] message
+              if (data === '[DONE]') {
+                console.log('Stream completed');
+                continue;
+              }
               
               try {
                 const parsed = JSON.parse(data);
@@ -95,7 +107,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                   { ...assistantMessage }
                 ]);
               } catch (e) {
-                console.error('Failed to parse chunk:', e);
+                console.log('Skipping unparseable chunk:', data);
               }
             }
           }

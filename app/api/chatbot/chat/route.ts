@@ -1,22 +1,59 @@
 import OpenAI from 'openai';
 import { NextRequest } from 'next/server';
+import connectMongo from "@/libs/mongoose";
+import ChatbotAISettings from "@/models/ChatbotAISettings";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Map internal model names to OpenAI model names
+const MODEL_MAPPING: { [key: string]: string } = {
+  'gpt-3.5-turbo': 'gpt-3.5-turbo',
+  'gpt-4': 'gpt-4',
+  'gpt-4-turbo': 'gpt-4-1106-preview',
+  'gpt-4o': 'gpt-4',
+  'gpt-4o-mini': 'gpt-4',  // or whatever the correct mapping should be
+};
+
 export async function POST(req: NextRequest) {
   try {
-    const { messages, chatbotId, model, temperature, maxTokens, systemPrompt } = await req.json();
+    const { messages, chatbotId } = await req.json();
+
+    await connectMongo();
+    const aiSettings = await ChatbotAISettings.findOne({ 
+      chatbotId: chatbotId 
+    });
+    
+    console.log('Query params:', { chatbotId });
+    console.log('Found settings:', aiSettings);
+
+    // Get the model name and map it to OpenAI model
+    const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
+    const openAIModel = MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo';
+
+    const temperature = aiSettings?.temperature ?? 0.7;
+    const maxTokens = aiSettings?.maxTokens ?? 500;
+    const systemPrompt = aiSettings?.systemPrompt || 'You are a helpful AI assistant.';
+
+    console.log('API Route - Using model:', {
+      chatbotId,
+      internalModel,
+      openAIModel,
+      temperature,
+      maxTokens,
+      systemPrompt,
+      fromDatabase: !!aiSettings
+    });
 
     const response = await openai.chat.completions.create({
-      model: model || 'gpt-3.5-turbo',
+      model: openAIModel,
       messages: [
-        { role: 'system', content: systemPrompt || 'You are a helpful AI assistant.' },
+        { role: 'system', content: systemPrompt },
         ...messages,
       ],
-      temperature: temperature || 0.7,
-      max_tokens: maxTokens || 500,
+      temperature,
+      max_tokens: maxTokens,
       stream: true,
     });
 
@@ -47,7 +84,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Streaming error:', error);
-    return new Response(JSON.stringify({ error: 'Streaming failed' }), {
+    return new Response(JSON.stringify({ 
+      error: 'Streaming failed', 
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
