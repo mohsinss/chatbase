@@ -6,6 +6,10 @@ import GeneralSettings from "./GeneralSettings";
 import AISettings from "./AISettings";
 import ChatInterfaceSettings from "./ChatInterfaceSettings";
 import SecuritySettings from "./SecuritySettings";
+import LeadsSettings from "./LeadsSettings";
+import NotificationsSettings from "./NotificationsSettings";
+import WebhooksSettings from "./WebhooksSettings";
+import CustomDomainsSettings from "./CustomDomainsSettings";
 
 interface SettingsProps {
   teamId: string;
@@ -82,6 +86,10 @@ export default function Settings({ teamId, chatbotId }: SettingsProps) {
             {currentTab === "chat-interface" && <ChatInterfaceSettings chatbotId={chatbotId} />}
 
             {currentTab === "security" && <SecuritySettings chatbotId={chatbotId} />}
+            {currentTab === "leads" && <LeadsSettings chatbotId={chatbotId} />}
+            {currentTab === "notifications" && <NotificationsSettings chatbotId={chatbotId} />}
+            {currentTab === "webhooks" && <WebhooksSettings chatbotId={chatbotId} />}
+            {currentTab === "custom-domains" && <CustomDomainsSettings chatbotId={chatbotId} />}
           </div>
         </div>
       </div>
