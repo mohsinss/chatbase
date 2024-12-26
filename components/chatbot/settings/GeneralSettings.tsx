@@ -4,13 +4,31 @@ import { useState, useEffect } from "react"
 import { Copy } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { Notification } from "@/components/ui/notification"
 
 interface GeneralSettingsProps {
   chatbotId: string;
 }
+
+type NotificationType = {
+  message: string;
+  type: 'success' | 'error';
+};
+
+const CustomNotification = ({ message, type, onClose }: NotificationType & { onClose: () => void }) => (
+  <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg ${
+    type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+  }`}>
+    <div className="flex justify-between items-center">
+      <p>{message}</p>
+      <button 
+        onClick={onClose}
+        className="ml-4 text-gray-500 hover:text-gray-700"
+      >
+        ×
+      </button>
+    </div>
+  </div>
+);
 
 const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
   const [name, setName] = useState("");
@@ -87,7 +105,7 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
   return (
     <>
       {notification && (
-        <Notification
+        <CustomNotification
           message={notification.message}
           type={notification.type}
           onClose={() => setNotification(null)}
@@ -129,10 +147,11 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
               <label htmlFor="name" className="text-sm font-medium">
                 Name
               </label>
-              <Input
+              <input
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -143,19 +162,25 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
                     Credit Limit
                   </label>
                 </div>
-                <Switch
-                  checked={creditLimit}
-                  onCheckedChange={setCreditLimit}
-                />
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={creditLimit}
+                    onChange={(e) => setCreditLimit(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
               </div>
               
               {creditLimit && (
                 <div className="space-y-2">
-                  <Input
+                  <input
                     type="number"
                     placeholder="Enter credit limit"
                     value={creditLimitValue || ""}
-                    onChange={(e) => setCreditLimitValue(Number(e.target.value))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCreditLimitValue(Number(e.target.value))}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p className="text-sm text-gray-500">
                     Enter the maximum number of credits this chatbot can use
