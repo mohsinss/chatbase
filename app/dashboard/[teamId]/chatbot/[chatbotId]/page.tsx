@@ -8,6 +8,17 @@ import DashboardNav from "@/components/DashboardNav";
 import ChatbotTabs from "@/components/chatbot/ChatbotTabs";
 import Playground from "@/components/chatbot/playground/Playground";
 
+interface ChatbotData {
+  id: string;
+  name: string;
+  settings?: {
+    model?: string;
+    temperature?: number;
+    maxTokens?: number;
+    systemPrompt?: string;
+  };
+}
+
 export default async function ChatbotPage({ 
   params 
 }: { 
@@ -27,12 +38,24 @@ export default async function ChatbotPage({
     redirect("/dashboard");
   }
 
+  // Serialize the chatbot data
+  const serializedChatbot: ChatbotData = {
+    id: chatbot._id.toString(),
+    name: chatbot.name,
+    settings: {
+      model: chatbot.settings?.model,
+      temperature: chatbot.settings?.temperature,
+      maxTokens: chatbot.settings?.maxTokens,
+      systemPrompt: chatbot.settings?.systemPrompt,
+    }
+  };
+
   return (
     <>
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <Playground chatbot={chatbot} />
+        <Playground chatbot={serializedChatbot} />
       </main>
     </>
   );
