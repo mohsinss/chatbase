@@ -25,11 +25,68 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Create new conversation on mount
+  useEffect(() => {
+    createNewConversation();
+  }, [chatbot.id]);
+
+  // Save conversation when messages change
+  useEffect(() => {
+    if (messages.length > 0 && conversationId) {
+      saveConversation();
+    }
+  }, [messages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const createNewConversation = async () => {
+    try {
+      const response = await fetch('/api/chatbot/conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatbotId: chatbot.id,
+          messages: [],
+          createNew: true, // Signal to create a new conversation
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setConversationId(data._id);
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error('Failed to create new conversation:', error);
+    }
+  };
+
+  const saveConversation = async () => {
+    if (!conversationId) return;
+    
+    try {
+      await fetch('/api/chatbot/conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatbotId: chatbot.id,
+          conversationId: conversationId,
+          messages,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to save conversation:', error);
+    }
+  };
+
+  const handleRefresh = async () => {
+    createNewConversation();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +109,6 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
 
       if (!response.ok) throw new Error('Stream failed');
       
-      // Create a new message for the assistant's response
       const assistantMessage: Message = { role: 'assistant', content: '' };
       setMessages(prev => [...prev, assistantMessage]);
 
@@ -113,7 +169,10 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
           {/* Chat Header */}
           <div className="flex items-center justify-between p-4 border-b">
             <h2 className="text-lg">{chatbot.name}</h2>
-            <button className="p-2 hover:bg-gray-100 rounded-full">
+            <button 
+              onClick={handleRefresh}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
               <IconRefresh className="w-5 h-5" />
             </button>
           </div>
