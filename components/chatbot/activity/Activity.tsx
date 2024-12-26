@@ -44,7 +44,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
         const data = await response.json();
         const validConversations = Array.isArray(data) ? data.filter(conv => 
           conv.messages.length > 0 && 
-          conv.messages.some(m => m.content?.trim())
+          conv.messages.some((m: Message) => m.content?.trim())
         ) : [];
         setConversations(validConversations);
       }
