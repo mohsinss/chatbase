@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconRefresh, IconFilter, IconDownload, IconTrash, IconX } from "@tabler/icons-react";
+import { IconRefresh, IconFilter, IconDownload, IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 interface Message {
@@ -76,128 +76,154 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
     return content.substring(0, maxLength) + '...';
   };
 
-  // Modal component for displaying full conversation
-  const ConversationModal = ({ conversation }: { conversation: Conversation }) => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-3xl max-h-[80vh] overflow-hidden">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Conversation Details</h3>
+  const renderChatLogs = () => (
+    <div className="flex flex-col h-full">
+      {/* Top Header - Fixed */}
+      <div className="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-10">
+        <h2 className="text-xl font-semibold">Chat Logs</h2>
+        <div className="flex gap-2">
           <button 
-            onClick={() => setSelectedConversation(null)}
-            className="p-1 hover:bg-gray-100 rounded"
+            onClick={handleRefresh}
+            className="btn btn-outline btn-sm gap-2"
+            disabled={loading}
           >
-            <IconX className="w-5 h-5" />
+            <IconRefresh className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+          <button className="btn btn-outline btn-sm gap-2">
+            <IconFilter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filter</span>
+          </button>
+          <button className="btn btn-outline btn-sm gap-2">
+            <IconDownload className="w-4 h-4" />
+            <span className="hidden sm:inline">Export</span>
           </button>
         </div>
-        <div className="p-4 overflow-y-auto max-h-[calc(80vh-8rem)]">
-          {conversation.messages.map((message, index) => (
-            <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-              <div className={`rounded-lg p-4 inline-block max-w-[80%] ${
-                message.role === 'assistant' ? 'bg-gray-100' : 'bg-blue-500 text-white'
-              }`}>
-                <p>{message.content}</p>
+      </div>
+
+      {/* Content Container - Scrollable */}
+      <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
+        {/* Conversation List - Fixed height for 3 items */}
+        <div className="w-full lg:w-[400px] lg:border-r bg-white shrink-0">
+          {loading ? (
+            <div className="text-center py-12 text-gray-500">
+              Loading conversations...
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              No chats found
+            </div>
+          ) : (
+            <div className="divide-y max-h-[192px] overflow-y-auto">
+              {/* 192px = 3 rows * 64px per row */}
+              {conversations.map((conversation) => {
+                const firstUserMessage = conversation.messages.find(m => m.role === 'user');
+                return (
+                  <div
+                    key={conversation._id}
+                    onClick={() => setSelectedConversation(conversation)}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer h-16 ${
+                      selectedConversation?._id === conversation._id ? 'bg-gray-50' : ''
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1 flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">
+                          {truncateContent(firstUserMessage?.content || 'No message content')}
+                        </p>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <span>{formatDate(conversation.createdAt)}</span>
+                          <span>•</span>
+                          <span>{conversation.messages.length} messages</span>
+                        </div>
+                      </div>
+                      <button 
+                        className="p-1 hover:bg-gray-100 rounded ml-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add delete functionality
+                        }}
+                      >
+                        <IconTrash className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Conversation Details */}
+        <div className="flex-1 bg-gray-50">
+          {selectedConversation ? (
+            <div className="flex flex-col">
+              <div className="p-4 border-b bg-white sticky top-0 z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Source: Playground</h3>
+                    <div className="text-sm text-gray-500">
+                      {formatDate(selectedConversation.createdAt)}
+                    </div>
+                  </div>
+                  <button className="p-1 hover:bg-gray-100 rounded">
+                    <IconTrash className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                  </button>
+                </div>
+              </div>
+              <div className="p-4">
+                {selectedConversation.messages.map((message, index) => (
+                  <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
+                    <div className={`rounded-lg p-4 inline-block max-w-[80%] ${
+                      message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'
+                    }`}>
+                      <p>{message.content}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          ) : (
+            <div className="h-full flex items-center justify-center text-gray-500">
+              Select a conversation to view details
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 
-  const renderContent = () => {
-    switch (currentSubTab) {
-      case 'chat-logs':
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Chat Logs</h2>
-              <div className="flex gap-2">
-                <button 
-                  onClick={handleRefresh}
-                  className="btn btn-outline btn-sm gap-2"
-                  disabled={loading}
-                >
-                  <IconRefresh className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
-                <button className="btn btn-outline btn-sm gap-2">
-                  <IconFilter className="w-4 h-4" />
-                  Filter
-                </button>
-                <button className="btn btn-outline btn-sm gap-2">
-                  <IconDownload className="w-4 h-4" />
-                  Export
-                </button>
-              </div>
-            </div>
+  return (
+    <div className="flex flex-col lg:flex-row min-h-screen">
+      {/* Navigation - Top on mobile, Side on desktop */}
+      <div className="lg:w-64 border-b lg:border-b-0 lg:border-r bg-white">
+        <div className="p-4 lg:p-6">
+          <h1 className="text-2xl font-bold mb-4 lg:mb-6">Activity</h1>
+          <nav className="flex lg:flex-col gap-2">
+            {SUB_TABS.map((tab) => (
+              <Link
+                key={tab.id}
+                href={`/dashboard/${teamId}/chatbot/${chatbotId}/activity/${tab.id}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors w-full
+                  ${currentSubTab === tab.id 
+                    ? "bg-primary/10 text-primary" 
+                    : "text-gray-600 hover:bg-gray-100"}`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </div>
 
-            {/* Chat Logs List */}
-            <div className="bg-white rounded-lg border">
-              {loading ? (
-                <div className="text-center py-12 text-gray-500">
-                  Loading conversations...
-                </div>
-              ) : conversations.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  No chats found
-                </div>
-              ) : (
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="text-left p-4 font-medium text-gray-500">First Message</th>
-                      <th className="text-left p-4 font-medium text-gray-500">Date</th>
-                      <th className="text-left p-4 font-medium text-gray-500">Source</th>
-                      <th className="text-left p-4 font-medium text-gray-500">Messages</th>
-                      <th className="p-4"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {conversations.map((conversation) => {
-                      const firstUserMessage = conversation.messages.find(m => m.role === 'user');
-                      return (
-                        <tr 
-                          key={conversation._id} 
-                          className="hover:bg-gray-50 cursor-pointer"
-                          onClick={() => setSelectedConversation(conversation)}
-                        >
-                          <td className="p-4">
-                            {truncateContent(firstUserMessage?.content || 'No message content')}
-                          </td>
-                          <td className="p-4 text-gray-500">
-                            {formatDate(conversation.createdAt)}
-                          </td>
-                          <td className="p-4 text-gray-500">
-                            Playground
-                          </td>
-                          <td className="p-4 text-gray-500">
-                            {conversation.messages.length}
-                          </td>
-                          <td className="p-4">
-                            <button 
-                              className="p-1 hover:bg-gray-100 rounded"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Add delete functionality here
-                              }}
-                            >
-                              <IconTrash className="w-4 h-4 text-gray-400 hover:text-red-500" />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        );
-      
-      case 'leads':
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
+      {/* Main Content Area */}
+      <div className="flex-1">
+        {currentSubTab === 'chat-logs' ? (
+          renderChatLogs()
+        ) : (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Leads</h2>
               <div className="flex gap-2">
                 <button className="btn btn-outline btn-sm gap-2">
@@ -214,42 +240,8 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
               No leads found
             </div>
           </div>
-        );
-      
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className="max-w-6xl mx-auto p-8">
-      {/* Title and sub-navigation */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-6">Activity</h1>
-        <div className="flex space-x-4">
-          {SUB_TABS.map((tab) => (
-            <Link
-              key={tab.id}
-              href={`/dashboard/${teamId}/chatbot/${chatbotId}/activity/${tab.id}`}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
-                ${currentSubTab === tab.id 
-                  ? "bg-primary/10 text-primary" 
-                  : "text-gray-600 hover:bg-gray-100"}`}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-            </Link>
-          ))}
-        </div>
+        )}
       </div>
-
-      {/* Content based on current tab */}
-      {renderContent()}
-
-      {/* Conversation Modal */}
-      {selectedConversation && (
-        <ConversationModal conversation={selectedConversation} />
-      )}
     </div>
   );
 };
