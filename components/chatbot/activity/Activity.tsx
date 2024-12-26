@@ -103,7 +103,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
 
       {/* Content Container - Scrollable */}
       <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
-        {/* Conversation List - Fixed height for 3 items */}
+        {/* Conversation List - Responsive height */}
         <div className="w-full lg:w-[400px] lg:border-r bg-white shrink-0">
           {loading ? (
             <div className="text-center py-12 text-gray-500">
@@ -114,8 +114,9 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
               No chats found
             </div>
           ) : (
-            <div className="divide-y max-h-[192px] overflow-y-auto">
-              {/* 192px = 3 rows * 64px per row */}
+            <div className="divide-y max-h-[192px] lg:max-h-[calc(100vh-300px)] overflow-y-auto">
+              {/* 192px = 3 rows * 64px per row on mobile */}
+              {/* calc(100vh-300px) = full height minus headers and padding on desktop */}
               {conversations.map((conversation) => {
                 const firstUserMessage = conversation.messages.find(m => m.role === 'user');
                 return (
