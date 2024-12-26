@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, ChangeEvent } from "react"
 import { Copy } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"

@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { IconSend, IconRefresh } from "@tabler/icons-react";
 
 interface Message {
@@ -116,11 +115,13 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
       const decoder = new TextDecoder();
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
+        let done = false;
+        while (!done) {
+          const result = await reader.read();
+          done = result.done;
           if (done) break;
-
-          const chunk = decoder.decode(value);
+          
+          const chunk = decoder.decode(result.value);
           const lines = chunk.split('\n');
 
           for (const line of lines) {

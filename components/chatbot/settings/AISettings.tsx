@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, ChangeEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import * as React from "react"
 
 interface AISettingsProps {
   chatbotId: string;
@@ -178,7 +177,7 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
                 placeholder="You are a helpful AI assistant..."
                 className="flex w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
-              <p className="text-sm text-gray-500">Define the AI's personality and behavior</p>
+              <p className="text-sm text-gray-500">Define the AI&apos;s personality and behavior</p>
             </div>
 
             <div className="space-y-2">

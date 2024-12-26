@@ -2,6 +2,11 @@ import { NextRequest } from 'next/server';
 import connectMongo from "@/libs/mongoose";
 import ChatbotConversation from "@/models/ChatbotConversation";
 
+interface ChatMessage {
+  content?: string;
+  // Add other message properties if needed
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { chatbotId, messages, createNew, conversationId } = await req.json();
@@ -10,7 +15,7 @@ export async function POST(req: NextRequest) {
     let conversation;
 
     // Only create or update if there are actual messages
-    const hasValidMessages = messages && messages.some((m: any) => m.content?.trim());
+    const hasValidMessages = messages && messages.some((m: ChatMessage) => m.content?.trim());
 
     if (createNew) {
       // Create a new conversation only if needed
@@ -51,7 +56,7 @@ export async function GET(req: NextRequest) {
 
     // Additional filter for conversations with non-empty messages
     const validConversations = conversations.filter(conv => 
-      conv.messages.some(m => m.content?.trim())
+      conv.messages.some((m: ChatMessage) => m.content?.trim())
     );
 
     return new Response(JSON.stringify(validConversations), {
@@ -63,4 +68,4 @@ export async function GET(req: NextRequest) {
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
-} 
+}
