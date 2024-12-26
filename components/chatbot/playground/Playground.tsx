@@ -3,6 +3,11 @@
 import { useState, useRef, useEffect } from "react";
 import { IconSend, IconRefresh } from "@tabler/icons-react";
 
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 interface PlaygroundProps {
   chatbot: {
     name: string;
@@ -14,11 +19,6 @@ interface PlaygroundProps {
       systemPrompt?: string;
     };
   };
-}
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
 }
 
 const Playground = ({ chatbot }: PlaygroundProps) => {
@@ -35,49 +35,29 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage = { role: 'user', content: input } as Message;
+    const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
-      console.log('Chatbot settings:', {
-        model: chatbot.settings?.model || 'gpt-3.5-turbo (default)',
-        temperature: chatbot.settings?.temperature || '0.7 (default)',
-        maxTokens: chatbot.settings?.maxTokens || '500 (default)',
-        systemPrompt: chatbot.settings?.systemPrompt || 'default system prompt',
-      });
-
-      console.log('Sending request:', {
-        messages: [...messages, userMessage],
-        chatbotId: chatbot.id,
-        model: chatbot.settings?.model,
-        temperature: chatbot.settings?.temperature,
-        maxTokens: chatbot.settings?.maxTokens,
-        systemPrompt: chatbot.settings?.systemPrompt,
-      });
-
       const response = await fetch('/api/chatbot/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, userMessage],
           chatbotId: chatbot.id,
-          model: chatbot.settings?.model || 'gpt-3.5-turbo',
-          temperature: chatbot.settings?.temperature || 0.7,
-          maxTokens: chatbot.settings?.maxTokens || 500,
-          systemPrompt: chatbot.settings?.systemPrompt || '',
         }),
       });
 
       if (!response.ok) throw new Error('Stream failed');
+      
+      // Create a new message for the assistant's response
+      const assistantMessage: Message = { role: 'assistant', content: '' };
+      setMessages(prev => [...prev, assistantMessage]);
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-      let assistantMessage = { role: 'assistant', content: '' } as Message;
-      
-      // Add the assistant message immediately with empty content
-      setMessages(prev => [...prev, assistantMessage]);
 
       if (reader) {
         while (true) {
@@ -85,29 +65,27 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
           if (done) break;
 
           const chunk = decoder.decode(value);
-          console.log('Received chunk:', chunk);
-          
           const lines = chunk.split('\n');
-          
+
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.slice(5).trim();
               
-              // Skip if it's the [DONE] message
-              if (data === '[DONE]') {
-                console.log('Stream completed');
-                continue;
-              }
+              if (data === '[DONE]') continue;
               
               try {
                 const parsed = JSON.parse(data);
-                assistantMessage.content += parsed.content;
-                setMessages(prev => [
-                  ...prev.slice(0, -1),
-                  { ...assistantMessage }
-                ]);
+                if (parsed.text) {
+                  setMessages(prev => {
+                    const lastMessage = prev[prev.length - 1];
+                    return [
+                      ...prev.slice(0, -1),
+                      { ...lastMessage, content: lastMessage.content + parsed.text }
+                    ];
+                  });
+                }
               } catch (e) {
-                console.log('Skipping unparseable chunk:', data);
+                console.log('Skipping unparseable chunk');
               }
             }
           }
