@@ -47,14 +47,14 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(`/api/chatbot/settings?chatbotId=${chatbotId}`);
+      const response = await fetch(`/api/chatbot/list/single?chatbotId=${chatbotId}`);
       const data = await response.json();
       
-      if (data) {
-        setName(data.name || "");
-        setCharacterCount(data.characterCount || 0);
-        setCreditLimit(data.creditLimitEnabled || false);
-        setCreditLimitValue(data.creditLimit || null);
+      if (data.chatbot) {
+        setName(data.chatbot.name || "");
+        setCharacterCount(data.chatbot.characterCount || 0);
+        setCreditLimit(data.chatbot.creditLimitEnabled || false);
+        setCreditLimitValue(data.chatbot.creditLimit || null);
       }
     } catch (error) {
       setNotification({
@@ -67,8 +67,8 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/chatbot/settings", {
-        method: "POST",
+      const response = await fetch("/api/chatbot/update", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chatbotId,
@@ -102,6 +102,29 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
     });
   }
 
+  const handleNameUpdate = async (newName: string) => {
+    try {
+      const response = await fetch(`/api/chatbot/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chatbotId,
+          name: newName,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update chatbot name');
+      }
+
+      // Optionally refresh the page or update local state
+    } catch (error) {
+      console.error('Error updating chatbot name:', error);
+    }
+  };
+
   return (
     <>
       {notification && (
@@ -115,7 +138,9 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
       <div className="w-full max-w-3xl mx-auto space-y-8">
         {/* General Section */}
         <Card className="p-6 space-y-6">
-          <h1 className="text-2xl font-semibold">General</h1>
+          <h1 className="text-2xl font-semibold">
+            {name || `Chatbot ${new Date().toLocaleString()}`}
+          </h1>
           
           <div className="space-y-4">
             <div className="space-y-2">

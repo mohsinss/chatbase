@@ -1,15 +1,20 @@
 import mongoose from "mongoose";
 
+export interface IChatbotSettings {
+  chatbotId: string;
+  characterCount: number;
+  creditLimitEnabled: boolean;
+  creditLimit: number | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 const ChatbotSettingsSchema = new mongoose.Schema(
   {
     chatbotId: {
       type: String,
       required: true,
       unique: true,
-    },
-    name: {
-      type: String,
-      required: true,
     },
     characterCount: {
       type: Number,

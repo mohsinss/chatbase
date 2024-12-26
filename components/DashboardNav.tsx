@@ -10,6 +10,9 @@ import { IconSearch, IconPlus } from "@tabler/icons-react";
 interface Chatbot {
   chatbotId: string;
   name: string;
+  teamId: string;
+  createdBy: string;
+  sources: any[];
 }
 
 const DashboardNav = ({ teamId }: { teamId: string }) => {
@@ -26,12 +29,11 @@ const DashboardNav = ({ teamId }: { teamId: string }) => {
     const fetchChatbots = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/chatbot/list?teamId=${teamId}`);
+        const response = await fetch(`/api/chatbot/list?teamId=${teamId}&t=${Date.now()}`);
         if (!response.ok) {
           throw new Error('Failed to fetch chatbots');
         }
         const data = await response.json();
-        console.log('Fetched chatbots:', data.chatbots); // Debug log
         setChatbots(data.chatbots || []);
       } catch (error) {
         console.error("Failed to fetch chatbots:", error);

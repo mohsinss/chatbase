@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { IconSend, IconRefresh } from "@tabler/icons-react";
 
-const Playground = () => {
+interface PlaygroundProps {
+  chatbot: {
+    name: string;
+  };
+}
+
+const Playground = ({ chatbot }: PlaygroundProps) => {
   const [message, setMessage] = useState("");
 
   return (
@@ -20,7 +26,7 @@ const Playground = () => {
         <div className="bg-white rounded-lg shadow-sm border">
           {/* Chat Header */}
           <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg">Chatbot 12/26/2024, 12:11:01 AM</h2>
+            <h2 className="text-lg">{chatbot.name}</h2>
             <button className="p-2 hover:bg-gray-100 rounded-full">
               <IconRefresh className="w-5 h-5" />
             </button>
