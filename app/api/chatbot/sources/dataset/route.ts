@@ -1,48 +1,37 @@
 import { NextResponse } from "next/server";
-import { TrieveSDK } from "trieve-ts-sdk";
 
 export async function POST(req: Request) {
   try {
     const { chatbotId, name } = await req.json();
 
-    // First try to get datasets using direct API call since SDK doesn't have getDatasets
-    const datasetsResponse = await fetch("https://api.trieve.ai/api/dataset", {
+    const response = await fetch("https://api.trieve.ai/api/dataset", {
+      method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
         "TR-Organization": process.env.TRIEVE_ORG_ID!,
-      }
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        dataset_name: name || `Chatbot Dataset ${chatbotId}`,
+        server_configuration: {
+          chunk_size: 512,
+          chunk_overlap: 50
+        }
+      })
     });
 
-    if (datasetsResponse.ok) {
-      const datasets = await datasetsResponse.json();
-      const existingDataset = datasets.find((dataset: any) => 
-        dataset.dataset_name === `Chatbot Dataset ${chatbotId}`
-      );
-
-      if (existingDataset) {
-        return NextResponse.json(existingDataset);
-      }
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error("Dataset creation failed:", data);
+      throw new Error(data.message || "Failed to create dataset");
     }
 
-    // If no existing dataset found, create a new one using SDK
-    const trieve = new TrieveSDK({
-      apiKey: process.env.TRIEVE_API_KEY!,
-      organizationId: process.env.TRIEVE_ORG_ID!
-    });
-
-    const newDataset = await trieve.createDataset({
-      dataset_name: `Chatbot Dataset ${chatbotId}`,
-      server_configuration: {
-        chunk_size: 512,
-        chunk_overlap: 50
-      }
-    });
-
-    return NextResponse.json(newDataset);
+    return NextResponse.json(data);
   } catch (error) {
-    console.error("Dataset operation error:", error);
+    console.error("Dataset creation error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to handle dataset operation" },
+      { error: error instanceof Error ? error.message : "Failed to create dataset" },
       { status: 500 }
     );
   }

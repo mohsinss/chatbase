@@ -39,12 +39,11 @@ export async function POST(req: Request) {
         chatbotId: datasetId,
         mime_type: file.type
       },
-      use_pdf2md_ocr: file.type === 'application/pdf',
       target_splits_per_chunk: 20,
       rebalance_chunks: true,
       split_delimiters: ['.', '!', '?', '\n'],
       tag_set: [`chatbot-${datasetId}`]
-    });
+    } as any);
     
     return NextResponse.json(data);
   } catch (error) {

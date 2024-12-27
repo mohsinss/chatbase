@@ -16,23 +16,30 @@ export const FileUpload = ({ teamId, chatbotId }: FileUploadProps) => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const createDataset = async () => {
-    const response = await fetch("/api/chatbot/sources/dataset", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chatbotId,
-        name: `Chatbot ${chatbotId} Dataset`
-      }),
-    });
+    try {
+      const response = await fetch("/api/chatbot/sources/dataset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chatbotId,
+          name: `Chatbot Dataset ${chatbotId}`
+        }),
+      });
 
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error || "Failed to create dataset");
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to create dataset");
+      }
+
+      const dataset = await response.json();
+      console.log("Created/Retrieved dataset:", dataset); // Debug log
+      return dataset;
+    } catch (err) {
+      console.error("Dataset creation error:", err);
+      throw err;
     }
-
-    return response.json();
   };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -41,14 +48,25 @@ export const FileUpload = ({ teamId, chatbotId }: FileUploadProps) => {
     setSuccess(null);
 
     try {
+      // Get or create dataset
       const dataset = await createDataset();
-      const datasetId = dataset.id;
+      console.log("Using dataset:", dataset); // Debug log
+
+      if (!dataset?.id) {
+        throw new Error("Invalid dataset ID received");
+      }
 
       for (const file of acceptedFiles) {
+        console.log("Uploading file:", {
+          fileName: file.name,
+          fileType: file.type,
+          datasetId: dataset.id
+        }); // Debug log
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('fileName', file.name);
-        formData.append('datasetId', datasetId);
+        formData.append('datasetId', dataset.id);
         formData.append('teamId', teamId);
 
         const response = await fetch("/api/chatbot/sources/upload", {
@@ -56,11 +74,13 @@ export const FileUpload = ({ teamId, chatbotId }: FileUploadProps) => {
           body: formData,
         });
 
-        const data = await response.json();
-        
         if (!response.ok) {
-          throw new Error(data.error || "Failed to upload file");
+          const data = await response.json();
+          throw new Error(data.error || `Failed to upload file: ${file.name}`);
         }
+
+        const data = await response.json();
+        console.log("Upload response:", data); // Debug log
       }
       
       setSuccess(`Successfully uploaded ${acceptedFiles.length} file(s)`);
