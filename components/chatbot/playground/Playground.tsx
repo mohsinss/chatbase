@@ -192,7 +192,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Chat Input */}
+          {/* Chat Input .*/}
           <form onSubmit={handleSubmit} className="border-t p-4">
             <div className="relative">
               <input
