@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { IconSend, IconRefresh } from "@tabler/icons-react";
+import ReactMarkdown from 'react-markdown';
+import { ChatSettings } from './ChatSettings';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -26,6 +28,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Create new conversation on mount
   useEffect(() => {
@@ -156,62 +159,107 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#fafafa] p-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+    <div>
+      {/* Playground header - moved outside */}
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold flex items-center">
             Playground
-            <span className="inline-block w-5 h-5 rounded-full border flex items-center justify-center text-sm">?</span>
+            <span className="ml-1 inline-flex w-4 h-4 rounded-full border text-xs items-center justify-center">ⓘ</span>
           </h1>
-          <button className="px-4 py-2 border rounded-lg">Compare</button>
         </div>
+        <div className="flex items-center gap-2">
+          <button className="px-4 py-1.5 border rounded-lg text-sm">Compare</button>
+          <button className="w-8 h-8 flex items-center justify-center border rounded-lg">
+            <span className="w-4 h-4">💡</span>
+          </button>
+        </div>
+      </div>
 
-        <div className="bg-white rounded-lg shadow-sm border">
-          {/* Chat Header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg">{chatbot.name}</h2>
-            <button 
-              onClick={handleRefresh}
-              className="p-2 hover:bg-gray-100 rounded-full"
-            >
-              <IconRefresh className="w-5 h-5" />
-            </button>
+      {/* Main content area */}
+      <div className="relative min-h-[calc(100vh-80px)]" 
+           style={{ 
+             backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
+             backgroundSize: '20px 20px'
+           }}>
+        <div className="flex">
+          {/* Settings Panel */}
+          <div className={`w-[400px] transition-all duration-300 ${
+            isSettingsOpen ? 'mr-4' : '-ml-[400px]'
+          }`}>
+            <ChatSettings isVisible={isSettingsOpen} onToggle={() => setIsSettingsOpen(false)} />
           </div>
 
-          {/* Chat Messages */}
-          <div className="h-[calc(100vh-280px)] overflow-y-auto p-4">
-            {messages.map((message, index) => (
-              <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                <div className={`rounded-lg p-4 inline-block max-w-[80%] ${
-                  message.role === 'assistant' ? 'bg-gray-100' : 'bg-blue-500 text-white'
-                }`}>
-                  <p>{message.content}</p>
+          {/* Chat Container */}
+          <div className="flex-1 flex justify-center pt-4 px-4">
+            <div className="w-[400px] relative">
+              {!isSettingsOpen && (
+                <button 
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="absolute -left-12 h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white"
+                >
+                  ☰
+                </button>
+              )}
+
+              <div className="bg-white rounded-lg shadow-sm border">
+                {/* Chat Header */}
+                <div className="flex items-center justify-between p-3 border-b">
+                  <div className="text-sm">Chatbot {new Date().toLocaleString()}</div>
+                  <button 
+                    onClick={handleRefresh}
+                    className="p-1.5 hover:bg-gray-100 rounded-full"
+                  >
+                    <IconRefresh className="w-4 h-4" />
+                  </button>
                 </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
 
-          {/* Chat Input .*/}
-          <form onSubmit={handleSubmit} className="border-t p-4">
-            <div className="relative">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Message..."
-                className="w-full p-4 pr-12 rounded-lg border focus:outline-none focus:border-blue-500"
-                disabled={isLoading}
-              />
-              <button 
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-              >
-                <IconSend className="w-5 h-5" />
-              </button>
+                {/* Chat Messages */}
+                <div className="h-[calc(100vh-280px)] overflow-y-auto p-4">
+                  {messages.length === 0 && (
+                    <div className="text-gray-500 p-4 rounded-lg bg-gray-50">
+                      Hi! What can I help you with?
+                    </div>
+                  )}
+                  {messages.map((message, index) => (
+                    <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
+                      <div className={`rounded-lg p-3 inline-block max-w-[80%] ${
+                        message.role === 'assistant' ? 'bg-gray-100 prose prose-sm max-w-none' : 'bg-blue-500 text-white'
+                      }`}>
+                        {message.role === 'assistant' ? (
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        ) : (
+                          <p>{message.content}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Chat Input */}
+                <form onSubmit={handleSubmit} className="border-t p-3">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Message..."
+                      className="w-full p-3 pr-10 rounded-lg border focus:outline-none focus:border-blue-500 text-sm"
+                      disabled={isLoading}
+                    />
+                    <button 
+                      type="submit"
+                      disabled={isLoading || !input.trim()}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                    >
+                      <IconSend className="w-4 h-4" />
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
