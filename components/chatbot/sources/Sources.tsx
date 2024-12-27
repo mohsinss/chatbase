@@ -52,7 +52,7 @@ const Sources = ({
       <h1 className="text-2xl font-bold mb-8">Sources</h1>
 
       {/* Source Type Tabs */}
-      <div className="flex space-x-4 mb-8">
+      <div className="flex justify-center space-x-4 mb-8">
         {SOURCE_TABS.map((tab) => (
           <button
             key={tab.id}
