@@ -4,6 +4,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { IconFile, IconAlignLeft, IconGlobe, IconMessageQuestion, IconBrandNotion } from "@tabler/icons-react";
 import { FileUpload } from "./FileUpload";
 import SourceStats from './SourceStats';
+import TextInput from './TextInput';
+import WebsiteInput from './WebsiteInput';
+import QAInput from './QAInput';
+import NotionInput from './NotionInput';
 
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
@@ -32,7 +36,31 @@ const Sources = ({
     switch (currentTab) {
       case "files":
         return <FileUpload teamId={teamId} chatbotId={chatbotId} />;
-      // Add other tab contents as needed
+      case "text":
+        return <TextInput onTextChange={(text) => {
+          console.log('Text changed:', text);
+        }} />;
+      case "website":
+        return <WebsiteInput 
+          onFetchLinks={(url) => {
+            console.log('Fetching links from:', url);
+          }}
+          onLoadSitemap={(url) => {
+            console.log('Loading sitemap from:', url);
+          }}
+        />;
+      case "qa":
+        return <QAInput 
+          onQAChange={(qaPairs) => {
+            console.log('QA pairs changed:', qaPairs);
+          }}
+        />;
+      case "notion":
+        return <NotionInput 
+          onConnect={() => {
+            console.log('Connecting to Notion...');
+          }}
+        />;
       default:
         return <div>Content for {currentTab}</div>;
     }
@@ -73,23 +101,30 @@ const Sources = ({
             ))}
           </div>
 
-          {/* Content Area */}
-          <div className="flex-1">
+          {/* Content Area - added min-height */}
+          <div className="flex-1 min-h-[700px]">
             {renderContent()}
           </div>
         </div>
 
         {/* Right Stats Panel */}
-        <SourceStats
-          fileCount={1}
-          fileChars={4290}
-          textInputChars={5}
-          charLimit={6_000_000}
-          onRetrain={() => {
-            // Add retrain logic here
-            console.log('Retraining chatbot...');
-          }}
-        />
+        <div className="w-[300px] shrink-0">
+          <SourceStats
+            fileCount={1}
+            fileChars={4290}
+            textInputChars={5}
+            websiteCount={2}
+            websiteChars={1500}
+            qaCount={2}
+            qaChars={800}
+            notionCount={1}
+            notionChars={2000}
+            charLimit={6_000_000}
+            onRetrain={() => {
+              console.log('Retraining chatbot...');
+            }}
+          />
+        </div>
       </div>
     </div>
   );
