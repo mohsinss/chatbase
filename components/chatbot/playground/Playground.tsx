@@ -177,7 +177,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
       </div>
 
       {/* Main content area */}
-      <div className="relative min-h-[calc(100vh-80px)]" 
+      <div className="relative min-h-[calc(100vh-80px)] pl-2" 
            style={{ 
              backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
              backgroundSize: '20px 20px'
