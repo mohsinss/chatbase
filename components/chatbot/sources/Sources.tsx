@@ -113,12 +113,6 @@ const Sources = ({
             fileCount={1}
             fileChars={4290}
             textInputChars={5}
-            websiteCount={2}
-            websiteChars={1500}
-            qaCount={2}
-            qaChars={800}
-            notionCount={1}
-            notionChars={2000}
             charLimit={6_000_000}
             onRetrain={() => {
               console.log('Retraining chatbot...');
