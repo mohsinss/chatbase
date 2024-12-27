@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { IconFile, IconAlignLeft, IconGlobe, IconMessageQuestion, IconBrandNotion } from "@tabler/icons-react";
 import { FileUpload } from "./FileUpload";
+import SourceStats from './SourceStats';
 
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
@@ -38,28 +39,58 @@ const Sources = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-8">
+    <div className="max-w-6xl mx-auto p-4 md:p-8">
       <h1 className="text-2xl font-bold mb-8">Sources</h1>
 
-      {/* Source Type Tabs */}
-      <div className="flex justify-center space-x-4 mb-8">
-        {SOURCE_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors
-              ${currentTab === tab.id 
-                ? "bg-primary/10 text-primary" 
-                : "text-gray-600 hover:bg-gray-100"}`}
-          >
-            {tab.icon}
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
+      {/* Responsive Layout Container */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Left side nav and main content */}
+        <div className="flex flex-col md:flex-row flex-1">
+          {/* Source Type Tabs - Side for larger screens, Top for mobile */}
+          <div className={`
+            max-md:mb-8
+            max-md:flex max-md:justify-center max-md:space-x-4
+            md:w-[160px] md:border-r md:space-y-2 
+            md:pr-3 md:mr-6
+          `}>
+            {SOURCE_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`
+                  flex items-center gap-2 transition-colors w-full
+                  md:px-4 md:py-2
+                  max-md:px-6 max-md:py-3
+                  rounded-lg
+                  ${currentTab === tab.id 
+                    ? "bg-primary/10 text-primary" 
+                    : "text-gray-600 hover:bg-gray-100"}
+                `}
+              >
+                {tab.icon}
+                <span className="text-sm">{tab.label}</span>
+              </button>
+            ))}
+          </div>
 
-      {/* Content Area */}
-      {renderContent()}
+          {/* Content Area */}
+          <div className="flex-1">
+            {renderContent()}
+          </div>
+        </div>
+
+        {/* Right Stats Panel */}
+        <SourceStats
+          fileCount={1}
+          fileChars={4290}
+          textInputChars={5}
+          charLimit={6_000_000}
+          onRetrain={() => {
+            // Add retrain logic here
+            console.log('Retraining chatbot...');
+          }}
+        />
+      </div>
     </div>
   );
 };
