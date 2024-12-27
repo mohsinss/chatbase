@@ -52,6 +52,7 @@
     "stripe": "^13.11.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "trieve-ts-sdk": "^0.0.49",
     "zod": "^3.22.4"
   },
   "devDependencies": {

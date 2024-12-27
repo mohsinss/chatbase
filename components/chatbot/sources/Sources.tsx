@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { IconFile, IconAlignLeft, IconGlobe, IconMessageQuestion, IconBrandNotion } from "@tabler/icons-react";
+import { FileUpload } from "./FileUpload";
 
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
@@ -29,18 +30,7 @@ const Sources = ({
   const renderContent = () => {
     switch (currentTab) {
       case "files":
-        return (
-          <div className="bg-white rounded-lg p-8 border">
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
-                <IconFile className="w-12 h-12 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Drag & drop files here, or click to select files</h3>
-              <p className="text-gray-500 mb-4">Supported File Types: .pdf, .doc, .docx, .txt</p>
-              <p className="text-gray-500">If you are uploading a PDF, make sure you can select/highlight the text.</p>
-            </div>
-          </div>
-        );
+        return <FileUpload teamId={teamId} chatbotId={chatbotId} />;
       // Add other tab contents as needed
       default:
         return <div>Content for {currentTab}</div>;
