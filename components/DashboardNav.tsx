@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { IconSearch, IconPlus } from "@tabler/icons-react";
+import ButtonAccount from "./ButtonAccount";
 
 interface Chatbot {
   chatbotId: string;
@@ -309,21 +310,7 @@ const DashboardNav = ({ teamId }: { teamId: string }) => {
 
             {/* User Menu */}
             <div className="ml-4">
-              <button className="flex items-center justify-center w-8 h-8 rounded-full bg-base-200">
-                <svg
-                  className="w-5 h-5 text-base-content"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </button>
+              <ButtonAccount />
             </div>
           </div>
         </div>
