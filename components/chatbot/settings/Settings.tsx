@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useParams, usePathname } from "next/navigation";
-import { IconSettings, IconBrain, IconMessages, IconShield, IconUsers, IconBell, IconWebhook, IconWorld, IconSparkles } from "@tabler/icons-react";
+import { IconSettings, IconSparkles, IconMessages, IconShield, IconUsers, IconBell, IconWebhook, IconWorld } from "@tabler/icons-react";
 import GeneralSettings from "./GeneralSettings";
 import AISettings from "./AISettings";
 import ChatInterfaceSettings from "./ChatInterfaceSettings";
@@ -43,48 +43,35 @@ export default function Settings({ teamId, chatbotId }: SettingsProps) {
     <div className="min-h-screen bg-[#fafafa] p-4">
       <h1 className="text-2xl font-bold mb-6">Settings</h1>
       
-      {/* Mobile Tabs */}
-      <div className="sm:hidden overflow-x-auto">
-        <div className="flex space-x-2 mb-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
-              className={`flex items-center gap-2 p-2 whitespace-nowrap rounded-lg hover:bg-gray-100 text-gray-700
-                       ${currentTab === tab.id ? 'bg-violet-50 text-violet-600' : ''}`}
-            >
-              {tab.icon}
-              <span>{tab.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex">
-        {/* Desktop Sidebar - hidden on mobile */}
-        <div className="hidden sm:block w-64 space-y-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
-              className={`w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700
-                       ${currentTab === tab.id ? 'bg-violet-50 text-violet-600' : ''}`}
-            >
-              {tab.icon}
-              <span>{tab.name}</span>
-            </button>
-          ))}
+      <div className="flex gap-6">
+        {/* Sidebar */}
+        <div className="w-64">
+          <div className="space-y-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab.id)}
+                className={`flex items-center gap-2 w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                  ${currentTab === tab.id 
+                    ? "bg-primary/10 text-primary" 
+                    : "text-gray-600 hover:bg-gray-100"
+                  }`}
+              >
+                {tab.icon}
+                {tab.name}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 sm:ml-6">
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex-1 max-w-3xl">
+          <div className="bg-white rounded-xl border p-6">
             <h2 className="text-2xl font-semibold mb-6">{tabs.find(tab => tab.id === currentTab)?.name}</h2>
             
-            {currentTab === "general" && <GeneralSettings chatbotId={chatbotId} />}
+            {currentTab === "general" && <GeneralSettings chatbotId={chatbotId} teamId={teamId} />}
             {currentTab === "ai" && <AISettings chatbotId={chatbotId} />}
             {currentTab === "chat-interface" && <ChatInterfaceSettings chatbotId={chatbotId} />}
-
             {currentTab === "security" && <SecuritySettings chatbotId={chatbotId} />}
             {currentTab === "leads" && <LeadsSettings chatbotId={chatbotId} />}
             {currentTab === "notifications" && <NotificationsSettings chatbotId={chatbotId} />}
