@@ -12,7 +12,7 @@ import {
   DialogDescription, 
   DialogFooter 
 } from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface GeneralSettingsProps {
   chatbotId: string;
@@ -40,8 +40,10 @@ export const CustomNotification = ({ message, type, onClose }: NotificationType 
   </div>
 );
 
-const GeneralSettings = ({ chatbotId, teamId }: GeneralSettingsProps) => {
+const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
   const router = useRouter();
+  const pathname = usePathname();
+  const teamId = pathname.split('/')[2];
   const [name, setName] = useState("");
   const [characterCount, setCharacterCount] = useState(0);
   const [creditLimit, setCreditLimit] = useState(false);
@@ -158,7 +160,6 @@ const GeneralSettings = ({ chatbotId, teamId }: GeneralSettingsProps) => {
         type: "success"
       });
 
-      // Navigate back to the chatbots list after successful deletion
       setTimeout(() => {
         router.push(`/dashboard/${teamId}`);
       }, 1000);
