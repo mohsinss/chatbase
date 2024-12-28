@@ -40,15 +40,15 @@ const ChatbotCreator = ({ teamId }: { teamId: string }) => {
   return (
     <div>
       <div className="mb-8 px-8 pt-8">
-        <h1 className="text-2xl font-bold mb-2">Data Sources</h1>
+        {/* <h1 className="text-2xl font-bold mb-2">Data Sources</h1>
         <p className="text-base-content/70">
           Add your data sources to train your chatbot
-        </p>
+        </p> */}
       </div>
       
       <div className="flex">
-        <SideNav activeItem={activeItem} onItemClick={setActiveItem} />
-        {renderContent()}
+        {/* <SideNav activeItem={activeItem} onItemClick={setActiveItem} /> */}
+        {/* {renderContent()} */}
         <ConfigPanel teamId={teamId} />
       </div>
     </div>
