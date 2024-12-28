@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { IconSend, IconRefresh } from "@tabler/icons-react";
 import ReactMarkdown from 'react-markdown';
 import { ChatSettings } from './ChatSettings';
+import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -36,6 +37,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showPlaygroundInfo, setShowPlaygroundInfo] = useState(false);
+  const { config } = useChatInterfaceSettings(chatbot.id);
 
   // Create new conversation on mount
   useEffect(() => {
@@ -224,13 +226,25 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                 </button>
               )}
 
-              <div className="bg-white rounded-lg shadow-sm border">
+              <div className={`bg-white rounded-lg shadow-sm border ${
+                config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+              }`}>
                 {/* Chat Header */}
-                <div className="flex items-center justify-between p-3 border-b">
-                  <div className="text-sm">Chatbot {new Date().toLocaleString()}</div>
+                <div 
+                  className="flex items-center justify-between p-3 border-b"
+                  style={{
+                    backgroundColor: config.syncColors ? config.userMessageColor : undefined,
+                    color: config.syncColors ? 'white' : undefined
+                  }}
+                >
+                  <div className="text-sm">{config.displayName}</div>
                   <button 
                     onClick={handleRefresh}
-                    className="p-1.5 hover:bg-gray-100 rounded-full"
+                    className={`p-1.5 rounded-full ${
+                      config.syncColors 
+                        ? 'hover:bg-white/10 text-white' 
+                        : 'hover:bg-gray-100'
+                    }`}
                   >
                     <IconRefresh className="w-4 h-4" />
                   </button>
@@ -239,15 +253,22 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                 {/* Chat Messages */}
                 <div className="h-[calc(100vh-280px)] overflow-y-auto p-4">
                   {messages.length === 0 && (
-                    <div className="text-gray-500 p-4 rounded-lg bg-gray-50">
-                      Hi! What can I help you with?
+                    <div className={`text-gray-500 p-4 rounded-lg ${
+                      config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
+                    }`}>
+                      {config.initialMessage}
                     </div>
                   )}
                   {messages.map((message, index) => (
                     <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
                       <div className={`rounded-lg p-3 inline-block max-w-[80%] ${
-                        message.role === 'assistant' ? 'bg-gray-100 prose prose-sm max-w-none' : 'bg-blue-500 text-white'
-                      }`}>
+                        message.role === 'assistant' 
+                          ? `${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} prose prose-sm max-w-none` 
+                          : 'text-white'
+                      }`}
+                      style={{
+                        backgroundColor: message.role === 'user' ? config.userMessageColor : undefined
+                      }}>
                         {message.role === 'assistant' ? (
                           <ReactMarkdown>{message.content}</ReactMarkdown>
                         ) : (
@@ -266,8 +287,10 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                       type="text"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder="Message..."
-                      className="w-full p-3 pr-10 rounded-lg border focus:outline-none focus:border-blue-500 text-sm"
+                      placeholder={config.messagePlaceholder}
+                      className={`w-full p-3 pr-10 rounded-lg border focus:outline-none focus:border-blue-500 text-sm ${
+                        config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''
+                      }`}
                       disabled={isLoading}
                     />
                     <button 
@@ -279,6 +302,14 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                     </button>
                   </div>
                 </form>
+
+                {/* Footer */}
+                {config.footerText && (
+                  <div className="p-2 text-center text-sm text-gray-500">
+                    <span>Powered by Chatbase.co</span>
+                    <span className="ml-1">{config.footerText}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

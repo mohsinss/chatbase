@@ -308,9 +308,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                   }`}
                 />
               </div>
-              <label 
-                className="text-sm font-medium leading-none"
-              >
+              <label className="text-sm font-medium leading-none">
                 Sync User Message Color with Chatbot Header
               </label>
             </div>
@@ -416,9 +414,19 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
 
         {/* Preview Panel */}
         <Card className="h-full flex flex-col">
-          <div className="p-4 border-b flex items-center justify-between">
+          <div 
+            className="p-4 border-b flex items-center justify-between"
+            style={{
+              backgroundColor: config.syncColors ? config.userMessageColor : undefined,
+              color: config.syncColors ? 'white' : undefined
+            }}
+          >
             <div className="font-medium">{config.displayName}</div>
-            <Button variant="ghost" size="icon">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className={config.syncColors ? 'text-white hover:bg-white/10' : ''}
+            >
               <RefreshCcw className="h-4 w-4" />
             </Button>
           </div>
