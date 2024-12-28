@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import apiClient from "@/libs/api";
-import toast from "react-hot-toast";
+import { IconPlus } from "@tabler/icons-react";
 
-const ButtonCreateTeam = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+// Separate non-interactive content
+const TeamButtonContent = () => (
+  <div className="card-body">
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+        <IconPlus className="w-5 h-5 text-primary" />
+      </div>
+      <div className="text-left">
+        <h2 className="card-title text-lg">Create New Team</h2>
+        <p className="text-sm text-base-content/70">
+          Start collaborating with others
+        </p>
+      </div>
+    </div>
+  </div>
+);
 
+// Interactive button wrapper
+export default function ButtonCreateTeam() {
   const handleCreateTeam = async () => {
-    setIsLoading(true);
     try {
       const response = await fetch("/api/team/create", {
         method: "POST",
@@ -19,40 +30,23 @@ const ButtonCreateTeam = () => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create team");
-      }
+      if (!response.ok) throw new Error("Failed to create team");
 
       const data = await response.json();
-      
-      if (!data.teamId) {
-        throw new Error("No team ID returned from server");
-      }
+      if (!data.teamId) throw new Error("No team ID returned");
 
-      router.push(`/dashboard/${data.teamId}`);
-      toast.success("Team created successfully!");
-      
-    } catch (error: any) {
-      console.error("Create team error:", error);
-      toast.error(error?.message || "Failed to create team");
-    } finally {
-      setIsLoading(false);
+      window.location.href = `/dashboard/${data.teamId}`;
+    } catch (error) {
+      console.error(error);
     }
   };
 
   return (
-    <button 
+    <div 
       onClick={handleCreateTeam}
-      className="btn btn-primary"
-      disabled={isLoading}
+      className="card bg-base-100 hover:bg-base-200 transition-colors border border-base-200 border-dashed cursor-pointer"
     >
-      {isLoading ? (
-        <span className="loading loading-spinner loading-xs"></span>
-      ) : (
-        "Create Team"
-      )}
-    </button>
+      <TeamButtonContent />
+    </div>
   );
-};
-
-export default ButtonCreateTeam; 
+} 
