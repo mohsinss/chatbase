@@ -115,7 +115,7 @@ export default function SecuritySettings({ chatbotId }: SecuritySettingsProps) {
 
           <p className="text-sm text-gray-500">
             Limit the number of messages sent from one device on the iframe and chat bubble
-            (this limit will not be applied to you on chatbase.co, only on your website for
+            (this limit will not be applied to you on chatsa.co, only on your website for
             your users to prevent abuse).
           </p>
 

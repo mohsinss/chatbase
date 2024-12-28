@@ -64,7 +64,7 @@ const EmbedSection = ({ chatbotId }: { chatbotId: string }) => {
 ></iframe>`;
 
   const identityEmbedCode = `<script>
-  window.chatbaseUserConfig = {
+  window.chatsaUserConfig = {
     user_id: "<USER_ID>",
     user_hash: "<USER_HASH>" // this is the hash of the user_id, should be generated on the server
   }
@@ -247,7 +247,7 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
                 </div>
 
                 <div className="space-y-2 text-gray-600">
-                  <p>You&apos;ll need to generate an HMAC on your server for each logged-in user and send it to Chatbase.</p>
+                  <p>You&apos;ll need to generate an HMAC on your server for each logged-in user and send it to Chatsa.</p>
                   <p>You&apos;ll need your secret key to add identity verification to your site or app.</p>
                 </div>
 

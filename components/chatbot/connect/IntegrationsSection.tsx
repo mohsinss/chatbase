@@ -66,7 +66,7 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
     },
     {
       title: "Wordpress",
-      description: "Use the official Chatbase plugin for Wordpress to add the chat widget to your website.",
+      description: "Use the official Chatsa plugin for Wordpress to add the chat widget to your website.",
       icon: "/integrations/wordpress.svg",
       onClick: () => handleConnect("wordpress")
     },

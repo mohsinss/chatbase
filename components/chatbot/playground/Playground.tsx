@@ -310,7 +310,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                 {/* Footer */}
                 {config.footerText && (
                   <div className="p-2 text-center text-sm text-gray-500">
-                    <span>Powered by Chatbase.co</span>
+                    <span>Powered by Chatsa.co</span>
                     <span className="ml-1">{config.footerText}</span>
                   </div>
                 )}

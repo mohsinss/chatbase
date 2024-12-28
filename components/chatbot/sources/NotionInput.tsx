@@ -67,8 +67,8 @@ const NotionInput = ({ onConnect }: NotionInputProps) => {
             <DialogDescription className="text-gray-600 space-y-4">
               <p>
                 Please note that the pages you select will affect the Notion pages
-                Chatbase has access to across all your chatbots, as well as any
-                other Chatbase accounts connected to the same Notion account.
+                Chatsa has access to across all your chatbots, as well as any
+                other Chatsa accounts connected to the same Notion account.
               </p>
               <p>
                 If you have any previously selected pages for other active
