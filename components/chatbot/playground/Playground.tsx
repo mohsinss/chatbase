@@ -22,6 +22,12 @@ interface PlaygroundProps {
   };
 }
 
+const InfoTooltip = ({ content }: { content: string }) => (
+  <div className="absolute left-0 top-full mt-1 w-64 p-3 bg-white border text-sm text-gray-600 rounded-md shadow-lg z-50">
+    {content}
+  </div>
+);
+
 const Playground = ({ chatbot }: PlaygroundProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -29,6 +35,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
   const [conversationId, setConversationId] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showPlaygroundInfo, setShowPlaygroundInfo] = useState(false);
 
   // Create new conversation on mount
   useEffect(() => {
@@ -163,10 +170,21 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
       {/* Playground header - moved outside */}
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold flex items-center">
-            Playground
-            <span className="ml-1 inline-flex w-4 h-4 rounded-full border text-xs items-center justify-center">ⓘ</span>
-          </h1>
+          <div className="relative">
+            <h1 className="text-2xl font-bold flex items-center">
+              Playground
+              <button
+                className="ml-1 text-gray-400 text-lg"
+                onMouseEnter={() => setShowPlaygroundInfo(true)}
+                onMouseLeave={() => setShowPlaygroundInfo(false)}
+              >
+                ⓘ
+              </button>
+            </h1>
+            {showPlaygroundInfo && (
+              <InfoTooltip content="Test and experiment with your chatbot's settings in real-time. Changes made here won't affect your live chatbot until you save them." />
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button className="px-4 py-1.5 border rounded-lg text-sm">Compare</button>
@@ -187,7 +205,11 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
           <div className={`w-[400px] transition-all duration-300 ${
             isSettingsOpen ? 'mr-4' : '-ml-[400px]'
           }`}>
-            <ChatSettings isVisible={isSettingsOpen} onToggle={() => setIsSettingsOpen(false)} />
+            <ChatSettings 
+              isVisible={isSettingsOpen} 
+              onToggle={() => setIsSettingsOpen(false)}
+              chatbotId={chatbot.id}
+            />
           </div>
 
           {/* Chat Container */}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CustomNotification } from '@/components/ui/notification';
+import { CustomNotification } from './GeneralSettings'
 
 interface LeadsSettingsProps {
   chatbotId: string;

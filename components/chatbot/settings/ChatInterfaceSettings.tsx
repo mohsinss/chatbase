@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { RefreshCcw, Bold, Italic, Underline, Link2, Undo2, Redo2, AlignLeft, AlignCenter, AlignRight, Send } from 'lucide-react'
 import { HexColorPicker } from "react-colorful"
-import { CustomNotification } from '@/components/ui/notification'
+import { CustomNotification } from './GeneralSettings'
 
 interface ChatConfig {
   initialMessage: string
