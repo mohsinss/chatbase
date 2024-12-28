@@ -4,9 +4,19 @@ import React, { useState, useEffect, ChangeEvent } from "react"
 import { Copy } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader,
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
 
 interface GeneralSettingsProps {
   chatbotId: string;
+  teamId: string;
 }
 
 type NotificationType = {
@@ -30,7 +40,8 @@ export const CustomNotification = ({ message, type, onClose }: NotificationType 
   </div>
 );
 
-const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
+const GeneralSettings = ({ chatbotId, teamId }: GeneralSettingsProps) => {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [characterCount, setCharacterCount] = useState(0);
   const [creditLimit, setCreditLimit] = useState(false);
@@ -40,6 +51,7 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
     message: string;
     type: 'success' | 'error';
   } | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -123,6 +135,41 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
     } catch (error) {
       console.error('Error updating chatbot name:', error);
     }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/chatbot/delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chatbotId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete chatbot");
+      }
+
+      setNotification({
+        message: "Chatbot deleted successfully",
+        type: "success"
+      });
+
+      // Navigate back to the chatbots list after successful deletion
+      setTimeout(() => {
+        router.push(`/dashboard/${teamId}`);
+      }, 1000);
+
+    } catch (error) {
+      setNotification({
+        message: "Failed to delete chatbot",
+        type: "error"
+      });
+    }
+    setIsDeleteDialogOpen(false);
   };
 
   return (
@@ -255,12 +302,42 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
                     All your uploaded data will be deleted. <span className="font-semibold">This action is not reversible</span>
                   </p>
                 </div>
-                <Button variant="destructive">Delete</Button>
+                <Button 
+                  variant="destructive"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  Delete
+                </Button>
               </div>
             </div>
           </Card>
         </div>
       </div>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Chatbot</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this chatbot? This action cannot be undone and all associated data will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+            >
+              Delete Permanently
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

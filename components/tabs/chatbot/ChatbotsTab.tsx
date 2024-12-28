@@ -115,7 +115,7 @@ const ChatbotsTab = () => {
                       {chatbot.sources?.length || 0} sources
                     </p>
                   </div>
-                  <div className="badge badge-primary">xxActive</div>
+                  <div className="badge badge-primary">Active</div>
                 </div>
                 
                 <div className="card-actions justify-end mt-4">
