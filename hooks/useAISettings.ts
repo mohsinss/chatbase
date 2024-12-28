@@ -5,6 +5,7 @@ interface AISettingsType {
   temperature: number;
   systemPrompt: string;
   maxTokens: number;
+  displayName: string;
 }
 
 export const useAISettings = (chatbotId: string) => {
@@ -13,6 +14,7 @@ export const useAISettings = (chatbotId: string) => {
     temperature: 0.7,
     systemPrompt: "",
     maxTokens: 500,
+    displayName: "Chatbot"
   });
   const [loading, setLoading] = useState(true);
   const [availableModels] = useState([
@@ -25,50 +27,64 @@ export const useAISettings = (chatbotId: string) => {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(`/api/chatbot/ai-settings?chatbotId=${chatbotId}`);
-      const data = await response.json();
-      
-      if (data) {
-        setSettings({
-          model: data.model ?? "gpt-3.5-turbo",
-          temperature: data.temperature ?? 0.7,
-          systemPrompt: data.systemPrompt ?? "",
-          maxTokens: data.maxTokens ?? 500,
-        });
-      }
+      const [aiResponse, interfaceResponse] = await Promise.all([
+        fetch(`/api/chatbot/ai-settings?chatbotId=${chatbotId}`),
+        fetch(`/api/chatbot/interface-settings?chatbotId=${chatbotId}`)
+      ]);
+
+      const aiData = await aiResponse.json();
+      const interfaceData = await interfaceResponse.json();
+
+      setSettings(prev => ({
+        ...prev,
+        ...aiData,
+        displayName: interfaceData.displayName || prev.displayName
+      }));
     } catch (error) {
-      console.error("Failed to fetch AI settings:", error);
-    } finally {
-      setLoading(false);
+      console.error('Failed to fetch settings:', error);
     }
   };
 
-  const saveSettings = async (newSettings: Partial<AISettingsType>) => {
+  const saveSettings = async (newSettings: AISettingsType) => {
     try {
-      const response = await fetch("/api/chatbot/ai-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chatbotId,
-          ...settings,
-          ...newSettings,
+      const [aiResponse, interfaceResponse] = await Promise.all([
+        fetch('/api/chatbot/ai-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chatbotId,
+            model: newSettings.model,
+            temperature: newSettings.temperature,
+            systemPrompt: newSettings.systemPrompt,
+            maxTokens: newSettings.maxTokens
+          })
         }),
-      });
+        fetch('/api/chatbot/interface-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chatbotId,
+            displayName: newSettings.displayName
+          })
+        })
+      ]);
 
-      if (!response.ok) {
+      if (!aiResponse.ok || !interfaceResponse.ok) {
         throw new Error('Failed to save settings');
       }
 
-      setSettings(prev => ({ ...prev, ...newSettings }));
+      setSettings(newSettings);
       return true;
     } catch (error) {
-      console.error("Failed to save settings:", error);
+      console.error('Failed to save settings:', error);
       return false;
     }
   };
 
   useEffect(() => {
-    fetchSettings();
+    if (chatbotId) {
+      fetchSettings();
+    }
   }, [chatbotId]);
 
   return { 

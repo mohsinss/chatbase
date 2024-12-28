@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { RefreshCcw, Bold, Italic, Underline, Link2, Undo2, Redo2, AlignLeft, AlignCenter, AlignRight, Send } from 'lucide-react'
 import { HexColorPicker } from "react-colorful"
 import { CustomNotification } from './GeneralSettings'
+import { Input } from "@/components/ui/input"
 
 interface ChatConfig {
   initialMessage: string
@@ -265,9 +266,11 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Display Name
             </label>
-            <input 
+            <Input 
               value={config.displayName}
               onChange={(e) => handleConfigChange('displayName', e.target.value)}
+              className="flex h-10 w-full max-w-xl"
+              placeholder="Enter chatbot name"
             />
           </div>
 

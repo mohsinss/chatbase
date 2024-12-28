@@ -38,7 +38,10 @@ const InfoTooltip = ({ content }: { content: string }) => (
 export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsProps) => {
   const { settings, saveSettings, availableModels } = useAISettings(chatbotId);
   const [isSaving, setIsSaving] = useState(false);
-  const [localSettings, setLocalSettings] = useState(settings);
+  const [localSettings, setLocalSettings] = useState({
+    ...settings,
+    displayName: settings?.displayName || "Chatbot"
+  });
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [notification, setNotification] = useState<NotificationType | null>(null);
   const [tooltips, setTooltips] = useState({
@@ -119,6 +122,22 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsPro
                 <span className="text-gray-700">Trained</span>
               </div>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700 font-medium">Display Name</span>
+            </div>
+            <input
+              type="text"
+              value={localSettings.displayName}
+              onChange={(e) => setLocalSettings(prev => ({ 
+                ...prev, 
+                displayName: e.target.value 
+              }))}
+              className="w-full p-2.5 border rounded-lg bg-white text-gray-700"
+              placeholder="Enter chatbot name"
+            />
           </div>
 
           <div className="space-y-2 relative">

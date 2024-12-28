@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import ChatbotInterfaceSettings from "@/models/ChatbotInterfaceSettings";
+import Chatbot from "@/models/Chatbot";
 
 export async function GET(req: Request) {
   try {
@@ -23,17 +24,23 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
     const body = await req.json();
-    const { chatbotId, roundedHeaderCorners, roundedChatCorners, ...otherSettings } = body;
+    const { chatbotId, displayName, ...otherSettings } = body;
 
     const settings = await ChatbotInterfaceSettings.findOneAndUpdate(
       { chatbotId },
       { 
-        roundedHeaderCorners,
-        roundedChatCorners,
+        displayName,
         ...otherSettings 
       },
       { upsert: true, new: true }
     );
+
+    if (displayName) {
+      await Chatbot.findOneAndUpdate(
+        { chatbotId },
+        { name: displayName }
+      );
+    }
 
     return NextResponse.json(settings);
   } catch (error) {
