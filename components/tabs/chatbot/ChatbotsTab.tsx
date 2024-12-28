@@ -18,28 +18,41 @@ interface Chatbot {
 const ChatbotsTab = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const teamId = pathname.split('/')[2]; // Get teamId from URL
+  const teamId = pathname.split('/')[2];
   const [chatbots, setChatbots] = useState<Chatbot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchChatbots = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/chatbot/list?teamId=${teamId}&t=${Date.now()}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch chatbots');
-        }
-        const data = await response.json();
-        setChatbots(data.chatbots || []);
-      } catch (error) {
-        console.error("Failed to fetch chatbots:", error);
-      } finally {
-        setIsLoading(false);
+  const fetchChatbots = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/chatbot/list?teamId=${teamId}&t=${Date.now()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch chatbots');
       }
-    };
+      const data = await response.json();
+      setChatbots(data.chatbots || []);
+    } catch (error) {
+      console.error("Failed to fetch chatbots:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  const refreshChatbots = async () => {
+    try {
+      const response = await fetch(`/api/chatbot/list?teamId=${teamId}&t=${Date.now()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch chatbots');
+      }
+      const data = await response.json();
+      setChatbots(data.chatbots || []);
+    } catch (error) {
+      console.error("Failed to fetch chatbots:", error);
+    }
+  };
+
+  useEffect(() => {
     if (teamId) {
       fetchChatbots();
     }
@@ -102,7 +115,7 @@ const ChatbotsTab = () => {
                       {chatbot.sources?.length || 0} sources
                     </p>
                   </div>
-                  <div className="badge badge-primary">Active</div>
+                  <div className="badge badge-primary">xxActive</div>
                 </div>
                 
                 <div className="card-actions justify-end mt-4">
@@ -133,7 +146,11 @@ const ChatbotsTab = () => {
 
       <Dialog open={isCreateModalOpen} onOpenChange={handleCreateModalClose}>
         <DialogContent className="max-w-2xl">
-          <ConfigPanel onClose={handleCreateModalClose} teamId={teamId} />
+          <ConfigPanel 
+            onClose={handleCreateModalClose} 
+            teamId={teamId} 
+            onSuccess={refreshChatbots}
+          />
         </DialogContent>
       </Dialog>
     </div>

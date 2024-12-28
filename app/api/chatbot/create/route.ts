@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { teamId, sources } = await req.json();
+    const { teamId, sources, name } = await req.json();
     const chatbotId = nanoid();
 
     await connectMongo();
@@ -21,11 +21,15 @@ export async function POST(req: Request) {
     const chatbot = await Chatbot.create({
       chatbotId,
       teamId,
+      name: name || `Chatbot ${new Date().toLocaleString()}`,
       sources,
       createdBy: session.user.id
     });
 
-    return NextResponse.json({ chatbotId: chatbot.chatbotId });
+    return NextResponse.json({ 
+      chatbotId: chatbot.chatbotId,
+      name: chatbot.name 
+    });
 
   } catch (error: any) {
     console.error("Chatbot creation error:", error);
