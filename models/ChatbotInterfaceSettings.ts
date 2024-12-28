@@ -61,6 +61,14 @@ const ChatbotInterfaceSettingsSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    roundedHeaderCorners: {
+      type: Boolean,
+      default: false,
+    },
+    roundedChatCorners: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

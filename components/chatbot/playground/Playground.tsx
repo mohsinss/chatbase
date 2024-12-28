@@ -226,12 +226,14 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                 </button>
               )}
 
-              <div className={`bg-white rounded-lg shadow-sm border ${
+              <div className={`bg-white shadow-sm border ${
                 config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
-              }`}>
+              } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
                 {/* Chat Header */}
                 <div 
-                  className="flex items-center justify-between p-3 border-b"
+                  className={`flex items-center justify-between p-3 border-b ${
+                    config.roundedHeaderCorners ? 'rounded-t-xl' : ''
+                  }`}
                   style={{
                     backgroundColor: config.syncColors ? config.userMessageColor : undefined,
                     color: config.syncColors ? 'white' : undefined
@@ -253,15 +255,17 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                 {/* Chat Messages */}
                 <div className="h-[calc(100vh-280px)] overflow-y-auto p-4">
                   {messages.length === 0 && (
-                    <div className={`text-gray-500 p-4 rounded-lg ${
-                      config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
-                    }`}>
+                    <div className={`text-gray-500 p-4 ${
+                      config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                    } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
                       {config.initialMessage}
                     </div>
                   )}
                   {messages.map((message, index) => (
                     <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                      <div className={`rounded-lg p-3 inline-block max-w-[80%] ${
+                      <div className={`p-3 inline-block max-w-[80%] ${
+                        config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                      } ${
                         message.role === 'assistant' 
                           ? `${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} prose prose-sm max-w-none` 
                           : 'text-white'
@@ -288,9 +292,9 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       placeholder={config.messagePlaceholder}
-                      className={`w-full p-3 pr-10 rounded-lg border focus:outline-none focus:border-blue-500 text-sm ${
-                        config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''
-                      }`}
+                      className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${
+                        config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
+                      } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}
                       disabled={isLoading}
                     />
                     <button 

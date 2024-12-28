@@ -8,6 +8,8 @@ interface ChatConfig {
   displayName: string;
   footerText: string;
   syncColors: boolean;
+  roundedHeaderCorners: boolean;
+  roundedChatCorners: boolean;
 }
 
 export const useChatInterfaceSettings = (chatbotId: string) => {
@@ -19,11 +21,9 @@ export const useChatInterfaceSettings = (chatbotId: string) => {
     displayName: "Chatbot",
     footerText: "",
     syncColors: false,
+    roundedHeaderCorners: false,
+    roundedChatCorners: false,
   });
-
-  useEffect(() => {
-    fetchSettings();
-  }, [chatbotId]);
 
   const fetchSettings = async () => {
     try {
@@ -41,5 +41,38 @@ export const useChatInterfaceSettings = (chatbotId: string) => {
     }
   };
 
-  return { config };
+  const saveSettings = async (newSettings: Partial<ChatConfig>) => {
+    try {
+      const response = await fetch("/api/chatbot/interface-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chatbotId,
+          ...config,
+          ...newSettings,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save settings');
+      }
+
+      setConfig(prev => ({ ...prev, ...newSettings }));
+      return true;
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    fetchSettings();
+  }, [chatbotId]);
+
+  return { 
+    config, 
+    setConfig, 
+    saveSettings,
+    fetchSettings 
+  };
 }; 

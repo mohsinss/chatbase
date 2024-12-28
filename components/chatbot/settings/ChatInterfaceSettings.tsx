@@ -21,6 +21,8 @@ interface ChatConfig {
   theme: 'light' | 'dark'
   displayName: string
   footerText: string
+  roundedHeaderCorners: boolean
+  roundedChatCorners: boolean
 }
 
 interface ChatInterfaceSettingsProps {
@@ -41,7 +43,9 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     autoShowDelay: 3,
     theme: 'light',
     displayName: "Chatbot",
-    footerText: ""
+    footerText: "",
+    roundedHeaderCorners: false,
+    roundedChatCorners: false
   })
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{
@@ -338,6 +342,44 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 </Button>
               </div>
             </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <div
+                  className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                    config.roundedHeaderCorners ? 'bg-primary' : 'bg-input'
+                  }`}
+                  onClick={() => handleConfigChange('roundedHeaderCorners', !config.roundedHeaderCorners)}
+                >
+                  <span
+                    className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
+                      config.roundedHeaderCorners ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </div>
+                <label className="text-sm font-medium leading-none">
+                  Rounded Header Corners
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <div
+                  className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                    config.roundedChatCorners ? 'bg-primary' : 'bg-input'
+                  }`}
+                  onClick={() => handleConfigChange('roundedChatCorners', !config.roundedChatCorners)}
+                >
+                  <span
+                    className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
+                      config.roundedChatCorners ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </div>
+                <label className="text-sm font-medium leading-none">
+                  Rounded Chat Corners
+                </label>
+              </div>
+            </div>
           </div>
 
           {/* Alignment Control */}
@@ -415,7 +457,9 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         {/* Preview Panel */}
         <Card className="h-full flex flex-col">
           <div 
-            className="p-4 border-b flex items-center justify-between"
+            className={`p-4 border-b flex items-center justify-between ${
+              config.roundedHeaderCorners ? 'rounded-t-xl' : ''
+            }`}
             style={{
               backgroundColor: config.syncColors ? config.userMessageColor : undefined,
               color: config.syncColors ? 'white' : undefined
@@ -432,11 +476,15 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           </div>
 
           <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-            <div className="bg-gray-100 p-3 rounded-lg max-w-[80%]">
+            <div className={`bg-gray-100 p-3 ${
+              config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+            } max-w-[80%]`}>
               {config.initialMessage}
             </div>
             <div 
-              className="ml-auto p-3 rounded-lg max-w-[80%] text-white"
+              className={`ml-auto p-3 ${
+                config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+              } max-w-[80%] text-white`}
               style={{ backgroundColor: config.userMessageColor }}
             >
               Hello
@@ -448,9 +496,11 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
               <input 
                 type="text"
                 placeholder={config.messagePlaceholder}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`flex h-10 w-full border border-input bg-background px-3 py-2 text-sm ${
+                  config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
+                }`}
               />
-              <Button size="icon">
+              <Button size="icon" className={config.roundedChatCorners ? 'rounded-lg' : ''}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
