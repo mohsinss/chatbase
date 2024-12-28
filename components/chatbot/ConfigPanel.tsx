@@ -5,7 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 
-const ConfigPanel = ({ teamId }: { teamId: string }) => {
+interface ConfigPanelProps {
+  onClose?: () => void;
+  teamId: string;
+}
+
+const ConfigPanel = ({ onClose, teamId }: ConfigPanelProps) => {
   const router = useRouter();
 
   const handleCreateChatbot = async () => {
@@ -38,6 +43,8 @@ const ConfigPanel = ({ teamId }: { teamId: string }) => {
       // Navigate to the new chatbot page
       router.push(`/dashboard/${teamId}/chatbot/${data.chatbotId}`);
       toast.success("Chatbot created successfully!");
+      
+      onClose?.();
       
     } catch (error: any) {
       console.error('Failed to create chatbot:', error);

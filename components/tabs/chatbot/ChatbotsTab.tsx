@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { IconMessage, IconPlus } from "@tabler/icons-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import ConfigPanel from "@/components/chatbot/ConfigPanel";
 
 interface Chatbot {
   chatbotId: string;
@@ -19,6 +21,7 @@ const ChatbotsTab = () => {
   const teamId = pathname.split('/')[2]; // Get teamId from URL
   const [chatbots, setChatbots] = useState<Chatbot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchChatbots = async () => {
@@ -43,7 +46,11 @@ const ChatbotsTab = () => {
   }, [teamId]);
 
   const handleNewChatbot = () => {
-    router.push(`/dashboard/${teamId}/create-new-chatbot`);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateModalClose = () => {
+    setIsCreateModalOpen(false);
   };
 
   if (isLoading) {
@@ -123,6 +130,12 @@ const ChatbotsTab = () => {
           ))}
         </div>
       )}
+
+      <Dialog open={isCreateModalOpen} onOpenChange={handleCreateModalClose}>
+        <DialogContent className="max-w-2xl">
+          <ConfigPanel onClose={handleCreateModalClose} teamId={teamId} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
