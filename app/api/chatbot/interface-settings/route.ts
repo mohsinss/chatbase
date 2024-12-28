@@ -1,53 +1,46 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/libs/mongoose";
+import dbConnect from "@/lib/dbConnect";
 import ChatbotInterfaceSettings from "@/models/ChatbotInterfaceSettings";
 
 export async function GET(req: Request) {
   try {
-    await connectDB();
+    await dbConnect();
     const { searchParams } = new URL(req.url);
     const chatbotId = searchParams.get("chatbotId");
-
-    if (!chatbotId) {
-      return NextResponse.json({ error: "Chatbot ID is required" }, { status: 400 });
-    }
 
     const settings = await ChatbotInterfaceSettings.findOne({ chatbotId });
     return NextResponse.json(settings || {});
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
+    console.error("Error fetching interface settings:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch interface settings" },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(req: Request) {
   try {
-    await connectDB();
+    await dbConnect();
     const body = await req.json();
-    const { chatbotId, ...settings } = body;
+    const { chatbotId, roundedHeaderCorners, roundedChatCorners, ...otherSettings } = body;
 
-    if (!chatbotId) {
-      return NextResponse.json({ error: "Chatbot ID is required" }, { status: 400 });
-    }
-
-    const updatedSettings = await ChatbotInterfaceSettings.findOneAndUpdate(
+    const settings = await ChatbotInterfaceSettings.findOneAndUpdate(
       { chatbotId },
-      {
-        chatbotId,
-        initialMessage: settings.initialMessage,
-        messagePlaceholder: settings.messagePlaceholder,
-        userMessageColor: settings.userMessageColor,
-        theme: settings.theme,
-        displayName: settings.displayName,
-        footerText: settings.footerText,
-        syncColors: settings.syncColors,
-        roundedHeaderCorners: settings.roundedHeaderCorners,
-        roundedChatCorners: settings.roundedChatCorners,
+      { 
+        roundedHeaderCorners,
+        roundedChatCorners,
+        ...otherSettings 
       },
       { upsert: true, new: true }
     );
 
-    return NextResponse.json(updatedSettings);
+    return NextResponse.json(settings);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to save settings" }, { status: 500 });
+    console.error("Error saving interface settings:", error);
+    return NextResponse.json(
+      { error: "Failed to save interface settings" },
+      { status: 500 }
+    );
   }
 } 
