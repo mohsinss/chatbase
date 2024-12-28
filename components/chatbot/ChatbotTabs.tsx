@@ -53,7 +53,7 @@ const TABS: ReadonlyArray<Tab> = [
   },
   { id: "sources", label: "Sources" },
   { id: "actions", label: "Actions", badge: "New" },
-  { id: "connect", label: "Connect" },
+  { id: "connect", label: "Connect", defaultSubRoute: "embed" },
   { 
     id: "settings", 
     label: "Settings",
@@ -87,6 +87,10 @@ const ChatbotTabs = ({
 
     if ('defaultSubRoute' in tab && tab.defaultSubRoute) {
       return `/dashboard/${teamId}/chatbot/${chatbotId}/${tab.id}/${tab.defaultSubRoute}`;
+    }
+    
+    if (tab.id === 'connect') {
+      return `/dashboard/${teamId}/chatbot/${chatbotId}/${tab.id}/embed`;
     }
     
     return `/dashboard/${teamId}/chatbot/${chatbotId}/${tab.id}`;

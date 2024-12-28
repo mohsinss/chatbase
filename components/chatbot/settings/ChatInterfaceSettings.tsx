@@ -508,7 +508,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
               </Button>
             </div>
             <div className="mt-2 text-center text-sm text-gray-500 flex items-center justify-center gap-1">
-              <span>Powered By Chatbase.co</span>
+              <span>Powered By ChatSA.co</span>
               <span>{config.footerText}</span>
             </div>
           </div>
