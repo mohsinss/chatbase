@@ -153,6 +153,7 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
                 <option value="ja">Japanese</option>
                 <option value="ko">Korean</option>
                 <option value="zh">Chinese</option>
+                <option value="ar">Arabic</option>
               </select>
               <p className="text-sm text-gray-500">Select the language for AI responses</p>
             </div>

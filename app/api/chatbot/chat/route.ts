@@ -31,15 +31,17 @@ export async function POST(req: NextRequest) {
     const openAIModel = MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
-    const systemPrompt = aiSettings?.systemPrompt || 'You are a helpful AI assistant.';
+    const language = aiSettings?.language || 'en';
+    const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} Please respond in ${language}.`;
 
-    console.log('API Route - Using model:', {
+    console.log('API Route - Using settings:', {
       chatbotId,
       internalModel,
       openAIModel,
       temperature,
       maxTokens,
       systemPrompt,
+      language,
       fromDatabase: !!aiSettings
     });
 

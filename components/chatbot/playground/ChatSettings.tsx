@@ -45,12 +45,14 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsPro
     model: false,
     temperature: false,
     maxTokens: false,
+    language: false,
   });
 
   const tooltipContent = {
-    model: "Choose the AI model that powers your chatbot. Each model has different capabilities and pricing. More powerful models can handle complex tasks better but cost more credits.",
-    temperature: "Adjust the creativity level of responses. Lower values (more reserved) give consistent, focused outputs. Higher values (more creative) produce more varied, imaginative responses.",
-    maxTokens: "Set the maximum length of responses. One token is roughly 4 characters or 3/4 of a word. Longer responses require more tokens. Adjust based on your needs for concise or detailed answers.",
+    model: "Choose the AI model that powers your chatbot. Each model has different capabilities and pricing.",
+    temperature: "Adjust the creativity level of responses. Lower values give consistent outputs.",
+    maxTokens: "Set the maximum length of responses. One token is roughly 4 characters.",
+    language: "Select the language for AI responses. This will affect how the AI communicates."
   };
 
   // Update local settings when server settings change
@@ -119,6 +121,41 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsPro
                 <span className="text-gray-700">Trained</span>
               </div>
             </div>
+          </div>
+
+          <div className="space-y-2 relative">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700 font-medium">Response Language</span>
+              <div className="relative">
+                <button 
+                  className="text-gray-400 text-lg"
+                  onMouseEnter={() => setTooltips(prev => ({ ...prev, language: true }))}
+                  onMouseLeave={() => setTooltips(prev => ({ ...prev, language: false }))}
+                >
+                  ⓘ
+                </button>
+                {tooltips.language && <InfoTooltip content={tooltipContent.language} />}
+              </div>
+            </div>
+            <select
+              value={localSettings.language}
+              onChange={(e) => setLocalSettings(prev => ({ ...prev, language: e.target.value }))}
+              className="w-full p-2.5 border rounded-lg bg-white text-gray-700"
+            >
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="it">Italian</option>
+              <option value="pt">Portuguese</option>
+              <option value="nl">Dutch</option>
+              <option value="pl">Polish</option>
+              <option value="ru">Russian</option>
+              <option value="ja">Japanese</option>
+              <option value="ko">Korean</option>
+              <option value="zh">Chinese</option>
+              <option value="ar">Arabic</option>
+            </select>
           </div>
 
           <div className="space-y-2 relative">

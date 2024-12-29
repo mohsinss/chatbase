@@ -4,6 +4,7 @@ import { IconSend, IconRefresh } from "@tabler/icons-react";
 import ReactMarkdown from 'react-markdown';
 import { ChatSettings } from './ChatSettings';
 import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings';
+import { useAISettings } from '@/hooks/useAISettings';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -19,6 +20,7 @@ interface PlaygroundProps {
       temperature?: number;
       maxTokens?: number;
       systemPrompt?: string;
+      language?: string;
     };
   };
 }
@@ -38,6 +40,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showPlaygroundInfo, setShowPlaygroundInfo] = useState(false);
   const { config } = useChatInterfaceSettings(chatbot.id);
+  const { settings: aiSettings } = useAISettings(chatbot.id);
 
   // Create new conversation on mount
   useEffect(() => {
@@ -115,6 +118,11 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
         body: JSON.stringify({
           messages: [...messages, userMessage],
           chatbotId: chatbot.id,
+          language: aiSettings?.language || 'en',
+          model: aiSettings?.model,
+          temperature: aiSettings?.temperature,
+          maxTokens: aiSettings?.maxTokens,
+          systemPrompt: aiSettings?.systemPrompt
         }),
       });
 
