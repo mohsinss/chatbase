@@ -123,8 +123,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete }: DatasetListProps) =
 
   return (
     <div className="mt-8">
-                <h2 className="text-xl font-semibold">Uploaded Files</h2>
-
+        
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Uploaded Files</h2>
         <button
