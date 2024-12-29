@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { cn } from "@/libs/utils";
@@ -13,7 +15,7 @@ const menuItems = [
 
 export function SettingsMenu() {
   const params = useParams();
-  const currentTab = params.tab as string;
+  const currentTab = params.subtab as string;
 
   return (
     <div className="w-64 space-y-1">
