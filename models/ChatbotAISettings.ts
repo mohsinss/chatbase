@@ -45,10 +45,21 @@ const ChatbotAISettingsSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    language: {
+      type: String,
+      required: true,
+      enum: ['en', 'es', 'fr', 'de', 'it', 'pt', 'nl', 'pl', 'ru', 'ja', 'ko', 'zh'],
+      default: 'en'
+    },
   },
   {
     timestamps: true,
+    strict: true
   }
 );
 
-export default mongoose.models.ChatbotAISettings || mongoose.model("ChatbotAISettings", ChatbotAISettingsSchema); 
+if (mongoose.models.ChatbotAISettings) {
+  delete mongoose.models.ChatbotAISettings;
+}
+
+export default mongoose.model("ChatbotAISettings", ChatbotAISettingsSchema); 

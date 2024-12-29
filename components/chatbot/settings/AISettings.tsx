@@ -41,6 +41,7 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
     message: string;
     type: 'success' | 'error';
   } | null>(null);
+  const [language, setLanguage] = useState("en")
 
   useEffect(() => {
     fetchSettings();
@@ -59,6 +60,7 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
         setKnowledgeCutoff(data.knowledgeCutoff ?? "");
         setMaxTokens(data.maxTokens ?? 500);
         setContextWindow(data.contextWindow ?? 16000);
+        setLanguage(data.language ?? "en");
       }
     } catch (error) {
       console.error("Fetch error:", error);
@@ -80,6 +82,7 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
         knowledgeCutoff,
         maxTokens,
         contextWindow,
+        language,
         topP: 1,
         frequencyPenalty: 0,
         presencePenalty: 0
@@ -129,6 +132,31 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
       <div className="w-full max-w-3xl mx-auto space-y-8">
         <Card className="p-6 space-y-6">
           <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Language
+              </label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="flex h-10 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="it">Italian</option>
+                <option value="pt">Portuguese</option>
+                <option value="nl">Dutch</option>
+                <option value="pl">Polish</option>
+                <option value="ru">Russian</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="zh">Chinese</option>
+              </select>
+              <p className="text-sm text-gray-500">Select the language for AI responses</p>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Model

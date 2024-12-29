@@ -1,26 +1,23 @@
 import type { Config } from 'tailwindcss'
 
-const config: Config = {
-  darkMode: ["class"],
+const config = {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./styles/globals.css",
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: ['class'],
   theme: {
-    extend: {
-      // ... rest of your theme config stays exactly the same
-    }
+    extend: {},
   },
   plugins: [
-    require("daisyui"),
-    require("tailwindcss-animate"),
-    require('@tailwindcss/typography')
+    require('daisyui'),
+    require('tailwindcss-animate'),
+    require('@tailwindcss/typography'),
   ],
   daisyui: {
-    themes: ["light", "dark"],
+    themes: ['light', 'dark'],
   },
-}
+} satisfies Config
 
 export default config 
