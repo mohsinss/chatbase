@@ -1,25 +1,46 @@
-import { SettingsMenu } from "./SettingsMenu";
+"use client";
 
-const SettingsTab = () => {
+import { useParams } from "next/navigation";
+import { SettingsMenu } from "./SettingsMenu";
+import GeneralSettings from "./GeneralSettings";
+import { MembersSettings } from "./MembersSettings";
+import { PlansSettings } from "./PlansSettings";
+import { BillingSettings } from "./BillingSettings";
+import { ApiKeysSettings } from "./ApiKeysSettings";
+import { OpenAISettings } from "./OpenAISettings";
+
+interface SettingsTabProps {
+  teamId: string;
+}
+
+const SettingsTab = ({ teamId }: SettingsTabProps) => {
+  const params = useParams();
+  const currentSubTab = params.subtab as string || "general";
+
+  const getSettingsComponent = () => {
+    switch (currentSubTab) {
+      case "general":
+        return <GeneralSettings teamId={teamId} />;
+      case "members":
+        return <MembersSettings teamId={teamId} />;
+      case "plans":
+        return <PlansSettings teamId={teamId} />;
+      case "billing":
+        return <BillingSettings teamId={teamId} />;
+      case "api-keys":
+        return <ApiKeysSettings teamId={teamId} />;
+      case "openai-key":
+        return <OpenAISettings teamId={teamId} />;
+      default:
+        return <GeneralSettings teamId={teamId} />;
+    }
+  };
+
   return (
     <div className="flex gap-8">
       <SettingsMenu />
-      <div className="flex-1 space-y-6">
-        <h2 className="text-2xl font-bold">Settings</h2>
-        <div className="card bg-base-200">
-          <div className="card-body">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">Team Name</span>
-              </label>
-              <input 
-                type="text" 
-                className="input input-bordered w-full max-w-xs" 
-                placeholder="Enter team name"
-              />
-            </div>
-          </div>
-        </div>
+      <div className="flex-1">
+        {getSettingsComponent()}
       </div>
     </div>
   );

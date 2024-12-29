@@ -15,10 +15,13 @@ interface Chatbot {
   sources: any[];
 }
 
-const ChatbotsTab = () => {
+interface ChatbotsTabProps {
+  teamId: string;
+}
+
+const ChatbotsTab = ({ teamId }: ChatbotsTabProps) => {
   const router = useRouter();
   const pathname = usePathname();
-  const teamId = pathname.split('/')[2];
   const [chatbots, setChatbots] = useState<Chatbot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

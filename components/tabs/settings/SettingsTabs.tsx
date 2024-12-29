@@ -1,9 +1,11 @@
-
-
 import { useState } from 'react';
 import GeneralSettings from './GeneralSettings';
 
-const SettingsTabs = () => {
+interface SettingsTabsProps {
+  teamId: string;
+}
+
+const SettingsTabs = ({ teamId }: SettingsTabsProps) => {
   const [activeTab, setActiveTab] = useState('general');
 
   return (
@@ -25,7 +27,7 @@ const SettingsTabs = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 p-6">
-        {activeTab === 'general' && <GeneralSettings />}
+        {activeTab === 'general' && <GeneralSettings teamId={teamId} />}
       </div>
     </div>
   );

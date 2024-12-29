@@ -38,7 +38,11 @@ const mockPieData = [
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#22c55e', '#ef4444', '#f97316'];
 
-const UsageTab = () => {
+interface UsageTabProps {
+  teamId: string;
+}
+
+export default function UsageTab({ teamId }: UsageTabProps) {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -124,6 +128,4 @@ const UsageTab = () => {
       </Card>
     </div>
   );
-};
-
-export default UsageTab; 
+} 
