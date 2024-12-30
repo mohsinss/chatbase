@@ -22,9 +22,8 @@ export async function POST(req: NextRequest) {
     await connectMongo();
     const aiSettings = await ChatbotAISettings.findOne({ 
       chatbotId: chatbotId 
-    });
+    }).lean();
     
-    console.log('Query params:', { chatbotId });
     console.log('Found settings:', aiSettings);
 
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
@@ -32,7 +31,8 @@ export async function POST(req: NextRequest) {
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
     const language = aiSettings?.language || 'en';
-    const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} Please respond in ${language}.`;
+
+    const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
 
     console.log('API Route - Using settings:', {
       chatbotId,

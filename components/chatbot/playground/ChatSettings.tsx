@@ -1,6 +1,7 @@
 import { IconRefresh } from "@tabler/icons-react";
 import { useAISettings } from '@/hooks/useAISettings';
 import React, { useState, useEffect } from 'react';
+import { SUPPORTED_LANGUAGES } from '../settings/AISettings';
 
 interface ChatSettingsProps {
   isVisible: boolean;
@@ -63,7 +64,11 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsPro
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const success = await saveSettings(localSettings);
+      const success = await saveSettings({
+        ...localSettings,
+        language: localSettings.language || 'en'
+      });
+      
       if (success) {
         setNotification({
           message: "Settings saved successfully",
@@ -142,19 +147,11 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsPro
               onChange={(e) => setLocalSettings(prev => ({ ...prev, language: e.target.value }))}
               className="w-full p-2.5 border rounded-lg bg-white text-gray-700"
             >
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="it">Italian</option>
-              <option value="pt">Portuguese</option>
-              <option value="nl">Dutch</option>
-              <option value="pl">Polish</option>
-              <option value="ru">Russian</option>
-              <option value="ja">Japanese</option>
-              <option value="ko">Korean</option>
-              <option value="zh">Chinese</option>
-              <option value="ar">Arabic</option>
+              {SUPPORTED_LANGUAGES.map(lang => (
+                <option key={lang.value} value={lang.value}>
+                  {lang.label}
+                </option>
+              ))}
             </select>
           </div>
 

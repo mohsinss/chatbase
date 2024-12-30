@@ -40,7 +40,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showPlaygroundInfo, setShowPlaygroundInfo] = useState(false);
   const { config } = useChatInterfaceSettings(chatbot.id);
-  const { settings: aiSettings } = useAISettings(chatbot.id);
+  const { settings: aiSettings, fetchSettings } = useAISettings(chatbot.id);
 
   // Create new conversation on mount
   useEffect(() => {
@@ -57,6 +57,11 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Add effect to refetch settings when they change
+  useEffect(() => {
+    fetchSettings();
+  }, [chatbot.id]);
 
   const createNewConversation = async () => {
     try {
@@ -112,13 +117,16 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
     setIsLoading(true);
 
     try {
+      // Fetch latest settings before making the chat request
+      await fetchSettings();
+
       const response = await fetch('/api/chatbot/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, userMessage],
           chatbotId: chatbot.id,
-          language: aiSettings?.language || 'en',
+          language: aiSettings?.language,
           model: aiSettings?.model,
           temperature: aiSettings?.temperature,
           maxTokens: aiSettings?.maxTokens,

@@ -6,6 +6,7 @@ interface AISettingsType {
   systemPrompt: string;
   maxTokens: number;
   displayName: string;
+  language: string;
 }
 
 export const useAISettings = (chatbotId: string) => {
@@ -14,7 +15,8 @@ export const useAISettings = (chatbotId: string) => {
     temperature: 0.7,
     systemPrompt: "",
     maxTokens: 500,
-    displayName: "Chatbot"
+    displayName: "Chatbot",
+    language: "en"
   });
   const [loading, setLoading] = useState(true);
   const [availableModels] = useState([
@@ -56,7 +58,11 @@ export const useAISettings = (chatbotId: string) => {
             model: newSettings.model,
             temperature: newSettings.temperature,
             systemPrompt: newSettings.systemPrompt,
-            maxTokens: newSettings.maxTokens
+            maxTokens: newSettings.maxTokens,
+            language: newSettings.language,
+            topP: 1,
+            frequencyPenalty: 0,
+            presencePenalty: 0
           })
         }),
         fetch('/api/chatbot/interface-settings', {

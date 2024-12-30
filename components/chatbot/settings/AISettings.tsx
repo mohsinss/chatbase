@@ -13,6 +13,22 @@ type NotificationType = {
   type: 'success' | 'error';
 };
 
+export const SUPPORTED_LANGUAGES = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'fr', label: 'French' },
+  { value: 'de', label: 'German' },
+  { value: 'it', label: 'Italian' },
+  { value: 'pt', label: 'Portuguese' },
+  { value: 'nl', label: 'Dutch' },
+  { value: 'pl', label: 'Polish' },
+  { value: 'ru', label: 'Russian' },
+  { value: 'ja', label: 'Japanese' },
+  { value: 'ko', label: 'Korean' },
+  { value: 'zh', label: 'Chinese' },
+  { value: 'ar', label: 'Arabic' }
+] as const;
+
 const CustomNotification = ({ message, type, onClose }: NotificationType & { onClose: () => void }) => (
   <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg ${
     type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -141,19 +157,11 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
                 onChange={(e) => setLanguage(e.target.value)}
                 className="flex h-10 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="it">Italian</option>
-                <option value="pt">Portuguese</option>
-                <option value="nl">Dutch</option>
-                <option value="pl">Polish</option>
-                <option value="ru">Russian</option>
-                <option value="ja">Japanese</option>
-                <option value="ko">Korean</option>
-                <option value="zh">Chinese</option>
-                <option value="ar">Arabic</option>
+                {SUPPORTED_LANGUAGES.map(lang => (
+                  <option key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </option>
+                ))}
               </select>
               <p className="text-sm text-gray-500">Select the language for AI responses</p>
             </div>
