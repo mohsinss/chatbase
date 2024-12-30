@@ -4,6 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconRefresh, IconFilter, IconDownload, IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "react-hot-toast";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -30,6 +33,8 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
 
   useEffect(() => {
     if (currentSubTab === 'chat-logs') {
@@ -74,6 +79,48 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
   const truncateContent = (content: string, maxLength: number = 50) => {
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + '...';
+  };
+
+  const handleDeleteClick = (conversation: Conversation, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConversationToDelete(conversation);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!conversationToDelete) return;
+
+    try {
+      const response = await fetch('/api/chatbot/conversation/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversationId: conversationToDelete._id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete conversation');
+      }
+
+      // Remove conversation from state
+      setConversations(conversations.filter(c => c._id !== conversationToDelete._id));
+      
+      // Clear selected conversation if it was deleted
+      if (selectedConversation?._id === conversationToDelete._id) {
+        setSelectedConversation(null);
+      }
+
+      toast.success('Conversation deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+      toast.error('Failed to delete conversation');
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setConversationToDelete(null);
+    }
   };
 
   const renderChatLogs = () => (
@@ -140,10 +187,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                       </div>
                       <button 
                         className="p-1 hover:bg-gray-100 rounded ml-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Add delete functionality
-                        }}
+                        onClick={(e) => handleDeleteClick(conversation, e)}
                       >
                         <IconTrash className="w-4 h-4 text-gray-400 hover:text-red-500" />
                       </button>
@@ -195,55 +239,81 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
   );
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen">
-      {/* Navigation - Top on mobile, Side on desktop */}
-      <div className="lg:w-64 border-b lg:border-b-0 lg:border-r bg-white">
-        <div className="p-4 lg:p-6">
-          <h1 className="text-2xl font-bold mb-4 lg:mb-6">Activity</h1>
-          <nav className="flex lg:flex-col gap-2">
-            {SUB_TABS.map((tab) => (
-              <Link
-                key={tab.id}
-                href={`/dashboard/${teamId}/chatbot/${chatbotId}/activity/${tab.id}`}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors w-full
-                  ${currentSubTab === tab.id 
-                    ? "bg-primary/10 text-primary" 
-                    : "text-gray-600 hover:bg-gray-100"}`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </Link>
-            ))}
-          </nav>
+    <>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Conversation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this conversation? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <div className="flex flex-col lg:flex-row min-h-screen">
+        {/* Navigation - Top on mobile, Side on desktop */}
+        <div className="lg:w-64 border-b lg:border-b-0 lg:border-r bg-white">
+          <div className="p-4 lg:p-6">
+            <h1 className="text-2xl font-bold mb-4 lg:mb-6">Activity</h1>
+            <nav className="flex lg:flex-col gap-2">
+              {SUB_TABS.map((tab) => (
+                <Link
+                  key={tab.id}
+                  href={`/dashboard/${teamId}/chatbot/${chatbotId}/activity/${tab.id}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors w-full
+                    ${currentSubTab === tab.id 
+                      ? "bg-primary/10 text-primary" 
+                      : "text-gray-600 hover:bg-gray-100"}`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </Link>
+              ))}
+            </nav>
+          </div>
         </div>
-      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1">
-        {currentSubTab === 'chat-logs' ? (
-          renderChatLogs()
-        ) : (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Leads</h2>
-              <div className="flex gap-2">
-                <button className="btn btn-outline btn-sm gap-2">
-                  <IconFilter className="w-4 h-4" />
-                  Filter
-                </button>
-                <button className="btn btn-outline btn-sm gap-2">
-                  <IconDownload className="w-4 h-4" />
-                  Export
-                </button>
+        {/* Main Content Area */}
+        <div className="flex-1">
+          {currentSubTab === 'chat-logs' ? (
+            renderChatLogs()
+          ) : (
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Leads</h2>
+                <div className="flex gap-2">
+                  <button className="btn btn-outline btn-sm gap-2">
+                    <IconFilter className="w-4 h-4" />
+                    Filter
+                  </button>
+                  <button className="btn btn-outline btn-sm gap-2">
+                    <IconDownload className="w-4 h-4" />
+                    Export
+                  </button>
+                </div>
+              </div>
+              <div className="text-center py-12 text-gray-500">
+                No leads found
               </div>
             </div>
-            <div className="text-center py-12 text-gray-500">
-              No leads found
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
