@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconRefresh, IconFilter, IconDownload, IconTrash } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
@@ -37,32 +37,49 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
   const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
 
   useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const response = await fetch(`/api/chatbot/conversation?chatbotId=${chatbotId}`);
+        if (response.ok) {
+          const data = await response.json();
+          const validConversations = Array.isArray(data) ? data.filter(conv => 
+            conv.messages.length > 0 && 
+            conv.messages.some((m: Message) => m.content?.trim())
+          ) : [];
+          setConversations(validConversations);
+        }
+      } catch (error) {
+        console.error('Failed to fetch conversations:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (currentSubTab === 'chat-logs') {
       fetchConversations();
     }
   }, [chatbotId, currentSubTab]);
 
-  const fetchConversations = async () => {
-    try {
-      const response = await fetch(`/api/chatbot/conversation?chatbotId=${chatbotId}`);
-      if (response.ok) {
-        const data = await response.json();
-        const validConversations = Array.isArray(data) ? data.filter(conv => 
-          conv.messages.length > 0 && 
-          conv.messages.some((m: Message) => m.content?.trim())
-        ) : [];
-        setConversations(validConversations);
-      }
-    } catch (error) {
-      console.error('Failed to fetch conversations:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleRefresh = () => {
     setLoading(true);
-    fetchConversations();
+    const fetchAndRefresh = async () => {
+      try {
+        const response = await fetch(`/api/chatbot/conversation?chatbotId=${chatbotId}`);
+        if (response.ok) {
+          const data = await response.json();
+          const validConversations = Array.isArray(data) ? data.filter(conv => 
+            conv.messages.length > 0 && 
+            conv.messages.some((m: Message) => m.content?.trim())
+          ) : [];
+          setConversations(validConversations);
+        }
+      } catch (error) {
+        console.error('Failed to fetch conversations:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAndRefresh();
   };
 
   const formatDate = (date: Date) => {

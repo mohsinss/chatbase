@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -88,10 +89,6 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
 
   const currentChatbotId = pathname.includes('/chatbot/') 
     ? pathname.split('/chatbot/')[1] 
-    : null;
-
-  const currentChatbot = currentChatbotId 
-    ? chatbots.find(c => c.chatbotId === currentChatbotId) 
     : null;
 
   const isRootDashboard = pathname === "/dashboard";

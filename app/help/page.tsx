@@ -33,13 +33,13 @@ export default function HelpPage() {
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold mb-2">How do I create a new chatbot?</h3>
               <p className="text-gray-600">
-                Navigate to your team dashboard and click on "Create new chatbot" button. Follow the setup wizard to configure your chatbot.
+                Navigate to your team dashboard and click on &ldquo;Create new chatbot&rdquo; button. Follow the setup wizard to configure your chatbot.
               </p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold mb-2">How can I invite team members?</h3>
               <p className="text-gray-600">
-                Go to team settings and use the "Invite Members" feature to send invitations via email.
+                Go to team settings and use the &ldquo;Invite Members&rdquo; feature to send invitations via email.
               </p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm">
