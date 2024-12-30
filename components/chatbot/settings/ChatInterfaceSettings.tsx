@@ -138,7 +138,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           onClose={() => setNotification(null)}
         />
       )}
-      <div className="grid grid-cols-[1fr_400px] gap-4 p-4 h-screen">
+      <div className="grid grid-cols-[1fr_400px] gap-10 p-4 h-screen">
         {/* Configuration Panel */}
         <div className="space-y-6 overflow-y-auto relative pb-16">
           <h1 className="text-2xl font-bold">Chat Interface</h1>

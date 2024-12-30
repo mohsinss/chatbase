@@ -45,7 +45,7 @@ export default function Settings({ teamId, chatbotId }: SettingsProps) {
       
       <div className="flex gap-6">
         {/* Sidebar */}
-        <div className="w-64">
+        <div className="w-54">
           <div className="space-y-1">
             {tabs.map((tab) => (
               <button
@@ -65,7 +65,7 @@ export default function Settings({ teamId, chatbotId }: SettingsProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 max-w-3xl">
+        <div className="flex-1 max-w-[90]">
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-2xl font-semibold mb-6">{tabs.find(tab => tab.id === currentTab)?.name}</h2>
             
