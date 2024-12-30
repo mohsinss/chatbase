@@ -5,7 +5,7 @@ import { Popover, Transition } from "@headlessui/react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 
-const ButtonAccount = () => {
+const ButtonAccount = ({ teamId }: { teamId: string }) => {
   const { data: session, status } = useSession();
 
   const handleSignOut = () => {
@@ -49,7 +49,7 @@ const ButtonAccount = () => {
                     {session?.user?.email}
                   </div>
                   <Link
-                    href="/dashboard"
+                    href={teamId ? `/dashboard/${teamId}/chatbots` : "/dashboard"}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
                   >
                     Dashboard
