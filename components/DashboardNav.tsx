@@ -289,14 +289,13 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
             {/* Desktop links and account */}
             <div className="hidden md:flex items-center space-x-8">
               <Link
-                href="https://shipfa.st/docs"
+                href="/docs"
                 className="text-sm font-medium hover:text-primary"
-                target="_blank"
               >
                 Docs
               </Link>
               <Link
-                href="mailto:support@example.com"
+                href="/help"
                 className="text-sm font-medium hover:text-primary"
               >
                 Help
@@ -359,14 +358,13 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
 
             {/* Navigation Links */}
             <Link
-              href="https://shipfa.st/docs"
+              href="/docs"
               className="block px-3 py-2 text-base font-medium rounded-md hover:bg-gray-100"
-              target="_blank"
             >
               Docs
             </Link>
             <Link
-              href="mailto:support@example.com"
+              href="/help"
               className="block px-3 py-2 text-base font-medium rounded-md hover:bg-gray-100"
             >
               Help
