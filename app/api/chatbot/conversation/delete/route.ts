@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
-import Conversation from "@/models/Conversation";
+import ChatbotConversation from "@/models/ChatbotConversation";
 
 export async function DELETE(req: Request) {
   try {
@@ -19,7 +19,7 @@ export async function DELETE(req: Request) {
     }
 
     await connectMongo();
-    await Conversation.deleteOne({ _id: conversationId });
+    await ChatbotConversation.deleteOne({ _id: conversationId });
 
     return NextResponse.json({ success: true });
 

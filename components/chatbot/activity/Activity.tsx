@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
 
 interface Message {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
 }
