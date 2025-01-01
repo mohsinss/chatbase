@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Inter } from "next/font/google";
 import { Viewport } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
 import config from "@/config";
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 		>
 			<body>
 				<ClientLayout>{children}</ClientLayout>
+				<Analytics />
 			</body>
 		</html>
 	);
