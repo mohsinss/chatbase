@@ -60,12 +60,12 @@ const ButtonAccount = ({ teamId }: { teamId: string }) => {
                   >
                     Account Settings
                   </Link>
-                  <Link
+                  {/* <Link
                     href="/team"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
                   >
                     Create or join team
-                  </Link>
+                  </Link> */}
                   <button
                     onClick={handleSignOut}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
