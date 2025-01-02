@@ -19,15 +19,24 @@ export const useAISettings = (chatbotId: string) => {
     language: "en"
   });
   const [loading, setLoading] = useState(true);
+  
+  // Updated model list to match route.ts
   const [availableModels] = useState([
-    { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo" },
-    { id: "gpt-4", name: "GPT-4" },
-    { id: "gpt-4o", name: "GPT-4o" },
-    { id: "gpt-4-turbo", name: "GPT-4 Turbo" },
+    // OpenAI Models
+    { id: "gpt-4o", name: "GPT-4o (Flagship)" },
     { id: "gpt-4o-mini", name: "GPT-4o Mini" },
-    { id: "claude-3-haiku-20240307", name: "Claude 3 Haiku" },
-    { id: "claude-3-sonnet-20240229", name: "Claude 3 Sonnet" },
-    { id: "claude-3-opus-20240229", name: "Claude 3 Opus" }
+    { id: "o1", name: "O1 (Advanced Reasoning)" },
+    { id: "o1-mini", name: "O1 Mini" },
+    { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo" },
+    // Anthropic Models
+    { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet" },
+    { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku" },
+    { id: "claude-3-opus-20240229", name: "Claude 3 Opus" },
+    // Gemini Models
+    { id: "gemini-2.0-flash-exp", name: "Gemini 2.0 Flash" },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+    { id: "gemini-1.5-flash-8b", name: "Gemini 1.5 Flash-8B" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" }
   ]);
 
   const fetchSettings = async () => {
@@ -40,18 +49,30 @@ export const useAISettings = (chatbotId: string) => {
       const aiData = await aiResponse.json();
       const interfaceData = await interfaceResponse.json();
 
+      // Special handling for O1 models
+      const isO1Model = aiData.model?.startsWith('o1');
+      const temperature = isO1Model ? 1 : (aiData.temperature ?? 0.7);
+
       setSettings(prev => ({
         ...prev,
         ...aiData,
+        temperature,
         displayName: interfaceData.displayName || prev.displayName
       }));
+      
+      setLoading(false);
     } catch (error) {
       console.error('Failed to fetch settings:', error);
+      setLoading(false);
     }
   };
 
   const saveSettings = async (newSettings: AISettingsType) => {
     try {
+      // Special handling for O1 models
+      const isO1Model = newSettings.model?.startsWith('o1');
+      const temperature = isO1Model ? 1 : newSettings.temperature;
+
       const [aiResponse, interfaceResponse] = await Promise.all([
         fetch('/api/chatbot/ai-settings', {
           method: 'POST',
@@ -59,7 +80,7 @@ export const useAISettings = (chatbotId: string) => {
           body: JSON.stringify({
             chatbotId,
             model: newSettings.model,
-            temperature: newSettings.temperature,
+            temperature,
             systemPrompt: newSettings.systemPrompt,
             maxTokens: newSettings.maxTokens,
             language: newSettings.language,

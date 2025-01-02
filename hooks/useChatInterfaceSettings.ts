@@ -1,29 +1,31 @@
 import { useState, useEffect } from 'react';
 
-interface ChatConfig {
-  initialMessage: string;
-  messagePlaceholder: string;
-  userMessageColor: string;
+interface ChatInterfaceSettings {
   theme: 'light' | 'dark';
   displayName: string;
+  initialMessage: string;
+  messagePlaceholder: string;
   footerText: string;
-  syncColors: boolean;
+  userMessageColor: string;
   roundedHeaderCorners: boolean;
   roundedChatCorners: boolean;
+  syncColors: boolean;
 }
 
 export const useChatInterfaceSettings = (chatbotId: string) => {
-  const [config, setConfig] = useState<ChatConfig>({
-    initialMessage: "Hi! What can I help you with?",
-    messagePlaceholder: "Message...",
-    userMessageColor: "#4285f4",
+  const [config, setConfig] = useState<ChatInterfaceSettings>({
     theme: 'light',
-    displayName: "Chatbot",
-    footerText: "",
-    syncColors: false,
-    roundedHeaderCorners: false,
-    roundedChatCorners: false,
+    displayName: 'AI Assistant',
+    initialMessage: 'Hello! How can I help you today?',
+    messagePlaceholder: 'Type your message...',
+    footerText: '',
+    userMessageColor: '#2563eb',
+    roundedHeaderCorners: true,
+    roundedChatCorners: true,
+    syncColors: false
   });
+
+  const [loading, setLoading] = useState(true);
 
   const fetchSettings = async () => {
     try {
@@ -37,42 +39,48 @@ export const useChatInterfaceSettings = (chatbotId: string) => {
         }));
       }
     } catch (error) {
-      console.error("Failed to load chat interface settings:", error);
+      console.error('Failed to fetch interface settings:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const saveSettings = async (newSettings: Partial<ChatConfig>) => {
+  const saveSettings = async (newSettings: Partial<ChatInterfaceSettings>) => {
     try {
-      const response = await fetch("/api/chatbot/interface-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/chatbot/interface-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chatbotId,
-          ...config,
-          ...newSettings,
+          ...newSettings
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save settings');
-      }
+      if (!response.ok) throw new Error('Failed to save settings');
 
-      setConfig(prev => ({ ...prev, ...newSettings }));
+      setConfig(prev => ({
+        ...prev,
+        ...newSettings
+      }));
+      
       return true;
     } catch (error) {
-      console.error("Failed to save settings:", error);
+      console.error('Failed to save interface settings:', error);
       return false;
     }
   };
 
   useEffect(() => {
-    fetchSettings();
+    if (chatbotId) {
+      fetchSettings();
+    }
   }, [chatbotId]);
 
-  return { 
-    config, 
-    setConfig, 
-    saveSettings,
-    fetchSettings 
+  return {
+    config,
+    setConfig,
+    loading,
+    fetchSettings,
+    saveSettings
   };
 }; 
