@@ -37,6 +37,7 @@ type ModelInfo = {
 type AIModelProviders = {
   OpenAI: ModelInfo[];
   Anthropic: ModelInfo[];
+  Gemini: ModelInfo[];
 }
 
 // Group models by provider with proper typing
@@ -50,6 +51,12 @@ const AI_MODELS: AIModelProviders = {
     { value: "claude-3-haiku-20240307", label: "Claude 3 Haiku" },
     { value: "claude-3-sonnet-20240229", label: "Claude 3 Sonnet" },
     { value: "claude-3-opus-20240229", label: "Claude 3 Opus" }
+  ],
+  Gemini: [
+    { value: "gemini-1.5-flash", label: "Gemini 2.0 Flash" },
+    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
+    { value: "gemini-1.0-pro", label: "Gemini 1.0 Pro" },
+    { value: "gemini-1.0-ultra", label: "Gemini 1.0 Ultra" }
   ]
 };
 

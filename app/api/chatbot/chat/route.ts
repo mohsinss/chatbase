@@ -1,4 +1,5 @@
 import { sendAnthropic } from '@/libs/anthropic';
+import { sendGemini } from '@/libs/gemini';
 import OpenAI from 'openai';
 import { NextRequest } from 'next/server';
 import connectMongo from "@/libs/mongoose";
@@ -9,14 +10,19 @@ const openai = new OpenAI({
 });
 
 const MODEL_MAPPING: { [key: string]: string } = {
+  // OpenAI models
   'gpt-3.5-turbo': 'gpt-3.5-turbo',
   'gpt-4': 'gpt-4',
   'gpt-4-turbo': 'gpt-4-1106-preview',
-  'gpt-4o': 'gpt-4o',
-  'gpt-4o-mini': 'gpt-4o-mini',
+  // Anthropic models
   'claude-3-haiku-20240307': 'claude-3-haiku-20240307',
   'claude-3-sonnet-20240229': 'claude-3-sonnet-20240229',
-  'claude-3-opus-20240229': 'claude-3-opus-20240229'
+  'claude-3-opus-20240229': 'claude-3-opus-20240229',
+  // Gemini models
+  'gemini-1.5-pro': 'gemini-1.5-pro',
+  'gemini-1.5-flash': 'gemini-1.5-flash',
+  'gemini-1.0-pro': 'gemini-1.0-pro',
+  'gemini-1.0-ultra': 'gemini-1.0-ultra'
 };
 
 export async function POST(req: NextRequest) {
@@ -36,9 +42,10 @@ export async function POST(req: NextRequest) {
     const language = aiSettings?.language || 'en';
     const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
 
-    // Check if using Anthropic model
+    const encoder = new TextEncoder();
+
+    // Check model provider and handle accordingly
     if (internalModel.startsWith('claude-')) {
-      const encoder = new TextEncoder();
       const stream = new ReadableStream({
         async start(controller) {
           try {
@@ -48,7 +55,10 @@ export async function POST(req: NextRequest) {
             };
 
             await sendAnthropic(
-              messages,
+              [
+                { role: 'system', content: systemPrompt },
+                ...messages
+              ],
               'user-1',
               onContent,
               maxTokens,
@@ -71,62 +81,81 @@ export async function POST(req: NextRequest) {
           'Connection': 'keep-alive',
         },
       });
-    }
-
-    console.log('API Route - Using settings:', {
-      chatbotId,
-      internalModel,
-      temperature,
-      maxTokens,
-      systemPrompt,
-      language,
-      fromDatabase: !!aiSettings
-    });
-
-    const response = await openai.chat.completions.create({
-      model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages,
-      ],
-      temperature,
-      max_tokens: maxTokens,
-      stream: true,
-    });
-
-    // Create a text encoder
-    const encoder = new TextEncoder();
-
-    // Create a transform stream
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of response) {
-            const text = chunk.choices[0]?.delta?.content || '';
-            if (text) {
-              // Format the chunk as a Server-Sent Event
+    } else if (internalModel.startsWith('gemini-')) {
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            const onContent = (text: string) => {
               const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
               controller.enqueue(encoder.encode(sseMessage));
-            }
-          }
-          // Send a done message
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-          controller.close();
-        } catch (error) {
-          controller.error(error);
-        }
-      },
-    });
+            };
 
-    // Return the stream with appropriate headers
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Transfer-Encoding': 'chunked'
-      },
-    });
+            await sendGemini(
+              [
+                { role: 'system', content: systemPrompt },
+                ...messages
+              ],
+              'user-1',
+              onContent,
+              maxTokens,
+              temperature,
+              internalModel
+            );
+
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+          } catch (error) {
+            controller.error(error);
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    } else {
+      // OpenAI models
+      const response = await openai.chat.completions.create({
+        model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...messages,
+        ],
+        temperature,
+        max_tokens: maxTokens,
+        stream: true,
+      });
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of response) {
+              const text = chunk.choices[0]?.delta?.content || '';
+              if (text) {
+                const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
+                controller.enqueue(encoder.encode(sseMessage));
+              }
+            }
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+          } catch (error) {
+            controller.error(error);
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
   } catch (error) {
     console.error('Streaming error:', error);
     return new Response(

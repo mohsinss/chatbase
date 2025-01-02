@@ -36,6 +36,34 @@ const InfoTooltip = ({ content }: { content: string }) => (
   </div>
 );
 
+const AI_MODELS = {
+  OpenAI: [
+    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
+    { value: "gpt-4", label: "GPT-4" },
+    { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
+  ],
+  Anthropic: [
+    { value: "claude-3-haiku-20240307", label: "Claude 3 Haiku" },
+    { value: "claude-3-sonnet-20240229", label: "Claude 3 Sonnet" },
+    { value: "claude-3-opus-20240229", label: "Claude 3 Opus" }
+  ],
+  Gemini: [
+    { value: "gemini-1.5-flash", label: "Gemini 2.0 Flash" },
+    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
+    { value: "gemini-1.0-pro", label: "Gemini 1.0 Pro" },
+    { value: "gemini-1.0-ultra", label: "Gemini 1.0 Ultra" }
+  ]
+};
+
+const getSelectedProvider = (model: string): keyof typeof AI_MODELS => {
+  for (const [provider, models] of Object.entries(AI_MODELS)) {
+    if (models.some(m => m.value === model)) {
+      return provider as keyof typeof AI_MODELS;
+    }
+  }
+  return 'OpenAI';
+};
+
 export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsProps) => {
   const { settings, saveSettings, availableModels } = useAISettings(chatbotId);
   const [isSaving, setIsSaving] = useState(false);
@@ -157,6 +185,37 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsPro
 
           <div className="space-y-2 relative">
             <div className="flex items-center justify-between">
+              <span className="text-gray-700 font-medium">Model Provider</span>
+              <div className="relative">
+                <button 
+                  className="text-gray-400 text-lg"
+                  onMouseEnter={() => setTooltips(prev => ({ ...prev, model: true }))}
+                  onMouseLeave={() => setTooltips(prev => ({ ...prev, model: false }))}
+                >
+                  ⓘ
+                </button>
+                {tooltips.model && <InfoTooltip content={tooltipContent.model} />}
+              </div>
+            </div>
+            <select
+              value={getSelectedProvider(localSettings.model)}
+              onChange={(e) => {
+                const provider = e.target.value as keyof typeof AI_MODELS;
+                const firstModel = AI_MODELS[provider][0].value;
+                setLocalSettings(prev => ({ ...prev, model: firstModel }));
+              }}
+              className="w-full p-2.5 border rounded-lg bg-white text-gray-700"
+            >
+              {Object.keys(AI_MODELS).map(provider => (
+                <option key={provider} value={provider}>
+                  {provider}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2 relative">
+            <div className="flex items-center justify-between">
               <span className="text-gray-700 font-medium">Model</span>
               <div className="relative">
                 <button 
@@ -169,30 +228,17 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsPro
                 {tooltips.model && <InfoTooltip content={tooltipContent.model} />}
               </div>
             </div>
-            <div 
-              className="flex items-center gap-2 p-3 border rounded-lg bg-white cursor-pointer"
-              onClick={() => setShowModelDropdown(!showModelDropdown)}
+            <select
+              value={localSettings.model}
+              onChange={(e) => setLocalSettings(prev => ({ ...prev, model: e.target.value }))}
+              className="w-full p-2.5 border rounded-lg bg-white text-gray-700"
             >
-              <span className="w-5 h-5">🤖</span>
-              <span>{availableModels.find(m => m.id === localSettings.model)?.name || localSettings.model}</span>
-            </div>
-            {showModelDropdown && (
-              <div className="absolute w-full mt-1 bg-white border rounded-lg shadow-lg z-10">
-                {availableModels.map(model => (
-                  <div
-                    key={model.id}
-                    className="p-2 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => {
-                      setLocalSettings(prev => ({ ...prev, model: model.id }));
-                      setShowModelDropdown(false);
-                    }}
-                  >
-                    {model.name}
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="text-xs text-gray-500">1 credit per message</div>
+              {AI_MODELS[getSelectedProvider(localSettings.model)].map(model => (
+                <option key={model.value} value={model.value}>
+                  {model.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">
