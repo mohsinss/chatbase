@@ -1,0 +1,19 @@
+{
+  "name": "vectorize-worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/worker.js",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@cloudflare/ai": "^1.0.47",
+    "mustache": "^4.2.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.22.1"
+  }
+} 
