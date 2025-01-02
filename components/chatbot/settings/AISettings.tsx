@@ -29,8 +29,18 @@ export const SUPPORTED_LANGUAGES = [
   { value: 'ar', label: 'Arabic' }
 ] as const;
 
-// Group models by provider
-const AI_MODELS = {
+type ModelInfo = {
+  value: string;
+  label: string;
+}
+
+type AIModelProviders = {
+  OpenAI: ModelInfo[];
+  Anthropic: ModelInfo[];
+}
+
+// Group models by provider with proper typing
+const AI_MODELS: AIModelProviders = {
   OpenAI: [
     { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
     { value: "gpt-4", label: "GPT-4" },
@@ -42,6 +52,8 @@ const AI_MODELS = {
     { value: "claude-3-opus-20240229", label: "Claude 3 Opus" }
   ]
 };
+
+type Provider = keyof typeof AI_MODELS;
 
 const CustomNotification = ({ message, type, onClose }: NotificationType & { onClose: () => void }) => (
   <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg ${
@@ -67,10 +79,7 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
   const [maxTokens, setMaxTokens] = useState<number>(500)
   const [contextWindow, setContextWindow] = useState<number>(16000)
   const [loading, setLoading] = useState(false)
-  const [notification, setNotification] = useState<{
-    message: string;
-    type: 'success' | 'error';
-  } | null>(null);
+  const [notification, setNotification] = useState<NotificationType | null>(null);
   const [language, setLanguage] = useState("en")
 
   useEffect(() => {
@@ -149,11 +158,11 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
     setLoading(false);
   };
 
-  // Get provider based on selected model
-  const getSelectedProvider = () => {
+  // Get provider based on selected model with proper typing
+  const getSelectedProvider = (): Provider => {
     for (const [provider, models] of Object.entries(AI_MODELS)) {
       if (models.some(m => m.value === model)) {
-        return provider;
+        return provider as Provider;
       }
     }
     return 'OpenAI'; // Default provider
@@ -197,8 +206,7 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
               <select
                 value={getSelectedProvider()}
                 onChange={(e) => {
-                  // When provider changes, select first model from that provider
-                  const provider = e.target.value;
+                  const provider = e.target.value as Provider;
                   const firstModel = AI_MODELS[provider][0].value;
                   setModel(firstModel);
                 }}
@@ -334,4 +342,4 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
   );
 };
 
-export default AISettings; 
+export default AISettings;

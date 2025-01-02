@@ -34,9 +34,12 @@ export const sendAnthropic = async (
 
     for await (const chunk of response) {
       if (chunk.type === 'content_block_delta') {
-        const text = chunk.delta?.text || '';
-        if (text) {
-          onContent(text);
+        const delta = chunk.delta;
+        if ('text' in delta) {
+          const text = delta.text || '';
+          if (text) {
+            onContent(text);
+          }
         }
       }
     }
