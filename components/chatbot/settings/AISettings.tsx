@@ -29,6 +29,20 @@ export const SUPPORTED_LANGUAGES = [
   { value: 'ar', label: 'Arabic' }
 ] as const;
 
+// Group models by provider
+const AI_MODELS = {
+  OpenAI: [
+    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
+    { value: "gpt-4", label: "GPT-4" },
+    { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
+  ],
+  Anthropic: [
+    { value: "claude-3-haiku-20240307", label: "Claude 3 Haiku" },
+    { value: "claude-3-sonnet-20240229", label: "Claude 3 Sonnet" },
+    { value: "claude-3-opus-20240229", label: "Claude 3 Opus" }
+  ]
+};
+
 const CustomNotification = ({ message, type, onClose }: NotificationType & { onClose: () => void }) => (
   <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg ${
     type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -135,6 +149,16 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
     setLoading(false);
   };
 
+  // Get provider based on selected model
+  const getSelectedProvider = () => {
+    for (const [provider, models] of Object.entries(AI_MODELS)) {
+      if (models.some(m => m.value === model)) {
+        return provider;
+      }
+    }
+    return 'OpenAI'; // Default provider
+  };
+
   return (
     <>
       {notification && (
@@ -168,18 +192,40 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
 
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Model Provider
+              </label>
+              <select
+                value={getSelectedProvider()}
+                onChange={(e) => {
+                  // When provider changes, select first model from that provider
+                  const provider = e.target.value;
+                  const firstModel = AI_MODELS[provider][0].value;
+                  setModel(firstModel);
+                }}
+                className="flex h-10 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                {Object.keys(AI_MODELS).map(provider => (
+                  <option key={provider} value={provider}>
+                    {provider}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">
                 Model
               </label>
               <select
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                className="flex h-10 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="gpt-4">GPT-4</option>
-                <option value="gpt-4o">GPT-4o</option>
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                <option value="gpt-4o-mini">GPT-4o Mini</option>
+                {AI_MODELS[getSelectedProvider()].map(model => (
+                  <option key={model.value} value={model.value}>
+                    {model.label}
+                  </option>
+                ))}
               </select>
               <p className="text-sm text-gray-500">Select the AI model to power your chatbot</p>
             </div>

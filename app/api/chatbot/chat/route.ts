@@ -1,3 +1,4 @@
+import { sendAnthropic } from '@/libs/anthropic';
 import OpenAI from 'openai';
 import { NextRequest } from 'next/server';
 import connectMongo from "@/libs/mongoose";
@@ -13,6 +14,9 @@ const MODEL_MAPPING: { [key: string]: string } = {
   'gpt-4-turbo': 'gpt-4-1106-preview',
   'gpt-4o': 'gpt-4o',
   'gpt-4o-mini': 'gpt-4o-mini',
+  'claude-3-haiku-20240307': 'claude-3-haiku-20240307',
+  'claude-3-sonnet-20240229': 'claude-3-sonnet-20240229',
+  'claude-3-opus-20240229': 'claude-3-opus-20240229'
 };
 
 export async function POST(req: NextRequest) {
@@ -27,17 +31,51 @@ export async function POST(req: NextRequest) {
     console.log('Found settings:', aiSettings);
 
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
-    const openAIModel = MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
     const language = aiSettings?.language || 'en';
-
     const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
+
+    // Check if using Anthropic model
+    if (internalModel.startsWith('claude-')) {
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            const onContent = (text: string) => {
+              const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
+              controller.enqueue(encoder.encode(sseMessage));
+            };
+
+            await sendAnthropic(
+              messages,
+              'user-1',
+              onContent,
+              maxTokens,
+              temperature,
+              internalModel
+            );
+
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+          } catch (error) {
+            controller.error(error);
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
 
     console.log('API Route - Using settings:', {
       chatbotId,
       internalModel,
-      openAIModel,
       temperature,
       maxTokens,
       systemPrompt,
@@ -46,7 +84,7 @@ export async function POST(req: NextRequest) {
     });
 
     const response = await openai.chat.completions.create({
-      model: openAIModel,
+      model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
       messages: [
         { role: 'system', content: systemPrompt },
         ...messages,

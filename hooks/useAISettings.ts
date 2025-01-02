@@ -25,6 +25,9 @@ export const useAISettings = (chatbotId: string) => {
     { id: "gpt-4o", name: "GPT-4o" },
     { id: "gpt-4-turbo", name: "GPT-4 Turbo" },
     { id: "gpt-4o-mini", name: "GPT-4o Mini" },
+    { id: "claude-3-haiku-20240307", name: "Claude 3 Haiku" },
+    { id: "claude-3-sonnet-20240229", name: "Claude 3 Sonnet" },
+    { id: "claude-3-opus-20240229", name: "Claude 3 Opus" }
   ]);
 
   const fetchSettings = async () => {
