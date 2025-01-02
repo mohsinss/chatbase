@@ -27,6 +27,21 @@ const MODEL_MAPPING: { [key: string]: string } = {
   'gemini-1.5-pro': 'gemini-1.5-pro'
 };
 
+// Add model type mapping with specific O1 model versions
+const O1_MODELS = ['o1', 'o1-mini'];
+const O1_CONFIG = {
+  'o1': {
+    maxOutputTokens: 100000,
+    contextWindow: 200000,
+    model: 'o1'
+  },
+  'o1-mini': {
+    maxOutputTokens: 65536,
+    contextWindow: 128000,
+    model: 'o1-mini'
+  }
+};
+
 export async function POST(req: NextRequest) {
   try {
     const { messages, chatbotId } = await req.json();
@@ -133,15 +148,40 @@ export async function POST(req: NextRequest) {
       });
     } else {
       console.log('Using OpenAI Model:', MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo');
-      // OpenAI models
-      const response = await openai.chat.completions.create({
-        model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
-        messages: [
+      
+      // For O1 models, prepend system message as a user message
+      let formattedMessages;
+      if (O1_MODELS.includes(internalModel)) {
+        formattedMessages = [
+          { role: 'user', content: systemPrompt },
+          ...messages
+        ];
+      } else {
+        formattedMessages = [
           { role: 'system', content: systemPrompt },
-          ...messages,
-        ],
-        temperature,
-        max_tokens: maxTokens,
+          ...messages
+        ];
+      }
+
+      // Configure model-specific parameters
+      const modelParams = O1_MODELS.includes(internalModel) 
+        ? {
+            max_completion_tokens: Math.min(
+              maxTokens,
+              O1_CONFIG[internalModel as keyof typeof O1_CONFIG].maxOutputTokens
+            ),
+            temperature: 1,
+            model: O1_CONFIG[internalModel as keyof typeof O1_CONFIG].model
+          }
+        : {
+            max_tokens: maxTokens,
+            temperature,
+            model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo'
+          };
+
+      const response = await openai.chat.completions.create({
+        ...modelParams,
+        messages: formattedMessages,
         stream: true,
       });
 
