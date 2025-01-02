@@ -11,18 +11,20 @@ const openai = new OpenAI({
 
 const MODEL_MAPPING: { [key: string]: string } = {
   // OpenAI models
+  'gpt-4o': 'gpt-4o',
+  'gpt-4o-mini': 'gpt-4o-mini',
+  'o1': 'o1',
+  'o1-mini': 'o1-mini',
   'gpt-3.5-turbo': 'gpt-3.5-turbo',
-  'gpt-4': 'gpt-4',
-  'gpt-4-turbo': 'gpt-4-1106-preview',
-  // Anthropic models
-  'claude-3-haiku-20240307': 'claude-3-haiku-20240307',
-  'claude-3-sonnet-20240229': 'claude-3-sonnet-20240229',
+  // Anthropic models (latest versions)
+  'claude-3-5-sonnet-20241022': 'claude-3-5-sonnet-20241022',
+  'claude-3-5-haiku-20241022': 'claude-3-5-haiku-20241022',
   'claude-3-opus-20240229': 'claude-3-opus-20240229',
   // Gemini models
-  'gemini-1.5-pro': 'gemini-1.5-pro',
+  'gemini-2.0-flash-exp': 'gemini-2.0-flash-exp',
   'gemini-1.5-flash': 'gemini-1.5-flash',
-  'gemini-1.0-pro': 'gemini-1.0-pro',
-  'gemini-1.0-ultra': 'gemini-1.0-ultra'
+  'gemini-1.5-flash-8b': 'gemini-1.5-flash-8b',
+  'gemini-1.5-pro': 'gemini-1.5-pro'
 };
 
 export async function POST(req: NextRequest) {
@@ -34,18 +36,29 @@ export async function POST(req: NextRequest) {
       chatbotId: chatbotId 
     }).lean();
     
-    console.log('Found settings:', aiSettings);
-
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
     const language = aiSettings?.language || 'en';
     const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
 
+    // Add detailed logging
+    console.log('Chat Request Details:', {
+      selectedModel: internalModel,
+      mappedModel: MODEL_MAPPING[internalModel],
+      provider: internalModel.startsWith('claude-') ? 'Anthropic' : 
+               internalModel.startsWith('gemini-') ? 'Gemini' : 'OpenAI',
+      temperature,
+      maxTokens,
+      language,
+      systemPrompt
+    });
+
     const encoder = new TextEncoder();
 
     // Check model provider and handle accordingly
     if (internalModel.startsWith('claude-')) {
+      console.log('Using Anthropic Model:', internalModel);
       const stream = new ReadableStream({
         async start(controller) {
           try {
@@ -82,6 +95,7 @@ export async function POST(req: NextRequest) {
         },
       });
     } else if (internalModel.startsWith('gemini-')) {
+      console.log('Using Gemini Model:', internalModel);
       const stream = new ReadableStream({
         async start(controller) {
           try {
@@ -118,6 +132,7 @@ export async function POST(req: NextRequest) {
         },
       });
     } else {
+      console.log('Using OpenAI Model:', MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo');
       // OpenAI models
       const response = await openai.chat.completions.create({
         model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',

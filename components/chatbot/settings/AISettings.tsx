@@ -43,20 +43,22 @@ type AIModelProviders = {
 // Group models by provider with proper typing
 const AI_MODELS: AIModelProviders = {
   OpenAI: [
-    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
-    { value: "gpt-4", label: "GPT-4" },
-    { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
+    { value: "gpt-4o", label: "GPT-4o (Flagship)" },
+    { value: "gpt-4o-mini", label: "GPT-4o Mini" },
+    { value: "o1", label: "O1 (Advanced Reasoning)" },
+    { value: "o1-mini", label: "O1 Mini" },
+    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" }
   ],
   Anthropic: [
-    { value: "claude-3-haiku-20240307", label: "Claude 3 Haiku" },
-    { value: "claude-3-sonnet-20240229", label: "Claude 3 Sonnet" },
+    { value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet" },
+    { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku" },
     { value: "claude-3-opus-20240229", label: "Claude 3 Opus" }
   ],
   Gemini: [
-    { value: "gemini-1.5-flash", label: "Gemini 2.0 Flash" },
-    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
-    { value: "gemini-1.0-pro", label: "Gemini 1.0 Pro" },
-    { value: "gemini-1.0-ultra", label: "Gemini 1.0 Ultra" }
+    { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash" },
+    { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
+    { value: "gemini-1.5-flash-8b", label: "Gemini 1.5 Flash-8B" },
+    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" }
   ]
 };
 

@@ -19,13 +19,7 @@ export const sendGemini = async (
     const systemMessage = messages.find(m => m.role === 'system')?.content || '';
     const userMessages = messages.filter(m => m.role !== 'system');
 
-    // Format messages for Gemini
-    const formattedHistory = userMessages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }));
-
-    // Start chat with history
+    // Initialize chat with generation config
     const chat = geminiModel.startChat({
       generationConfig: {
         maxOutputTokens: max,
@@ -33,14 +27,29 @@ export const sendGemini = async (
       },
     });
 
-    // Add system prompt if present
+    // Send system prompt first to set context and language
     if (systemMessage) {
-      await chat.sendMessage([{ text: systemMessage }]);
+      await chat.sendMessage([{
+        text: `You are an AI assistant. You must strictly follow these instructions:
+        1. You must ONLY respond in the language specified in the system prompt
+        2. You must maintain the persona and behavior specified in the system prompt
+        3. System prompt: ${systemMessage}`
+      }]);
     }
 
-    // Send the last user message and stream the response
-    const lastMessage = userMessages[userMessages.length - 1].content;
-    const result = await chat.sendMessageStream([{ text: lastMessage }]);
+    // Send conversation history
+    for (let i = 0; i < userMessages.length - 1; i++) {
+      const msg = userMessages[i];
+      await chat.sendMessage([{
+        text: msg.content
+      }]);
+    }
+
+    // Send the last message and stream the response
+    const lastMessage = userMessages[userMessages.length - 1];
+    const result = await chat.sendMessageStream([{
+      text: lastMessage.content
+    }]);
 
     for await (const chunk of result.stream) {
       const text = chunk.text();

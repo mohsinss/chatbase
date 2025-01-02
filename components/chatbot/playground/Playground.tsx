@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import { ChatSettings } from './ChatSettings';
 import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings';
 import { useAISettings } from '@/hooks/useAISettings';
+import { AISettingsProvider } from '@/contexts/AISettingsContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -30,6 +31,137 @@ const InfoTooltip = ({ content }: { content: string }) => (
     {content}
   </div>
 );
+
+interface ChatContainerProps {
+  isSettingsOpen: boolean;
+  setIsSettingsOpen: (open: boolean) => void;
+  messages: Message[];
+  config: any;
+  isLoading: boolean;
+  input: string;
+  setInput: (input: string) => void;
+  handleSubmit: (e: React.FormEvent) => Promise<void>;
+  handleRefresh: () => void;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
+}
+
+const ChatContainer = ({ 
+  isSettingsOpen, 
+  setIsSettingsOpen,
+  messages,
+  config,
+  isLoading,
+  input,
+  setInput,
+  handleSubmit,
+  handleRefresh,
+  messagesEndRef
+}: ChatContainerProps) => {
+  return (
+    <div className="flex-1 flex justify-center pt-4 px-4">
+      <div className="w-[400px] relative">
+        {!isSettingsOpen && (
+          <button 
+            onClick={() => setIsSettingsOpen(true)}
+            className="absolute -left-12 h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white"
+          >
+            ☰
+          </button>
+        )}
+
+        <div className={`bg-white shadow-sm border ${
+          config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+        } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
+          {/* Chat Header */}
+          <div 
+            className={`flex items-center justify-between p-3 border-b ${
+              config.roundedHeaderCorners ? 'rounded-t-xl' : ''
+            }`}
+            style={{
+              backgroundColor: config.syncColors ? config.userMessageColor : undefined,
+              color: config.syncColors ? 'white' : undefined
+            }}
+          >
+            <div className="text-sm">{config.displayName}</div>
+            <button 
+              onClick={handleRefresh}
+              className={`p-1.5 rounded-full ${
+                config.syncColors 
+                  ? 'hover:bg-white/10 text-white' 
+                  : 'hover:bg-gray-100'
+              }`}
+            >
+              <IconRefresh className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Chat Messages */}
+          <div className="h-[calc(100vh-280px)] overflow-y-auto p-4">
+            {messages.length === 0 && (
+              <div className={`text-gray-500 p-4 ${
+                config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+              } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                {config.initialMessage}
+              </div>
+            )}
+            {messages.map((message, index) => (
+              <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
+                <div className={`p-3 inline-block max-w-[80%] ${
+                  config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                } ${
+                  message.role === 'assistant' 
+                    ? `${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} prose prose-sm max-w-none` 
+                    : 'text-white'
+                }`}
+                style={{
+                  backgroundColor: message.role === 'user' ? config.userMessageColor : undefined
+                }}>
+                  {message.role === 'assistant' ? (
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  ) : (
+                    <p>{message.content}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Chat Input */}
+          <form onSubmit={handleSubmit} className="border-t p-3">
+            <div className="relative">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={config.messagePlaceholder}
+                className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${
+                  config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
+                } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}
+                disabled={isLoading}
+              />
+              <button 
+                type="submit"
+                disabled={isLoading || !input.trim()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              >
+                <IconSend className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+
+          {/* Footer */}
+          {config.footerText && (
+            <div className="p-2 text-center text-sm text-gray-500">
+              <span>Powered by Chatsa.co</span>
+              <span className="ml-1">{config.footerText}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Playground = ({ chatbot }: PlaygroundProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -184,158 +316,70 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
   };
 
   return (
-    <div>
-      {/* Playground header - moved outside */}
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <h1 className="text-2xl font-bold flex items-center">
-              Playground
-              <button
-                className="ml-1 text-gray-400 text-lg"
-                onMouseEnter={() => setShowPlaygroundInfo(true)}
-                onMouseLeave={() => setShowPlaygroundInfo(false)}
-              >
-                ⓘ
-              </button>
-            </h1>
-            {showPlaygroundInfo && (
-              <InfoTooltip content="Test and experiment with your chatbot's settings in real-time. Changes made here won't affect your live chatbot until you save them." />
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="px-4 py-1.5 border rounded-lg text-sm">Compare</button>
-          <button className="w-8 h-8 flex items-center justify-center border rounded-lg">
-            <span className="w-4 h-4">💡</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main content area */}
-      <div className="relative min-h-[calc(100vh-80px)] pl-2" 
-           style={{ 
-             backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
-             backgroundSize: '20px 20px'
-           }}>
-        <div className="flex">
-          {/* Settings Panel */}
-          <div className={`w-[400px] transition-all duration-300 ${
-            isSettingsOpen ? 'mr-4' : '-ml-[400px]'
-          }`}>
-            <ChatSettings 
-              isVisible={isSettingsOpen} 
-              onToggle={() => setIsSettingsOpen(false)}
-              chatbotId={chatbot.id}
-            />
-          </div>
-
-          {/* Chat Container */}
-          <div className="flex-1 flex justify-center pt-4 px-4">
-            <div className="w-[400px] relative">
-              {!isSettingsOpen && (
-                <button 
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="absolute -left-12 h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white"
+    <AISettingsProvider chatbotId={chatbot.id}>
+      <div>
+        {/* Playground header - moved outside */}
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <h1 className="text-2xl font-bold flex items-center">
+                Playground
+                <button
+                  className="ml-1 text-gray-400 text-lg"
+                  onMouseEnter={() => setShowPlaygroundInfo(true)}
+                  onMouseLeave={() => setShowPlaygroundInfo(false)}
                 >
-                  ☰
+                  ⓘ
                 </button>
+              </h1>
+              {showPlaygroundInfo && (
+                <InfoTooltip content="Test and experiment with your chatbot's settings in real-time. Changes made here won't affect your live chatbot until you save them." />
               )}
-
-              <div className={`bg-white shadow-sm border ${
-                config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
-              } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
-                {/* Chat Header */}
-                <div 
-                  className={`flex items-center justify-between p-3 border-b ${
-                    config.roundedHeaderCorners ? 'rounded-t-xl' : ''
-                  }`}
-                  style={{
-                    backgroundColor: config.syncColors ? config.userMessageColor : undefined,
-                    color: config.syncColors ? 'white' : undefined
-                  }}
-                >
-                  <div className="text-sm">{config.displayName}</div>
-                  <button 
-                    onClick={handleRefresh}
-                    className={`p-1.5 rounded-full ${
-                      config.syncColors 
-                        ? 'hover:bg-white/10 text-white' 
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    <IconRefresh className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Chat Messages */}
-                <div className="h-[calc(100vh-280px)] overflow-y-auto p-4">
-                  {messages.length === 0 && (
-                    <div className={`text-gray-500 p-4 ${
-                      config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                    } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                      {config.initialMessage}
-                    </div>
-                  )}
-                  {messages.map((message, index) => (
-                    <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                      <div className={`p-3 inline-block max-w-[80%] ${
-                        config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                      } ${
-                        message.role === 'assistant' 
-                          ? `${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} prose prose-sm max-w-none` 
-                          : 'text-white'
-                      }`}
-                      style={{
-                        backgroundColor: message.role === 'user' ? config.userMessageColor : undefined
-                      }}>
-                        {message.role === 'assistant' ? (
-                          <ReactMarkdown>{message.content}</ReactMarkdown>
-                        ) : (
-                          <p>{message.content}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Chat Input */}
-                <form onSubmit={handleSubmit} className="border-t p-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder={config.messagePlaceholder}
-                      className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${
-                        config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
-                      } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}
-                      disabled={isLoading}
-                    />
-                    <button 
-                      type="submit"
-                      disabled={isLoading || !input.trim()}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                    >
-                      <IconSend className="w-4 h-4" />
-                    </button>
-                  </div>
-                </form>
-
-                {/* Footer */}
-                {config.footerText && (
-                  <div className="p-2 text-center text-sm text-gray-500">
-                    <span>Powered by Chatsa.co</span>
-                    <span className="ml-1">{config.footerText}</span>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <button className="px-4 py-1.5 border rounded-lg text-sm">Compare</button>
+            <button className="w-8 h-8 flex items-center justify-center border rounded-lg">
+              <span className="w-4 h-4">💡</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Main content area */}
+        <div className="relative min-h-[calc(100vh-80px)] pl-2" 
+             style={{ 
+               backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
+               backgroundSize: '20px 20px'
+             }}>
+          <div className="flex">
+            {/* Settings Panel */}
+            <div className={`w-[400px] transition-all duration-300 ${
+              isSettingsOpen ? 'mr-4' : '-ml-[400px]'
+            }`}>
+              <ChatSettings 
+                isVisible={isSettingsOpen} 
+                onToggle={() => setIsSettingsOpen(false)}
+                chatbotId={chatbot.id}
+              />
+            </div>
+
+            {/* Chat Container */}
+            <ChatContainer 
+              isSettingsOpen={isSettingsOpen}
+              setIsSettingsOpen={setIsSettingsOpen}
+              messages={messages}
+              config={config}
+              isLoading={isLoading}
+              input={input}
+              setInput={setInput}
+              handleSubmit={handleSubmit}
+              handleRefresh={handleRefresh}
+              messagesEndRef={messagesEndRef}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </AISettingsProvider>
   );
 };
 
