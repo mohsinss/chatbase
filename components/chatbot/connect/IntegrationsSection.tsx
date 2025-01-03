@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { IconDeviceLaptop } from "@tabler/icons-react";
+import { useState } from "react";
 
 interface IntegrationCardProps {
   title: string;
@@ -9,9 +10,14 @@ interface IntegrationCardProps {
   icon: string;
   onClick: () => void;
   showDeviceIcon?: boolean;
+  isConnecting: boolean;
 }
 
-const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = false }: IntegrationCardProps) => (
+interface WhatsAppAuthResponse {
+  authUrl: string;
+}
+
+const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = false, isConnecting }: IntegrationCardProps) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
     <div className="w-12 h-12">
       <Image
@@ -31,9 +37,10 @@ const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = f
     <div className="flex items-center gap-2">
       <button
         onClick={onClick}
-        className="flex-1 px-4 py-2 text-center rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+        className="flex-1 px-4 py-2 text-center rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50"
+        disabled={isConnecting}
       >
-        Connect
+        {isConnecting ? "Connecting..." : "Connect"}
       </button>
       {showDeviceIcon && (
         <button className="p-2 rounded-lg border border-gray-200 hover:border-gray-300">
@@ -45,9 +52,75 @@ const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = f
 );
 
 const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
-  const handleConnect = (platform: string) => {
-    // TODO: Implement connection logic for each platform
-    console.log(`Connecting to ${platform}...`);
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const handleConnect = async (platform: string) => {
+    if (platform === "whatsapp") {
+      setIsConnecting(true);
+      try {
+        const response = await fetch("/api/chatbot/integrations/whatsapp", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ chatbotId }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to connect to WhatsApp");
+        }
+
+        const data: WhatsAppAuthResponse = await response.json();
+        
+        // Open WhatsApp authentication window
+        const authWindow = window.open(
+          data.authUrl,
+          "WhatsApp Authentication",
+          "width=600,height=600"
+        );
+
+        // Handle authentication callback
+        window.addEventListener("message", async (event) => {
+          if (event.data.type === "WHATSAPP_AUTH_SUCCESS") {
+            authWindow?.close();
+            // Save WhatsApp credentials
+            await saveWhatsAppCredentials(event.data.credentials);
+          }
+        });
+
+      } catch (error) {
+        console.error("WhatsApp connection error:", error);
+        alert("Failed to connect to WhatsApp. Please try again.");
+      } finally {
+        setIsConnecting(false);
+      }
+    } else {
+      console.log(`Connecting to ${platform}...`);
+    }
+  };
+
+  const saveWhatsAppCredentials = async (credentials: any) => {
+    try {
+      const response = await fetch("/api/chatbot/integrations/whatsapp/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chatbotId,
+          credentials,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save WhatsApp credentials");
+      }
+
+      alert("Successfully connected to WhatsApp!");
+    } catch (error) {
+      console.error("Error saving WhatsApp credentials:", error);
+      alert("Failed to save WhatsApp connection. Please try again.");
+    }
   };
 
   const integrations = [
@@ -106,6 +179,7 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
           <IntegrationCard
             key={integration.title}
             {...integration}
+            isConnecting={isConnecting}
           />
         ))}
       </div>
