@@ -1,4 +1,4 @@
-import { Ai } from '@cloudflare/ai';
+//import { Ai } from '@cloudflare/ai';
 
 export interface VectorizeConfig {
   accountId: string;

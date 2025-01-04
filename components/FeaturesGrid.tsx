@@ -3,267 +3,134 @@ import React from "react";
 
 const features = [
   {
-    title: "Collect user feedback",
-    description:
-      "Use your Insighto's board to let users submit features they want.",
-    styles: "bg-primary text-primary-content",
-    demo: (
-      <div className="overflow-hidden h-full flex items-stretch">
-        <div className="w-full translate-x-12 bg-base-200 rounded-t-box h-full p-6">
-          <p className="font-medium uppercase tracking-wide text-base-content/60 text-sm mb-3">
-            Suggest a feature
-          </p>
-          <div className="relative textarea py-4 h-full mr-12 bg-base-200 group-hover:bg-base-100 group-hover:border-base-content/10 text-base-content">
-            <div className="absolute left-4 top-4 group-hover:hidden flex items-center ">
-              <span>Notifica</span>
-              <span className="w-[2px] h-6 bg-primary animate-pulse"></span>
-            </div>
-            <div className="opacity-0 group-hover:opacity-100 duration-500">
-              Notifications should be visible only on certain pages.
-            </div>
-            <div className="opacity-0 group-hover:opacity-100 duration-1000 flex items-center gap-0.5">
-              <span>Terms & privacy pages don&apos;t need them</span>
-              <span className="w-[2px] h-6 bg-primary animate-pulse"></span>
-            </div>
-            <button className="btn shadow-lg btn-primary absolute right-4 bottom-6 opacity-0 group-hover:opacity-100 duration-1000">
-              Submit
-            </button>
-          </div>
+    title: "Trustworthy, Accurate Answers",
+    description: "With features like \"Revise answers\" and \"Confidence score\" you can be sure your chatbot is giving the right answers.",
+    image: "/features/chat-accurate.png",
+  },
+  {
+    title: "Lead Generation Engine",
+    description: "Collect leads and gather your customer's data, all while providing a personalized experience.",
+    image: "/features/chat-leads.png",
+  },
+  {
+    title: "Advanced Analytics",
+    description: "Get insights into your chatbot's interactions with your customers and use them to improve its performance.",
+    image: "/features/analytics.png",
+  },
+];
+
+const additionalFeatures = [
+  {
+    icon: (
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    ),
+    title: "Multiple Data Sources",
+    description: "Import data from multiple sources to train your chatbot.",
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+      </svg>
+    ),
+    title: "Customizations",
+    description: "Customize your chatbot's look and feel to match your brand's style and website design.",
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+      </svg>
+    ),
+    title: "Whitelabel",
+    description: "Remove ChatSA branding and use a custom domain.",
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    ),
+    title: "Privacy & Security",
+    description: "Your data is hosted on secure servers with robust encryption and access control.",
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    ),
+    title: "Auto-Retrain",
+    description: "Set your chatbot to retrain automatically and always be synced with your data.",
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+      </svg>
+    ),
+    title: "Integrations",
+    description: "Connect your chatbot to your favorite tools like Slack, WhatsApp Zapier, and more.",
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
+    title: "Powerful AI Models",
+    description: "Choose from a variety of AI models, including GPT-4o, Claude 3.5 Sonnet, and Gemini 1.5 Pro.",
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+      </svg>
+    ),
+    title: "80+ Languages",
+    description: "Reach your customers in their native language even if your data is in a different language.",
+  },
+];
+
+const FeaturesGrid = () => {
+  return (
+    <section className="py-1 px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-left mb-16">
+          <h2 className="text-pink-500 font-semibold mb-4">POWERFUL FEATURES</h2>
+          <h3 className="text-4xl font-bold">Everything you need for your no-code AI chatbot.</h3>
         </div>
-      </div>
-    ),
-  },
-  {
-    title: "Prioritize features",
-    description: "Users upvote features they want. You know what to ship next.",
-    styles: "md:col-span-2 bg-base-300 text-base-content",
-    demo: (
-      <div className="px-6 max-w-[600px] flex flex-col gap-4 overflow-hidden">
-        {[
-          {
-            text: "Add LemonSqueezy integration to the boilerplate",
-            secondaryText: "Yes, ship this! ✅",
-            votes: 48,
-            transition: "group-hover:-mt-36 group-hover:md:-mt-28 duration-500",
-          },
-          {
-            text: "A new pricing table for metered billing",
-            secondaryText: "Maybe ship this 🤔",
-            votes: 12,
-          },
-          {
-            text: "A new UI library for the dashboard",
-            secondaryText: "But don't ship that ❌",
-            votes: 1,
-          },
-        ].map((feature, i) => (
-          <div
-            className={`p-4 bg-base-100 text-base-content rounded-box flex justify-between mb-2 gap-4 ${feature?.transition}`}
-            key={i}
-          >
-            <div>
-              <p className="font-semibold mb-1">{feature.text}</p>
-              <p className="text-base-content-secondary">
-                {feature.secondaryText}
-              </p>
-            </div>
-            <button
-              className={`px-4 py-2 rounded-box group text-center text-lg duration-150 border border-transparent bg-primary text-primary-content`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`w-5 h-5 ease-in-out duration-150 -translate-y-0.5 group-hover:translate-y-0`}
-              >
-                <path d="m18 15-6-6-6 6" />
-              </svg>
-              {feature.votes}
-            </button>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
-    title: "Your brand, your board",
-    description: "Customize your Insighto board with 7 themes.",
-    styles: "md:col-span-2 bg-base-100 text-base-content",
-    demo: (
-      <div className="flex left-0 w-full h-full pt-0 lg:pt-8 overflow-hidden -mt-4">
-        <div className="-rotate-[8deg] flex min-w-max overflow-x-visible h-full lg:pt-4">
-          {[
-            {
-              buttonStyles: "bg-primary text-primary-content",
-              css: "-ml-1 rotate-[6deg] w-72 h-72 z-30 bg-base-200 text-base-content rounded-2xl group-hover:-ml-64 group-hover:opacity-0 group-hover:scale-75 transition-all duration-500 p-4",
-            },
-            {
-              buttonStyles: "bg-secondary text-secondary-content",
-              css: "rotate-[6deg] bg-base-200 text-base-content w-72 h-72 -mr-20 -ml-20 z-20 rounded-xl p-4",
-            },
-            {
-              buttonStyles: "bg-accent text-accent-content",
-              css: "rotate-[6deg] bg-base-200 text-base-content z-10 w-72 h-72 rounded-xl p-4",
-            },
-            {
-              buttonStyles: "bg-neutral text-neutral-content",
-              css: "rotate-[6deg] bg-base-200 text-base-content w-72 h-72 -ml-20 rounded-xl p-4",
-            },
-            {
-              buttonStyles: "bg-base-100 text-base-content",
-              css: "rotate-[6deg] bg-base-200 text-base-content w-72 h-72 -ml-10 -z-10 rounded-xl p-4 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300",
-            },
-          ].map((theme, i) => (
-            <div className={theme.css} key={i}>
-              <div className="font-medium uppercase tracking-wide text-base-content/60 text-sm mb-3">
-                Trending feedback
+
+        {/* Main Features */}
+        <div className="grid md:grid-cols-3 gap-8 mb-20">
+          {features.map((feature, i) => (
+            <div key={i} className="bg-gray-100 rounded-xl p-6">
+              <div className="aspect-[4/3] relative mb-6 bg-white rounded-lg overflow-hidden">
+                <img
+                  src={feature.image}
+                  alt={feature.title}
+                  className="object-cover w-full h-full"
+                />
               </div>
-              <div className="space-y-2">
-                <div className="p-4 bg-base-100 rounded-box flex justify-between">
-                  <div>
-                    <p className="font-semibold mb-1">Clickable cards</p>
-                    <p className="opacity-80">Make cards more accessible</p>
-                  </div>
-                  <button
-                    className={`px-4 py-2 rounded-box group text-center text-lg duration-150 border border-transparent ${theme.buttonStyles}`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={`w-5 h-5 ease-in-out duration-150 -translate-y-0.5 group-hover:translate-y-0`}
-                    >
-                      <path d="m18 15-6-6-6 6" />
-                    </svg>
-                    8
-                  </button>
-                </div>
-                <div className="p-4 bg-base-100 rounded-box flex justify-between ">
-                  <div>
-                    <p className="font-semibold mb-1">Bigger images</p>
-                    <p className="opacity-80">Make cards more accessible</p>
-                  </div>
-                  <button
-                    className={`px-4 py-2 rounded-box group text-center text-lg duration-150 border border-transparent ${theme.buttonStyles}`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={`w-5 h-5 ease-in-out duration-150 -translate-y-0.5 group-hover:translate-y-0`}
-                    >
-                      <path d="m18 15-6-6-6 6" />
-                    </svg>
-                    5
-                  </button>
-                </div>
-              </div>
+              <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+              <p className="text-gray-600">{feature.description}</p>
             </div>
           ))}
         </div>
-      </div>
-    ),
-  },
-  {
-    title: "Discover new ideas",
-    description: "Users can chat and discuss features.",
-    styles: "bg-neutral text-neutral-content",
-    demo: (
-      <div className="text-neutral-content px-6 space-y-4">
-        {[
-          {
-            id: 1,
-            text: "Can we have a feature to add a custom domain to IndiePage?",
-            userImg:
-              "https://pbs.twimg.com/profile_images/1514863683574599681/9k7PqDTA_400x400.jpg",
-            userName: "Marc Lou",
-            createdAt: "2024-09-01T00:00:00Z",
-          },
-          {
-            id: 2,
-            text: "I'd definitelly pay for that 🤩",
-            userImg:
-              "https://pbs.twimg.com/profile_images/1778434561556320256/knBJT1OR_400x400.jpg",
-            userName: "Dan K.",
-            createdAt: "2024-09-02T00:00:00Z",
-            transition:
-              "opacity-0 group-hover:opacity-100 duration-500 translate-x-1/4 group-hover:translate-x-0",
-          },
-        ]?.map((reply) => (
-          <div
-            key={reply.id}
-            className={`px-6 py-4 bg-neutral-content text-neutral rounded-box ${reply?.transition}`}
-          >
-            <div className="mb-2 whitespace-pre-wrap">{reply.text}</div>
-            <div className="text-neutral/80 flex items-center gap-2 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="avatar">
-                  <div className="w-7 rounded-full">
-                    <img src={reply.userImg} alt={reply.userName} />
-                  </div>
-                </div>
-                <div className=""> {reply.userName} </div>
+
+        {/* Additional Features */}
+        <div className="grid md:grid-cols-4 gap-8">
+          {additionalFeatures.map((feature, i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <div className="text-gray-700">
+                {feature.icon}
               </div>
-              •
-              <div>
-                {new Date(reply.createdAt).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </div>
+              <h3 className="text-lg font-semibold">{feature.title}</h3>
+              <p className="text-gray-600 text-sm">{feature.description}</p>
             </div>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-];
-const FeaturesGrid = () => {
-  return (
-    <section className="flex justify-center items-center w-full bg-base-200/50 text-base-content py-20 lg:py-32">
-      <div className="flex flex-col max-w-[82rem] gap-16 md:gap-20 px-4">
-        <h2 className="max-w-3xl font-black text-4xl md:text-6xl tracking-[-0.01em]">
-          Ship features <br /> users{" "}
-          <span className="underline decoration-dashed underline-offset-8 decoration-base-300">
-            really want
-          </span>
-        </h2>
-        <div className="flex flex-col w-full h-fit gap-4 lg:gap-10 text-text-default max-w-[82rem]">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-10">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className={`${feature.styles} rounded-3xl flex flex-col gap-6 w-full h-[22rem] lg:h-[25rem] pt-6 overflow-hidden group`}
-              >
-                <div className="px-6 space-y-2">
-                  <h3 className="font-bold text-xl lg:text-3xl tracking-tight">
-                    {feature.title}
-                  </h3>
-                  <p className="opacity-80">{feature.description}</p>
-                </div>
-                {feature.demo}
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
     </section>
