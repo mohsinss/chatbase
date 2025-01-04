@@ -1,4 +1,4 @@
-import { Ai } from '@cloudflare/ai';
+// import { Ai } from '@cloudflare/ai';
 import { ExecutionContext } from '@cloudflare/workers-types';
 
 interface Env {
