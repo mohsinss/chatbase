@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { IconFile, IconAlignLeft, IconGlobe, IconMessageQuestion, IconBrandNotion } from "@tabler/icons-react";
 import { FileUpload } from "./FileUpload";
@@ -27,6 +28,8 @@ const Sources = ({
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'files';
+  const [fileCount, setFileCount] = useState<number>(0);
+  const [fileSize, setFileSize] = useState<number>(0);
 
   const handleTabChange = (tabId: string) => {
     router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources?tab=${tabId}`);
@@ -35,7 +38,7 @@ const Sources = ({
   const renderContent = () => {
     switch (currentTab) {
       case "files":
-        return <FileUpload teamId={teamId} chatbotId={chatbotId} />;
+        return <FileUpload teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount} setFileSize={setFileSize} />;
       case "text":
         return <TextInput onTextChange={(text) => {
           console.log('Text changed:', text);
@@ -110,7 +113,7 @@ const Sources = ({
         {/* Right Stats Panel */}
         <div className="w-[300px] shrink-0">
           <SourceStats
-            fileCount={1}
+            fileCount={fileCount}
             fileChars={4290}
             textInputChars={5}
             charLimit={6_000_000}

@@ -23,7 +23,8 @@ const SourceStats = ({
       
       <div className="space-y-3 mb-6">
         <p className="text-gray-700">
-          {fileCount} File ({fileChars.toLocaleString()} chars)
+          {fileCount} File{fileCount == 1?'':'s'}
+          {/* {fileCount} File ({fileChars.toLocaleString()} chars) */}
         </p>
         <p className="text-gray-700">
           {textInputChars} text input chars

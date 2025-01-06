@@ -15,48 +15,42 @@ interface File {
 interface DatasetListProps {
   teamId: string;
   chatbotId: string;
+  datasetId: string;
+  uploading: boolean;
+  setFileCount: (value: number | ((prevState: number) => number)) => void;
+  setFileSize: (value: number | ((prevState: number) => number)) => void;
   onDelete?: () => void;
 }
 
-export const DatasetList = ({ teamId, chatbotId, onDelete }: DatasetListProps) => {
+export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading, setFileCount, setFileSize }: DatasetListProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchFiles = async () => {
     try {
+      if(!datasetId)
+        return;
       // First get the dataset ID
-      const datasetsResponse = await fetch("https://api.trieve.ai/api/dataset", {
+      const datasetsResponse = await fetch("https://api.trieve.ai/api/dataset/files/"+datasetId+"/1", {
         headers: {
           "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
           "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
+          "TR-Dataset": datasetId,
         }
       });
       
       if (!datasetsResponse.ok) throw new Error("Failed to fetch datasets");
       
       const datasets = await datasetsResponse.json();
-      const dataset = datasets.find((d: any) => 
-        d.dataset_name === `Chatbot Dataset ${chatbotId}`
-      );
-
-      if (!dataset) {
-        setFiles([]);
-        return;
-      }
-
-      // Then get files for this dataset
-      const trieve = new TrieveSDK({
-        apiKey: process.env.NEXT_PUBLIC_TRIEVE_API_KEY!,
-        datasetId: dataset.id,
-        organizationId: process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!
-      });
-
-      const filesData = await trieve.getFilesForDataset({
-        page: 1 // First page of results
-      });
-
-      setFiles(filesData);
+      
+      // @ts-ignore
+      setFiles(datasets.file_and_group_ids.map(item => item.file));
+      setFileCount(datasets.file_and_group_ids.length);
+      // @ts-ignore
+      setFileSize(datasets.file_and_group_ids.reduce((size, file) => {
+        return size + file.size;
+      }, 0.0));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch files");
     } finally {
@@ -73,6 +67,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete }: DatasetListProps) =
         headers: {
           "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
           "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
+          "TR-Dataset": datasetId,
         }
       });
 
@@ -116,7 +111,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete }: DatasetListProps) =
 
   useEffect(() => {
     fetchFiles();
-  }, [chatbotId]);
+  }, [chatbotId, datasetId, uploading]);
 
   if (loading) return <div className="text-center py-4">Loading files...</div>;
   if (error) return <div className="text-red-500 py-4">{error}</div>;

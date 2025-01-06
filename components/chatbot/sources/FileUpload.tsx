@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { IconFile, IconUpload } from "@tabler/icons-react";
 import { useDropzone } from "react-dropzone";
 import { DatasetList } from "./DatasetList";
@@ -8,39 +8,47 @@ import { DatasetList } from "./DatasetList";
 interface FileUploadProps {
   teamId: string;
   chatbotId: string;
+  setFileCount: (value: number | ((prevState: number) => number)) => void;
+  setFileSize: (value: number | ((prevState: number) => number)) => void;
 }
 
-export const FileUpload = ({ teamId, chatbotId }: FileUploadProps) => {
+export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [datasetId, setDatasetId] = useState<string | null>(null);
 
-  const createDataset = async () => {
-    try {
-      const response = await fetch("/api/chatbot/sources/dataset", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          chatbotId,
-          name: `Chatbot Dataset ${chatbotId}`
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to create dataset");
+  useEffect(() => {
+    const createDataset = async () => {
+      try {
+        const response = await fetch("/api/chatbot/sources/dataset", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            chatbotId,
+            name: `Chatbot Dataset ${chatbotId}`
+          }),
+        });
+  
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to create dataset");
+        }
+  
+        const dataset = await response.json();
+        console.log("Created/Retrieved dataset:", dataset); // Debug log
+        setDatasetId(dataset.id);
+        return dataset;
+      } catch (err) {
+        console.error("Dataset creation error:", err);
+        throw err;
       }
+    };
 
-      const dataset = await response.json();
-      console.log("Created/Retrieved dataset:", dataset); // Debug log
-      return dataset;
-    } catch (err) {
-      console.error("Dataset creation error:", err);
-      throw err;
-    }
-  };
+    createDataset();
+  }, [])
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     setUploading(true);
@@ -48,25 +56,18 @@ export const FileUpload = ({ teamId, chatbotId }: FileUploadProps) => {
     setSuccess(null);
 
     try {
-      // Get or create dataset
-      const dataset = await createDataset();
-      console.log("Using dataset:", dataset); // Debug log
-
-      if (!dataset?.id) {
-        throw new Error("Invalid dataset ID received");
-      }
-
+      if(!datasetId) return;
       for (const file of acceptedFiles) {
         console.log("Uploading file:", {
           fileName: file.name,
           fileType: file.type,
-          datasetId: dataset.id
+          datasetId
         }); // Debug log
 
         const formData = new FormData();
         formData.append('file', file);
         formData.append('fileName', file.name);
-        formData.append('datasetId', dataset.id);
+        formData.append('datasetId', datasetId);
         formData.append('teamId', teamId);
 
         const response = await fetch("/api/chatbot/sources/upload", {
@@ -90,7 +91,7 @@ export const FileUpload = ({ teamId, chatbotId }: FileUploadProps) => {
     } finally {
       setUploading(false);
     }
-  }, [chatbotId, teamId]);
+  }, [chatbotId, teamId, datasetId]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -139,6 +140,10 @@ export const FileUpload = ({ teamId, chatbotId }: FileUploadProps) => {
       <DatasetList 
         teamId={teamId} 
         chatbotId={chatbotId} 
+        datasetId={datasetId}
+        uploading={uploading}
+        setFileCount={setFileCount}
+        setFileSize={setFileSize}
         onDelete={() => setSuccess(null)} 
       />
     </div>
