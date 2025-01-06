@@ -82,28 +82,42 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
 
   const handleDownload = async (fileId: string, fileName: string) => {
     try {
-      const trieve = new TrieveSDK({
-        apiKey: process.env.NEXT_PUBLIC_TRIEVE_API_KEY!,
-        organizationId: process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!
+      if(!datasetId)
+        return;
+      // First get the dataset ID
+      const fileResponse = await fetch("https://api.trieve.ai/api/file/"+fileId, {
+        headers: {
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
+          "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
+          "TR-Dataset": datasetId,
+        }
       });
+      
+      if (!fileResponse.ok) throw new Error("Failed to fetch datasets");
+      
+      const fileData = await fileResponse.json();
 
-      const fileData = await trieve.getFile({
-        fileId
-      });
-
-      // Download using the signed URL
       if (fileData.s3_url) {
-        const response = await fetch(fileData.s3_url);
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-      }
+        try {
+            const response = await fetch(fileData.s3_url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+    
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName || 'download';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        } catch (error) {
+            console.error("Error downloading file:", error);
+        }
+    }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to download file");
     }

@@ -1,23 +1,23 @@
-// import { headers } from 'next/headers';
-// import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
 
-// export const dynamic = 'force-dynamic'; // This is the key line to fix the error
-// export const runtime = 'edge'; // Optional: Use edge runtime for better performance
+export const dynamic = 'force-dynamic'; // This is the key line to fix the error
+export const runtime = 'edge'; // Optional: Use edge runtime for better performance
 
-// export async function POST(request: Request) {
-//   const headersList = headers();
+export async function POST(request: Request) {
+  const headersList = headers();
   
-//   try {
-//     const body = await request.json();
+  try {
+    const body = await request.json();
     
-//     // Your WhatsApp webhook handling logic here
+    // Your WhatsApp webhook handling logic here
     
-//     return NextResponse.json({ success: true }, { status: 200 });
-//   } catch (error) {
-//     console.error('WhatsApp webhook error:', error);
-//     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-//   }
-// }
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error('WhatsApp webhook error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
 
 // export async function GET(request: Request) {
 //   const headersList = headers();
