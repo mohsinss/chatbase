@@ -1,104 +1,34 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/libs/next-auth";
-import connectMongo from "@/libs/mongoose";
-import mongoose from "mongoose";
+// import { headers } from 'next/headers';
+// import { NextResponse } from 'next/server';
 
-export async function GET(req: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+// export const dynamic = 'force-dynamic'; // This is the key line to fix the error
+// export const runtime = 'edge'; // Optional: Use edge runtime for better performance
 
-    const url = new URL(req.url);
-    const code = url.searchParams.get('code');
-    const state = url.searchParams.get('state'); // This is our chatbotId
+// export async function POST(request: Request) {
+//   const headersList = headers();
+  
+//   try {
+//     const body = await request.json();
     
-    if (!code || !state) {
-      throw new Error("Missing code or state parameter");
-    }
+//     // Your WhatsApp webhook handling logic here
+    
+//     return NextResponse.json({ success: true }, { status: 200 });
+//   } catch (error) {
+//     console.error('WhatsApp webhook error:', error);
+//     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+//   }
+// }
 
-    // Exchange code for access token
-    const tokenResponse = await fetch('https://graph.facebook.com/v17.0/oauth/access_token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: process.env.META_APP_ID,
-        client_secret: process.env.META_APP_SECRET,
-        code,
-        redirect_uri: `${process.env.NEXTAUTH_URL}/api/chatbot/integrations/whatsapp/callback`,
-      }),
-    });
+// export async function GET(request: Request) {
+//   const headersList = headers();
+//   const mode = request.nextUrl.searchParams.get('hub.mode');
+//   const token = request.nextUrl.searchParams.get('hub.verify_token');
+//   const challenge = request.nextUrl.searchParams.get('hub.challenge');
 
-    const tokenData = await tokenResponse.json();
+//   // Verify webhook
+//   if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+//     return new Response(challenge, { status: 200 });
+//   }
 
-    if (!tokenResponse.ok) {
-      throw new Error(`Failed to get access token: ${JSON.stringify(tokenData)}`);
-    }
-
-    // Get WhatsApp Business Account ID
-    const wabaResponse = await fetch('https://graph.facebook.com/v17.0/me/whatsapp_business_account', {
-      headers: {
-        'Authorization': `Bearer ${tokenData.access_token}`,
-      },
-    });
-
-    const wabaData = await wabaResponse.json();
-
-    // Store the credentials
-    await connectMongo();
-    await mongoose.connection.collection('chatbotIntegrations').insertOne({
-      chatbotId: state,
-      platform: "whatsapp",
-      credentials: {
-        accessToken: tokenData.access_token,
-        wabaId: wabaData.data[0]?.id,
-        expiresAt: new Date(Date.now() + (tokenData.expires_in * 1000)),
-      },
-      userId: session.user.id,
-      createdAt: new Date()
-    });
-
-    // Close the popup and notify the parent window
-    return new NextResponse(`
-      <html>
-        <body>
-          <script>
-            window.opener.postMessage({ 
-              type: 'WHATSAPP_AUTH_SUCCESS',
-              success: true 
-            }, '*');
-            window.close();
-          </script>
-        </body>
-      </html>
-    `, {
-      headers: {
-        'Content-Type': 'text/html',
-      },
-    });
-
-  } catch (error) {
-    console.error("WhatsApp callback error:", error);
-    return new NextResponse(`
-      <html>
-        <body>
-          <script>
-            window.opener.postMessage({ 
-              type: 'WHATSAPP_AUTH_ERROR',
-              error: 'Failed to connect WhatsApp'
-            }, '*');
-            window.close();
-          </script>
-        </body>
-      </html>
-    `, {
-      headers: {
-        'Content-Type': 'text/html',
-      },
-    });
-  }
-} 
+//   return new Response('Forbidden', { status: 403 });
+// } .
