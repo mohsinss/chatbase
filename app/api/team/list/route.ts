@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import { getTeams } from "@/libs/teams";
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

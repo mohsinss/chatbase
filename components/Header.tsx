@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ButtonSignin from "./ButtonSignin";
 
@@ -22,7 +21,6 @@ const links = [
 ];
 
 const Header = () => {
-  const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -34,10 +32,6 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    setIsOpen(false);
-  }, [searchParams]);
 
   return (
     <header className={`fixed top-0 w-full bg-white z-50 transition-all duration-200 ${
