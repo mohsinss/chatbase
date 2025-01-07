@@ -30,10 +30,44 @@ const Sources = ({
   const currentTab = searchParams.get('tab') || 'files';
   const [fileCount, setFileCount] = useState<number>(0);
   const [fileSize, setFileSize] = useState<number>(0);
+  const [isTraining, setIsTraining] = useState(false);
 
   const handleTabChange = (tabId: string) => {
     router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources?tab=${tabId}`);
   };
+
+  const retrain = async () => {
+    try {
+      setIsTraining(true);
+
+      const formData = new FormData();
+      formData.append('chatbotId', chatbotId);
+
+      const response = await fetch("/api/chatbot/train", {
+        headers: {
+          "Content-Type": "application/json"
+        },
+        method: "POST",
+        body: JSON.stringify({
+          chatbotId
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || `Failed to retrain`);
+      }
+
+      const data = await response.json();
+      console.log("Retrain response:", data);
+      // setSuccess(`Successfully uploaded ${acceptedFiles.length} file(s)`);
+    } catch (err) {
+      console.error("Retrain error:", err);
+      // setError(err instanceof Error ? err.message : "Failed to upload file");
+    } finally {
+      setIsTraining(false);
+    }
+  }
 
   const renderContent = () => {
     switch (currentTab) {
@@ -117,9 +151,8 @@ const Sources = ({
             fileChars={4290}
             textInputChars={5}
             charLimit={6_000_000}
-            onRetrain={() => {
-              console.log('Retraining chatbot...');
-            }}
+            onRetrain={retrain}
+            isTraining={isTraining}
           />
         </div>
       </div>

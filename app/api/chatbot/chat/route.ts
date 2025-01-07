@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 import { NextRequest } from 'next/server';
 import connectMongo from "@/libs/mongoose";
 import ChatbotAISettings from "@/models/ChatbotAISettings";
+import Dataset from "@/models/Dataset";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -47,10 +48,81 @@ export async function POST(req: NextRequest) {
     const { messages, chatbotId } = await req.json();
 
     await connectMongo();
-    const aiSettings = await ChatbotAISettings.findOne({ 
-      chatbotId: chatbotId 
-    }).lean();
-    
+
+    const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
+    const dataset = await Dataset.findOne({ chatbotId });
+    // If dataset has an assistant ID, use the Assistant API
+    if (dataset?.openaiAssistantId) {
+      console.log('Using OpenAI Assistant:', dataset.openaiAssistantId);
+      
+      const thread = await openai.beta.threads.create();
+      
+      // Add the user's message to the thread
+      await openai.beta.threads.messages.create(thread.id, {
+        role: "user",
+        content: messages[messages.length - 1].content,
+      });
+
+      // Run the assistant
+      const run = await openai.beta.threads.runs.create(thread.id, {
+        assistant_id: dataset.openaiAssistantId,
+      });
+
+      // Create a stream to send the response
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            // Poll for completion
+            while (true) {
+              const runStatus = await openai.beta.threads.runs.retrieve(
+                thread.id,
+                run.id
+              );
+
+              if (runStatus.status === 'completed') {
+                // Get messages after the run is completed
+                const messages = await openai.beta.threads.messages.list(
+                  thread.id
+                );
+                
+                // Get the assistant's response
+                const assistantMessage = messages.data
+                  .filter(msg => msg.role === 'assistant')
+                  .pop();
+
+                if (assistantMessage?.content[0]?.type === 'text') {
+                  const text = assistantMessage.content[0].text.value;
+                  const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
+                  controller.enqueue(encoder.encode(sseMessage));
+                }
+                
+                break;
+              } else if (runStatus.status === 'failed') {
+                throw new Error('Assistant run failed');
+              }
+
+              // Wait before polling again
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+          } catch (error) {
+            controller.error(error);
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
+
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
 interface SourceStatsProps {
   fileCount: number;
@@ -6,6 +7,7 @@ interface SourceStatsProps {
   textInputChars: number;
   charLimit: number;
   onRetrain: () => void;
+  isTraining: boolean;
 }
 
 const SourceStats = ({ 
@@ -13,7 +15,8 @@ const SourceStats = ({
   fileChars, 
   textInputChars, 
   charLimit, 
-  onRetrain 
+  onRetrain,
+  isTraining,
 }: SourceStatsProps) => {
   const totalChars = fileChars + textInputChars;
 
@@ -42,8 +45,9 @@ const SourceStats = ({
       <Button 
         className="w-full mt-6 bg-black text-white hover:bg-gray-800" 
         onClick={onRetrain}
+        disabled={isTraining}
       >
-        Retrain Chatbot
+        {isTraining ? 'contructing...' : 'construct the index'}
       </Button>
     </div>
   );

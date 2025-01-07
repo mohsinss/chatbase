@@ -1,7 +1,17 @@
 // models/Dataset.js
 import mongoose from 'mongoose';
+import toJSON from "./plugins/toJSON";
 
-const datasetSchema = new mongoose.Schema({
+interface IDataset {
+  chatbotId: string;
+  datasetId: string;
+  vectorStoreId?: string | null;
+  openaiAssistantId?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const datasetSchema = new mongoose.Schema<IDataset>({
     chatbotId: {
         type: String,
         required: true,
@@ -10,6 +20,14 @@ const datasetSchema = new mongoose.Schema({
     datasetId: {
         type: String,
         required: true,
+    },
+    vectorStoreId: {
+        type: String,
+        default: null
+    },
+    openaiAssistantId: {
+        type: String,
+        required: false
     },
     createdAt: {
         type: Date,
@@ -23,7 +41,7 @@ const datasetSchema = new mongoose.Schema({
 
 // Middleware to update the updatedAt field on save
 datasetSchema.pre('save', function (next) {
-    this.updatedAt = Date.now();
+    this.updatedAt = new Date();
     next();
 });
 

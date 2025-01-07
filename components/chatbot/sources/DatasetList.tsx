@@ -99,20 +99,21 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
 
       if (fileData.s3_url) {
         try {
-            const response = await fetch(fileData.s3_url);
+            // const response = await fetch(fileData.s3_url);
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            // if (!response.ok) {
+            //     throw new Error(`HTTP error! status: ${response.status}`);
+            // }
     
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
+            // const blob = await response.blob();
+            // const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
+            // a.href = url;
+            a.href = fileData.s3_url;
             a.download = fileName || 'download';
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
+            // window.URL.revokeObjectURL(url);
             a.remove();
         } catch (error) {
             console.error("Error downloading file:", error);
