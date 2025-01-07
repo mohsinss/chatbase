@@ -73,8 +73,15 @@ export async function POST(req: NextRequest) {
       const stream = new ReadableStream({
         async start(controller) {
           try {
-            // Poll for completion
-            while (true) {
+            const MAX_POLLING_ATTEMPTS = 60; // 30 seconds with 500ms intervals
+            let attempts = 0;
+            let isCompleted = false;
+
+            while (!isCompleted) {
+              if (attempts >= MAX_POLLING_ATTEMPTS) {
+                throw new Error('Assistant run timed out');
+              }
+
               const runStatus = await openai.beta.threads.runs.retrieve(
                 thread.id,
                 run.id
@@ -97,12 +104,13 @@ export async function POST(req: NextRequest) {
                   controller.enqueue(encoder.encode(sseMessage));
                 }
                 
-                break;
+                isCompleted = true;
               } else if (runStatus.status === 'failed') {
                 throw new Error('Assistant run failed');
               }
 
               // Wait before polling again
+              attempts++;
               await new Promise(resolve => setTimeout(resolve, 500));
             }
 
