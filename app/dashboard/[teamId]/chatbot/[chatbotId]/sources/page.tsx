@@ -32,7 +32,7 @@ export default async function SourcesPage({
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <Sources teamId={params.teamId} chatbotId={params.chatbotId} />
+        <Sources teamId={params.teamId} chatbotId={params.chatbotId} chatbot={chatbot}/>
       </main>
     </>
   );
