@@ -49,14 +49,16 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
       const datasets = await datasetsResponse.json();
       console.log(datasets.file_and_group_ids)
       // @ts-ignore
-      setFiles(datasets.file_and_group_ids.map(item => item.file));
-      setFileCount(datasets.file_and_group_ids.length);
+      const files = datasets.file_and_group_ids.filter(item => item.file.file_name != 'texttexttexttext.txt');
       // @ts-ignore
-      setFileSize(datasets.file_and_group_ids.reduce((size, file) => {
+      setFiles(files.map(item => item.file));
+      setFileCount(files.length);
+      // @ts-ignore
+      setFileSize(files.reduce((size, file) => {
         return size + file.file.metadata.sizeInBytes;
       }, 0.0));
       // @ts-ignore
-      setFileChars(datasets.file_and_group_ids.reduce((size, file) => {
+      setFileChars(files.reduce((size, file) => {
         return size + file.file.metadata.sizeInCharacters;
       }, 0));
       
@@ -136,6 +138,8 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
   };
 
   useEffect(() => {
+    if(uploading)
+      return;
     fetchFiles();
   }, [chatbotId, datasetId, uploading]);
 

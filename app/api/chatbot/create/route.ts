@@ -55,8 +55,9 @@ export async function POST(req: Request) {
     const newDataset = new DatasetModel({
       chatbotId,
       datasetId: data.id, // Assuming 'data.id' contains the new dataset ID
-      vectorStoreId: null,
-      openaiAssistantId: null,
+      // vectorStoreId: null,
+      // openaiAssistantId: null,
+      text: null,
     });
     
     await newDataset.save();

@@ -1,15 +1,14 @@
 import { useState } from 'react';
 
 interface TextInputProps {
-  onTextChange: (text: string) => void;
+  text: string,
+  setText: (value: string | ((prevState: string) => string)) => void;
 }
 
-const TextInput = ({ onTextChange }: TextInputProps) => {
-  const [text, setText] = useState('');
+const TextInput = ({ setText, text }: TextInputProps) => {
 
   const handleTextChange = (value: string) => {
     setText(value);
-    onTextChange(value);
   };
 
   return (

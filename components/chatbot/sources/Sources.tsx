@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { IconFile, IconAlignLeft, IconGlobe, IconMessageQuestion, IconBrandNotion } from "@tabler/icons-react";
 import { FileUpload } from "./FileUpload";
@@ -21,10 +21,12 @@ const SOURCE_TABS = [
 
 const Sources = ({ 
   teamId, 
-  chatbotId 
+  chatbotId,
+  chatbot
 }: { 
   teamId: string;
   chatbotId: string;
+  chatbot: any;
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,6 +35,27 @@ const Sources = ({
   const [fileSize, setFileSize] = useState<number>(0);
   const [fileChars, setFileChars] = useState<number>(0);
   const [isTraining, setIsTraining] = useState(false);
+  const [dataset, setDataset] = useState<any>(null);
+  const [text, setText] = useState<string>('');
+
+  useEffect(() => {
+    const fetchDataset = async () => {
+      try {
+        const response = await fetch(`/api/chatbot/sources/dataset?chatbotId=${chatbotId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch dataset');
+        }
+        const data = await response.json();
+        setDataset(data); // Assuming the API returns the dataset directly
+        setText(data.text)
+      } catch (error) {
+        console.error("Error fetching dataset:", error);
+        toast.error("Failed to load dataset");
+      }
+    };
+
+    fetchDataset();
+  }, [chatbotId]); // Add chatbotId as a dependency
 
   const handleTabChange = (tabId: string) => {
     router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources?tab=${tabId}`);
@@ -42,16 +65,14 @@ const Sources = ({
     try {
       setIsTraining(true);
 
-      const formData = new FormData();
-      formData.append('chatbotId', chatbotId);
-
       const response = await fetch("/api/chatbot/train", {
         headers: {
           "Content-Type": "application/json"
         },
         method: "POST",
         body: JSON.stringify({
-          chatbotId
+          chatbotId, 
+          text,
         }),
       });
 
@@ -83,9 +104,7 @@ const Sources = ({
       case "files":
         return <FileUpload teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount} setFileSize={setFileSize} setFileChars={setFileChars}/>;
       case "text":
-        return <TextInput onTextChange={(text) => {
-          console.log('Text changed:', text);
-        }} />;
+        return <TextInput text={text} setText={setText} />;
       case "website":
         return <WebsiteInput 
           onFetchLinks={(url) => {
@@ -158,7 +177,7 @@ const Sources = ({
           <SourceStats
             fileCount={fileCount}
             fileChars={fileChars}
-            textInputChars={5}
+            textInputChars={text.length}
             charLimit={6_000_000}
             onRetrain={retrain}
             isTraining={isTraining}

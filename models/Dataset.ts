@@ -1,10 +1,12 @@
 // models/Dataset.js
 import mongoose from 'mongoose';
 import toJSON from "./plugins/toJSON";
+import { text } from 'stream/consumers';
 
 interface IDataset {
   chatbotId: string;
   datasetId: string;
+  text: string;
 //   vectorStoreId?: string | null;
 //   openaiAssistantId?: string | null;
   createdAt: Date;
@@ -29,6 +31,10 @@ const datasetSchema = new mongoose.Schema<IDataset>({
     //     type: String,
     //     required: false
     // },
+    text: {
+        type: String,
+        default: null,
+    },
     createdAt: {
         type: Date,
         default: Date.now, // Automatically set the date when created
