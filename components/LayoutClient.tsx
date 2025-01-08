@@ -65,6 +65,7 @@ const ClientLayout = ({ children }: { children: ReactNode }) => {
         <Toaster
           toastOptions={{
             duration: 3000,
+            position: 'top-right'
           }}
         />
 

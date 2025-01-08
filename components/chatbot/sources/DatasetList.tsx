@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { IconTrash, IconRefresh, IconFile, IconDownload } from "@tabler/icons-react";
 import { TrieveSDK } from "trieve-ts-sdk";
+import toast from "react-hot-toast";
 
 interface File {
   id: string;
@@ -18,14 +19,17 @@ interface DatasetListProps {
   datasetId: string;
   uploading: boolean;
   setFileCount: (value: number | ((prevState: number) => number)) => void;
+  setFileChars: (value: number | ((prevState: number) => number)) => void;
   setFileSize: (value: number | ((prevState: number) => number)) => void;
   onDelete?: () => void;
 }
 
-export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading, setFileCount, setFileSize }: DatasetListProps) => {
+export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading, setFileCount, setFileSize, setFileChars }: DatasetListProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dFileId, setDFileId] = useState<string | null>(null);
 
   const fetchFiles = async () => {
     try {
@@ -43,14 +47,19 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
       if (!datasetsResponse.ok) throw new Error("Failed to fetch datasets");
       
       const datasets = await datasetsResponse.json();
-      
+      console.log(datasets.file_and_group_ids)
       // @ts-ignore
       setFiles(datasets.file_and_group_ids.map(item => item.file));
       setFileCount(datasets.file_and_group_ids.length);
       // @ts-ignore
       setFileSize(datasets.file_and_group_ids.reduce((size, file) => {
-        return size + file.size;
+        return size + file.file.metadata.sizeInBytes;
       }, 0.0));
+      // @ts-ignore
+      setFileChars(datasets.file_and_group_ids.reduce((size, file) => {
+        return size + file.file.metadata.sizeInCharacters;
+      }, 0));
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch files");
     } finally {
@@ -60,6 +69,8 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
 
   const handleDelete = async (fileId: string) => {
     if (!confirm("Are you sure you want to delete this file?")) return;
+    setDeleting(true)
+    setDFileId(fileId)
 
     try {
       const response = await fetch(`/api/chatbot/sources/file/${fileId}?datasetId=${datasetId}`, {
@@ -70,8 +81,13 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
 
       await fetchFiles();
       onDelete?.();
+      toast.success("file is successfully deleted.")
     } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete file");
       setError(err instanceof Error ? err.message : "Failed to delete file");
+    } finally {
+      setDeleting(false)
+      setDFileId(null);
     }
   };
 
@@ -156,7 +172,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                   <div>
                     <div className="font-medium">{file.file_name}</div>
                     <div className="text-sm text-gray-500">
-                      Size: {Math.round(file.size / 1024)}KB • Created: {new Date(file.created_at).toLocaleDateString()}
+                      Size: {Math.round(file.metadata.sizeInBytes / 1024)}KB • Created: {new Date(file.created_at).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
@@ -170,8 +186,9 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                   <button
                     onClick={() => handleDelete(file.id)}
                     className="text-red-500 hover:text-red-700"
+                    disabled={deleting}
                   >
-                    <IconTrash className="w-5 h-5" />
+                    {file.id==dFileId ? 'deleting' :<IconTrash className="w-5 h-5" /> }
                   </button>
                 </div>
               </div>

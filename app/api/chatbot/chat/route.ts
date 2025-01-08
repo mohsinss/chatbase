@@ -1,7 +1,7 @@
 import { sendAnthropic } from '@/libs/anthropic';
 import { sendGemini } from '@/libs/gemini';
 import OpenAI from 'openai';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import connectMongo from "@/libs/mongoose";
 import ChatbotAISettings from "@/models/ChatbotAISettings";
 import Dataset from "@/models/Dataset";
@@ -48,9 +48,49 @@ export async function POST(req: NextRequest) {
     const { messages, chatbotId } = await req.json();
 
     await connectMongo();
+    console.time('MongoDB Connection Time'); // Start timing MongoDB connection
+    await connectMongo();
+    console.timeEnd('MongoDB Connection Time'); // End timing MongoDB connection
 
+    // Measure time for fetching AI settings and dataset
+    const fetchStart = Date.now();
     const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
     const dataset = await Dataset.findOne({ chatbotId });
+    console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
+    
+    if (!dataset) {
+      return NextResponse.json(
+        { error: "No dataset found for this chatbot" },
+        { status: 404 }
+      );
+    }
+
+    const options = {
+      method: 'POST',
+      headers: {
+        'TR-Dataset': dataset.datasetId,
+        Authorization: `Bearer ${process.env.TRIEVE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: messages[messages.length - 1].content,
+        search_type: 'semantic',
+        page_size: 4
+      })
+    };
+    
+    const chunk_response = await fetch('https://api.trieve.ai/api/chunk/search', options)
+    const chunk_response_data = await chunk_response.json();
+
+    if (!chunk_response.ok) {
+      console.error("Dataset creation failed:", chunk_response_data);
+      throw new Error(chunk_response_data.message || "Failed to create dataset");
+    }
+    console.log(chunk_response)
+    let relevant_chunk = 'Please check this information well:\n';
+    for(let i = 0 ; i < chunk_response_data.chunks.length ; i++) {
+      relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
+    }
 
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;
@@ -72,6 +112,8 @@ export async function POST(req: NextRequest) {
 
     const encoder = new TextEncoder();
 
+    // Measure time for model processing
+    const modelProcessingStart = Date.now();
     // Check model provider and handle accordingly
     if (internalModel.startsWith('claude-')) {
       console.log('Using Anthropic Model:', internalModel);
@@ -86,6 +128,7 @@ export async function POST(req: NextRequest) {
             await sendAnthropic(
               [
                 { role: 'system', content: systemPrompt },
+                { role: 'user', content: relevant_chunk },
                 ...messages
               ],
               'user-1',
@@ -123,6 +166,7 @@ export async function POST(req: NextRequest) {
             await sendGemini(
               [
                 { role: 'system', content: systemPrompt },
+                { role: 'user', content: relevant_chunk },
                 ...messages
               ],
               'user-1',
@@ -235,11 +279,13 @@ export async function POST(req: NextRequest) {
       if (O1_MODELS.includes(internalModel)) {
         formattedMessages = [
           { role: 'user', content: systemPrompt },
+          { role: 'user', content: relevant_chunk },
           ...messages
         ];
       } else {
         formattedMessages = [
           { role: 'system', content: systemPrompt },
+          { role: 'user', content: relevant_chunk },
           ...messages
         ];
       }
@@ -265,6 +311,8 @@ export async function POST(req: NextRequest) {
         messages: formattedMessages,
         stream: true,
       });
+
+      console.log(`Model processing took ${Date.now() - modelProcessingStart}ms`);
 
       const stream = new ReadableStream({
         async start(controller) {

@@ -5,8 +5,8 @@ import toJSON from "./plugins/toJSON";
 interface IDataset {
   chatbotId: string;
   datasetId: string;
-  vectorStoreId?: string | null;
-  openaiAssistantId?: string | null;
+//   vectorStoreId?: string | null;
+//   openaiAssistantId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,14 +21,14 @@ const datasetSchema = new mongoose.Schema<IDataset>({
         type: String,
         required: true,
     },
-    vectorStoreId: {
-        type: String,
-        default: null
-    },
-    openaiAssistantId: {
-        type: String,
-        required: false
-    },
+    // vectorStoreId: {
+    //     type: String,
+    //     default: null
+    // },
+    // openaiAssistantId: {
+    //     type: String,
+    //     required: false
+    // },
     createdAt: {
         type: Date,
         default: Date.now, // Automatically set the date when created

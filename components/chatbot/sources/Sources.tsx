@@ -9,6 +9,7 @@ import TextInput from './TextInput';
 import WebsiteInput from './WebsiteInput';
 import QAInput from './QAInput';
 import NotionInput from './NotionInput';
+import toast, { Toaster } from 'react-hot-toast';
 
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
@@ -30,6 +31,7 @@ const Sources = ({
   const currentTab = searchParams.get('tab') || 'files';
   const [fileCount, setFileCount] = useState<number>(0);
   const [fileSize, setFileSize] = useState<number>(0);
+  const [fileChars, setFileChars] = useState<number>(0);
   const [isTraining, setIsTraining] = useState(false);
 
   const handleTabChange = (tabId: string) => {
@@ -60,9 +62,16 @@ const Sources = ({
 
       const data = await response.json();
       console.log("Retrain response:", data);
-      // setSuccess(`Successfully uploaded ${acceptedFiles.length} file(s)`);
+      
+      toast.success("Retraining completed successfully!");
+      
+      // Redirect to the sources page without the tab query parameter
+      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}`);
     } catch (err) {
       console.error("Retrain error:", err);
+      
+      toast.error(err instanceof Error ? err.message : "Failed to retrain");
+      
       // setError(err instanceof Error ? err.message : "Failed to upload file");
     } finally {
       setIsTraining(false);
@@ -72,7 +81,7 @@ const Sources = ({
   const renderContent = () => {
     switch (currentTab) {
       case "files":
-        return <FileUpload teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount} setFileSize={setFileSize} />;
+        return <FileUpload teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount} setFileSize={setFileSize} setFileChars={setFileChars}/>;
       case "text":
         return <TextInput onTextChange={(text) => {
           console.log('Text changed:', text);
@@ -148,7 +157,7 @@ const Sources = ({
         <div className="w-[300px] shrink-0">
           <SourceStats
             fileCount={fileCount}
-            fileChars={4290}
+            fileChars={fileChars}
             textInputChars={5}
             charLimit={6_000_000}
             onRetrain={retrain}

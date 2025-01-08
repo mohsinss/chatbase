@@ -9,10 +9,11 @@ interface FileUploadProps {
   teamId: string;
   chatbotId: string;
   setFileCount: (value: number | ((prevState: number) => number)) => void;
+  setFileChars: (value: number | ((prevState: number) => number)) => void;
   setFileSize: (value: number | ((prevState: number) => number)) => void;
 }
 
-export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount }: FileUploadProps) => {
+export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFileChars }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -144,6 +145,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount }: Fil
         uploading={uploading}
         setFileCount={setFileCount}
         setFileSize={setFileSize}
+        setFileChars={setFileChars}
         onDelete={() => setSuccess(null)} 
       />
     </div>
