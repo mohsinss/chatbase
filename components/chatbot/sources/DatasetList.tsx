@@ -62,13 +62,8 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
     if (!confirm("Are you sure you want to delete this file?")) return;
 
     try {
-      const response = await fetch(`https://api.trieve.ai/api/file/${fileId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
-          "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
-          "TR-Dataset": datasetId,
-        }
+      const response = await fetch(`/api/chatbot/sources/file/${fileId}?datasetId=${datasetId}`, {
+        method: "DELETE"
       });
 
       if (!response.ok) throw new Error("Failed to delete file");

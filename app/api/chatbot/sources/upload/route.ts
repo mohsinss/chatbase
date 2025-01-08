@@ -28,6 +28,12 @@ export async function POST(req: Request) {
       .replace(/\//g, '_')
       .replace(/=+$/, '');
 
+    let metadata = {
+      sizeInBytes: arrayBuffer.byteLength, // Size in bytes of the original data
+      sizeInCharacters: base64String.length, // Size in characters of the base64 string
+      uniqueTag: `${fileName}-${Date.now()}` // Append timestamp to ensure uniqueness
+    };
+    
     const response = await fetch("https://api.trieve.ai/api/file", {
       method: "POST",
       headers: {
@@ -39,6 +45,7 @@ export async function POST(req: Request) {
         {
           base64_file: base64String,
           file_name: fileName,
+          metadata,
         }
       )
     });
