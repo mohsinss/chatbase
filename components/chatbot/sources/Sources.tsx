@@ -37,6 +37,7 @@ const Sources = ({
   const [isTraining, setIsTraining] = useState(false);
   const [dataset, setDataset] = useState<any>(null);
   const [text, setText] = useState<string>('');
+  const [qaPairs, setQaPairs] = useState<{ id: string; question: string; answer: string }[]>([]);
 
   useEffect(() => {
     const fetchDataset = async () => {
@@ -48,6 +49,8 @@ const Sources = ({
         const data = await response.json();
         setDataset(data); // Assuming the API returns the dataset directly
         setText(data.text)
+        if(data.qaPairs)
+          setQaPairs(data.qaPairs)
       } catch (error) {
         console.error("Error fetching dataset:", error);
         toast.error("Failed to load dataset");
@@ -73,6 +76,7 @@ const Sources = ({
         body: JSON.stringify({
           chatbotId, 
           text,
+          qaPairs,
         }),
       });
 
@@ -115,11 +119,7 @@ const Sources = ({
           }}
         />;
       case "qa":
-        return <QAInput 
-          onQAChange={(qaPairs) => {
-            console.log('QA pairs changed:', qaPairs);
-          }}
-        />;
+        return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs}/>;
       case "notion":
         return <NotionInput 
           onConnect={() => {

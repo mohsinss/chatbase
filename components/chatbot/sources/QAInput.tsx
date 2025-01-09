@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -10,14 +11,11 @@ interface QAPair {
 }
 
 interface QAInputProps {
-  onQAChange: (qaPairs: QAPair[]) => void;
+  qaPairs: QAPair[];
+  setQaPairs: React.Dispatch<React.SetStateAction<QAPair[]>>;
 }
 
-const QAInput = ({ onQAChange }: QAInputProps) => {
-  const [qaPairs, setQaPairs] = useState<QAPair[]>([
-    { id: '1', question: '', answer: '' }
-  ]);
-
+const QAInput: React.FC<QAInputProps> = ({ qaPairs, setQaPairs }) => {
   const addQAPair = () => {
     const newPair = {
       id: Date.now().toString(),
@@ -25,18 +23,16 @@ const QAInput = ({ onQAChange }: QAInputProps) => {
       answer: ''
     };
     setQaPairs([...qaPairs, newPair]);
-    onQAChange([...qaPairs, newPair]);
   };
 
   const deleteQAPair = (id: string) => {
     const newPairs = qaPairs.filter(pair => pair.id !== id);
     setQaPairs(newPairs);
-    onQAChange(newPairs);
   };
 
   const deleteAll = () => {
     setQaPairs([{ id: Date.now().toString(), question: '', answer: '' }]);
-    onQAChange([]);
+    setQaPairs([]);
   };
 
   const updateQAPair = (id: string, field: 'question' | 'answer', value: string) => {
@@ -44,7 +40,6 @@ const QAInput = ({ onQAChange }: QAInputProps) => {
       pair.id === id ? { ...pair, [field]: value } : pair
     );
     setQaPairs(newPairs);
-    onQAChange(newPairs);
   };
 
   return (

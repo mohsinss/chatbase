@@ -3,10 +3,17 @@ import mongoose from 'mongoose';
 import toJSON from "./plugins/toJSON";
 import { text } from 'stream/consumers';
 
+interface IQAPair {
+  id: string;
+  question: string;
+  answer: string;
+}
+
 interface IDataset {
   chatbotId: string;
   datasetId: string;
   text: string;
+  qaPairs?: IQAPair[];
 //   vectorStoreId?: string | null;
 //   openaiAssistantId?: string | null;
   createdAt: Date;
@@ -34,6 +41,14 @@ const datasetSchema = new mongoose.Schema<IDataset>({
     text: {
         type: String,
         default: null,
+    },
+    qaPairs: {
+        type: [{ 
+            id: { type: String, required: true },
+            question: { type: String, required: true },
+            answer: { type: String, required: true }
+        }],
+        default: []
     },
     createdAt: {
         type: Date,

@@ -58,6 +58,7 @@ export async function POST(req: Request) {
       // vectorStoreId: null,
       // openaiAssistantId: null,
       text: null,
+      qaPairs: [],
     });
     
     await newDataset.save();

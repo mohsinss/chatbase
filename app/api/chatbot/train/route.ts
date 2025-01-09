@@ -106,14 +106,25 @@ async function clearVectorStore(vectorStoreId) {
 
 export async function POST(req: Request) {
   try {
-    const { chatbotId, text } = await req.json();
+    const { chatbotId, text, qaPairs } = await req.json();
     console.log("Received text:", text);
+    
+    // Convert qaPairs to a string containing only questions and answers
+    //@ts-ignore
+    const qaString = qaPairs.map(pair => `Question: ${pair.question} Answer: ${pair.answer}`).join('\n');
+    console.log("Converted qaPairs to string:", qaString);
 
     const base64File = Buffer.from(text, 'utf-8').toString('base64')
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
     console.log("Base64 encoded file:", base64File);
+
+    const base64QAFile = Buffer.from(qaString, 'utf-8').toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    console.log("Base64 encoded file for qa:", base64QAFile);
 
     if (!chatbotId) {
       return NextResponse.json({ error: "chatbotId is required" }, { status: 400 });
@@ -135,7 +146,7 @@ export async function POST(req: Request) {
     // Perform update with error catching
     const updatedDataset = await DatasetModel.findOneAndUpdate(
       { chatbotId: chatbotId },
-      { $set: { text: text } },
+      { $set: { text, qaPairs } },
       { 
         new: true, 
         runValidators: true,
@@ -162,7 +173,7 @@ export async function POST(req: Request) {
         {
           filter: {
             metadata: {
-              type: 'texttexttexttext'
+              type: 'text'
             }
           }
         }
@@ -172,6 +183,30 @@ export async function POST(req: Request) {
     // Check if the chunk deletion was successful
     if (!response2.ok) {
       throw new Error(`Failed to delete chunks: ${response2.statusText}`);
+    }
+    
+    // Delete associated chunks using the uniqueTag from the file metadata
+    const response3 = await fetch(`https://api.trieve.ai/api/chunk`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+        "TR-Dataset": existingDataset.datasetId, // Use datasetId since it's guaranteed to be present
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(
+        {
+          filter: {
+            metadata: {
+              type: 'qa'
+            }
+          }
+        }
+      )
+    });
+
+    // Check if the chunk deletion was successful
+    if (!response3.ok) {
+      throw new Error(`Failed to delete chunks: ${response3.statusText}`);
     }
 
     const response = await fetch("https://api.trieve.ai/api/file", {
@@ -183,7 +218,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify(
         {
-          base64_file: base64File,
+          base64_file: base64QAFile,
           file_name: 'texttexttexttext.txt',
           metadata: {
             type: 'text'
@@ -197,6 +232,31 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       throw new Error(`Failed to update text: ${response.statusText} - ${JSON.stringify(responseData)}`);
+    }
+
+    const response4 = await fetch("https://api.trieve.ai/api/file", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+        "TR-Dataset": existingDataset.datasetId,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          base64_file: base64File,
+          file_name: 'texttexttexttextqa.txt',
+          metadata: {
+            type: 'qa'
+          },
+        }
+      )
+    });
+
+    const responseData4 = await response4.json();
+    console.log("API response4:", responseData4);
+
+    if (!response4.ok) {
+      throw new Error(`Failed to update text for qa: ${response4.statusText} - ${JSON.stringify(responseData4)}`);
     }
 
     return NextResponse.json({
