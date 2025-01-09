@@ -30,7 +30,7 @@ export async function DELETE(req: Request) {
       const datasetId = existingDataset._id; // Assuming _id is the dataset ID
       const options = {
         method: 'DELETE',
-        headers: {'TR-Dataset': '<tr-dataset>', Authorization: '<api-key>'}
+        headers: {'TR-Dataset': datasetId, Authorization: `Bearer ${process.env.TRIEVE_API_KEY}`}
       };
 
       await fetch(`https://api.trieve.ai/api/dataset/${datasetId}`, options)

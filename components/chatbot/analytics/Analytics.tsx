@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconMessageCircle, IconTags, IconMoodSmile } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import Datepicker from "react-tailwindcss-datepicker";
 
 const SUB_TABS = [
   { id: "chats", label: "Chats", icon: <IconMessageCircle className="w-4 h-4" /> },
@@ -27,20 +28,37 @@ const Analytics = ({
     // Add more fields if needed
   });
 
-  useEffect(() => {
-    // Fetch analytics data
-    const fetchAnalyticsData = async () => {
-      try {
-        const response = await fetch(`/api/chatbot/analytics/${chatbotId}`);
-        const data = await response.json();
-        setAnalyticsData(data);
-      } catch (error) {
-        console.error("Failed to fetch analytics data", error);
-      }
-    };
+  const [value, setValue] = useState({
+    startDate: null,
+    endDate: null
+  });
+  // Fetch analytics data
+  //@ts-ignore
+  const fetchAnalyticsData = async (v) => {
+    try {
+      const response = await fetch(`/api/chatbot/analytics/${chatbotId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(v),
+      });
+      const data = await response.json();
+      setAnalyticsData(data);
+    } catch (error) {
+      console.error("Failed to fetch analytics data", error);
+    }
+  };
 
-    fetchAnalyticsData();
+  useEffect(() => {
+    fetchAnalyticsData(null);
   }, [chatbotId]);
+
+  //@ts-ignore
+  const onChangePeriod = (v) => {
+    setValue(v)
+    fetchAnalyticsData(v)
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-8">
@@ -68,9 +86,12 @@ const Analytics = ({
       <div className="space-y-8">
         {/* Date Range Picker */}
         <div className="flex justify-end">
-          <button className="btn btn-outline">
-            2024-12-19 ~ 2024-12-25
-          </button>
+          <div className="w-full max-w-[300px] border-[1px] rounded-md">
+            <Datepicker
+              value={value}
+              onChange={newValue => onChangePeriod(newValue)}
+            />
+          </div>
         </div>
 
         {/* Analytics Cards */}
