@@ -174,7 +174,7 @@ const Sources = ({
           <SourceStats
             fileCount={fileCount}
             fileChars={fileChars}
-            textInputChars={text.length}
+            textInputChars={text ? text.length : 0}
             charLimit={6_000_000}
             onRetrain={retrain}
             isTraining={isTraining}
