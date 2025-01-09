@@ -117,23 +117,54 @@ export async function POST(req: Request) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
+
+    let linkText = '';
+    // Iterate over each link to fetch content and count characters
+    for (let link of links) {
+      const response = await fetch(link.link);
+      if (!response.ok) {
+        console.error(`Failed to fetch content from ${link}: ${response.statusText}`);
+        continue; // Skip to the next link if there's an error
+      }
+      const content = await response.text();
+      // Function to remove HTML tags and scripts
+      const stripHTMLTagsAndScripts = (str: string) => {
+        // Remove script tags
+        str = str.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, ' ');
+        // Remove all other HTML tags
+        return str.replace(/<[^>]*>/g, ' ');
+      };
+
+      const cleanedContent = stripHTMLTagsAndScripts(content);
+      console.log(cleanedContent);
+      // Parse the HTML and extract the body text
+      const charCount = cleanedContent.length; // Get character count
+      link.chars = charCount; // Update link with character count
+      console.log(`Fetched content from ${link.link} with ${charCount} characters.`);
+      // console.log(bodyText); // Log the body text
+      linkText += cleanedContent + '\n';
+    }
+
     // Convert qaPairs to a string containing only questions and answers
     //@ts-ignore
-    const qaString = qaPairs.map(pair => `Question: ${pair.question} Answer: ${pair.answer}`).join('\n');
+    const qaString = qaPairs.length > 0 ? qaPairs.map(pair => `Question: ${pair.question} Answer: ${pair.answer}`).join('\n') : '';
     console.log("Converted qaPairs to string:", qaString);
 
     const base64File = Buffer.from(text, 'utf-8').toString('base64')
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
-    console.log("Base64 encoded file:", base64File);
+    console.log("Base64 encoded file:", base64File)
 
     const base64QAFile = Buffer.from(qaString, 'utf-8').toString('base64')
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
-    console.log("Base64 encoded file for qa:", base64QAFile);
+
+    const base64LinksFile = Buffer.from(linkText, 'utf-8').toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
 
     await connectMongo();
 
@@ -146,8 +177,8 @@ export async function POST(req: Request) {
     const updatedDataset = await DatasetModel.findOneAndUpdate(
       { chatbotId: chatbotId },
       { $set: { text, qaPairs, links } },
-      { 
-        new: true, 
+      {
+        new: true,
         runValidators: true,
         // Add this to get more detailed error information
         validateBeforeSave: true
@@ -159,7 +190,7 @@ export async function POST(req: Request) {
       console.log("Document check after failed update:", checkDataset);
       throw new Error("Dataset not found during update");
     }
-    
+
     // Delete associated chunks using the uniqueTag from the file metadata
     const delete_text_response = await fetch(`https://api.trieve.ai/api/chunk`, {
       method: "DELETE",
@@ -183,7 +214,7 @@ export async function POST(req: Request) {
     if (!delete_text_response.ok) {
       throw new Error(`Failed to delete chunks: ${delete_text_response.statusText}`);
     }
-    
+
     // Delete associated chunks using the uniqueTag from the file metadata
     const delete_qa_response = await fetch(`https://api.trieve.ai/api/chunk`, {
       method: "DELETE",
@@ -207,7 +238,7 @@ export async function POST(req: Request) {
     if (!delete_qa_response.ok) {
       throw new Error(`Failed to delete chunks: ${delete_qa_response.statusText}`);
     }
-    
+
     // Delete associated chunks using the uniqueTag from the file metadata
     const delete_links_response = await fetch(`https://api.trieve.ai/api/chunk`, {
       method: "DELETE",
@@ -220,7 +251,7 @@ export async function POST(req: Request) {
         {
           filter: {
             metadata: {
-              type: 'qa'
+              type: 'link'
             }
           }
         }
@@ -241,7 +272,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify(
         {
-          base64_file: base64QAFile,
+          base64_file: base64File,
           file_name: 'texttexttexttext.txt',
           metadata: {
             type: 'text'
@@ -265,7 +296,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify(
         {
-          base64_file: base64File,
+          base64_file: base64QAFile,
           file_name: 'texttexttexttextqa.txt',
           metadata: {
             type: 'qa'
@@ -278,6 +309,30 @@ export async function POST(req: Request) {
 
     if (!add_qa_response.ok) {
       throw new Error(`Failed to update text for qa: ${add_qa_response.statusText} - ${JSON.stringify(responseData)}`);
+    }
+
+    const add_links_response = await fetch("https://api.trieve.ai/api/file", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+        "TR-Dataset": existingDataset.datasetId,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          base64_file: base64LinksFile,
+          file_name: 'texttexttexttextlink.txt',
+          metadata: {
+            type: 'link'
+          },
+        }
+      )
+    });
+
+    responseData = await add_links_response.json();
+
+    if (!add_links_response.ok) {
+      throw new Error(`Failed to update text for qa: ${add_links_response.statusText} - ${JSON.stringify(responseData)}`);
     }
 
     return NextResponse.json({

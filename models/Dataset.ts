@@ -12,6 +12,7 @@ interface IQAPair {
 interface ILink {
   id: string;
   link: string;
+  chars: number;
 }
 
 interface IDataset {
@@ -60,6 +61,7 @@ const datasetSchema = new mongoose.Schema<IDataset>({
         type: [{ 
             id: { type: String, required: true },
             link: { type: String, required: true },
+            chars: { type: Number, required: false },
         }],
         default: []
     },

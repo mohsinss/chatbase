@@ -49,7 +49,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
       const datasets = await datasetsResponse.json();
       console.log(datasets.file_and_group_ids)
       // @ts-ignore
-      const files = datasets.file_and_group_ids.filter(item => item.file.file_name != 'texttexttexttext.txt').filter(item => item.file.file_name != 'texttexttexttextqa.txt');
+      const files = datasets.file_and_group_ids.filter(item => item.file.file_name != 'texttexttexttext.txt').filter(item => item.file.file_name != 'texttexttexttextqa.txt').filter(item => item.file.file_name != 'texttexttexttextlink.txt');
       // @ts-ignore
       setFiles(files.map(item => item.file));
       setFileCount(files.length);
@@ -81,12 +81,33 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
           throw new Error(`Failed to delete file: ${response.statusText}`);
         }
       }
+      
       //@ts-ignore
       const qas = datasets.file_and_group_ids.filter(item => item.file.file_name == 'texttexttexttextqa.txt');
 
       for(let i = 0 ; i < qas.length ; i++){
         // Delete the file using the provided fileId
         const response = await fetch(`https://api.trieve.ai/api/file/${qas[i].file.id}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
+            "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
+            "TR-Dataset": datasetId, // Use datasetId since it's guaranteed to be present
+          }
+        });
+
+        // Check if the file deletion was successful
+        if (!response.ok) {
+          throw new Error(`Failed to delete file: ${response.statusText}`);
+        }
+      }
+
+      //@ts-ignore
+      const links = datasets.file_and_group_ids.filter(item => item.file.file_name == 'texttexttexttextlink.txt');
+
+      for(let i = 0 ; i < links.length ; i++){
+        // Delete the file using the provided fileId
+        const response = await fetch(`https://api.trieve.ai/api/file/${links[i].file.id}`, {
           method: "DELETE",
           headers: {
             "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,

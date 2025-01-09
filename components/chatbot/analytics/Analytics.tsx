@@ -43,6 +43,11 @@ const Analytics = ({
         },
         body: JSON.stringify(v),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       setAnalyticsData(data);
     } catch (error) {
@@ -51,7 +56,7 @@ const Analytics = ({
   };
 
   useEffect(() => {
-    fetchAnalyticsData(null);
+    fetchAnalyticsData({startDate:null, endDate:null});
   }, [chatbotId]);
 
   //@ts-ignore

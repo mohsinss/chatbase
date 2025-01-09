@@ -38,7 +38,104 @@ const Sources = ({
   const [dataset, setDataset] = useState<any>(null);
   const [text, setText] = useState<string>('');
   const [qaPairs, setQaPairs] = useState<{ id: string; question: string; answer: string }[]>([]);
-  const [links, setLinks] = useState<{ id: string; link: string}[]>([]);
+  const [links, setLinks] = useState<{ id: string; link: string, chars: number}[]>([]);
+
+  const fetchFiles = async () => {
+    try {
+      if(!dataset?.datasetId)
+        return;
+      // First get the dataset ID
+      const datasetsResponse = await fetch("https://api.trieve.ai/api/dataset/files/"+dataset?.datasetId+"/1", {
+        headers: {
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
+          "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
+          "TR-Dataset": dataset?.datasetId,
+        }
+      });
+      
+      if (!datasetsResponse.ok) throw new Error("Failed to fetch datasets");
+      
+      const datasets = await datasetsResponse.json();
+      console.log(datasets.file_and_group_ids)
+      // @ts-ignore
+      const files = datasets.file_and_group_ids.filter(item => item.file.file_name != 'texttexttexttext.txt').filter(item => item.file.file_name != 'texttexttexttextqa.txt').filter(item => item.file.file_name != 'texttexttexttextlink.txt');
+      // @ts-ignore
+      setFiles(files.map(item => item.file));
+      setFileCount(files.length);
+      // @ts-ignore
+      setFileSize(files.reduce((size, file) => {
+        return size + file.file.metadata.sizeInBytes;
+      }, 0.0));
+      // @ts-ignore
+      setFileChars(files.reduce((size, file) => {
+        return size + file.file.metadata.sizeInCharacters;
+      }, 0));
+      
+      //@ts-ignore
+      const texts = datasets.file_and_group_ids.filter(item => item.file.file_name == 'texttexttexttext.txt');
+
+      for(let i = 0 ; i < texts.length ; i++){
+        // Delete the file using the provided fileId
+        const response = await fetch(`https://api.trieve.ai/api/file/${texts[i].file.id}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
+            "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
+            "TR-Dataset": dataset?.datasetId, // Use datasetId since it's guaranteed to be present
+          }
+        });
+
+        // Check if the file deletion was successful
+        if (!response.ok) {
+          throw new Error(`Failed to delete file: ${response.statusText}`);
+        }
+      }
+      //@ts-ignore
+      const qas = datasets.file_and_group_ids.filter(item => item.file.file_name == 'texttexttexttextqa.txt');
+
+      for(let i = 0 ; i < qas.length ; i++){
+        // Delete the file using the provided fileId
+        const response = await fetch(`https://api.trieve.ai/api/file/${qas[i].file.id}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
+            "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
+            "TR-Dataset": dataset?.datasetId, // Use datasetId since it's guaranteed to be present
+          }
+        });
+
+        // Check if the file deletion was successful
+        if (!response.ok) {
+          throw new Error(`Failed to delete file: ${response.statusText}`);
+        }
+      }
+
+      //@ts-ignore
+      const links = datasets.file_and_group_ids.filter(item => item.file.file_name == 'texttexttexttextlink.txt');
+
+      for(let i = 0 ; i < links.length ; i++){
+        // Delete the file using the provided fileId
+        const response = await fetch(`https://api.trieve.ai/api/file/${links[i].file.id}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
+            "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
+            "TR-Dataset": dataset?.datasetId, // Use datasetId since it's guaranteed to be present
+          }
+        });
+
+        // Check if the file deletion was successful
+        if (!response.ok) {
+          throw new Error(`Failed to delete file: ${response.statusText}`);
+        }
+      }
+      
+    } catch (err) {
+      // setError(err instanceof Error ? err.message : "Failed to fetch files");
+    } finally {
+      // setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDataset = async () => {
@@ -49,11 +146,13 @@ const Sources = ({
         }
         const data = await response.json();
         setDataset(data); // Assuming the API returns the dataset directly
-        setText(data.text)
         if(data.qaPairs)
           setQaPairs(data.qaPairs)
+        if(data.text)
+          setText(data.text)
         if(data.links)
           setLinks(data.links)
+        fetchFiles()
       } catch (error) {
         console.error("Error fetching dataset:", error);
         toast.error("Failed to load dataset");
@@ -95,7 +194,7 @@ const Sources = ({
       toast.success("Retraining completed successfully!");
       
       // Redirect to the sources page without the tab query parameter
-      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}`);
+      // router.push(`/dashboard/${teamId}/chatbot/${chatbotId}`);
     } catch (err) {
       console.error("Retrain error:", err);
       
@@ -178,6 +277,10 @@ const Sources = ({
             charLimit={6_000_000}
             onRetrain={retrain}
             isTraining={isTraining}
+            qaInputCount={qaPairs.length}
+            qaInputChars={qaPairs.reduce((total, pair) => total + pair.question.length + pair.answer.length, 0)}
+            linkInputCount={links.length}
+            linkInputChars={links.reduce((total, link) => total + link.chars, 0)}
           />
         </div>
       </div>

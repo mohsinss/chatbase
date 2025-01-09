@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 
 interface WebsiteInputProps {
-  links: { id: string; link: string }[];
+  links: { id: string; link: string, chars: number }[];
   setLinks: React.Dispatch<React.SetStateAction<{ id: string; link: string }[]>>;
 }
 
@@ -13,11 +13,29 @@ const WebsiteInput: React.FC<WebsiteInputProps> = ({ links, setLinks }) => {
   const [crawlUrl, setCrawlUrl] = useState('');
   const [sitemapUrl, setSitemapUrl] = useState('');
 
+  const normalizeUrl = (url: string) => {
+    try {
+      const normalized = new URL(url);
+      return normalized.origin + normalized.pathname.replace(/\/$/, ''); // Remove trailing slash
+    } catch (error) {
+      return url; // Return as is if URL is invalid
+    }
+  };
+
   const onFetchLinks = () => {
+    const normalizedCrawlUrl = normalizeUrl(crawlUrl);
+
+    // Check for duplication
+    if (links.some(link => normalizeUrl(link.link) === normalizedCrawlUrl)) {
+      alert('This link already exists.');
+      return;
+    }
+
     setLinks([...links, {
       id: new Date().toString(),
-      link: crawlUrl,
-    }])
+      link: normalizedCrawlUrl,
+      chars: 0,
+    }]);
   }
 
   const deleteLink = (linkid: string) => {

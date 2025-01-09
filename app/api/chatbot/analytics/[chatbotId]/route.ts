@@ -37,6 +37,9 @@ export async function POST(
         totalMessages: totalMessages[0] ? totalMessages[0].totalMessages : 0
       });
     } catch (error) {
-      return NextResponse.json({ error: "Failed to fetch chatbot" }, { status: 500 });
+      return NextResponse.json({ 
+        error: "Failed to fetch chatbot chat analytics", 
+        details: error.message
+      }, { status: 500 });
     }
   }
