@@ -4,6 +4,7 @@ import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
 import Chatbot from "@/models/Chatbot";
 import ChatbotAISettings from "@/models/ChatbotAISettings";
+import DatasetModel from "@/models/Dataset";
 
 export async function DELETE(req: Request) {
   try {
@@ -20,6 +21,28 @@ export async function DELETE(req: Request) {
     }
 
     await connectMongo();
+
+    // Check for existing dataset ID in MongoDB
+    let existingDataset = await DatasetModel.findOne({ chatbotId });
+
+    if (existingDataset) {
+      // If a dataset exists, delete it using the external API
+      const datasetId = existingDataset._id; // Assuming _id is the dataset ID
+      const options = {
+        method: 'DELETE',
+        headers: {'TR-Dataset': '<tr-dataset>', Authorization: '<api-key>'}
+      };
+
+      await fetch(`https://api.trieve.ai/api/dataset/${datasetId}`, options)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to delete dataset');
+          }
+          return response.json();
+        })
+        .then(response => console.log(response))
+        .catch(err => console.error(err));
+    }
     
     // Delete the chatbot and its associated data
     await Promise.all([

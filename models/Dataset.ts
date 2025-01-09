@@ -9,11 +9,17 @@ interface IQAPair {
   answer: string;
 }
 
+interface ILink {
+  id: string;
+  link: string;
+}
+
 interface IDataset {
   chatbotId: string;
   datasetId: string;
   text: string;
   qaPairs?: IQAPair[];
+  links?: ILink[];
 //   vectorStoreId?: string | null;
 //   openaiAssistantId?: string | null;
   createdAt: Date;
@@ -47,6 +53,13 @@ const datasetSchema = new mongoose.Schema<IDataset>({
             id: { type: String, required: true },
             question: { type: String, required: true },
             answer: { type: String, required: true }
+        }],
+        default: []
+    },
+    links: {
+        type: [{ 
+            id: { type: String, required: true },
+            link: { type: String, required: true },
         }],
         default: []
     },

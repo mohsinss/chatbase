@@ -1,16 +1,29 @@
+import React from 'react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { IconPlus } from '@tabler/icons-react';
+import { IconPlus, IconTrash } from '@tabler/icons-react';
 
 interface WebsiteInputProps {
-  onFetchLinks: (url: string) => void;
-  onLoadSitemap: (url: string) => void;
+  links: { id: string; link: string }[];
+  setLinks: React.Dispatch<React.SetStateAction<{ id: string; link: string }[]>>;
 }
 
-const WebsiteInput = ({ onFetchLinks, onLoadSitemap }: WebsiteInputProps) => {
+const WebsiteInput: React.FC<WebsiteInputProps> = ({ links, setLinks }) => {
   const [crawlUrl, setCrawlUrl] = useState('');
   const [sitemapUrl, setSitemapUrl] = useState('');
+
+  const onFetchLinks = () => {
+    setLinks([...links, {
+      id: new Date().toString(),
+      link: crawlUrl,
+    }])
+  }
+
+  const deleteLink = (linkid: string) => {
+    const newLinks = links.filter(link => link.id !== linkid);
+    setLinks(newLinks);
+  }
 
   return (
     <div className="w-full space-y-8">
@@ -27,7 +40,7 @@ const WebsiteInput = ({ onFetchLinks, onLoadSitemap }: WebsiteInputProps) => {
             className="flex-1"
           />
           <Button 
-            onClick={() => onFetchLinks(crawlUrl)}
+            onClick={() => onFetchLinks()}
             className="bg-black text-white hover:bg-gray-800"
           >
             Fetch links
@@ -59,7 +72,7 @@ const WebsiteInput = ({ onFetchLinks, onLoadSitemap }: WebsiteInputProps) => {
             className="flex-1"
           />
           <Button 
-            onClick={() => onLoadSitemap(sitemapUrl)}
+            onClick={() => {console.log('Load sitemap')}}
             className="bg-black text-white hover:bg-gray-800"
           >
             Load sitemap
@@ -80,6 +93,17 @@ const WebsiteInput = ({ onFetchLinks, onLoadSitemap }: WebsiteInputProps) => {
           </Button>
         </div>
         {/* Links will be listed here */}
+        {links.map((link) => {
+          return <div className='p-4 bg-white rounded-lg border relative'>            
+            <button
+              onClick={() => deleteLink(link.id)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-red-500"
+            >
+              <IconTrash className="h-5 w-5" />
+            </button>
+            <div className=''>{link.link}</div>            
+          </div>
+        })}
       </div>
     </div>
   );

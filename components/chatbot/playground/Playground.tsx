@@ -40,6 +40,7 @@ interface ChatContainerProps {
   config: any;
   isLoading: boolean;
   input: string;
+  chatbotId: string;
   setInput: (input: string) => void;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   handleRefresh: () => void;
@@ -56,7 +57,8 @@ const ChatContainer = ({
   setInput,
   handleSubmit,
   handleRefresh,
-  messagesEndRef
+  messagesEndRef,
+  chatbotId
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
     if(confidenceScore === -1){
@@ -70,6 +72,70 @@ const ChatContainer = ({
     const blue = 241; // Keep blue constant
 
     return `rgb(${red}, ${green}, ${blue})`; // Return the RGB color
+  };
+
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+  const [loadingSources, setLoadingSources] = useState(false);
+  const [sources, setSources] = useState([])
+
+  const fetchDataset = async () => {
+    try {
+      const response = await fetch(`/api/chatbot/sources/dataset?chatbotId=${chatbotId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch dataset');
+      }
+      const data = await response.json();
+      return data.datasetId;
+    } catch (error) {
+      console.error("Error fetching dataset:", error);
+    }
+  };
+
+  const loadSources = async () => {
+    setLoadingSources(true);
+    const datasetId = await fetchDataset();
+    console.log(datasetId)
+    const options = {
+      method: 'POST',
+      headers: {
+        'TR-Dataset': datasetId,
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: '{}'
+    };
+    
+    fetch('https://api.trieve.ai/api/chunks/scroll', options)
+      .then(response => response.json())
+      .then(response => setSources(response.chunks))
+      .catch(err => console.error(err))
+      .finally(() => setLoadingSources(false));
+  }
+
+  // Modal Component
+  //@ts-ignore
+  const Modal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null; // Don't render if not open
+  
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white p-4 pt-8 rounded shadow-lg relative min-w-[400px] max-w-[800px] w-[80%] h-[80%] overflow-x-hidden overflow-y-scroll">
+          <button onClick={onClose} className="absolute top-2 right-2">
+            ✖️
+          </button>
+          <h1 className="font-bold text-2xl">Sources</h1>
+          {sources.map(chunk => {
+            return <div className="border-b-[1px] pt-2">{chunk.chunk_html}</div>
+          })}
+          <button 
+            onClick={onClose} // Open modal on button click
+            className="mt-2 w-full rounded-md border-[1px] bg-white p-2 text-center hover:bg-slate-100"
+          >
+             Close
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -129,7 +195,7 @@ const ChatContainer = ({
                     : 'text-white'
                 }`}
                 style={{
-                  backgroundColor: message.role === 'user' ? config.userMessageColor : getBackgroundColor(message.confidenceScore),
+                  backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
                   transition: 'background-color 0.3s ease'
                 }}>
                   {message.role === 'assistant' ? (
@@ -138,7 +204,7 @@ const ChatContainer = ({
                     <p>{message.content}</p>
                   )}
                   { message.role === 'assistant' && message.confidenceScore != -1 && <div>
-                    <span style={{backgroundColor: 'white', padding: '2px 4px', borderRadius: '4px'}}>{message.confidenceScore}</span>
+                    <span style={{backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px'}}>{message.confidenceScore}</span>
                   </div>}
                 </div>
               </div>
@@ -177,6 +243,13 @@ const ChatContainer = ({
             </div>
           )}
         </div>
+        <button 
+          onClick={() => {loadSources();setIsModalOpen(true);}} // Open modal on button click
+          className="mt-2 w-full rounded-md border-[1px] bg-white p-2 text-center hover:bg-slate-100"
+        >
+          {loadingSources? 'Loading Sources...' : "Show Sources"}
+        </button>
+        <Modal isOpen={isModalOpen && !loadingSources} onClose={() => setIsModalOpen(false)} /> {/* Modal component */}
       </div>
     </div>
   );
@@ -415,6 +488,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
               handleSubmit={handleSubmit}
               handleRefresh={handleRefresh}
               messagesEndRef={messagesEndRef}
+              chatbotId={chatbot.id}
             />
           </div>
         </div>

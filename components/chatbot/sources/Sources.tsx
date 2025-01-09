@@ -38,6 +38,7 @@ const Sources = ({
   const [dataset, setDataset] = useState<any>(null);
   const [text, setText] = useState<string>('');
   const [qaPairs, setQaPairs] = useState<{ id: string; question: string; answer: string }[]>([]);
+  const [links, setLinks] = useState<{ id: string; link: string}[]>([]);
 
   useEffect(() => {
     const fetchDataset = async () => {
@@ -51,6 +52,8 @@ const Sources = ({
         setText(data.text)
         if(data.qaPairs)
           setQaPairs(data.qaPairs)
+        if(data.links)
+          setLinks(data.links)
       } catch (error) {
         console.error("Error fetching dataset:", error);
         toast.error("Failed to load dataset");
@@ -77,6 +80,7 @@ const Sources = ({
           chatbotId, 
           text,
           qaPairs,
+          links,
         }),
       });
 
@@ -110,14 +114,7 @@ const Sources = ({
       case "text":
         return <TextInput text={text} setText={setText} />;
       case "website":
-        return <WebsiteInput 
-          onFetchLinks={(url) => {
-            console.log('Fetching links from:', url);
-          }}
-          onLoadSitemap={(url) => {
-            console.log('Loading sitemap from:', url);
-          }}
-        />;
+        return <WebsiteInput links={links} setLinks={setLinks} />;
       case "qa":
         return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs}/>;
       case "notion":
