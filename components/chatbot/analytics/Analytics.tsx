@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconMessageCircle, IconTags, IconMoodSmile } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 
 const SUB_TABS = [
   { id: "chats", label: "Chats", icon: <IconMessageCircle className="w-4 h-4" /> },
@@ -10,15 +11,36 @@ const SUB_TABS = [
   { id: "sentiment", label: "Sentiment", icon: <IconMoodSmile className="w-4 h-4" /> },
 ];
 
-const Analytics = ({ 
-  teamId, 
-  chatbotId 
-}: { 
+const Analytics = ({
+  teamId,
+  chatbotId
+}: {
   teamId: string;
   chatbotId: string;
 }) => {
   const pathname = usePathname();
   const currentSubTab = pathname.split('/').pop();
+  // State to store analytics data
+  const [analyticsData, setAnalyticsData] = useState({
+    totalChats: 0,
+    totalMessages: 0,
+    // Add more fields if needed
+  });
+
+  useEffect(() => {
+    // Fetch analytics data
+    const fetchAnalyticsData = async () => {
+      try {
+        const response = await fetch(`/api/chatbot/analytics/${chatbotId}`);
+        const data = await response.json();
+        setAnalyticsData(data);
+      } catch (error) {
+        console.error("Failed to fetch analytics data", error);
+      }
+    };
+
+    fetchAnalyticsData();
+  }, [chatbotId]);
 
   return (
     <div className="max-w-6xl mx-auto p-8">
@@ -31,8 +53,8 @@ const Analytics = ({
               key={tab.id}
               href={`/dashboard/${teamId}/chatbot/${chatbotId}/analytics/${tab.id}`}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
-                ${currentSubTab === tab.id 
-                  ? "bg-primary/10 text-primary" 
+                ${currentSubTab === tab.id
+                  ? "bg-primary/10 text-primary"
                   : "text-gray-600 hover:bg-gray-100"}`}
             >
               {tab.icon}
@@ -58,7 +80,7 @@ const Analytics = ({
               <div className="flex items-center gap-2 text-primary mb-4">
                 <IconMessageCircle className="w-5 h-5" />
               </div>
-              <div className="text-3xl font-bold">0</div>
+              <div className="text-3xl font-bold">{analyticsData.totalChats}</div>
               <div className="text-sm text-gray-600">Total chats</div>
             </div>
           </div>
@@ -68,7 +90,7 @@ const Analytics = ({
               <div className="flex items-center gap-2 text-primary mb-4">
                 <IconMessageCircle className="w-5 h-5" />
               </div>
-              <div className="text-3xl font-bold">0</div>
+              <div className="text-3xl font-bold">{analyticsData.totalMessages}</div>
               <div className="text-sm text-gray-600">Total messages</div>
             </div>
           </div>
