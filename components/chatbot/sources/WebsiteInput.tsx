@@ -93,8 +93,8 @@ const WebsiteInput: React.FC<WebsiteInputProps> = ({ links, setLinks }) => {
           </Button>
         </div>
         {/* Links will be listed here */}
-        {links.map((link) => {
-          return <div className='p-4 bg-white rounded-lg border relative'>            
+        {links.map((link, index) => {
+          return <div className='p-4 bg-white rounded-lg border relative' key={'weblink-'+index}>            
             <button
               onClick={() => deleteLink(link.id)}
               className="absolute right-4 top-4 text-gray-400 hover:text-red-500"
