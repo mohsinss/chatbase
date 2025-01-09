@@ -60,7 +60,7 @@ const Sources = ({
       // @ts-ignore
       const files = datasets.file_and_group_ids.filter(item => item.file.file_name != 'texttexttexttext.txt').filter(item => item.file.file_name != 'texttexttexttextqa.txt').filter(item => item.file.file_name != 'texttexttexttextlink.txt');
       // @ts-ignore
-      setFiles(files.map(item => item.file));
+      // setFiles(files.map(item => item.file));
       setFileCount(files.length);
       // @ts-ignore
       setFileSize(files.reduce((size, file) => {
