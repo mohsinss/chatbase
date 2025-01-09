@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
     const dataset = await Dataset.findOne({ chatbotId });
     console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
-    
+
     if (!dataset) {
       return NextResponse.json(
         { error: "No dataset found for this chatbot" },
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         page_size: 4
       })
     };
-    
+
     const chunk_response = await fetch('https://api.trieve.ai/api/chunk/search', options)
     const chunk_response_data = await chunk_response.json();
 
@@ -86,9 +86,9 @@ export async function POST(req: NextRequest) {
       console.error("Dataset creation failed:", chunk_response_data);
       throw new Error(chunk_response_data.message || "Failed to create dataset");
     }
-    console.log(chunk_response)
+    console.log(chunk_response_data)
     let relevant_chunk = 'Please check this information well:\n';
-    for(let i = 0 ; i < chunk_response_data.chunks.length ; i++) {
+    for (let i = 0; i < chunk_response_data.chunks.length; i++) {
       relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
     }
 
@@ -129,7 +129,8 @@ export async function POST(req: NextRequest) {
               [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: relevant_chunk },
-                ...messages
+                ...messages,
+                { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value at the end of your response with 3 letters only like ':::100'" }
               ],
               'user-1',
               onContent,
@@ -158,7 +159,7 @@ export async function POST(req: NextRequest) {
       const stream = new ReadableStream({
         async start(controller) {
           try {
-            const onContent = (text: string) => {
+            const onContent = (text: string, confidenceScore: number) => {
               const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
               controller.enqueue(encoder.encode(sseMessage));
             };
@@ -167,7 +168,8 @@ export async function POST(req: NextRequest) {
               [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: relevant_chunk },
-                ...messages
+                ...messages,
+                { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put this value at the end of your response with 3 letters only like ':::100'" }
               ],
               'user-1',
               onContent,
@@ -280,13 +282,15 @@ export async function POST(req: NextRequest) {
         formattedMessages = [
           { role: 'user', content: systemPrompt },
           { role: 'user', content: relevant_chunk },
-          ...messages
+          ...messages,
+          { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'" }
         ];
       } else {
         formattedMessages = [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: relevant_chunk },
-          ...messages
+          ...messages,
+          { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'" }
         ];
       }
 
@@ -298,18 +302,21 @@ export async function POST(req: NextRequest) {
             O1_CONFIG[internalModel as keyof typeof O1_CONFIG].maxOutputTokens
           ),
           temperature: 1,
-          model: O1_CONFIG[internalModel as keyof typeof O1_CONFIG].model
+          model: O1_CONFIG[internalModel as keyof typeof O1_CONFIG].model,
+          // logprobs: 5 // Adjust this number based on how many log probabilities you want
         }
         : {
           max_tokens: maxTokens,
           temperature,
-          model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo'
+          model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
+          // logprobs: 5 // Adjust this number based on how many log probabilities you want
         };
 
       const response = await openai.chat.completions.create({
         ...modelParams,
         messages: formattedMessages,
         stream: true,
+        logprobs: true,
       });
 
       console.log(`Model processing took ${Date.now() - modelProcessingStart}ms`);
@@ -317,14 +324,31 @@ export async function POST(req: NextRequest) {
       const stream = new ReadableStream({
         async start(controller) {
           try {
+            let log_probs_len = 0;
+            let log_probs_sum = 0.0;
             for await (const chunk of response) {
               const text = chunk.choices[0]?.delta?.content || '';
+              log_probs_len++;
+              log_probs_sum += chunk.choices[0].logprobs?.content[0]?.logprob || 0.0;
+              
               if (text) {
                 const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
                 controller.enqueue(encoder.encode(sseMessage));
               }
             }
+            
+            // Calculate average log probability
+            const averageLogProb = log_probs_sum / log_probs_len;
+            let confidenceScore;
+            if (averageLogProb === 0) {
+              confidenceScore = 100; // If average is zero, confidence is perfect (100%)
+            } else {
+              confidenceScore = (1 + averageLogProb) * 100; // Adjust as needed
+            }
+
+            // Send confidence score as part of the response
             controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            // controller.enqueue(encoder.encode('score:' + confidenceScore));
             controller.close();
           } catch (error) {
             controller.error(error);

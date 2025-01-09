@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 export const sendGemini = async (
   messages: any[],
   userId: string,
-  onContent: (text: string) => void,
+  onContent: (text: string, confidenceScore: number) => void,
   max = 8000,
   temp = 0.7,
   model = "gemini-1.5-pro"
@@ -50,11 +50,13 @@ export const sendGemini = async (
     const result = await chat.sendMessageStream([{
       text: lastMessage.content
     }]);
-
+    console.log("result")
+    console.log(result)
     for await (const chunk of result.stream) {
       const text = chunk.text();
+      const confidenceScore = 1;
       if (text) {
-        onContent(text);
+        onContent(text, confidenceScore);
       }
     }
 

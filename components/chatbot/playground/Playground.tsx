@@ -10,6 +10,7 @@ import { AISettingsProvider } from '@/contexts/AISettingsContext';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  confidenceScore?: number;
 }
 
 interface PlaygroundProps {
@@ -57,6 +58,20 @@ const ChatContainer = ({
   handleRefresh,
   messagesEndRef
 }: ChatContainerProps) => {
+  const getBackgroundColor = (confidenceScore: number) => {
+    if(confidenceScore === -1){
+      return 'rgb(241, 241, 241)';
+    }
+    const normalizedScore = confidenceScore / 100;
+
+    // Calculate the color based on the normalized score
+    const red = Math.max(256 - Math.floor(normalizedScore * 15), 0); // Red decreases as score increases
+    const green = Math.min(Math.floor(normalizedScore * 241), 241); // Green increases as score increases
+    const blue = 241; // Keep blue constant
+
+    return `rgb(${red}, ${green}, ${blue})`; // Return the RGB color
+  };
+
   return (
     <div className="flex-1 flex justify-center pt-4 px-4">
       <div className="w-[400px] relative">
@@ -114,13 +129,17 @@ const ChatContainer = ({
                     : 'text-white'
                 }`}
                 style={{
-                  backgroundColor: message.role === 'user' ? config.userMessageColor : undefined
+                  backgroundColor: message.role === 'user' ? config.userMessageColor : getBackgroundColor(message.confidenceScore),
+                  transition: 'background-color 0.3s ease'
                 }}>
                   {message.role === 'assistant' ? (
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   ) : (
                     <p>{message.content}</p>
                   )}
+                  { message.role === 'assistant' && message.confidenceScore != -1 && <div>
+                    <span style={{backgroundColor: 'white', padding: '2px 4px', borderRadius: '4px'}}>{message.confidenceScore}</span>
+                  </div>}
                 </div>
               </div>
             ))}
@@ -173,6 +192,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
   const [showPlaygroundInfo, setShowPlaygroundInfo] = useState(false);
   const { config } = useChatInterfaceSettings(chatbot.id);
   const { settings: aiSettings, fetchSettings } = useAISettings(chatbot.id);
+  const [confidenceScore, setConfidenceScore] = useState(0);
 
   // Create new conversation on mount
   useEffect(() => {
@@ -295,15 +315,30 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                 if (parsed.text) {
                   setMessages(prev => {
                     const lastMessage = prev[prev.length - 1];
+                    let lastMessage_content = lastMessage.content + parsed.text;
+                    
+                    let confidenceScore1 = -1;
+
+                    if(lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0){
+                      const confidenceScore = lastMessage_content.split(":::")[1];
+                      confidenceScore1 = Number(confidenceScore)
+                      console.log(confidenceScore1)
+                      lastMessage_content = lastMessage_content.split(":::")[0];
+                    }
                     return [
                       ...prev.slice(0, -1),
-                      { ...lastMessage, content: lastMessage.content + parsed.text }
+                      { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
                     ];
                   });
                 }
               } catch (e) {
                 console.log('Skipping unparseable chunk');
               }
+            }
+            if (line.startsWith('score: ')) {
+              const score = line.slice(6).trim();
+              setConfidenceScore(Number(score))
+              console.log(score)
             }
           }
         }
@@ -313,6 +348,11 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleContent = (text: string, confidenceScore: number) => {
+    console.log(`Received text: ${text} with confidence score: ${confidenceScore}`);
+    // Handle the text and confidence score as needed
   };
 
   return (

@@ -16,7 +16,7 @@ export const sendAnthropic = async (
   messages.forEach((m) => console.log(` - ${m.role.toUpperCase()}: ${m.content}`));
 
   // Extract system message if present
-  const systemMessage = messages.find(m => m.role === 'system')?.content || '';
+  const systemMessage = (messages.find(m => m.role === 'system')?.content || '');
   const userMessages = messages.filter(m => m.role !== 'system');
 
   try {
@@ -33,6 +33,7 @@ export const sendAnthropic = async (
     });
 
     for await (const chunk of response) {
+      // console.log(chunk)
       if (chunk.type === 'content_block_delta') {
         const delta = chunk.delta;
         if ('text' in delta) {
