@@ -47,10 +47,11 @@ const Sources = ({
           throw new Error('Failed to fetch dataset');
         }
         const data = await response.json();
-        setDataset(data); // Assuming the API returns the dataset directly
-        setText(data.text)
-        if(data.qaPairs)
-          setQaPairs(data.qaPairs)
+        setDataset(data);
+        setText(data.text || '');
+        if(data.qaPairs) {
+          setQaPairs(data.qaPairs);
+        }
       } catch (error) {
         console.error("Error fetching dataset:", error);
         toast.error("Failed to load dataset");
@@ -58,7 +59,7 @@ const Sources = ({
     };
 
     fetchDataset();
-  }, [chatbotId]); // Add chatbotId as a dependency
+  }, [chatbotId]);
 
   const handleTabChange = (tabId: string) => {
     router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources?tab=${tabId}`);
