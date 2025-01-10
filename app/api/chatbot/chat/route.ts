@@ -43,6 +43,20 @@ const O1_CONFIG = {
   }
 };
 
+const allowedOrigins = ['*']; // Add your allowed origins here
+
+const setCorsHeaders = (res: Response) => {
+  res.headers.set('Access-Control-Allow-Origin', '*');
+  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  return res;
+};
+
+export async function OPTIONS(req: NextRequest) {
+  const res = NextResponse.json({}, { status: 200 });
+  return setCorsHeaders(res);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { messages, chatbotId } = await req.json();
@@ -59,10 +73,10 @@ export async function POST(req: NextRequest) {
     console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
 
     if (!dataset) {
-      return NextResponse.json(
+      return setCorsHeaders(NextResponse.json(
         { error: "No dataset found for this chatbot" },
         { status: 404 }
-      );
+      ));
     }
 
     const options = {
@@ -147,13 +161,13 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return new Response(stream, {
+      return setCorsHeaders(new Response(stream, {
         headers: {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
         },
-      });
+      }));
     } else if (internalModel.startsWith('gemini-')) {
       console.log('Using Gemini Model:', internalModel);
       const stream = new ReadableStream({
@@ -186,13 +200,13 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return new Response(stream, {
+      return setCorsHeaders(new Response(stream, {
         headers: {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
         },
-      });
+      }));
     } else {
       // If dataset has an assistant ID, use the Assistant API
       if (dataset?.openaiAssistantId) {
@@ -265,13 +279,13 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        return new Response(stream, {
+        return setCorsHeaders(new Response(stream, {
           headers: {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
           },
-        });
+        }));
       }
 
       console.log('Using OpenAI Model:', MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo');
@@ -356,17 +370,17 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return new Response(stream, {
+      return setCorsHeaders(new Response(stream, {
         headers: {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
         },
-      });
+      }));
     }
   } catch (error) {
     console.error('Streaming error:', error);
-    return new Response(
+    return setCorsHeaders(new Response(
       JSON.stringify({
         error: 'Streaming failed',
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -375,6 +389,6 @@ export async function POST(req: NextRequest) {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       }
-    );
+    ));
   }
 } 

@@ -32,7 +32,7 @@ export default async function ConnectPage({
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <Connect teamId={params.teamId} chatbotId={params.chatbotId} />
+        <Connect teamId={params.teamId} chatbotId={params.chatbotId} domain={process.env.LIVE_DOMAIN}/>
       </main>
     </>
   );

@@ -6,6 +6,10 @@ interface SourceStatsProps {
   fileChars: number;
   textInputChars: number;
   charLimit: number;
+  qaInputCount: number;
+  qaInputChars: number;
+  linkInputCount: number;
+  linkInputChars: number;
   onRetrain: () => void;
   isTraining: boolean;
 }
@@ -14,23 +18,33 @@ const SourceStats = ({
   fileCount, 
   fileChars, 
   textInputChars, 
+  qaInputCount,
+  qaInputChars,
+  linkInputCount,
+  linkInputChars,
   charLimit, 
   onRetrain,
   isTraining,
 }: SourceStatsProps) => {
-  const totalChars = fileChars + textInputChars;
+  const totalChars = fileChars + textInputChars + linkInputChars + qaInputChars;
 
   return (
     <div className="w-[300px] bg-white rounded-lg p-6 border shadow-sm">
       <h2 className="text-xl font-semibold mb-6">Sources</h2>
       
       <div className="space-y-3 mb-6">
-        <p className="text-gray-700">
+        {fileCount > 0 && <p className="text-gray-700">
           {fileCount} File{fileCount == 1?'':'s'} ({fileChars} chars)
-        </p>
-        <p className="text-gray-700">
+        </p>}
+        {textInputChars > 0 && <p className="text-gray-700">
           {textInputChars} text input chars
-        </p>
+        </p>}
+        {linkInputCount > 0 && <p className="text-gray-700">
+          {linkInputCount} Links ({linkInputChars} chars)
+        </p>}
+        {qaInputCount > 0 && <p className="text-gray-700">
+          {qaInputCount} Q&A ({qaInputChars} chars)
+        </p>}
       </div>
 
       <div className="space-y-2">

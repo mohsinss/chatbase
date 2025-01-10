@@ -24,7 +24,7 @@ const TextInput = ({ setText, text }: TextInputProps) => {
       />
 
       <div className="text-right text-sm text-gray-500">
-        {text.length} characters
+        {text ? text.length : 0} characters
       </div>
     </div>
   );

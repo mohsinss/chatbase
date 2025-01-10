@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconMessageCircle, IconTags, IconMoodSmile } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import Datepicker from "react-tailwindcss-datepicker";
 
 const SUB_TABS = [
   { id: "chats", label: "Chats", icon: <IconMessageCircle className="w-4 h-4" /> },
@@ -10,15 +12,58 @@ const SUB_TABS = [
   { id: "sentiment", label: "Sentiment", icon: <IconMoodSmile className="w-4 h-4" /> },
 ];
 
-const Analytics = ({ 
-  teamId, 
-  chatbotId 
-}: { 
+const Analytics = ({
+  teamId,
+  chatbotId
+}: {
   teamId: string;
   chatbotId: string;
 }) => {
   const pathname = usePathname();
   const currentSubTab = pathname.split('/').pop();
+  // State to store analytics data
+  const [analyticsData, setAnalyticsData] = useState({
+    totalChats: 0,
+    totalMessages: 0,
+    // Add more fields if needed
+  });
+
+  const [value, setValue] = useState({
+    startDate: null,
+    endDate: null
+  });
+  // Fetch analytics data
+  //@ts-ignore
+  const fetchAnalyticsData = async (v) => {
+    try {
+      const response = await fetch(`/api/chatbot/analytics/${chatbotId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(v),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setAnalyticsData(data);
+    } catch (error) {
+      console.error("Failed to fetch analytics data", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalyticsData({startDate:null, endDate:null});
+  }, [chatbotId]);
+
+  //@ts-ignore
+  const onChangePeriod = (v) => {
+    setValue(v)
+    fetchAnalyticsData(v)
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-8">
@@ -31,8 +76,8 @@ const Analytics = ({
               key={tab.id}
               href={`/dashboard/${teamId}/chatbot/${chatbotId}/analytics/${tab.id}`}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
-                ${currentSubTab === tab.id 
-                  ? "bg-primary/10 text-primary" 
+                ${currentSubTab === tab.id
+                  ? "bg-primary/10 text-primary"
                   : "text-gray-600 hover:bg-gray-100"}`}
             >
               {tab.icon}
@@ -42,68 +87,72 @@ const Analytics = ({
         </div>
       </div>
 
-      {/* Analytics Content */}
-      <div className="space-y-8">
-        {/* Date Range Picker */}
-        <div className="flex justify-end">
-          <button className="btn btn-outline">
-            2024-12-19 ~ 2024-12-25
-          </button>
+      {currentSubTab == 'chats' && 
+        <div className="space-y-8">
+          {/* Date Range Picker */}
+          <div className="flex justify-end">
+            <div className="w-full max-w-[300px] border-[1px] rounded-md">
+              <Datepicker
+                value={value}
+                onChange={newValue => onChangePeriod(newValue)}
+              />
+            </div>
+          </div>
+
+          {/* Analytics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body">
+                <div className="flex items-center gap-2 text-primary mb-4">
+                  <IconMessageCircle className="w-5 h-5" />
+                </div>
+                <div className="text-3xl font-bold">{analyticsData.totalChats}</div>
+                <div className="text-sm text-gray-600">Total chats</div>
+              </div>
+            </div>
+
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body">
+                <div className="flex items-center gap-2 text-primary mb-4">
+                  <IconMessageCircle className="w-5 h-5" />
+                </div>
+                <div className="text-3xl font-bold">{analyticsData.totalMessages}</div>
+                <div className="text-sm text-gray-600">Total messages</div>
+              </div>
+            </div>
+
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body">
+                <div className="flex items-center gap-2 text-primary mb-4">
+                  <IconMessageCircle className="w-5 h-5" />
+                </div>
+                <div className="text-3xl font-bold">0</div>
+                <div className="text-sm text-gray-600">Messages with thumbs up</div>
+              </div>
+            </div>
+
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body">
+                <div className="flex items-center gap-2 text-primary mb-4">
+                  <IconMessageCircle className="w-5 h-5" />
+                </div>
+                <div className="text-3xl font-bold">0</div>
+                <div className="text-sm text-gray-600">Messages with thumbs down</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Chart */}
+          <div className="card bg-base-100 shadow-sm">
+            <div className="card-body">
+              <h3 className="text-xl font-bold mb-4">Chats</h3>
+              <div className="h-64 flex items-center justify-center text-gray-500">
+                <p>Analytics data for today might be delayed</p>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
-              <div className="flex items-center gap-2 text-primary mb-4">
-                <IconMessageCircle className="w-5 h-5" />
-              </div>
-              <div className="text-3xl font-bold">0</div>
-              <div className="text-sm text-gray-600">Total chats</div>
-            </div>
-          </div>
-
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
-              <div className="flex items-center gap-2 text-primary mb-4">
-                <IconMessageCircle className="w-5 h-5" />
-              </div>
-              <div className="text-3xl font-bold">0</div>
-              <div className="text-sm text-gray-600">Total messages</div>
-            </div>
-          </div>
-
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
-              <div className="flex items-center gap-2 text-primary mb-4">
-                <IconMessageCircle className="w-5 h-5" />
-              </div>
-              <div className="text-3xl font-bold">0</div>
-              <div className="text-sm text-gray-600">Messages with thumbs up</div>
-            </div>
-          </div>
-
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
-              <div className="flex items-center gap-2 text-primary mb-4">
-                <IconMessageCircle className="w-5 h-5" />
-              </div>
-              <div className="text-3xl font-bold">0</div>
-              <div className="text-sm text-gray-600">Messages with thumbs down</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Chart */}
-        <div className="card bg-base-100 shadow-sm">
-          <div className="card-body">
-            <h3 className="text-xl font-bold mb-4">Chats</h3>
-            <div className="h-64 flex items-center justify-center text-gray-500">
-              <p>Analytics data for today might be delayed</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      }
     </div>
   );
 };

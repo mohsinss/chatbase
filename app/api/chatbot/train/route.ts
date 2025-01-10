@@ -106,25 +106,7 @@ async function clearVectorStore(vectorStoreId) {
 
 export async function POST(req: Request) {
   try {
-    const { chatbotId, text, qaPairs } = await req.json();
-    console.log("Received text:", text);
-    
-    // Convert qaPairs to a string containing only questions and answers
-    //@ts-ignore
-    const qaString = qaPairs.map(pair => `Question: ${pair.question} Answer: ${pair.answer}`).join('\n');
-    console.log("Converted qaPairs to string:", qaString);
-
-    const base64File = Buffer.from(text, 'utf-8').toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
-    console.log("Base64 encoded file:", base64File);
-
-    const base64QAFile = Buffer.from(qaString, 'utf-8').toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
-    console.log("Base64 encoded file for qa:", base64QAFile);
+    const { chatbotId, text, qaPairs, links } = await req.json();
 
     if (!chatbotId) {
       return NextResponse.json({ error: "chatbotId is required" }, { status: 400 });
@@ -136,6 +118,54 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    let linkText = '';
+    // Iterate over each link to fetch content and count characters
+    for (let link of links) {
+      const response = await fetch(link.link);
+      if (!response.ok) {
+        console.error(`Failed to fetch content from ${link}: ${response.statusText}`);
+        continue; // Skip to the next link if there's an error
+      }
+      const content = await response.text();
+      // Function to remove HTML tags and scripts
+      const stripHTMLTagsAndScripts = (str: string) => {
+        // Remove script tags
+        str = str.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, ' ');
+        // Remove all other HTML tags
+        return str.replace(/<[^>]*>/g, ' ');
+      };
+
+      const cleanedContent = stripHTMLTagsAndScripts(content);
+      console.log(cleanedContent);
+      // Parse the HTML and extract the body text
+      const charCount = cleanedContent.length; // Get character count
+      link.chars = charCount; // Update link with character count
+      console.log(`Fetched content from ${link.link} with ${charCount} characters.`);
+      // console.log(bodyText); // Log the body text
+      linkText += cleanedContent + '\n';
+    }
+
+    // Convert qaPairs to a string containing only questions and answers
+    //@ts-ignore
+    const qaString = qaPairs.length > 0 ? qaPairs.map(pair => `Question: ${pair.question} Answer: ${pair.answer}`).join('\n') : '';
+    console.log("Converted qaPairs to string:", qaString);
+
+    const base64File = Buffer.from(text, 'utf-8').toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    console.log("Base64 encoded file:", base64File)
+
+    const base64QAFile = Buffer.from(qaString, 'utf-8').toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    const base64LinksFile = Buffer.from(linkText, 'utf-8').toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
     await connectMongo();
 
     let existingDataset = await DatasetModel.findOne({ chatbotId });
@@ -146,9 +176,9 @@ export async function POST(req: Request) {
     // Perform update with error catching
     const updatedDataset = await DatasetModel.findOneAndUpdate(
       { chatbotId: chatbotId },
-      { $set: { text, qaPairs } },
-      { 
-        new: true, 
+      { $set: { text, qaPairs, links } },
+      {
+        new: true,
         runValidators: true,
         // Add this to get more detailed error information
         validateBeforeSave: true
@@ -160,9 +190,9 @@ export async function POST(req: Request) {
       console.log("Document check after failed update:", checkDataset);
       throw new Error("Dataset not found during update");
     }
-    
+
     // Delete associated chunks using the uniqueTag from the file metadata
-    const response2 = await fetch(`https://api.trieve.ai/api/chunk`, {
+    const delete_text_response = await fetch(`https://api.trieve.ai/api/chunk`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
@@ -181,12 +211,12 @@ export async function POST(req: Request) {
     });
 
     // Check if the chunk deletion was successful
-    if (!response2.ok) {
-      throw new Error(`Failed to delete chunks: ${response2.statusText}`);
+    if (!delete_text_response.ok) {
+      throw new Error(`Failed to delete chunks: ${delete_text_response.statusText}`);
     }
-    
+
     // Delete associated chunks using the uniqueTag from the file metadata
-    const response3 = await fetch(`https://api.trieve.ai/api/chunk`, {
+    const delete_qa_response = await fetch(`https://api.trieve.ai/api/chunk`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
@@ -205,36 +235,35 @@ export async function POST(req: Request) {
     });
 
     // Check if the chunk deletion was successful
-    if (!response3.ok) {
-      throw new Error(`Failed to delete chunks: ${response3.statusText}`);
+    if (!delete_qa_response.ok) {
+      throw new Error(`Failed to delete chunks: ${delete_qa_response.statusText}`);
     }
 
-    const response = await fetch("https://api.trieve.ai/api/file", {
-      method: "POST",
+    // Delete associated chunks using the uniqueTag from the file metadata
+    const delete_links_response = await fetch(`https://api.trieve.ai/api/chunk`, {
+      method: "DELETE",
       headers: {
         "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
-        "TR-Dataset": existingDataset.datasetId,
-        "Content-Type": "application/json"
+        "TR-Dataset": existingDataset.datasetId, // Use datasetId since it's guaranteed to be present
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(
         {
-          base64_file: base64QAFile,
-          file_name: 'texttexttexttext.txt',
-          metadata: {
-            type: 'text'
-          },
+          filter: {
+            metadata: {
+              type: 'link'
+            }
+          }
         }
       )
     });
 
-    const responseData = await response.json();
-    console.log("API response:", responseData);
-
-    if (!response.ok) {
-      throw new Error(`Failed to update text: ${response.statusText} - ${JSON.stringify(responseData)}`);
+    // Check if the chunk deletion was successful
+    if (!delete_links_response.ok) {
+      throw new Error(`Failed to delete chunks: ${delete_links_response.statusText}`);
     }
 
-    const response4 = await fetch("https://api.trieve.ai/api/file", {
+    const add_text_response = await fetch("https://api.trieve.ai/api/file", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
@@ -244,6 +273,30 @@ export async function POST(req: Request) {
       body: JSON.stringify(
         {
           base64_file: base64File,
+          file_name: 'texttexttexttext.txt',
+          metadata: {
+            type: 'text'
+          },
+        }
+      )
+    });
+
+    let responseData = await add_text_response.json();
+
+    if (!add_text_response.ok) {
+      throw new Error(`Failed to update text: ${add_text_response.statusText} - ${JSON.stringify(responseData)}`);
+    }
+
+    const add_qa_response = await fetch("https://api.trieve.ai/api/file", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+        "TR-Dataset": existingDataset.datasetId,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          base64_file: base64QAFile,
           file_name: 'texttexttexttextqa.txt',
           metadata: {
             type: 'qa'
@@ -252,11 +305,34 @@ export async function POST(req: Request) {
       )
     });
 
-    const responseData4 = await response4.json();
-    console.log("API response4:", responseData4);
+    responseData = await add_qa_response.json();
 
-    if (!response4.ok) {
-      throw new Error(`Failed to update text for qa: ${response4.statusText} - ${JSON.stringify(responseData4)}`);
+    if (!add_qa_response.ok) {
+      throw new Error(`Failed to update text for qa: ${add_qa_response.statusText} - ${JSON.stringify(responseData)}`);
+    }
+
+    const add_links_response = await fetch("https://api.trieve.ai/api/file", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+        "TR-Dataset": existingDataset.datasetId,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          base64_file: base64LinksFile,
+          file_name: 'texttexttexttextlink.txt',
+          metadata: {
+            type: 'link'
+          },
+        }
+      )
+    });
+
+    responseData = await add_links_response.json();
+
+    if (!add_links_response.ok) {
+      throw new Error(`Failed to update text for qa: ${add_links_response.statusText} - ${JSON.stringify(responseData)}`);
     }
 
     return NextResponse.json({

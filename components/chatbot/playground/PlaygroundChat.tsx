@@ -47,8 +47,8 @@ interface ChatContainerProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
 }
 
-const ChatContainer = ({ 
-  isSettingsOpen, 
+const ChatContainer = ({
+  isSettingsOpen,
   setIsSettingsOpen,
   messages,
   config,
@@ -61,7 +61,7 @@ const ChatContainer = ({
   chatbotId
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
-    if(confidenceScore === -1){
+    if (confidenceScore === -1) {
       return 'rgb(241, 241, 241)';
     }
     const normalizedScore = confidenceScore / 100;
@@ -74,137 +74,59 @@ const ChatContainer = ({
     return `rgb(${red}, ${green}, ${blue})`; // Return the RGB color
   };
 
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
-  const [loadingSources, setLoadingSources] = useState(false);
-  const [sources, setSources] = useState([])
-
-  const fetchDataset = async () => {
-    try {
-      const response = await fetch(`/api/chatbot/sources/dataset?chatbotId=${chatbotId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch dataset');
-      }
-      const data = await response.json();
-      return data.datasetId;
-    } catch (error) {
-      console.error("Error fetching dataset:", error);
-    }
-  };
-
-  const loadSources = async () => {
-    setLoadingSources(true);
-    const datasetId = await fetchDataset();
-    console.log(datasetId)
-    const options = {
-      method: 'POST',
-      headers: {
-        'TR-Dataset': datasetId,
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: '{}'
-    };
-    
-    fetch('https://api.trieve.ai/api/chunks/scroll', options)
-      .then(response => response.json())
-      .then(response => setSources(response.chunks))
-      .catch(err => console.error(err))
-      .finally(() => setLoadingSources(false));
-  }
-
-  // Modal Component
-  //@ts-ignore
-  const Modal = ({ isOpen, onClose }) => {
-    if (!isOpen) return null; // Don't render if not open
-  
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white p-4 pt-8 rounded shadow-lg relative min-w-[400px] max-w-[800px] w-[80%] h-[80%] overflow-x-hidden overflow-y-scroll">
-          <button onClick={onClose} className="absolute top-2 right-2">
-            ✖️
-          </button>
-          <h1 className="font-bold text-2xl">Sources</h1>
-          {sources.map((chunk, index) => {
-            return <div key={'chunk-' + index} className="border-b-[1px] pt-2">{chunk.chunk_html}</div>
-          })}
-          <button 
-            onClick={onClose} // Open modal on button click
-            className="mt-2 w-full rounded-md border-[1px] bg-white p-2 text-center hover:bg-slate-100"
-          >
-             Close
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="flex-1 flex justify-center pt-4 px-4">
-      <div className="w-[400px] relative">
-        {!isSettingsOpen && (
-          <button 
-            onClick={() => setIsSettingsOpen(true)}
-            className="absolute -left-12 h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white"
-          >
-            ☰
-          </button>
-        )}
+    <div className="flex-1 flex justify-center ">
+      <div className="w-full relative">
 
-        <div className={`bg-white shadow-sm border ${
-          config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
-        } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
+        <div className={`bg-white flex flex-col justify-between shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+          } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
           {/* Chat Header */}
-          <div 
-            className={`flex items-center justify-between p-3 border-b ${
-              config.roundedHeaderCorners ? 'rounded-t-xl' : ''
-            }`}
+          <div
+            className={`flex items-center justify-between p-3 border-b ${config.roundedHeaderCorners ? 'rounded-t-xl' : ''
+              }`}
             style={{
               backgroundColor: config.syncColors ? config.userMessageColor : undefined,
               color: config.syncColors ? 'white' : undefined
             }}
           >
             <div className="text-sm">{config.displayName}</div>
-            <button 
+            <button
               onClick={handleRefresh}
-              className={`p-1.5 rounded-full ${
-                config.syncColors 
-                  ? 'hover:bg-white/10 text-white' 
+              className={`p-1.5 rounded-full  mr-8 ${config.syncColors
+                  ? 'hover:bg-white/10 text-white'
                   : 'hover:bg-gray-100'
-              }`}
+                }`}
             >
               <IconRefresh className="w-4 h-4" />
             </button>
           </div>
 
           {/* Chat Messages */}
-          <div className="h-[calc(100vh-280px)] overflow-y-auto p-4">
+          <div className="h-[calc(100vh-126px)] overflow-y-auto p-4">
             {messages.length === 0 && (
-              <div className={`text-gray-500 p-4 ${
-                config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-              } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+              <div className={`text-gray-500 p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
                 {config.initialMessage}
               </div>
             )}
             {messages.map((message, index) => (
               <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                <div className={`p-3 inline-block max-w-[80%] ${
-                  config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                } ${
-                  message.role === 'assistant' 
-                    ? `${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} prose prose-sm max-w-none` 
+                <div className={`p-3 inline-block max-w-[80%] ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                  } ${message.role === 'assistant'
+                    ? `${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} prose prose-sm max-w-none`
                     : 'text-white'
-                }`}
-                style={{
-                  backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
-                  transition: 'background-color 0.3s ease'
-                }}>
+                  }`}
+                  style={{
+                    backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
+                    transition: 'background-color 0.3s ease'
+                  }}>
                   {message.role === 'assistant' ? (
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   ) : (
                     <p>{message.content}</p>
                   )}
-                  { message.role === 'assistant' && message.confidenceScore != -1 && <div>
-                    <span style={{backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px'}}>{message.confidenceScore}</span>
+                  {message.role === 'assistant' && message.confidenceScore != -1 && <div>
+                    <span style={{ backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px' }}>{message.confidenceScore}</span>
                   </div>}
                 </div>
               </div>
@@ -220,12 +142,11 @@ const ChatContainer = ({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={config.messagePlaceholder}
-                className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${
-                  config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
-                } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}
+                className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
+                  } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}
                 disabled={isLoading}
               />
-              <button 
+              <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
@@ -243,13 +164,6 @@ const ChatContainer = ({
             </div>
           )}
         </div>
-        <button 
-          onClick={() => {loadSources();setIsModalOpen(true);}} // Open modal on button click
-          className="mt-2 w-full rounded-md border-[1px] bg-white p-2 text-center hover:bg-slate-100"
-        >
-          {loadingSources? 'Loading Sources...' : "Show Sources"}
-        </button>
-        <Modal isOpen={isModalOpen && !loadingSources} onClose={() => setIsModalOpen(false)} /> {/* Modal component */}
       </div>
     </div>
   );
@@ -299,7 +213,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
           createNew: true, // Signal to create a new conversation
         }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setConversationId(data._id);
@@ -312,7 +226,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
 
   const saveConversation = async () => {
     if (!conversationId) return;
-    
+
     try {
       await fetch('/api/chatbot/conversation', {
         method: 'POST',
@@ -360,7 +274,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
       });
 
       if (!response.ok) throw new Error('Stream failed');
-      
+
       const assistantMessage: Message = { role: 'assistant', content: '' };
       setMessages(prev => [...prev, assistantMessage]);
 
@@ -373,26 +287,26 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
           const result = await reader.read();
           done = result.done;
           if (done) break;
-          
+
           const chunk = decoder.decode(result.value);
           const lines = chunk.split('\n');
 
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.slice(5).trim();
-              
+
               if (data === '[DONE]') continue;
-              
+
               try {
                 const parsed = JSON.parse(data);
                 if (parsed.text) {
                   setMessages(prev => {
                     const lastMessage = prev[prev.length - 1];
                     let lastMessage_content = lastMessage.content + parsed.text;
-                    
+
                     let confidenceScore1 = -1;
 
-                    if(lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0){
+                    if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
                       const confidenceScore = lastMessage_content.split(":::")[1];
                       confidenceScore1 = Number(confidenceScore)
                       console.log(confidenceScore1)
@@ -423,77 +337,30 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
     }
   };
 
-  const handleContent = (text: string, confidenceScore: number) => {
-    console.log(`Received text: ${text} with confidence score: ${confidenceScore}`);
-    // Handle the text and confidence score as needed
-  };
-
   return (
-    <AISettingsProvider chatbotId={chatbot.id}>
-      <div>
-        {/* Playground header - moved outside */}
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <h1 className="text-2xl font-bold flex items-center">
-                Playground
-                <button
-                  className="ml-1 text-gray-400 text-lg"
-                  onMouseEnter={() => setShowPlaygroundInfo(true)}
-                  onMouseLeave={() => setShowPlaygroundInfo(false)}
-                >
-                  ⓘ
-                </button>
-              </h1>
-              {showPlaygroundInfo && (
-                <InfoTooltip content="Test and experiment with your chatbot's settings in real-time. Changes made here won't affect your live chatbot until you save them." />
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="px-4 py-1.5 border rounded-lg text-sm">Compare</button>
-            <button className="w-8 h-8 flex items-center justify-center border rounded-lg">
-              <span className="w-4 h-4">💡</span>
-            </button>
-          </div>
-        </div>
+    <div className="relative h-[100%]"
+      style={{
+        backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
+        backgroundSize: '20px 20px'
+      }}>
+      <div className="flex">
 
-        {/* Main content area */}
-        <div className="relative min-h-[calc(100vh-80px)] pl-2" 
-             style={{ 
-               backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
-               backgroundSize: '20px 20px'
-             }}>
-          <div className="flex">
-            {/* Settings Panel */}
-            <div className={`w-[400px] transition-all duration-300 ${
-              isSettingsOpen ? 'mr-4' : '-ml-[400px]'
-            }`}>
-              <ChatSettings 
-                isVisible={isSettingsOpen} 
-                onToggle={() => setIsSettingsOpen(false)}
-                chatbotId={chatbot.id}
-              />
-            </div>
-
-            {/* Chat Container */}
-            <ChatContainer 
-              isSettingsOpen={isSettingsOpen}
-              setIsSettingsOpen={setIsSettingsOpen}
-              messages={messages}
-              config={config}
-              isLoading={isLoading}
-              input={input}
-              setInput={setInput}
-              handleSubmit={handleSubmit}
-              handleRefresh={handleRefresh}
-              messagesEndRef={messagesEndRef}
-              chatbotId={chatbot.id}
-            />
-          </div>
-        </div>
+        {/* Chat Container */}
+        <ChatContainer
+          isSettingsOpen={isSettingsOpen}
+          setIsSettingsOpen={setIsSettingsOpen}
+          messages={messages}
+          config={config}
+          isLoading={isLoading}
+          input={input}
+          setInput={setInput}
+          handleSubmit={handleSubmit}
+          handleRefresh={handleRefresh}
+          messagesEndRef={messagesEndRef}
+          chatbotId={chatbot.id}
+        />
       </div>
-    </AISettingsProvider>
+    </div>
   );
 };
 

@@ -59,6 +59,7 @@ export async function POST(req: Request) {
       // openaiAssistantId: null,
       text: null,
       qaPairs: [],
+      links: [],
     });
     
     await newDataset.save();
