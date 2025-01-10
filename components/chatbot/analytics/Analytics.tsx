@@ -87,71 +87,72 @@ const Analytics = ({
         </div>
       </div>
 
-      {/* Analytics Content */}
-      <div className="space-y-8">
-        {/* Date Range Picker */}
-        <div className="flex justify-end">
-          <div className="w-full max-w-[300px] border-[1px] rounded-md">
-            <Datepicker
-              value={value}
-              onChange={newValue => onChangePeriod(newValue)}
-            />
+      {currentSubTab == 'chats' && 
+        <div className="space-y-8">
+          {/* Date Range Picker */}
+          <div className="flex justify-end">
+            <div className="w-full max-w-[300px] border-[1px] rounded-md">
+              <Datepicker
+                value={value}
+                onChange={newValue => onChangePeriod(newValue)}
+              />
+            </div>
+          </div>
+
+          {/* Analytics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body">
+                <div className="flex items-center gap-2 text-primary mb-4">
+                  <IconMessageCircle className="w-5 h-5" />
+                </div>
+                <div className="text-3xl font-bold">{analyticsData.totalChats}</div>
+                <div className="text-sm text-gray-600">Total chats</div>
+              </div>
+            </div>
+
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body">
+                <div className="flex items-center gap-2 text-primary mb-4">
+                  <IconMessageCircle className="w-5 h-5" />
+                </div>
+                <div className="text-3xl font-bold">{analyticsData.totalMessages}</div>
+                <div className="text-sm text-gray-600">Total messages</div>
+              </div>
+            </div>
+
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body">
+                <div className="flex items-center gap-2 text-primary mb-4">
+                  <IconMessageCircle className="w-5 h-5" />
+                </div>
+                <div className="text-3xl font-bold">0</div>
+                <div className="text-sm text-gray-600">Messages with thumbs up</div>
+              </div>
+            </div>
+
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body">
+                <div className="flex items-center gap-2 text-primary mb-4">
+                  <IconMessageCircle className="w-5 h-5" />
+                </div>
+                <div className="text-3xl font-bold">0</div>
+                <div className="text-sm text-gray-600">Messages with thumbs down</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Chart */}
+          <div className="card bg-base-100 shadow-sm">
+            <div className="card-body">
+              <h3 className="text-xl font-bold mb-4">Chats</h3>
+              <div className="h-64 flex items-center justify-center text-gray-500">
+                <p>Analytics data for today might be delayed</p>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
-              <div className="flex items-center gap-2 text-primary mb-4">
-                <IconMessageCircle className="w-5 h-5" />
-              </div>
-              <div className="text-3xl font-bold">{analyticsData.totalChats}</div>
-              <div className="text-sm text-gray-600">Total chats</div>
-            </div>
-          </div>
-
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
-              <div className="flex items-center gap-2 text-primary mb-4">
-                <IconMessageCircle className="w-5 h-5" />
-              </div>
-              <div className="text-3xl font-bold">{analyticsData.totalMessages}</div>
-              <div className="text-sm text-gray-600">Total messages</div>
-            </div>
-          </div>
-
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
-              <div className="flex items-center gap-2 text-primary mb-4">
-                <IconMessageCircle className="w-5 h-5" />
-              </div>
-              <div className="text-3xl font-bold">0</div>
-              <div className="text-sm text-gray-600">Messages with thumbs up</div>
-            </div>
-          </div>
-
-          <div className="card bg-base-100 shadow-sm">
-            <div className="card-body">
-              <div className="flex items-center gap-2 text-primary mb-4">
-                <IconMessageCircle className="w-5 h-5" />
-              </div>
-              <div className="text-3xl font-bold">0</div>
-              <div className="text-sm text-gray-600">Messages with thumbs down</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Chart */}
-        <div className="card bg-base-100 shadow-sm">
-          <div className="card-body">
-            <h3 className="text-xl font-bold mb-4">Chats</h3>
-            <div className="h-64 flex items-center justify-center text-gray-500">
-              <p>Analytics data for today might be delayed</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      }
     </div>
   );
 };
