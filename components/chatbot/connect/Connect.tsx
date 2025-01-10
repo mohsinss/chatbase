@@ -58,7 +58,7 @@ const Connect = ({
           {/* Content Area */}
           <div className="flex-1">
             {currentTab === 'embed' && <EmbedSection chatbotId={chatbotId} domain={domain}/>}
-            {currentTab === 'share' && <ShareSection chatbotId={chatbotId} />}
+            {currentTab === 'share' && <ShareSection chatbotId={chatbotId} domain={domain}/>}
             {currentTab === 'integrations' && <IntegrationsSection chatbotId={chatbotId} />}
           </div>
         </div>

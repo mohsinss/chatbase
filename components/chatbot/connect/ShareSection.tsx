@@ -5,11 +5,12 @@ import { IconCopy, IconExternalLink } from "@tabler/icons-react";
 
 interface ShareSectionProps {
   chatbotId: string;
+  domain: string;
 }
 
-const ShareSection = ({ chatbotId }: ShareSectionProps) => {
+const ShareSection = ({ chatbotId, domain }: ShareSectionProps) => {
   const [copied, setCopied] = useState(false);
-  const chatbotUrl = `https://chatsa.co/chatbot-iframe/${chatbotId}`;
+  const chatbotUrl = `http://${domain}/chatbot/${chatbotId}`;
 
   const handleCopy = async () => {
     try {
@@ -37,7 +38,7 @@ const ShareSection = ({ chatbotId }: ShareSectionProps) => {
       <div className="bg-gray-50 p-6 rounded-lg space-y-4">
         {/* URL Display */}
         <div className="flex flex-col space-y-2">
-          <span className="text-sm font-medium text-gray-700">www.chatsa.co</span>
+          <span className="text-sm font-medium text-gray-700">{domain}</span>
           <div className="bg-white p-4 rounded border border-gray-200">
             <code className="text-sm text-gray-800 break-all">
               {chatbotUrl}
