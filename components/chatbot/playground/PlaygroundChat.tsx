@@ -92,7 +92,7 @@ const ChatContainer = ({
             <div className="text-sm">{config.displayName}</div>
             <button
               onClick={handleRefresh}
-              className={`p-1.5 rounded-full  pr-8 ${config.syncColors
+              className={`p-1.5 rounded-full  mr-8 ${config.syncColors
                   ? 'hover:bg-white/10 text-white'
                   : 'hover:bg-gray-100'
                 }`}

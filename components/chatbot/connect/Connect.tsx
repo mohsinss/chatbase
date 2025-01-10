@@ -14,10 +14,12 @@ const CONNECT_TABS = [
 
 const Connect = ({ 
   teamId, 
-  chatbotId 
+  chatbotId,
+  domain
 }: { 
   teamId: string;
   chatbotId: string;
+  domain: string;
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -55,7 +57,7 @@ const Connect = ({
 
           {/* Content Area */}
           <div className="flex-1">
-            {currentTab === 'embed' && <EmbedSection chatbotId={chatbotId} />}
+            {currentTab === 'embed' && <EmbedSection chatbotId={chatbotId} domain={domain}/>}
             {currentTab === 'share' && <ShareSection chatbotId={chatbotId} />}
             {currentTab === 'integrations' && <IntegrationsSection chatbotId={chatbotId} />}
           </div>

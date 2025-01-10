@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Switch } from "@headlessui/react";
 import { IconInfoCircle, IconCopy } from "@tabler/icons-react";
 
-const EmbedSection = ({ chatbotId }: { chatbotId: string }) => {
+const EmbedSection = ({ chatbotId, domain }: { chatbotId: string, domain: string }) => {
   const [isPublic, setIsPublic] = useState(false);
   const [embedType, setEmbedType] = useState<"without-identity" | "with-identity">("without-identity");
 
@@ -16,7 +16,7 @@ const EmbedSection = ({ chatbotId }: { chatbotId: string }) => {
     try {
       const response = await fetch(`/api/chatbot/visibility-settings?chatbotId=${chatbotId}`);
       const data = await response.json();
-      
+
       if (data) {
         setIsPublic(data.isPublic);
       }
@@ -46,20 +46,15 @@ const EmbedSection = ({ chatbotId }: { chatbotId: string }) => {
   const chatBubbleCode = `<script>
   window.embeddedChatbotConfig = {
     chatbotId: "${chatbotId}",
-    domain: "chatsa.co"
+    domain: "${domain}"
   }
 </script>
-<script 
-  src="https://chatsa.co/embed.min.js"
-  chatbotId="${chatbotId}"
-  domain="chatsa.co"
-  defer>
-</script>`;
+<script src="https://${domain}/embed.min.js" defer></script>`;
 
   const iframeCode = `<iframe
-  src="https://chatsa.co/chatbot-iframe/${chatbotId}"
+  src="http://${domain}/chatbot/${chatbotId}"
   width="100%"
-  style="height: 100%; min-height: 700px"
+  style="height: 100%; max-height: 700px"
   frameborder="0"
 ></iframe>`;
 
@@ -73,15 +68,10 @@ const EmbedSection = ({ chatbotId }: { chatbotId: string }) => {
 <script>
   window.embeddedChatbotConfig = {
     chatbotId: "${chatbotId}",
-    domain: "chatsa.co"
+    domain: "${domain}"
   }
 </script>
-<script 
-  src="https://chatsa.co/embed.min.js"
-  chatbotId="${chatbotId}"
-  domain="chatsa.co"
-  defer>
-</script>`;
+<script src="https://${domain}/embed.min.js" defer></script>`;
 
   const serverCode = `const crypto = require('crypto');
 
@@ -104,14 +94,12 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
           <Switch
             checked={isPublic}
             onChange={handleVisibilityChange}
-            className={`${
-              isPublic ? 'bg-primary' : 'bg-gray-200'
-            } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
+            className={`${isPublic ? 'bg-primary' : 'bg-gray-200'
+              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
           >
             <span
-              className={`${
-                isPublic ? 'translate-x-6' : 'translate-x-1'
-              } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+              className={`${isPublic ? 'translate-x-6' : 'translate-x-1'
+                } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
             />
           </Switch>
         </div>
@@ -122,18 +110,16 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => setEmbedType("without-identity")}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              embedType === "without-identity" 
-                ? "border-primary bg-primary/5" 
-                : "border-gray-200 hover:border-gray-300"
-            }`}
+            className={`p-4 rounded-lg border-2 transition-all ${embedType === "without-identity"
+              ? "border-primary bg-primary/5"
+              : "border-gray-200 hover:border-gray-300"
+              }`}
           >
             <div className="flex items-start gap-3">
-              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-1 ${
-                embedType === "without-identity" 
-                  ? "border-primary bg-primary" 
-                  : "border-gray-300"
-              }`} />
+              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-1 ${embedType === "without-identity"
+                ? "border-primary bg-primary"
+                : "border-gray-300"
+                }`} />
               <div className="text-left">
                 <h3 className="font-medium mb-1">Embed code without identity</h3>
                 <p className="text-sm text-gray-600">
@@ -145,18 +131,16 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
 
           <button
             onClick={() => setEmbedType("with-identity")}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              embedType === "with-identity" 
-                ? "border-primary bg-primary/5" 
-                : "border-gray-200 hover:border-gray-300"
-            }`}
+            className={`p-4 rounded-lg border-2 transition-all ${embedType === "with-identity"
+              ? "border-primary bg-primary/5"
+              : "border-gray-200 hover:border-gray-300"
+              }`}
           >
             <div className="flex items-start gap-3">
-              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-1 ${
-                embedType === "with-identity" 
-                  ? "border-primary bg-primary" 
-                  : "border-gray-300"
-              }`} />
+              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-1 ${embedType === "with-identity"
+                ? "border-primary bg-primary"
+                : "border-gray-300"
+                }`} />
               <div className="text-left">
                 <h3 className="font-medium mb-1">Embed code with identity</h3>
                 <p className="text-sm text-gray-600">
@@ -178,8 +162,8 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">www.chatsa.co</span>
-                  <button 
+                  <span className="text-sm font-medium">{domain}</span>
+                  <button
                     className="text-sm text-primary hover:text-primary/80 flex items-center gap-1"
                     onClick={() => handleCopyCode(chatBubbleCode)}
                   >
@@ -201,7 +185,7 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium"></span>
-                  <button 
+                  <button
                     className="text-sm text-primary hover:text-primary/80 flex items-center gap-1"
                     onClick={() => handleCopyCode(iframeCode)}
                   >
@@ -227,17 +211,17 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
               {/* On the Server Section */}
               <div className="space-y-4">
                 <h4 className="text-lg font-medium">On the server</h4>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-2">Secret key</label>
                   <div className="relative">
-                    <input 
-                      type="text" 
-                      value="••••••••9brj" 
+                    <input
+                      type="text"
+                      value="••••••••9brj"
                       readOnly
                       className="w-full p-2 rounded-lg border bg-white text-gray-900"
                     />
-                    <button 
+                    <button
                       className="absolute right-2 top-1/2 -translate-y-1/2"
                       onClick={() => handleCopyCode("••••••••9brj")}
                     >
@@ -255,7 +239,7 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
                   <div className="flex gap-2 text-amber-800">
                     <IconInfoCircle className="w-5 h-5 flex-shrink-0" />
                     <p className="text-sm">
-                      Keep your secret key safe! Never commit it directly to your repository, 
+                      Keep your secret key safe! Never commit it directly to your repository,
                       client-side code, or anywhere a third party can find it.
                     </p>
                   </div>
@@ -264,7 +248,7 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium"></span>
-                    <button 
+                    <button
                       className="text-sm text-primary hover:text-primary/80 flex items-center gap-1"
                       onClick={() => handleCopyCode(serverCode)}
                     >
@@ -284,7 +268,7 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium"></span>
-                    <button 
+                    <button
                       className="text-sm text-primary hover:text-primary/80 flex items-center gap-1"
                       onClick={() => handleCopyCode(identityEmbedCode)}
                     >
