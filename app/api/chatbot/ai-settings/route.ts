@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       knowledgeCutoff: body.knowledgeCutoff,
       maxTokens: body.maxTokens,
       contextWindow: body.contextWindow,
-      language: body.language || 'en', // Ensure language is set
+      language: body.language || 'english', // Ensure language is set
       topP: body.topP,
       frequencyPenalty: body.frequencyPenalty,
       presencePenalty: body.presencePenalty,

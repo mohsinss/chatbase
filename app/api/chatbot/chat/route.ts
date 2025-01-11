@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       throw new Error(chunk_response_data.message || "Failed to create dataset");
     }
     console.log(chunk_response_data)
-    let relevant_chunk = 'Please check this information well:\n';
+    let relevant_chunk = "Please use the following information for answering.\n";
     for (let i = 0; i < chunk_response_data.chunks.length; i++) {
       relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
     }
@@ -110,19 +110,21 @@ export async function POST(req: NextRequest) {
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
     const language = aiSettings?.language || 'en';
+    // const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in italian language only.`;
     const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
+    console.log("language", language)
 
     // Add detailed logging
-    console.log('Chat Request Details:', {
-      selectedModel: internalModel,
-      mappedModel: MODEL_MAPPING[internalModel],
-      provider: internalModel.startsWith('claude-') ? 'Anthropic' :
-        internalModel.startsWith('gemini-') ? 'Gemini' : 'OpenAI',
-      temperature,
-      maxTokens,
-      language,
-      systemPrompt
-    });
+    // console.log('Chat Request Details:', {
+    //   selectedModel: internalModel,
+    //   mappedModel: MODEL_MAPPING[internalModel],
+    //   provider: internalModel.startsWith('claude-') ? 'Anthropic' :
+    //     internalModel.startsWith('gemini-') ? 'Gemini' : 'OpenAI',
+    //   temperature,
+    //   maxTokens,
+    //   language,
+    //   systemPrompt
+    // });
 
     const encoder = new TextEncoder();
 

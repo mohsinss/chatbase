@@ -184,7 +184,7 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsPro
               className="w-full p-2.5 border rounded-lg bg-white text-gray-700"
             >
               {SUPPORTED_LANGUAGES.map(lang => (
-                <option key={lang.value} value={lang.value}>
+                <option key={lang.label} value={lang.label}>
                   {lang.label}
                 </option>
               ))}

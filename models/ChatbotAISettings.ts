@@ -48,8 +48,8 @@ const ChatbotAISettingsSchema = new mongoose.Schema(
     language: {
       type: String,
       required: true,
-      enum: ['en', 'es', 'fr', 'de', 'it', 'pt', 'nl', 'pl', 'ru', 'ja', 'ko', 'zh', 'ar'],
-      default: 'en'
+      // enum: ['en', 'es', 'fr', 'de', 'it', 'pt', 'nl', 'pl', 'ru', 'ja', 'ko', 'zh', 'ar'],
+      default: 'english'
     },
   },
   {
