@@ -194,7 +194,7 @@ const Sources = ({
       toast.success("Retraining completed successfully!");
       
       // Redirect to the sources page without the tab query parameter
-      // router.push(`/dashboard/${teamId}/chatbot/${chatbotId}`);
+      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}`);
     } catch (err) {
       console.error("Retrain error:", err);
       
