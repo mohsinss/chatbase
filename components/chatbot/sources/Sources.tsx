@@ -160,7 +160,7 @@ const Sources = ({
     };
 
     fetchDataset();
-  }, [chatbotId]); // Add chatbotId as a dependency
+  }, [chatbotId]);
 
   const handleTabChange = (tabId: string) => {
     router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources?tab=${tabId}`);
