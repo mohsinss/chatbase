@@ -180,19 +180,12 @@ function SocialHeader() {
 
 export default function ChangelogPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardNav teamId={""} />
-      <main className="flex flex-col items-center justify-center py-12 px-4">
-        <div className="w-full max-w-4xl">
-          <h1 className="text-4xl font-bold tracking-tight text-center mb-8">Changelog</h1>
-          <SocialHeader />
-          <div className="relative border-l-2 border-muted pl-8">
-            {changelogEntries.map((entry, index) => (
-              <ChangelogEntryCard key={index} entry={entry} />
-            ))}
-          </div>
-        </div>
-      </main>
+    <div className="pt-32 pb-16 max-w-7xl mx-auto px-4">
+      <h1 className="text-4xl font-bold mb-8">Changelog</h1>
+      <div className="prose max-w-none">
+        <p>Stay up to date with the latest updates and features.</p>
+        {/* Add changelog entries here */}
+      </div>
     </div>
   );
 } 

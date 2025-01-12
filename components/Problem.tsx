@@ -39,7 +39,7 @@ const Problem = () => {
           67% of customers abandon websites due to poor support experiences
         </h2>
         <p className="max-w-xl mx-auto text-lg opacity-90 leading-relaxed mb-12 md:mb-20">
-          Manual support is slow, expensive, and can't scale. Generic chatbots frustrate customers with irrelevant responses.
+          Manual support is slow, expensive, and can&apos;t scale. Generic chatbots frustrate customers with irrelevant responses.
         </p>
 
         <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-6">
