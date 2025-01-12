@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import ButtonSignin from "./ButtonSignin";
+import Image from "next/image";
 
 const links = [
   {
@@ -84,7 +85,13 @@ const Header = () => {
     }`}>
       <nav className="max-w-7xl mx-auto flex items-center justify-between h-16 px-8">
         {/* Logo */}
-        <Link href="/" className="text-xl font-bold">
+        <Link href="/" className="text-xl font-bold flex items-center gap-2">
+          <Image 
+            src="/icon.png" 
+            alt="ChatSA Logo" 
+            width={32} 
+            height={32}
+          />
           ChatSA
         </Link>
 

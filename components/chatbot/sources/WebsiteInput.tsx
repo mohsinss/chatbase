@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
@@ -12,6 +11,7 @@ interface WebsiteInputProps {
 const WebsiteInput: React.FC<WebsiteInputProps> = ({ links, setLinks }) => {
   const [crawlUrl, setCrawlUrl] = useState('');
   const [sitemapUrl, setSitemapUrl] = useState('');
+  const [isCrawling, setIsCrawling] = useState(false);
 
   const normalizeUrl = (url: string) => {
     try {
@@ -22,7 +22,7 @@ const WebsiteInput: React.FC<WebsiteInputProps> = ({ links, setLinks }) => {
     }
   };
 
-  const onFetchLinks = () => {
+  const onFetchLinks = useCallback(async () => {
     const normalizedCrawlUrl = normalizeUrl(crawlUrl);
 
     // Check for duplication
@@ -31,12 +31,68 @@ const WebsiteInput: React.FC<WebsiteInputProps> = ({ links, setLinks }) => {
       return;
     }
 
-    setLinks([...links, {
-      id: new Date().toString(),
-      link: normalizedCrawlUrl,
-      chars: 0,
-    }]);
-  }
+    setIsCrawling(true);
+
+    try {
+      // Use our API endpoint instead of direct fetch
+      const response = await fetch('/api/chatbot/crawl', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: normalizedCrawlUrl }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch URL');
+      }
+
+      const { html } = await response.json();
+
+      // Create a temporary DOM element to parse the HTML
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // Get all links from the page
+      const foundLinks = Array.from(doc.querySelectorAll('a'))
+        .map(a => a.href)
+        .filter(href => {
+          try {
+            const url = new URL(href, normalizedCrawlUrl); // Add base URL for relative links
+            // Only include links from the same domain
+            return url.origin === new URL(normalizedCrawlUrl).origin;
+          } catch {
+            return false;
+          }
+        })
+        // Remove duplicates
+        .filter((href, index, self) => self.indexOf(href) === index)
+        // Normalize URLs
+        .map(href => normalizeUrl(href));
+
+      // Add the original URL and all found links
+      const newLinks = [normalizedCrawlUrl, ...foundLinks].map(link => ({
+        id: new Date().getTime() + Math.random().toString(),
+        link,
+        chars: 0,
+      }));
+
+      // Filter out any duplicates with existing links
+      const uniqueNewLinks = newLinks.filter(
+        newLink => !links.some(existingLink => 
+          normalizeUrl(existingLink.link) === normalizeUrl(newLink.link)
+        )
+      );
+
+      setLinks(prevLinks => [...prevLinks, ...uniqueNewLinks]);
+
+    } catch (error) {
+      console.error('Error crawling links:', error);
+      alert('Failed to crawl links. Please check the URL and try again.');
+    } finally {
+      setIsCrawling(false);
+    }
+  }, [crawlUrl, links, setLinks]);
 
   const deleteLink = (linkid: string) => {
     const newLinks = links.filter(link => link.id !== linkid);
@@ -58,10 +114,11 @@ const WebsiteInput: React.FC<WebsiteInputProps> = ({ links, setLinks }) => {
             className="flex-1"
           />
           <Button 
-            onClick={() => onFetchLinks()}
+            onClick={onFetchLinks}
             className="bg-black text-white hover:bg-gray-800"
+            disabled={isCrawling}
           >
-            Fetch links
+            {isCrawling ? 'Crawling...' : 'Fetch links'}
           </Button>
         </div>
         <p className="text-gray-600 text-sm">
