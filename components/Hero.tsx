@@ -3,7 +3,7 @@ import ButtonSignin from "./ButtonSignin";
 
 const Hero = () => {
   return (
-    <section className="pt-24 max-w-7xl mx-auto flex flex-col lg:flex-row items-start justify-between gap-16 lg:gap-20 px-8 pb-0">
+    <section className="pt-24 pb-32 max-w-7xl mx-auto flex flex-col lg:flex-row items-start justify-between gap-16 lg:gap-20 px-8">
       {/* Left side - Text Content */}
       <div className="flex flex-col gap-8 lg:gap-10 items-start justify-start max-w-xl mt-6">
         <h1 className="font-extrabold text-5xl lg:text-7xl tracking-tight">
@@ -25,7 +25,7 @@ const Hero = () => {
       </div>
 
       {/* Right side - Overlapping Images */}
-      <div className="lg:w-[50%] w-full relative h-[800px]">
+      <div className="lg:w-[50%] w-full relative lg:h-[600px] h-[400px] mb-16 lg:mb-0">
         {/* Back/Bottom Image - Dashboard View */}
         <div className="absolute -right-10 top-0 w-[110%] h-auto z-0">
           <Image

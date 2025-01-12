@@ -96,7 +96,7 @@ const additionalFeatures = [
 
 const FeaturesGrid = () => {
   return (
-    <section className="py-1 px-8">
+    <section className="py-16 lg:py-24 px-8">
       <div className="max-w-7xl mx-auto">
         <div className="text-left mb-16">
           <h2 className="text-pink-500 font-semibold mb-4">POWERFUL FEATURES</h2>
@@ -121,7 +121,7 @@ const FeaturesGrid = () => {
         </div>
 
         {/* Additional Features */}
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {additionalFeatures.map((feature, i) => (
             <div key={i} className="flex flex-col gap-2">
               <div className="text-gray-700">

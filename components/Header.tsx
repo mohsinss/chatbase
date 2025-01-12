@@ -34,7 +34,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className={`fixed top-0 w-full bg-white z-50 transition-all duration-200 ${
+    <header className={`fixed top-[32px] w-full bg-white z-40 transition-all duration-200 ${
       isScrolled ? 'border-b border-gray-100 shadow-sm' : ''
     }`}>
       <nav className="max-w-7xl mx-auto flex items-center justify-between h-16 px-8">
