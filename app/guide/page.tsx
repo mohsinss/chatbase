@@ -102,33 +102,46 @@ export default function GuidePage() {
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* Getting Started Card */}
-              <Link
-                href="/guide/category/getting-started"
-                className="block p-6 bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0">
-                    <img
-                      src="/path-to-dashboard-image.png"
-                      alt="Dashboard preview"
-                      className="w-full h-auto rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">Getting started</h3>
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
+              <Link href="/guide/category/getting-started" className="block">
+                <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:border-blue-500 transition-colors">
+                  <div className="flex items-center gap-6">
+                    {/* Decorative illustration */}
+                    <div className="w-24 h-24 flex-shrink-0">
+                      <svg 
+                        viewBox="0 0 24 24" 
+                        className="w-full h-full text-blue-500"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path 
+                          d="M12 3V21M12 3L8 7M12 3L16 7M3 12H21M3 12L7 8M3 12L7 16M21 12L17 8M21 12L17 16" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-semibold mb-2">Getting Started</h2>
+                      <p className="text-gray-600">Learn the basics and set up your first chatbot</p>
+                    </div>
+                    {/* Arrow icon */}
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                      <svg 
+                        className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </Link>
