@@ -23,7 +23,13 @@ export const getSEOTags = ({
     // up to 160 characters (how does your app help the user?)
     description: description || config.appDescription,
     // some keywords separated by commas. by default it will be your app name
-    keywords: keywords || [config.appName],
+    keywords: keywords || [
+      config.appName,
+      "AI Chatbot",
+      "Knowledge Base",
+      "Customer Support",
+      "Conversational AI",
+    ],
     applicationName: config.appName,
     // set a base URL prefix for other fields that require a fully qualified URL (.e.g og:image: og:image: 'https://yourdomain.com/share.png' => '/share.png')
     metadataBase: new URL(
@@ -55,7 +61,7 @@ export const getSEOTags = ({
       // If you add an twitter-image.(jpg|jpeg|png|gif) image to the /app folder, you don't need the code below
       // images: [openGraph?.image || defaults.og.image],
       card: "summary_large_image",
-      creator: "@marc_louvion",
+      creator: "@mohsinb_dev",
     },
 
     // If a canonical URL is given, we add it. The metadataBase will turn the relative URL into a fully qualified URL
@@ -89,10 +95,10 @@ export const renderSchemaTags = () => {
           url: `https://${config.domainName}/`,
           author: {
             "@type": "Person",
-            name: "Marc Lou",
+            name: "Mohsin Alshammari",
           },
-          datePublished: "2023-08-01",
-          applicationCategory: "EducationalApplication",
+          datePublished: "2024-03-20",
+          applicationCategory: "BusinessApplication",
           aggregateRating: {
             "@type": "AggregateRating",
             ratingValue: "4.8",
@@ -101,7 +107,7 @@ export const renderSchemaTags = () => {
           offers: [
             {
               "@type": "Offer",
-              price: "9.00",
+              price: "99.00",
               priceCurrency: "USD",
             },
           ],

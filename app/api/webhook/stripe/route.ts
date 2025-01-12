@@ -13,9 +13,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 // This is where we receive Stripe webhook events
-// It used to update the user data, send emails, etc...
+// Used to update user data when they subscribe to chatbot plans
 // By default, it'll store the user in the database
-// See more: https://shipfa.st/docs/features/payments
+// See more: https://chatsa.co/docs/features/payments
 export async function POST(req: NextRequest) {
   await connectMongo();
 
@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
   try {
     switch (eventType) {
       case "checkout.session.completed": {
-        // First payment is successful and a subscription is created (if mode was set to "subscription" in ButtonCheckout)
-        // ✅ Grant access to the product
+        // First payment is successful and a subscription is created
+        // ✅ Grant access to chatbot features
         const stripeObject: Stripe.Checkout.Session = event.data
           .object as Stripe.Checkout.Session;
 
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
 
       case "customer.subscription.deleted": {
         // The customer subscription stopped
-        // ❌ Revoke access to the product
+        // ❌ Revoke access to chatbot features
         const stripeObject: Stripe.Subscription = event.data
           .object as Stripe.Subscription;
 

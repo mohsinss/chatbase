@@ -3,8 +3,8 @@ import { toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
 import config from "@/config";
 
-// use this to interact with our own API (/app/api folder) from the front-end side
-// See https://shipfa.st/docs/tutorials/api-call
+// use this to interact with our API endpoints from the frontend
+// See https://chatsa.co/docs/tutorials/api-call
 const apiClient = axios.create({
   baseURL: "/api",
 });
@@ -17,13 +17,12 @@ apiClient.interceptors.response.use(
     let message = "";
 
     if (error.response?.status === 401) {
-      // User not auth, ask to re login
-      toast.error("Please login");
-      // automatically redirect to /dashboard page after login
+      // User not authenticated
+      toast.error("Please login to access your chatbot settings");
       return signIn(undefined, { callbackUrl: config.auth.callbackUrl });
     } else if (error.response?.status === 403) {
-      // User not authorized, must subscribe/purchase/pick a plan
-      message = "Pick a plan to use this feature";
+      // User not authorized - needs subscription
+      message = "Please upgrade your plan to access this chatbot feature";
     } else {
       message =
         error?.response?.data?.error || error.message || error.toString();
@@ -34,11 +33,11 @@ apiClient.interceptors.response.use(
 
     console.error(error.message);
 
-    // Automatically display errors to the user
+    // Display user-friendly error messages
     if (error.message) {
       toast.error(error.message);
     } else {
-      toast.error("something went wrong...");
+      toast.error("Something went wrong with your chatbot request");
     }
     return Promise.reject(error);
   }

@@ -4,7 +4,7 @@ import FeaturesGrid from "@/components/FeaturesGrid";
 import Footer from "@/components/Footer";
 import Announcement from "@/components/Announcement";
 
-export default function Page() {
+export default function Home() {
   return (
     <>
       <Announcement />
