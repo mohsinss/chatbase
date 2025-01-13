@@ -130,13 +130,20 @@ export async function POST(req: Request) {
       // Function to remove HTML tags and scripts
       const stripHTMLTagsAndScripts = (str: string) => {
         // Remove script tags
-        str = str.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, ' ');
+        // str = str.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, ' ');
+        const cleanedHtml = str.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ''); // Remove scripts
+        const cleanedHtml1 = cleanedHtml.replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, ''); // Remove scripts
+        const cleanedHtml2 = cleanedHtml1.replace(/<header[^>]*>[\s\S]*?<\/header>/gi, ''); // Remove scripts
+        const cleanedHtml3 = cleanedHtml2.replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, ''); // Remove scripts
+        const cleanedHtml4 = cleanedHtml3.replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, ''); // Remove scripts
+        const bodyContentMatch = cleanedHtml4.match(/<body[^>]*>([\s\S]*?)<\/body>/i); // Match content inside <body> tags
+        const textOnly = bodyContentMatch ? bodyContentMatch[1].replace(/<[^>]*>/g, ' ') : ''; // Remove all HTML tags from body content
         // Remove all other HTML tags
-        return str.replace(/<[^>]*>/g, ' ');
+        return textOnly;
       };
 
       const cleanedContent = stripHTMLTagsAndScripts(content);
-      console.log(cleanedContent);
+      // console.log(cleanedContent);
       // Parse the HTML and extract the body text
       const charCount = cleanedContent.length; // Get character count
       link.chars = charCount; // Update link with character count
@@ -212,7 +219,7 @@ export async function POST(req: Request) {
 
     // Check if the chunk deletion was successful
     if (!delete_text_response.ok) {
-      throw new Error(`Failed to delete chunks: ${delete_text_response.statusText}`);
+      // throw new Error(`Failed to delete chunks: ${delete_text_response.statusText}`);
     }
 
     // Delete associated chunks using the uniqueTag from the file metadata
@@ -236,7 +243,7 @@ export async function POST(req: Request) {
 
     // Check if the chunk deletion was successful
     if (!delete_qa_response.ok) {
-      throw new Error(`Failed to delete chunks: ${delete_qa_response.statusText}`);
+      // throw new Error(`Failed to delete chunks: ${delete_qa_response.statusText}`);
     }
 
     // Delete associated chunks using the uniqueTag from the file metadata
@@ -260,7 +267,7 @@ export async function POST(req: Request) {
 
     // Check if the chunk deletion was successful
     if (!delete_links_response.ok) {
-      throw new Error(`Failed to delete chunks: ${delete_links_response.statusText}`);
+      // throw new Error(`Failed to delete chunks: ${delete_links_response.statusText}`);
     }
 
     const add_text_response = await fetch("https://api.trieve.ai/api/file", {
