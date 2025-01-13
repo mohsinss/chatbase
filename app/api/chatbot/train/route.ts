@@ -212,7 +212,7 @@ export async function POST(req: Request) {
 
     // Check if the chunk deletion was successful
     if (!delete_text_response.ok) {
-      throw new Error(`Failed to delete chunks: ${delete_text_response.statusText}`);
+      // throw new Error(`Failed to delete chunks: ${delete_text_response.statusText}`);
     }
 
     // Delete associated chunks using the uniqueTag from the file metadata
@@ -236,7 +236,7 @@ export async function POST(req: Request) {
 
     // Check if the chunk deletion was successful
     if (!delete_qa_response.ok) {
-      throw new Error(`Failed to delete chunks: ${delete_qa_response.statusText}`);
+      // throw new Error(`Failed to delete chunks: ${delete_qa_response.statusText}`);
     }
 
     // Delete associated chunks using the uniqueTag from the file metadata
@@ -260,7 +260,7 @@ export async function POST(req: Request) {
 
     // Check if the chunk deletion was successful
     if (!delete_links_response.ok) {
-      throw new Error(`Failed to delete chunks: ${delete_links_response.statusText}`);
+      // throw new Error(`Failed to delete chunks: ${delete_links_response.statusText}`);
     }
 
     const add_text_response = await fetch("https://api.trieve.ai/api/file", {
