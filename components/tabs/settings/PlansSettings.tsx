@@ -12,11 +12,13 @@ interface PlanFeature {
 interface Plan {
   name: string;
   price: number;
-  period: "Monthly" | "Yearly";
+  yearlyPrice: number;
+  period: "Per Month" | "Per Year";
   features: PlanFeature[];
 }
 
 export function PlansSettings({ teamId }: { teamId: string }) {
+  const [isYearly, setIsYearly] = useState(false);
   const [autoRecharge, setAutoRecharge] = useState(false);
   const [extraMessages, setExtraMessages] = useState(false);
   const [extraChatbots, setExtraChatbots] = useState(false);
@@ -27,8 +29,10 @@ export function PlansSettings({ teamId }: { teamId: string }) {
     {
       name: "Hobby",
       price: 19,
-      period: "Monthly",
+      yearlyPrice: 190,
+      period: isYearly ? "Per Year" : "Per Month",
       features: [
+        { name: "Everything in Free, plus..." },
         { name: "Access to advanced models", info: "?" },
         { name: "2,000 message credits/month" },
         { name: "2 chatbots" },
@@ -42,7 +46,8 @@ export function PlansSettings({ teamId }: { teamId: string }) {
     {
       name: "Standard",
       price: 99,
-      period: "Monthly",
+      yearlyPrice: 990,
+      period: isYearly ? "Per Year" : "Per Month",
       features: [
         { name: "Everything in Hobby, plus..." },
         { name: "10,000 message credits/month" },
@@ -54,7 +59,8 @@ export function PlansSettings({ teamId }: { teamId: string }) {
     {
       name: "Unlimited",
       price: 399,
-      period: "Monthly",
+      yearlyPrice: 3990,
+      period: isYearly ? "Per Year" : "Per Month",
       features: [
         { name: "Everything in Standard, plus..." },
         { name: "40,000 message credits/month included (Messages over the limit will use your OpenAI API Key)" },
@@ -69,42 +75,70 @@ export function PlansSettings({ teamId }: { teamId: string }) {
 
   return (
     <div className="space-y-8">
-      {/* Pricing Plans */}
-      <div className="grid grid-cols-3 gap-6">
-        {plans.map((plan) => (
-          <div key={plan.name} className="rounded-xl border p-6 space-y-6">
-            <div>
-              <h3 className="text-2xl">{plan.name}</h3>
-              <div className="mt-4">
-                <span className="text-5xl font-medium">${plan.price}</span>
-                <span className="text-gray-500 ml-2">Per Month</span>
-              </div>
-              {plan.name === "Hobby" && (
-                <div className="mt-4 inline-flex rounded-lg border">
-                  <button className="px-4 py-1 bg-white rounded-lg">Monthly</button>
-                  <button className="px-4 py-1 text-gray-500">Yearly</button>
-                </div>
-              )}
-            </div>
+      {/* Pricing Toggle */}
+      <div className="flex items-center justify-center gap-4 mb-12">
+        <span className={`text-sm ${!isYearly ? 'text-gray-900' : 'text-gray-500'}`}>Monthly</span>
+        <button
+          onClick={() => setIsYearly(!isYearly)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+            isYearly ? 'bg-indigo-600' : 'bg-gray-200'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              isYearly ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+        <span className={`text-sm ${isYearly ? 'text-gray-900' : 'text-gray-500'}`}>Yearly</span>
+      </div>
 
-            <div className="space-y-4">
-              <h4 className="text-gray-500">
-                {plan.features[0].name}
-              </h4>
-              {plan.features.slice(1).map((feature, index) => (
-                <div key={index} className="flex items-start gap-2">
-                  <Check className="w-5 h-5 mt-0.5" />
+      {/* Pricing Plans */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {plans.map((plan) => (
+          <div
+            key={plan.name}
+            className="bg-white rounded-lg border border-gray-200 p-8 hover:shadow-lg transition-shadow"
+          >
+            <h3 className="text-xl font-semibold mb-4">{plan.name}</h3>
+            <div className="mb-4">
+              <span className="text-4xl font-bold">
+                ${isYearly ? plan.yearlyPrice : plan.price}
+              </span>
+              <span className="text-gray-500 ml-2">{plan.period}</span>
+            </div>
+            <ul className="space-y-4 mb-8">
+              {plan.features.map((feature, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <svg
+                    className="w-5 h-5 text-green-500 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
                   <span>{feature.name}</span>
                   {feature.info && (
                     <button className="ml-1 w-4 h-4 rounded-full border text-xs">?</button>
                   )}
-                </div>
+                </li>
               ))}
-            </div>
-
-            <button className={`w-full py-2 rounded-lg border ${
-              plan.name === "Standard" ? "bg-black text-white" : ""
-            }`}>
+            </ul>
+            <button
+              className={`w-full py-2 px-4 rounded-lg border border-gray-200 
+                ${
+                  plan.name === "Standard"
+                    ? 'bg-gray-900 text-white hover:bg-gray-800'
+                    : 'bg-white text-gray-900 hover:bg-gray-50'
+                }
+                transition-colors`}
+            >
               Upgrade
             </button>
           </div>
