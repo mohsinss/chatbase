@@ -47,34 +47,34 @@ const WebsiteInput: React.FC<WebsiteInputProps> = ({ links, setLinks }) => {
         throw new Error('Failed to fetch URL');
       }
 
-      const { html } = await response.json();
+      const { html, foundLinks } = await response.json();
 
       // Create a temporary DOM element to parse the HTML
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
+      // const parser = new DOMParser();
+      // const doc = parser.parseFromString(html, 'text/html');
 
-      // Get all links from the page
-      const foundLinks = Array.from(doc.querySelectorAll('a'))
-        .map(a => a.href)
-        .filter(href => {
-          try {
-            const url = new URL(href, normalizedCrawlUrl); // Add base URL for relative links
-            // Only include links from the same domain
-            return url.origin === new URL(normalizedCrawlUrl).origin;
-          } catch {
-            return false;
-          }
-        })
-        // Remove duplicates
-        .filter((href, index, self) => self.indexOf(href) === index)
-        // Normalize URLs
-        .map(href => normalizeUrl(href));
+      // // Get all links from the page
+      // const foundLinks = Array.from(doc.querySelectorAll('a'))
+      //   .map(a => a.href)
+      //   .filter(href => {
+      //     try {
+      //       const url = new URL(href, normalizedCrawlUrl); // Add base URL for relative links
+      //       // Only include links from the same domain
+      //       return url.origin === new URL(normalizedCrawlUrl).origin;
+      //     } catch {
+      //       return false;
+      //     }
+      //   })
+      //   // Remove duplicates
+      //   .filter((href, index, self) => self.indexOf(href) === index)
+      //   // Normalize URLs
+      //   .map(href => normalizeUrl(href));
 
       // Add the original URL and all found links
-      const newLinks = [normalizedCrawlUrl, ...foundLinks].map(link => ({
+      const newLinks = [...foundLinks].map(link => ({
         id: new Date().getTime() + Math.random().toString(),
-        link,
-        chars: 0,
+        link: link.url,
+        chars: link.chars,
       }));
 
       // Filter out any duplicates with existing links
@@ -176,7 +176,7 @@ const WebsiteInput: React.FC<WebsiteInputProps> = ({ links, setLinks }) => {
             >
               <IconTrash className="h-5 w-5" />
             </button>
-            <div className=''>{link.link}</div>            
+            <div className=''>{link.link} : <span>{link.chars}</span></div>            
           </div>
         })}
       </div>
