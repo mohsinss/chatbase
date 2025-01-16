@@ -91,6 +91,12 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
 
       if (!response.ok) throw new Error();
 
+      // Notify the chat bubble of all setting changes
+      window.postMessage({
+        type: 'chatbot-settings-update',
+        settings: config
+      }, '*');
+
       setNotification({
         message: "Settings saved successfully",
         type: "success"

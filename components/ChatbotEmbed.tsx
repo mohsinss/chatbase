@@ -12,14 +12,6 @@ export default function ChatbotEmbed({
   chatbotId = "2rmMdD8T2OPVDpL25_6CP",
   domain = "localhost:3000"
 }: ChatbotEmbedProps) {
-  useEffect(() => {
-    // Initialize chatbot config
-    window.embeddedChatbotConfig = {
-      chatbotId,
-      domain
-    };
-  }, [chatbotId, domain]);
-
   return (
     <>
       <Script
@@ -35,11 +27,8 @@ export default function ChatbotEmbed({
       </Script>
       <Script
         id="chatbot-embed"
-        src="https://www.chatsa.co/embed.min.js"
-        strategy="afterInteractive"
-        onError={(e) => {
-          console.error('Error loading chatbot script:', e);
-        }}
+        src={`https://${domain}/embed.min.js`}
+        defer
       />
     </>
   );
