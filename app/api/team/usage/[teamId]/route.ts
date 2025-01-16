@@ -5,6 +5,15 @@ import ChatbotConversation from "@/models/ChatbotConversation";
 import ChatbotAISettings from "@/models/ChatbotAISettings";
 import Dataset from "@/models/Dataset";
 
+interface ChatbotUsage {
+  name: string;
+  dailyUsage: { date: string; count: number }[];
+  modelUsage: Record<string, number>;
+  totalMessages: number;
+  totalChars: number;
+  language: string;
+}
+
 export async function POST(
   req: Request,
   { params }: { params: { teamId: string } }
@@ -29,13 +38,13 @@ export async function POST(
         creditsUsed: 0,
         creditLimit: 5000 * chatbots.length // Assuming 5000 per chatbot
       },
-      usage: {},
+      usage: {} as Record<string, ChatbotUsage>,
       aggregatedData: {
         totalMessages: 0,
         totalChars: 0,
-        messagesByDate: {},
-        modelDistribution: {},
-        languageDistribution: {}
+        messagesByDate: [] as { date: string; count: number }[],
+        modelDistribution: {} as Record<string, number>,
+        languageDistribution: {} as Record<string, number>
       }
     };
 
@@ -69,7 +78,7 @@ export async function POST(
       // Process chatbot stats
       let chatbotTotalMessages = 0;
       let chatbotTotalChars = 0;
-      const dailyUsage = {};
+      const dailyUsage: Record<string, number> = {};
 
       messageStats.forEach(stat => {
         const date = stat._id.date;
@@ -81,8 +90,10 @@ export async function POST(
 
         // Update daily usage
         dailyUsage[date] = (dailyUsage[date] || 0) + count;
-        usageData.aggregatedData.messagesByDate[date] = 
-          (usageData.aggregatedData.messagesByDate[date] || 0) + count;
+        usageData.aggregatedData.messagesByDate.push({
+          date,
+          count: count as number
+        });
       });
 
       // Update model and language distribution
@@ -118,12 +129,7 @@ export async function POST(
     }
 
     // Convert messagesByDate to sorted array format
-    usageData.aggregatedData.messagesByDate = Object.entries(usageData.aggregatedData.messagesByDate)
-      .map(([date, count]) => ({
-        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        count: count as number
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    usageData.aggregatedData.messagesByDate.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return NextResponse.json(usageData);
 

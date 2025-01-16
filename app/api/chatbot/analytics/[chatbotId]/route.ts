@@ -100,7 +100,7 @@ export async function POST(
       totalSources: dataset?.links?.length || 0,
       totalQAPairs: dataset?.qaPairs?.length || 0,
       sources: dataset?.links || [],
-      averageSourceSize: dataset?.links?.reduce((acc, link) => acc + (link.chars || 0), 0) / (dataset?.links?.length || 1)
+      averageSourceSize: dataset?.links?.reduce((acc: number, link: { chars?: number }) => acc + (link.chars || 0), 0) / (dataset?.links?.length || 1)
     };
 
     // Current AI settings
