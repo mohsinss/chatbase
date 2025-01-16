@@ -6,6 +6,7 @@ import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
 import config from "@/config";
 import "./globals.css";
+import ChatbotEmbed from '@/components/ChatbotEmbed';
 
 const font = Inter({ subsets: ["latin"] });
 
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 			<body>
 				<ClientLayout>{children}</ClientLayout>
 				<Analytics />
+				<ChatbotEmbed />
 			</body>
 		</html>
 	);
