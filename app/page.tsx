@@ -20,14 +20,15 @@ export default function Home() {
         dangerouslySetInnerHTML={{
           __html: `
             window.embeddedChatbotConfig = {
-              chatbotId: "${process.env.NEXT_PUBLIC_DEFAULT_CHATBOT_ID}",
-              domain: "${process.env.NEXT_PUBLIC_DOMAIN}"
+              chatbotId: "S4EYnRPPPh8H479N6dKJH",
+              domain: "${process.env.NEXT_PUBLIC_DOMAIN}",
+              protocol: "${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}"
             }
           `
         }}
       />
       <Script 
-        src={`http://${process.env.NEXT_PUBLIC_DOMAIN}/embed.min.js`}
+        src={`${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}//${process.env.NEXT_PUBLIC_DOMAIN}/embed.min.js`}
         defer
       />
     </>

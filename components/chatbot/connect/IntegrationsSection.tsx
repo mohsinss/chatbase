@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { IconDeviceLaptop } from "@tabler/icons-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface IntegrationCardProps {
   title: string;
@@ -15,6 +16,12 @@ interface IntegrationCardProps {
 
 interface WhatsAppAuthResponse {
   authUrl: string;
+}
+
+interface MetaBusinessResponse {
+  url: string;
+  status: string;
+  error?: string;
 }
 
 const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = false, isConnecting }: IntegrationCardProps) => (
@@ -52,41 +59,35 @@ const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = f
 );
 
 const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
+  const router = useRouter();
   const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnect = async (platform: string) => {
     if (platform === "whatsapp") {
       setIsConnecting(true);
       try {
-        const response = await fetch("/api/chatbot/integrations/whatsapp", {
+        const response = await fetch("/api/chatbot/integrations/meta-business", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ chatbotId }),
+          body: JSON.stringify({ 
+            chatbotId,
+            platform: "whatsapp"
+          }),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to connect to WhatsApp");
+          throw new Error("Failed to initiate Meta Business connection");
         }
 
-        const data: WhatsAppAuthResponse = await response.json();
+        const data: MetaBusinessResponse = await response.json();
         
-        // Open WhatsApp authentication window
-        const authWindow = window.open(
-          data.authUrl,
-          "WhatsApp Authentication",
-          "width=600,height=600"
-        );
+        if (data.error) {
+          throw new Error(data.error);
+        }
 
-        // Handle authentication callback
-        window.addEventListener("message", async (event) => {
-          if (event.data.type === "WHATSAPP_AUTH_SUCCESS") {
-            authWindow?.close();
-            // Save WhatsApp credentials
-            await saveWhatsAppCredentials(event.data.credentials);
-          }
-        });
+        window.location.href = data.url;
 
       } catch (error) {
         console.error("WhatsApp connection error:", error);

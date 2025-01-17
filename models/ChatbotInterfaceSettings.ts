@@ -69,6 +69,14 @@ const ChatbotInterfaceSettingsSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    profilePictureUrl: {
+      type: String,
+      default: "",
+    },
+    chatIconUrl: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
