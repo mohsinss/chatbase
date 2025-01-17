@@ -25,6 +25,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 			data-theme={config.colors.theme}
 			className={font.className}
 		>
+			<head>
+				{/* other head elements */}
+			</head>
 			<body>
 				<ClientLayout>{children}</ClientLayout>
 				<Analytics />
