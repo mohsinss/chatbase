@@ -43,12 +43,10 @@ const TeamsPage = () => {
                 <li>
                   <p>All existing Chatsa members have been migrated to a default Chatsa team associated with their account name. You can see a list of your default team by clicking on the teams dropdown at the top left corner of the dashboard.</p>
                   <p className="mt-2">To create a new team, click on the Create Team button on the Select team dropdown menu.</p>
-                  {/* Image placeholder */}
                 </li>
 
                 <li>
-                  <p>On the next page, provide a name for your team, a preferred URL (if you aren't comfortable with the auto-generated one), and then click on the Create button. The new team will be created and automatically added to your list of teams.</p>
-                  {/* Image placeholder */}
+                  <p>On the next page, provide a name for your team, a preferred URL (if you aren&apos;t comfortable with the auto-generated one), and then click on the Create button. The new team will be created and automatically added to your list of teams.</p>
                 </li>
               </ol>
             </section>
@@ -77,7 +75,7 @@ const TeamsPage = () => {
 
                 <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-4">
                   <p className="text-yellow-700">
-                    <strong>Note:</strong> If the button is disabled and you get an error message saying: "You have reached the maximum number of members for your plan," then you need to upgrade your plan for that Team. Each team on Chatsa has its own chatbots, billing info, and billing plans. This means your plans are not shared across teams, and the privileges and limitations are unique to each team based on the plan. If you have any questions, please contact support@chatsa.co.
+                    <strong>Note:</strong> If the button is disabled and you get an error message saying: &ldquo;You have reached the maximum number of members for your plan,&rdquo; then you need to upgrade your plan for that Team. Each team on Chatsa has its own chatbots, billing info, and billing plans. This means your plans are not shared across teams, and the privileges and limitations are unique to each team based on the plan. If you have any questions, please contact support@chatsa.co.
                   </p>
                 </div>
 
@@ -97,7 +95,7 @@ const TeamsPage = () => {
                 </div>
 
                 <li>
-                  <p>Once an invitee receives the invite email from Chatsa, they'll be able to follow the provided link to join the team. The invited members would have to create a Chatsa account to be able to log into the Chatsa platform and access the team.</p>
+                  <p>Once an invitee receives the invite email from Chatsa, they&apos;ll be able to follow the provided link to join the team. The invited members would have to create a Chatsa account to be able to log into the Chatsa platform and access the team.</p>
                 </li>
               </ol>
             </section>

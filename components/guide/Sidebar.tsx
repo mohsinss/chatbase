@@ -4,9 +4,16 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+type SectionTitle = 'Getting started' | 'Integrations';
+
+interface ExpandedSections {
+  'Getting started': boolean;
+  'Integrations': boolean;
+}
+
 const sidebarSections = [
   {
-    title: 'Getting started',
+    title: 'Getting started' as SectionTitle,
     isExpanded: true,
     items: [
       { id: 'chatbot-settings', title: 'Chatbot settings', path: '/guide/category/getting-started' },
@@ -16,7 +23,7 @@ const sidebarSections = [
     ]
   },
   {
-    title: 'Integrations',
+    title: 'Integrations' as SectionTitle,
     isExpanded: false,
     items: []
   }
@@ -24,12 +31,12 @@ const sidebarSections = [
 
 const Sidebar = () => {
   const pathname = usePathname();
-  const [expandedSections, setExpandedSections] = React.useState({
+  const [expandedSections, setExpandedSections] = React.useState<ExpandedSections>({
     'Getting started': true,
     'Integrations': false
   });
 
-  const toggleSection = (title: string) => {
+  const toggleSection = (title: SectionTitle) => {
     setExpandedSections(prev => ({
       ...prev,
       [title]: !prev[title]
