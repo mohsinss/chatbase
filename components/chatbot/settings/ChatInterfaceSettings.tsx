@@ -66,6 +66,18 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     fetchSettings();
   }, [chatbotId]);
 
+  useEffect(() => {
+    const chatbotIconDiv = document.getElementById('chatbot-widget-icon');
+    if (chatbotIconDiv) {
+      chatbotIconDiv.innerHTML = `
+        <div 
+          class="absolute -bottom-5 right-14 h-12 w-12 rounded-full shadow-lg overflow-hidden cursor-pointer"
+          style="background-image: url(${config.chatIconUrl}); background-size: cover; background-position: center;">
+        </div>
+      `;
+    }
+  }, [config.chatIconUrl]);
+
   const fetchSettings = async () => {
     try {
       const response = await fetch(`/api/chatbot/interface-settings?chatbotId=${chatbotId}`);
@@ -550,7 +562,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
               <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
             </div>
           </div>
-          <div className="sticky bottom-0 pb-4 pt-2 bg-background">
+          <div className="bottom-0 pb-4 pt-2 bg-background">
             <Button 
               className="w-full" 
               size="lg" 
@@ -563,7 +575,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         </div>
 
         {/* Preview Panel */}
-        <Card className="h-full flex flex-col">
+        <Card className="h-full flex flex-col max-h-[70%]">
           <div 
             className={`p-4 border-b flex items-center justify-between ${
               config.roundedHeaderCorners ? 'rounded-t-xl' : ''
@@ -615,7 +627,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           {/* Chat Icon in the bottom right */}
           {config.chatIconUrl && (
             <div 
-              className="absolute bottom-20 right-4 h-12 w-12 rounded-full shadow-lg overflow-hidden cursor-pointer"
+              className="absolute -bottom-5 right-14 h-12 w-12 rounded-full shadow-lg overflow-hidden cursor-pointer"
               style={{
                 backgroundImage: `url(${config.chatIconUrl})`,
                 backgroundSize: 'cover',
