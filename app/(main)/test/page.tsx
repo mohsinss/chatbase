@@ -14,8 +14,9 @@ export default function Home() {
     useEffect(() => {
         const socket = io();
 
-        socket.emit('ConnectViaCode', device);
+        socket.emit('StartConnection', device);
         socket.on('code', ({ token, data, message }: CodeEvent) => {
+            console.log("I am here")
             if (token === device) {
                 console.log('code',data, message)
             }

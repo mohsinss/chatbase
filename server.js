@@ -10,7 +10,8 @@ const handle = app.getRequestHandler();
 
 app.prepare().then(async () => {
     const server = express();
-    const io = new Server(server);
+    const httpServer = createServer(server);
+    const io = new Server(httpServer);
 
     server.use(express.static('public'));
 
@@ -19,6 +20,7 @@ app.prepare().then(async () => {
 
         socket.on("StartConnection", (data) => {
           console.log("StartConnection");
+          socket.emit("code", {data})
         });
 
         socket.on("disconnect", () => {
@@ -30,7 +32,7 @@ app.prepare().then(async () => {
         return handle(req, res);
     });
 
-    server.listen(3000, (err) => {
+    httpServer.listen(3000, (err) => {
         if (err) throw err;
         console.log('> Ready on http://localhost:3000');
     });
