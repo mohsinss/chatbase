@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev-base": "next dev",
     "postbuild": "next-sitemap",
-    "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "dev": "node server.js",
+    "build": "next build",
+    "start": "NODE_ENV=production node server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
@@ -16,6 +17,7 @@
     "@aws-sdk/s3-request-presigner": "^3.730.0",
     "@cloudflare/ai": "^1.2.2",
     "@google/generative-ai": "^0.21.0",
+    "@hapi/boom": "^10.0.1",
     "@headlessui/react": "^1.7.18",
     "@mdx-js/loader": "^2.3.0",
     "@mdx-js/react": "^2.3.0",
@@ -32,6 +34,7 @@
     "@radix-ui/react-tooltip": "^1.1.6",
     "@tabler/icons-react": "^3.26.0",
     "@vercel/analytics": "^1.4.1",
+    "@whiskeysockets/baileys": "^6.7.9",
     "ai": "^4.0.22",
     "axios": "^1.6.8",
     "class-variance-authority": "^0.7.1",
@@ -40,9 +43,12 @@
     "dayjs": "^1.11.13",
     "eslint": "8.47.0",
     "eslint-config-next": "13.4.19",
+    "express": "^4.21.2",
     "form-data": "^4.0.0",
+    "http": "^0.0.1-security",
     "icons-react": "^3.7.1",
     "lucide-react": "^0.469.0",
+    "mongo-baileys": "^1.0.1",
     "mongodb": "^5.9.2",
     "mongoose": "^7.6.10",
     "nanoid": "^5.0.9",
@@ -50,9 +56,12 @@
     "next-auth": "^4.24.7",
     "next-sitemap": "^4.2.3",
     "nextjs-toploader": "^1.6.11",
+    "node-cache": "^5.1.2",
     "nodemailer": "^6.9.13",
     "openai": "^4.77.0",
     "pdf2json": "^3.1.5",
+    "pino": "^9.6.0",
+    "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-colorful": "^5.6.1",
     "react-dom": "^18.2.0",
@@ -64,10 +73,14 @@
     "react-tooltip": "^5.26.3",
     "recharts": "^2.15.0",
     "resend": "^4.0.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "stripe": "^13.11.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "trieve-ts-sdk": "^0.0.49",
+    "ulid": "^2.3.0",
+    "wa-sticker-formatter": "^4.4.4",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -77,6 +90,7 @@
     "@types/mongoose": "^5.11.97",
     "@types/node": "^20.12.2",
     "@types/pdf-parse": "^1.1.4",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@types/react-syntax-highlighter": "^15.5.11",
@@ -86,5 +100,6 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "5.7.2"
-  }
+  },
+  "type": "module"
 }

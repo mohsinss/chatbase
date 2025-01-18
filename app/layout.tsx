@@ -6,6 +6,7 @@ import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
 import config from "@/config";
 import "./globals.css";
+import Script from 'next/script';
 
 const font = Inter({ subsets: ["latin"] });
 
@@ -29,7 +30,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				<ClientLayout>{children}</ClientLayout>
-				<Analytics />
 			</body>
 		</html>
 	);

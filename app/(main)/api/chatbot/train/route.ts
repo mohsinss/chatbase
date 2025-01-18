@@ -119,6 +119,7 @@ export async function POST(req: Request) {
     }
 
     let linkText = '';
+    let sourcesCount = 0;
     // Iterate over each link to fetch content and count characters
     for (let link of links) {
       const response = await fetch(link.link);
@@ -151,7 +152,9 @@ export async function POST(req: Request) {
       // console.log(bodyText); // Log the body text
       linkText += cleanedContent + '\n';
     }
-
+    sourcesCount += links.length;
+    sourcesCount += qaPairs.length;
+    sourcesCount += text ? 1 : 0;
     // Convert qaPairs to a string containing only questions and answers
     //@ts-ignore
     const qaString = qaPairs.length > 0 ? qaPairs.map(pair => `Question: ${pair.question} Answer: ${pair.answer}`).join('\n') : '';
@@ -341,6 +344,33 @@ export async function POST(req: Request) {
     if (!add_links_response.ok) {
       throw new Error(`Failed to update text for qa: ${add_links_response.statusText} - ${JSON.stringify(responseData)}`);
     }
+
+    // Find the chatbot by its ID
+    let existingChatbot = await Chatbot.findOne({ chatbotId });
+    if (!existingChatbot) {
+      return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
+    }
+    
+    // First get the dataset ID
+    const datasetsResponse = await fetch("https://api.trieve.ai/api/dataset/files/"+existingDataset.datasetId+"/1", {
+      headers: {
+        "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
+        "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
+        "TR-Dataset": existingDataset.datasetId,
+      }
+    });
+    
+    if (!datasetsResponse.ok) throw new Error("Failed to fetch datasets");
+    
+    const datasets = await datasetsResponse.json();
+    // @ts-ignore
+    const files = datasets.file_and_group_ids.filter(item => item.file.file_name != 'texttexttexttext.txt').filter(item => item.file.file_name != 'texttexttexttextqa.txt').filter(item => item.file.file_name != 'texttexttexttextlink.txt');
+    // @ts-ignore
+
+    sourcesCount += files.length
+    // Update the chatbot with the sourcesCount
+    existingChatbot.sourcesCount = sourcesCount; // Assuming sourcesCount is a field in the Chatbot model
+    await existingChatbot.save(); // Save the updated chatbot
 
     return NextResponse.json({
       success: true,

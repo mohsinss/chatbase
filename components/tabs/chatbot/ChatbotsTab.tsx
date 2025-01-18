@@ -12,7 +12,7 @@ interface Chatbot {
   name: string;
   teamId: string;
   createdBy: string;
-  sources: any[];
+  sourcesCount: number;
 }
 
 interface ChatbotsTabProps {
@@ -35,6 +35,7 @@ const ChatbotsTab = ({ teamId }: ChatbotsTabProps) => {
       }
       const data = await response.json();
       setChatbots(data.chatbots || []);
+      console.log("data.chatbots", data.chatbots)
     } catch (error) {
       console.error("Failed to fetch chatbots:", error);
     } finally {
@@ -115,7 +116,7 @@ const ChatbotsTab = ({ teamId }: ChatbotsTabProps) => {
                   <div>
                     <h3 className="card-title text-lg">{chatbot.name}</h3>
                     <p className="text-sm text-base-content/70 mt-1">
-                      {chatbot.sources?.length || 0} sources
+                      {chatbot.sourcesCount || 0} sources
                     </p>
                   </div>
                   <div className="badge badge-primary">Active</div>

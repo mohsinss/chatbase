@@ -8,6 +8,10 @@ const teamSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    name: {
+      type: String,
+      required: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

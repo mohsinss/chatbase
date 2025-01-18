@@ -44,16 +44,16 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
         },
         body: JSON.stringify({
           name: teamData.name,
-          url: teamData.url.replace('team-', '')
+          url: teamData.url
         }),
       });
 
       if (!response.ok) throw new Error('Failed to update team data');
       
       const data = await response.json();
-      if (data.teamId !== teamId.replace('team-', '')) {
+      // if (data.teamId !== teamId) {
         window.location.href = `/dashboard/team-${data.teamId}/settings/general`;
-      }
+      // }
     } catch (error) {
       console.error("Error updating team data:", error);
     }

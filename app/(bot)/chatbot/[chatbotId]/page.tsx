@@ -68,9 +68,10 @@ export default function ChatbotPage({ params }: { params: { chatbotId: string } 
       let botResponse = '';
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        let done = false;
+        while (!done) {
+          const { done: isDone, value } = await reader.read();
+          done = isDone;
 
           const text = new TextDecoder().decode(value);
           const lines = text.split('\n');

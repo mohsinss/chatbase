@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import Image, { StaticImageData } from "next/image";
-import mohsinImg from "@/app/blog/_assets/images/authors/mohsin.png";
+import mohsinImg from "@/app/(main)/blog/_assets/images/authors/mohsin.png";
 import aiChatbotImg from "@/public/blog/ai-chatbot/header.png";
 
 // ==================================================================================================================================================================
