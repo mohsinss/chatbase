@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ChangeEvent, useEffect } from 'react'
+import { useState, type ChangeEvent, useEffect, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { RefreshCcw, Bold, Italic, Underline, Link2, Undo2, Redo2, AlignLeft, AlignCenter, AlignRight, Send } from 'lucide-react'
@@ -24,6 +24,8 @@ interface ChatConfig {
   footerText: string
   roundedHeaderCorners: boolean
   roundedChatCorners: boolean
+  profilePictureUrl: string
+  chatIconUrl: string
 }
 
 interface ChatInterfaceSettingsProps {
@@ -46,13 +48,19 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     displayName: "Chatbot",
     footerText: "",
     roundedHeaderCorners: false,
-    roundedChatCorners: false
+    roundedChatCorners: false,
+    profilePictureUrl: "",
+    chatIconUrl: ""
   })
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{
     message: string;
     type: 'success' | 'error';
   } | null>(null);
+  const [profilePicture, setProfilePicture] = useState<string>("");
+  const [chatIcon, setChatIcon] = useState<string>("");
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const chatIconInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -68,6 +76,8 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           ...prev,
           ...data
         }));
+        setProfilePicture(data.profilePictureUrl || "");
+        setChatIcon(data.chatIconUrl || "");
       }
     } catch (error) {
       setNotification({
@@ -120,10 +130,71 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     }))
   }
 
-  const handleImageUpload = (type: 'profile' | 'icon') => {
-    // Image upload handler would go here
-    console.log(`Uploading ${type} image`)
-  }
+  const handleImageUpload = async (type: 'profile' | 'icon') => {
+    const inputRef = type === 'profile' ? profileInputRef : chatIconInputRef;
+    inputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>, type: 'profile' | 'icon') => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (1MB limit)
+    if (file.size > 1024 * 1024) {
+      setNotification({
+        message: "File size must be less than 1MB",
+        type: "error"
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!['image/jpeg', 'image/png', 'image/svg+xml'].includes(file.type)) {
+      setNotification({
+        message: "Only JPG, PNG, and SVG files are supported",
+        type: "error"
+      });
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('chatbotId', chatbotId);
+      formData.append('imageType', type);
+
+      const response = await fetch('/api/chatbot/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.details || data.error || 'Upload failed');
+      }
+
+      // Update state and config
+      if (type === 'profile') {
+        setProfilePicture(data.url);
+        handleConfigChange('profilePictureUrl', data.url);
+      } else {
+        setChatIcon(data.url);
+        handleConfigChange('chatIconUrl', data.url);
+      }
+
+      setNotification({
+        message: "Image uploaded successfully",
+        type: "success"
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      setNotification({
+        message: error instanceof Error ? error.message : "Failed to upload image",
+        type: "error"
+      });
+    }
+  };
 
   const handleReset = (field: keyof ChatConfig) => {
     const defaults: Partial<ChatConfig> = {
@@ -430,7 +501,21 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 Profile Picture
               </label>
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-gray-200" />
+                <div 
+                  className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden"
+                  style={{
+                    backgroundImage: profilePicture ? `url(${profilePicture})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+                <input
+                  type="file"
+                  ref={profileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e, 'profile')}
+                />
                 <Button onClick={() => handleImageUpload('profile')}>
                   Upload Image
                 </Button>
@@ -443,7 +528,21 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 Chat Icon
               </label>
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-gray-200" />
+                <div 
+                  className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden"
+                  style={{
+                    backgroundImage: chatIcon ? `url(${chatIcon})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+                <input
+                  type="file"
+                  ref={chatIconInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e, 'icon')}
+                />
                 <Button onClick={() => handleImageUpload('icon')}>
                   Upload Image
                 </Button>
@@ -474,7 +573,20 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
               color: config.syncColors ? 'white' : undefined
             }}
           >
-            <div className="font-medium">{config.displayName}</div>
+            <div className="flex items-center gap-3">
+              {/* Profile Picture */}
+              {config.profilePictureUrl && (
+                <div 
+                  className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden"
+                  style={{
+                    backgroundImage: `url(${config.profilePictureUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+              )}
+              <div className="font-medium">{config.displayName}</div>
+            </div>
             <Button 
               variant="ghost" 
               size="icon"
@@ -499,6 +611,18 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
               Hello
             </div>
           </div>
+
+          {/* Chat Icon in the bottom right */}
+          {config.chatIconUrl && (
+            <div 
+              className="absolute bottom-20 right-4 h-12 w-12 rounded-full shadow-lg overflow-hidden cursor-pointer"
+              style={{
+                backgroundImage: `url(${config.chatIconUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            />
+          )}
 
           <div className="p-4 border-t">
             <div className="flex gap-2">
