@@ -21,7 +21,7 @@ export async function POST(
       createdAt: { $gte: start, $lte: end }
     };
 
-    // Get AI Settings for model info
+    // Get AI Settings for model info.
     const aiSettings = await ChatbotAISettings.findOne({ chatbotId: params.chatbotId });
 
     // Get Dataset info
