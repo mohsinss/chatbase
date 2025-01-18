@@ -1,12 +1,157 @@
-export default function GettingStartedPage() {
+'use client'
+
+import React from 'react';
+import Link from 'next/link';
+import Sidebar from '@/components/guide/Sidebar';
+
+const GettingStartedPage = () => {
   return (
-    <div className="min-h-screen pt-32 pb-16">
-      <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-4xl font-bold mb-8">Getting Started</h1>
-        <div className="prose max-w-none">
-          {/* Add getting started content here */}
+    <div className="min-h-screen bg-gray-50 text-gray-800">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b fixed top-0 w-full z-10">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center space-x-2 text-sm">
+            <Link href="/guide" className="text-gray-600">Guide</Link>
+            <span className="text-gray-400">/</span>
+            <Link href="/guide/getting-started" className="text-gray-600">Getting started</Link>
+            <span className="text-gray-400">/</span>
+            <span className="text-gray-900">Chatbot settings</span>
+          </div>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 flex pt-16">
+        <Sidebar />
+        {/* Main Content */}
+        <main className="flex-1 py-8 ml-64">
+          <section className="prose max-w-none">
+            <h1 className="text-4xl font-bold mb-8">Chatbot settings</h1>
+            
+            {/* Introduction */}
+            <section className="mb-12">
+              <h2 className="text-2xl font-bold">General Settings</h2>
+              <p className="text-lg text-gray-600">
+                Your chatbot's settings page is its command center, a place where you can make key adjustments to your bot's behavior and functionality. Let's take a look at each setting and what it accomplishes.
+              </p>
+            </section>
+
+            {/* Open AI Section */}
+            <section className="mb-12">
+              <h2 className="text-2xl font-bold">Open AI</h2>
+              
+              {/* Instructions */}
+              <div className="mt-6">
+                <h3 className="text-xl font-semibold mb-4">Instructions</h3>
+                <p>The instructions allows you to establish the nature of your chatbot's interactions and give your bot a personality. You can adjust and modify the instructions to better suit your needs. For example, you can:</p>
+                
+                <div className="ml-6 mt-4 space-y-6">
+                  <div>
+                    <h4 className="font-semibold">Modify the bot's personality</h4>
+                    <p className="text-gray-600">If you'd like your bot to have a casual and friendly tone, you can experiment with a phrase like this in your instructions: "You are a friendly and casual AI Assistant."</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold">Change how the bot responds to unknown queries</h4>
+                    <p className="text-gray-600">Instead of saying "Hmm, I am not sure.", you might want it to say something like, "I'm sorry, I don't have the information you're looking for, please contact customer support."</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold">Direct its focus on certain topics</h4>
+                    <p className="text-gray-600">If you want your bot to be a specialist in a certain area, you could add, "You are an AI Assistant who specializes in providing information about environmental sustainability."</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold">Define its boundaries</h4>
+                    <p className="text-gray-600">If you want to restrict your bot from providing certain types of information, you could specify, "Do not share financial advice or information."</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Model */}
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold mb-4">Model</h3>
+                <p>This setting allows you to choose the AI model you prefer your chatbot to use. By default, it's set to the GPT-4o model, which uses one credit per message. You can opt to use any of the 10 available AI models:</p>
+                
+                <ul className="list-disc ml-6 mt-4 space-y-1">
+                  <li>GPT-4</li>
+                  <li>GPT-4 Turbo</li>
+                  <li>GPT-3.5 Turbo</li>
+                  <li>GPT-4o</li>
+                  <li>GPT-4o Mini</li>
+                  <li>Claude 3 Haiku</li>
+                  <li>Claude 3 Opus</li>
+                  <li>Claude 3.5 Sonnet</li>
+                  <li>Gemini 1.5 Flash</li>
+                  <li>Gemini 1.5 Pro</li>
+                </ul>
+              </div>
+
+              {/* Temperature */}
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold mb-4">Temperature</h3>
+                <p>The temperature corresponds with the "creativity" of the bots responses. This value is set at zero, which instructs your chatbot to choose the most likely output when generating responses, resulting in more consistent and less random answers. You can adjust this number and experiment with the bot to fit your needs.</p>
+              </div>
+            </section>
+
+            {/* Access Section */}
+            <section className="mb-12">
+              <h2 className="text-2xl font-bold">Access</h2>
+              
+              <div className="mt-6 space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold">Visibility</h3>
+                  <p>You can set your chatbot visibility by selecting 'private' or 'public'. 'private' means that only you have access to the bot, and cannot embed it on a site. 'public' means that anyone with the link can chat with your chatbot if you send them the sharing link, and it can be embedded on your website.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold">Domains</h3>
+                  <p>Specify the website domains where you want to embed your chatbot in the text box here.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold">Usage Limit Settings</h3>
+                  <p>Chatsa offers rate limiting to prevent any abuse from users by limiting the number of messages sent from one device on the iframe and chat bubble. By default, it's set to allow 5 messages every 60 seconds, but you can adjust these values.</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Additional Features */}
+            <section className="mb-12">
+              <h2 className="text-2xl font-bold">Additional Features</h2>
+              
+              <div className="mt-6 space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold">Leads</h3>
+                  <p>You can prompt a user to input their name, email address and/or phone number when opening the chatbot. The customer information is available to view in the dashboard under the "Leads" tab. You can download them in csv format, along with the conversation history in JSON format.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold">Chat Interface</h3>
+                  <p>You can adjust the user interface of the chatbot and improve the user experience by adjusting the "initial messages", "suggested messages", theme, logo, alignment, and colours.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold">Notification Settings</h3>
+                  <p>Your notification settings allow you to receive email updates with chat records from your bot. You can enable notifications by typing an email and clicking "Add Email".</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Next Steps */}
+            <section className="bg-blue-50 p-6 rounded-lg">
+              <h2 className="text-2xl font-bold">Next steps</h2>
+              <p className="mt-4">
+                By understanding each setting and adjusting them according to your business needs, you can fully leverage the potential of your chatbot. Ensuring your bot is optimized and well-configured will provide your users with a smoother, more intuitive, and effective interaction experience.
+              </p>
+              <p className="mt-4">
+                Check out our next article on Optimizing Chatbot Responses for more tips on optimizing user experience with Chatsa.
+              </p>
+            </section>
+          </section>
+        </main>
       </div>
     </div>
   );
-} 
+};
+
+export default GettingStartedPage; 
