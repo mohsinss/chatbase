@@ -6,6 +6,7 @@ import EmailProvider from "next-auth/providers/email";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import config from "@/config";
 import connectMongo from "./mongo";
+import sgMail from '@sendgrid/mail';
 
 interface NextAuthOptionsExtended extends NextAuthOptions {
   adapter: any;
@@ -16,15 +17,33 @@ export const authOptions: NextAuthOptionsExtended = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
     EmailProvider({
-      server: {
-        host: 'smtp.sendgrid.net',
-        port: 465,
-        auth: {
-          user: 'apikey', // This is the username SendGrid expects
-          pass: process.env.SENDGRID_API_KEY, // Your SendGrid API Key
-        },
-      },
+      // server: {
+      //   host: 'smtp.sendgrid.net',
+      //   port: 587,
+      //   auth: {
+      //     user: 'apikey', // This is the username SendGrid expects
+      //     pass: process.env.SENDGRID_API_KEY, // Your SendGrid API Key
+      //   },
+      // },
       from: process.env.EMAIL_FROM,
+      //@ts-ignore
+      sendVerificationRequest: async ({ identifier: email, url, token, baseUrl, provider }) => {
+        const { server, from } = provider;
+        // Initialize SendGrid
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+        // Create email data
+        const msg = {
+          to: email,
+          from,
+          subject: `Sign in link for ${baseUrl}`,
+          text: `Use the link below to sign in:\n\n${url}\n\n`,
+          html: `<p>Use the link below to sign in:</p><p><a href="${url}">${url}</a></p>`,
+        };
+
+        // Send email
+        await sgMail.send(msg);
+      },
     }),
     GoogleProvider({
       // Follow the "Login with Google" tutorial to get your credentials
@@ -40,24 +59,6 @@ export const authOptions: NextAuthOptionsExtended = {
         };
       },
     }),
-
-    // Follow the "Login with Email" tutorial to set up your email server
-    // Requires a MongoDB database. Set MONOGODB_URI env variable.
-    // ...(connectMongo
-    //   ? [
-    //       EmailProvider({
-    //         server: {
-    //           host: "smtp.resend.com",
-    //           port: 465,
-    //           auth: {
-    //             user: "resend",
-    //             pass: process.env.RESEND_API_KEY,
-    //           },
-    //         },
-    //         from: config.resend.fromNoReply,
-    //       }),
-    //     ]
-    //   : []),
   ],
   // New users will be saved in Database (MongoDB Atlas). Each user (model) has some fields like name, email, image, etc..
   // Requires a MongoDB database. Set MONOGODB_URI env variable.
