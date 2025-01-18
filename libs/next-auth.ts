@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import Providers from "next-auth/providers";
 import EmailProvider from "next-auth/providers/email";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import config from "@/config";
@@ -14,6 +15,17 @@ export const authOptions: NextAuthOptionsExtended = {
   // Set any random key in .env.local
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
+    EmailProvider({
+      server: {
+        host: 'smtp.sendgrid.net',
+        port: 465,
+        auth: {
+          user: 'apikey', // This is the username SendGrid expects
+          pass: process.env.SENDGRID_API_KEY, // Your SendGrid API Key
+        },
+      },
+      from: process.env.EMAIL_FROM,
+    }),
     GoogleProvider({
       // Follow the "Login with Google" tutorial to get your credentials
       clientId: process.env.GOOGLE_ID,
@@ -28,6 +40,7 @@ export const authOptions: NextAuthOptionsExtended = {
         };
       },
     }),
+
     // Follow the "Login with Email" tutorial to set up your email server
     // Requires a MongoDB database. Set MONOGODB_URI env variable.
     // ...(connectMongo
