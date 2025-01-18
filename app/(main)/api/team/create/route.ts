@@ -19,6 +19,7 @@ export async function POST() {
     const teamId = `team-${crypto.randomBytes(4).toString('hex')}`;
 
     const team = await Team.create({
+      name: teamId,
       teamId,
       createdBy: session.user.id
     });
