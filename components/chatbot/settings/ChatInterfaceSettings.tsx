@@ -90,12 +90,18 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   const handleSave = async () => {
     setLoading(true);
     try {
+      const configToSave = {
+        ...config,
+        profilePictureUrl: profilePicture,
+        chatIconUrl: chatIcon,
+      };
+
       const response = await fetch("/api/chatbot/interface-settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chatbotId,
-          ...config
+          ...configToSave
         }),
       });
 
@@ -494,7 +500,8 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Profile Picture
               </label>
-              <div className="flex items-center gap-4">
+              <div className="space-y-4">
+                {/* Preview */}
                 <div 
                   className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden"
                   style={{
@@ -503,25 +510,52 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                     backgroundPosition: 'center'
                   }}
                 />
-                <input
-                  type="file"
-                  ref={profileInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => handleFileChange(e, 'profile')}
-                />
-                <Button onClick={() => handleImageUpload('profile')}>
-                  Upload Image
-                </Button>
+                {/* Upload controls */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="file"
+                      ref={profileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'profile')}
+                    />
+                    <Button onClick={() => handleImageUpload('profile')}>
+                      Upload Image
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="url"
+                      placeholder="Or enter image URL..."
+                      value={config.profilePictureUrl}
+                      onChange={(e) => {
+                        setProfilePicture(e.target.value);
+                        handleConfigChange('profilePictureUrl', e.target.value);
+                      }}
+                      className="flex-1"
+                    />
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setProfilePicture("");
+                        handleConfigChange('profilePictureUrl', "");
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
               </div>
-              <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Chat Icon
               </label>
-              <div className="flex items-center gap-4">
+              <div className="space-y-4">
+                {/* Preview */}
                 <div 
                   className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden"
                   style={{
@@ -530,18 +564,44 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                     backgroundPosition: 'center'
                   }}
                 />
-                <input
-                  type="file"
-                  ref={chatIconInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => handleFileChange(e, 'icon')}
-                />
-                <Button onClick={() => handleImageUpload('icon')}>
-                  Upload Image
-                </Button>
+                {/* Upload controls */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="file"
+                      ref={chatIconInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'icon')}
+                    />
+                    <Button onClick={() => handleImageUpload('icon')}>
+                      Upload Image
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="url"
+                      placeholder="Or enter image URL..."
+                      value={config.chatIconUrl}
+                      onChange={(e) => {
+                        setChatIcon(e.target.value);
+                        handleConfigChange('chatIconUrl', e.target.value);
+                      }}
+                      className="flex-1"
+                    />
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setChatIcon("");
+                        handleConfigChange('chatIconUrl', "");
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
               </div>
-              <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
             </div>
           </div>
           <div className="sticky bottom-0 pb-4 pt-2 bg-background">

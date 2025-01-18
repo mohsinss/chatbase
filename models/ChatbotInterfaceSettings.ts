@@ -72,10 +72,22 @@ const ChatbotInterfaceSettingsSchema = new mongoose.Schema(
     profilePictureUrl: {
       type: String,
       default: "",
+      validate: {
+        validator: function(v: string) {
+          return v === "" || /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(v);
+        },
+        message: 'Please enter a valid URL'
+      }
     },
     chatIconUrl: {
       type: String,
       default: "",
+      validate: {
+        validator: function(v: string) {
+          return v === "" || /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(v);
+        },
+        message: 'Please enter a valid URL'
+      }
     },
   },
   {
