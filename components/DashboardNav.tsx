@@ -28,6 +28,8 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const [teams, setTeams] = useState<any[]>([]);
+  const [teamSearchQuery, setTeamSearchQuery] = useState("");
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" });
@@ -55,6 +57,24 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
       fetchChatbots();
     }
   }, [teamId]);
+
+  // Fetch teams when component mounts or teamId changes
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const response = await fetch(`/api/team/list?teamId=${teamId}&t=${Date.now()}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch teams');
+        }
+        const data = await response.json();
+        setTeams(data.teams || []);
+      } catch (error) {
+        console.error("Failed to fetch teams:", error);
+      }
+    };
+
+    fetchTeams();
+  }, []);
 
   const handleCreateTeam = async () => {
     try {
@@ -92,6 +112,11 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
     : null;
 
   const isRootDashboard = pathname === "/dashboard";
+
+  // Filter teams based on search query
+  const filteredTeams = teams.filter(team => 
+    team.name.toLowerCase().includes(teamSearchQuery.toLowerCase())
+  );
 
   return (
     <div className="border-b bg-base-100">
@@ -147,6 +172,8 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
                         </div>
                         <input
                           type="text"
+                          value={teamSearchQuery}
+                          onChange={(e) => setTeamSearchQuery(e.target.value)}
                           className="w-full pl-10 pr-4 py-2 border rounded-md text-sm bg-base-200 border-base-300 focus:outline-none focus:ring-1 focus:ring-primary"
                           placeholder="Search team..."
                         />
@@ -156,16 +183,20 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
                     {/* Teams Section */}
                     <div className="px-2 py-1">
                       <p className="px-2 py-1 text-sm text-base-content/70">Teams</p>
-                      <button 
-                        className="w-full px-2 py-2 text-left rounded-md hover:bg-base-200 flex items-center justify-between group"
-                      >
-                        <span className="text-sm font-medium">My team</span>
-                        {teamId && (
-                          <svg className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </button>
+                      {filteredTeams.map((team) => (
+                        <button 
+                          key={team.teamId}
+                          onClick={() => router.push(`/dashboard/${team.id}`)}
+                          className="w-full px-2 py-2 text-left rounded-md hover:bg-base-200 flex items-center justify-between group"
+                        >
+                          <span className="text-sm font-medium">{team.name}</span>
+                          {teamId === team.teamId && (
+                            <svg className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </button>
+                      ))}
                     </div>
 
                     {/* Create Team Button */}

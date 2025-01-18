@@ -20,9 +20,10 @@ const ChatbotSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    sources: {
-      type: Array,
-      default: [],
+    sourcesCount: {
+      type: Number,
+      required: true,
+      default: 0,
     },
     characterCount: {
       type: Number,

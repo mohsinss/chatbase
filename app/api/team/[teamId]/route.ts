@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/libs/mongoose";
 import Team from "@/models/Team";
+import Chatbot from "@/models/Chatbot";
 
 export async function GET(
   request: Request,
@@ -10,7 +11,7 @@ export async function GET(
     await connectMongo();
     
     // Remove 'team-' prefix if it exists
-    const cleanTeamId = params.teamId.replace('team-', '');
+    const cleanTeamId = params.teamId;
     
     const team = await Team.findOne({ 
       $or: [
@@ -43,7 +44,7 @@ export async function PUT(
     const body = await request.json();
     
     // Remove 'team-' prefix if it exists
-    const cleanTeamId = params.teamId.replace('team-', '');
+    const cleanTeamId = params.teamId;
     
     const team = await Team.findOneAndUpdate(
       { 
@@ -54,7 +55,7 @@ export async function PUT(
       },
       { 
         name: body.name,
-        teamId: body.url.replace('team-', '') // Store without prefix
+        teamId: body.url // Store without prefix
       },
       { new: true }
     );
@@ -62,6 +63,12 @@ export async function PUT(
     if (!team) {
       return new NextResponse("Team not found", { status: 404 });
     }
+
+    // Update the chatbot's teamId
+    await Chatbot.updateMany(
+      { teamId: params.teamId }, // Find chatbots with the old teamId
+      { teamId: body.url } // Update to the new teamId
+    );
 
     return NextResponse.json(team);
 
