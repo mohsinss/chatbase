@@ -212,9 +212,12 @@ export async function POST(req: Request) {
       body: JSON.stringify(
         {
           filter: {
-            metadata: {
-              type: 'text'
-            }
+            must: [
+              {
+                field:"metadata.type",
+                match_all: ['text']
+              }
+            ]
           }
         }
       )
@@ -236,9 +239,12 @@ export async function POST(req: Request) {
       body: JSON.stringify(
         {
           filter: {
-            metadata: {
-              type: 'qa'
-            }
+            must: [
+              {
+                field:"metadata.type",
+                match_all: ['qa']
+              }
+            ]
           }
         }
       )
@@ -260,9 +266,12 @@ export async function POST(req: Request) {
       body: JSON.stringify(
         {
           filter: {
-            metadata: {
-              type: 'link'
-            }
+            must: [
+              {
+                field:"metadata.type",
+                match_all: ['link']
+              }
+            ]
           }
         }
       )
