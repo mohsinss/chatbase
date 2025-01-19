@@ -4,6 +4,7 @@ import { Buffer } from 'buffer'; // Import Buffer if necessary
 export const dynamic = 'force-dynamic';
 // import { PDFDocument } from "pdf-lib";
 import PDFParser from "pdf2json";
+// import { createWorker } from 'tesseract.js';
 
 export async function POST(req: Request) {
   try {
@@ -27,35 +28,18 @@ export async function POST(req: Request) {
     // Convert to base64url encoding as specified in the docs
     const base64String = Buffer.from(arrayBuffer)
       .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
+    // .replace(/\+/g, '-')
+    // .replace(/\//g, '_')
+    // .replace(/=+$/, '');
 
-    console.log(file)
+    console.log(file.type)
     // Check if the file is a PDF
-    if (file.type === 'application/pdf') {
+    if (file.type === 'application/pdf-v1') {
       try {
-        const buffer = Buffer.from(new Uint8Array(arrayBuffer)); // Convert Uint8Array to Buffer
-        // const pdfData = await pdf(buffer); // Await the pdf-parse function
-        // const pdfText = pdfData.text; // Get the extracted text
-        // const characterCount = pdfText.length; // Count characters in the PDF text
-
-        // const pdfDoc = await PDFDocument.load(arrayBuffer);
-
-        // let characterCount = 0;
-    
-        // Loop through each page and extract text
-        // const pages = pdfDoc.getPages();
-        // for (const page of pages) {
-        //   const textContent = await page.doc.getTextContent();
-        //   const textItems = textContent.items;
-        //   for (const item of textItems) {
-        //     characterCount += item.str.length; // Count characters in each text item
-        //   }
-        // }
+        const buffer = Buffer.from(new Uint8Array(arrayBuffer));
 
         const pdfParser = new PDFParser();
-    
+
         // Create a Promise to handle the parsing
         const characterCountPromise = new Promise((resolve, reject) => {
 
@@ -64,7 +48,7 @@ export async function POST(req: Request) {
             console.error("PDF parsing error:", errData.parserError);
             reject(errData.parserError);
           });
-    
+
           //@ts-ignore
           pdfParser.on("pdfParser_dataReady", pdfData => {
             let characterCount = 0; // Declare a variable to hold the character count    
@@ -78,14 +62,14 @@ export async function POST(req: Request) {
                 characterCount += decodedText.length; // Count characters in the decoded text
               });
             });
-    
+
             resolve(characterCount); // Resolve with the character count
           });
-    
+
           // Parse the PDF from the ArrayBuffer
           pdfParser.parseBuffer(Buffer.from(arrayBuffer));
         });
-    
+
         // Await the promise to get the character count
         const characterCount = await characterCountPromise;
 
@@ -101,6 +85,122 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
+    } else if (file.type === 'application/pdf') { // Check if the file is an image
+      // } else if (file.type.startsWith('image/')) { // Check if the file is an image
+      try {
+        // Read file into buffer
+        // const buffer = await file.arrayBuffer();
+        // const dataUrl = 'data:image/png;base64,' + Buffer.from(buffer).toString('base64');
+
+        // const worker = await createWorker('eng');
+        // const { data: { text } } = await worker.recognize(dataUrl);
+        // console.log(text);
+        // await worker.terminate();
+
+        const response = await fetch("https:///pdf2md.trieve.ai/api/task", {
+          method: "POST",
+          headers: {
+            "Authorization": `${process.env.TRIEVE_PDF2MD_API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(
+            {
+              file_name: fileName,
+              base64_file: base64String,
+              provider: "LLM",
+              llm_model: "openai/gpt-4o-mini",
+              system_prompt: "Convert the following PDF page to markdown. Return only the markdown with no explanation text. Do not exclude any content from the page."
+            }
+          )
+        });
+        const data = await response.json();
+        console.log(data)
+
+        if (!response.ok || data.status != "Created") {
+          console.error("Failed to create read PDF task:", data);
+          throw new Error(data.message || "Failed to create read PDF task.");
+        }
+
+        let pages = [];
+
+        // Loop until the task is complete
+        while (true) {
+          // If the task is not complete, wait for a second before checking again
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          // Fetch the task status
+          const response_task_status = await fetch(`https:///pdf2md.trieve.ai/api/task/${data.id}`, {
+            method: "GET",
+            headers: {
+              "Authorization": `${process.env.TRIEVE_PDF2MD_API_KEY}`,
+              "Content-Type": "application/json"
+            },
+          });
+
+          // Parse the response
+          const taskStatus = await response_task_status.json();
+          console.log(taskStatus.status)
+          // Check if the task is complete
+          if (taskStatus.status === "Completed") {
+            // If the task is complete, get the pages
+            pages = taskStatus.pages;
+            break;
+          }
+          if (taskStatus.status === "Failed") {
+            throw new Error(data.message || "Failed to get task status.");
+          }
+        }
+
+        // Now you can process the pages
+        // console.log(pages);
+        let allContent = '';
+        //@ts-ignore
+        pages.forEach(page => {
+          allContent += page.content; // Access the content property of each page
+        });
+
+        metadata = {
+          sizeInBytes: arrayBuffer.byteLength, // Size in bytes of the original data
+          sizeInCharacters: allContent.length, // Size in characters of the base64 string
+          uniqueTag: `${fileName}-${Date.now()}`, // Append timestamp to ensure uniqueness
+          filetype: "pdftext"
+        };
+
+        const base64File_PDF_text = Buffer.from(allContent, 'utf-8').toString('base64')
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+$/, '');
+
+        const response_text_for_pdf = await fetch("https://api.trieve.ai/api/file", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+            "TR-Dataset": datasetId,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(
+            {
+              base64_file: base64File_PDF_text,
+              file_name: `pdftext-${fileName}.txt`,
+              metadata,
+            }
+          )
+        });
+
+        const data_text = await response_text_for_pdf.json();
+
+        if (!response_text_for_pdf.ok) {
+          console.error("File for pdftext upload failed:", data_text);
+          throw new Error(data_text.message || "Failed to upload file for pdftext");
+        }
+
+        metadata.filetype = 'pdf';
+      } catch (ocrError) {
+        console.error("PDF2MD trieve error:", ocrError);
+        return NextResponse.json(
+          { error: "Failed to extract text from pdf." },
+          { status: 400 }
+        );
+      }
     } else {
       metadata = {
         sizeInBytes: arrayBuffer.byteLength, // Size in bytes of the original data
@@ -108,7 +208,7 @@ export async function POST(req: Request) {
         uniqueTag: `${fileName}-${Date.now()}` // Append timestamp to ensure uniqueness
       };
     }
-    
+
     const response = await fetch("https://api.trieve.ai/api/file", {
       method: "POST",
       headers: {
@@ -118,7 +218,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify(
         {
-          base64_file: base64String,
+          base64_file: base64String.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
           file_name: fileName,
           metadata,
         }
@@ -126,7 +226,7 @@ export async function POST(req: Request) {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       console.error("File upload failed:", data);
       throw new Error(data.message || "Failed to upload file");

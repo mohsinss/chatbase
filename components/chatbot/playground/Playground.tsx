@@ -125,6 +125,7 @@ const ChatContainer = ({
           </button>
           <h1 className="font-bold text-2xl">Sources</h1>
           {sources.map((chunk, index) => {
+            if(chunk.metadata.filetype == "pdf") return null;
             return <div key={'chunk-' + index} className="border-b-[1px] pt-2">{chunk.chunk_html}</div>
           })}
           <button 

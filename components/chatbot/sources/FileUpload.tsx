@@ -98,7 +98,10 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
     onDrop,
     accept: {
       'application/pdf': ['.pdf'],
-      'text/plain': ['.txt']
+      'text/plain': ['.txt'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/gif': ['.gif']
     },
     maxSize: 10485760, // 10MB
   });

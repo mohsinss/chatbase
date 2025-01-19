@@ -106,6 +106,33 @@ export async function DELETE(
       throw new Error(`Failed to delete chunks: ${response2.statusText}`);
     }
 
+    // Delete associated chunks using the uniqueTag from the file metadata for pdftext files
+    const response3 = await fetch(`https://api.trieve.ai/api/chunk`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+        "TR-Dataset": datasetId, // Use datasetId since it's guaranteed to be present
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(
+        {
+          filter: {
+            must: [
+              {
+                field:"metadata.uniqueTag",
+                match_all: [data.metadata.uniqueTag]
+              }
+            ]
+          }
+        }
+      )
+    });
+
+    // Check if the chunk deletion was successful
+    if (!response3.ok) {
+      throw new Error(`Failed to delete chunks: ${response3.statusText}`);
+    }
+
     // Return a success response
     return NextResponse.json({ success: true });
   } catch (error) {

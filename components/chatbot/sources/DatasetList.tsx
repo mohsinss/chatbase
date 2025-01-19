@@ -49,7 +49,13 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
       const datasets = await datasetsResponse.json();
       console.log(datasets.file_and_group_ids)
       // @ts-ignore
-      const files = datasets.file_and_group_ids.filter(item => item.file.file_name != 'texttexttexttext.txt').filter(item => item.file.file_name != 'texttexttexttextqa.txt').filter(item => item.file.file_name != 'texttexttexttextlink.txt');
+      const files = datasets.file_and_group_ids.filter(item => item.file.file_name != 'texttexttexttext.txt')
+          //@ts-ignore
+          .filter(item => item.file.file_name != 'texttexttexttextqa.txt')
+          //@ts-ignore
+          .filter(item => item.file.file_name != 'texttexttexttextlink.txt')
+          //@ts-ignore
+          .filter(item => !item.file.file_name.startsWith('pdftext-'));
       // @ts-ignore
       setFiles(files.map(item => item.file));
       setFileCount(files.length);
