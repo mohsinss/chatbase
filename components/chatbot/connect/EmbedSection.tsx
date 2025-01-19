@@ -65,13 +65,13 @@ const EmbedSection = ({ chatbotId, domain }: { chatbotId: string, domain: string
   }
 </script>
 
-// <script>
-//   window.embeddedChatbotConfig = {
-//     chatbotId: "${chatbotId}",
-//     domain: "${domain}"
-//   }
-// </script>
-// <script src="https://${domain}/embed.min.js" defer></script>`;
+<script>
+  window.embeddedChatbotConfig = {
+    chatbotId: "${chatbotId}",
+    domain: "${domain}"
+  }
+</script>
+<script src="https://${domain}/embed.min.js" defer></script>`;
 
   const serverCode = `const crypto = require('crypto');
 
