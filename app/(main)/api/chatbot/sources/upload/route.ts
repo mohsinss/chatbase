@@ -122,9 +122,9 @@ export async function POST(req: Request) {
         }
 
         let pages = [];
-
+        let done = false;
         // Loop until the task is complete
-        while (true) {
+        while (!done) {
           // If the task is not complete, wait for a second before checking again
           await new Promise(resolve => setTimeout(resolve, 3000));
           // Fetch the task status
@@ -143,6 +143,7 @@ export async function POST(req: Request) {
           if (taskStatus.status === "Completed") {
             // If the task is complete, get the pages
             pages = taskStatus.pages;
+            done = true;
             break;
           }
           if (taskStatus.status === "Failed") {
