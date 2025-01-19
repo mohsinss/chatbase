@@ -39,16 +39,16 @@ const sidebarItems = [
 const integrations = [
   {
     title: "Whatsapp",
-    description: "This guide provides a step-by-step process for integrating WhatsApp with Chatbase.",
+    description: "This guide provides a step-by-step process for integrating WhatsApp with Chatsa.",
     href: "/guide/category/integrations/whatsapp",
     icons: {
       platform: "/integrations/whatsapp.svg",
-      chatbase: "/integrations/chatbase-icon.svg"
+      chatsa: "/integrations/chatsa-icon.svg"
     }
   },
   {
     title: "Zapier",
-    description: "A Step-by-step guide on how to integrate your Chatbase bot with Zapier",
+    description: "A Step-by-step guide on how to integrate your Chatsa bot with Zapier",
     href: "/guide/category/integrations/zapier",
     icons: {
       platform: "/integrations/zapier.svg",
@@ -57,7 +57,7 @@ const integrations = [
   },
   {
     title: "Wix",
-    description: "A quick guide on how to add a Chatbase chatbot on your Wix website",
+    description: "A quick guide on how to add a Chatsa chatbot on your Wix website",
     href: "/guide/category/integrations/wix",
     icons: {
       platform: "/integrations/wix-icon.svg",
@@ -66,7 +66,7 @@ const integrations = [
   },
   {
     title: "Framer",
-    description: "Learn how to seamlessly integrate a Chatbase chatbot into your Framer website with these step-by-step instructions",
+    description: "Learn how to seamlessly integrate a Chatsa chatbot into your Framer website with these step-by-step instructions",
     href: "/guide/category/integrations/framer",
     icons: {
       platform: "/integrations/framer-icon.svg",
@@ -75,7 +75,7 @@ const integrations = [
   },
   {
     title: "Cal.com",
-    description: "How to set up the Cal.com integration with your Chatbase chatbot",
+    description: "How to set up the Cal.com integration with your Chatsa chatbot",
     href: "/guide/category/integrations/calcom",
     icons: {
       platform: "/integrations/cal-icon.svg",
@@ -84,7 +84,7 @@ const integrations = [
   },
   {
     title: "Slack",
-    description: "How to add a Chatbase chatbot to Slack for seamless team communication",
+    description: "How to add a Chatsa chatbot to Slack for seamless team communication",
     href: "/guide/category/integrations/slack",
     icons: {
       platform: "/integrations/slack.svg",
@@ -93,7 +93,7 @@ const integrations = [
   },
   {
     title: "Bubble",
-    description: "How to embed a Chatbase chatbot on your Bubble web app",
+    description: "How to embed a Chatsa chatbot on your Bubble web app",
     href: "/guide/category/integrations/bubble",
     icons: {
       platform: "/integrations/bubble-icon.png",
@@ -102,7 +102,7 @@ const integrations = [
   },
   {
     title: "WordPress",
-    description: "Let&apos;s walk you through how to embed a Chatbase chatbot on your WordPress website",
+    description: "Let&apos;s walk you through how to embed a Chatsa chatbot on your WordPress website",
     href: "/guide/category/integrations/wordpress",
     icons: {
       platform: "/integrations/wordpress.svg",
@@ -129,7 +129,7 @@ const integrations = [
   },
   {
     title: "Weebly",
-    description: "How to add a Chatbase chatbot to your Weebly website",
+    description: "How to add a Chatsa chatbot to your Weebly website",
     href: "/guide/category/integrations/weebly",
     icons: {
       platform: "/integrations/weebly-icon.svg",
@@ -138,7 +138,7 @@ const integrations = [
   },
   {
     title: "Webflow",
-    description: "How to add a Chatbase chatbot to your Webflow website",
+    description: "How to add a Chatsa chatbot to your Webflow website",
     href: "/guide/category/integrations/webflow",
     icons: {
       platform: "/integrations/webflow-icon.svg",
@@ -147,7 +147,7 @@ const integrations = [
   },
   {
     title: "Shopify",
-    description: "How to add a Chatbase chatbot to your Shopify website or store",
+    description: "How to add a Chatsa chatbot to your Shopify website or store",
     href: "/guide/category/integrations/shopify",
     icons: {
       platform: "/integrations/shopify.svg",
@@ -259,8 +259,8 @@ export default function IntegrationsPage() {
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 relative">
                         <Image
-                          src={integration.icons.chatbase}
-                          alt="Chatbase"
+                          src={integration.icons.chatsa}
+                          alt="Chatsa"
                           fill
                           className="rounded-lg"
                         />

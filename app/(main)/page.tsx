@@ -14,13 +14,13 @@ export default function Home() {
       <FeaturesGrid />
       <Footer />
       
-      {/* Chat Bubble Scripts */}
+      {/* Chat Bubble Scripts 1*/}
       <Script
         id="chatbot-config"
         dangerouslySetInnerHTML={{
           __html: `
             window.embeddedChatbotConfig = {
-              chatbotId: "S4EYnRPPPh8H479N6dKJH",
+              chatbotId: "uQm55VeJJpN37SxMTUfwV",
               domain: "${process.env.NEXT_PUBLIC_DOMAIN}",
               protocol: "${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}"
             }
