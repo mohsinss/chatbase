@@ -48,6 +48,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
         // @ts-ignore
         window.location.href = res.url;
     } catch (e) {
+      console.log(e)
     }
     setIsLoading(false);
   }
