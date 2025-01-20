@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
+import apiClient from "@/libs/api";
+import toast, { Toaster } from 'react-hot-toast';
 
 interface PlanFeature {
   name: string;
@@ -30,6 +32,22 @@ export function PlansSettings({ teamId }: { teamId: string }) {
     setIsLoading(true);
     console.log(planName, isYearly, priceID)
     await new Promise(resolve => setTimeout(resolve, 3000));
+    try {
+      const res = await apiClient.post("/stripe/create-checkout", {
+        plan: planName,
+        teamID: teamId,
+        isYearly,
+        mode: "payment",
+        successUrl: window.location.href.split('?')[0] + "?checkout=1&plan=" + planName,
+        cancelUrl: window.location.href.split('?')[0] + "?checkout=2&plan=" + planName,
+      });
+
+      //@ts-ignore
+      window.location.href = res.url;
+    } catch (e) {
+      console.error(e);
+      toast.error(e)
+    }
     setIsLoading(false);
   }
 

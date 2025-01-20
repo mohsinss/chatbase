@@ -311,7 +311,7 @@ const ChatContainer = ({
             </div>
 
             {/* Chat Input */}
-            <div className="border-t p-3">
+            <form onSubmit={handleSubmit} className="border-t p-3">
               <div className="relative">
                 <input
                   type="text"
@@ -330,15 +330,13 @@ const ChatContainer = ({
                   <IconSend className="w-4 h-4" />
                 </button>
               </div>
-            </div>
+            </form>
 
             {/* Footer */}
-            {config.footerText && (
-              <div className="p-2 text-center text-sm text-gray-500">
-                <span>Powered by Chatsa.co</span>
-                <span className="ml-1">{config.footerText}</span>
-              </div>
-            )}
+            {embed && <div className="p-2 text-center text-sm text-gray-500">
+              <span>Powered by Chatsa.co</span>
+              {config.footerText && <span className="ml-1">{config.footerText}</span>}
+            </div>}
           </div>
         </div>
         <button
