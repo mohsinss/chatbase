@@ -35,7 +35,7 @@ interface ChatInterfaceSettingsProps {
 export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettingsProps) {
   const [config, setConfig] = useState<ChatConfig>({
     initialMessage: "Hi! What can I help you with?",
-    suggestedMessages: "What is example.com?",
+    suggestedMessages: "how are you ?\nwho are they ?\nwhat dates the event will start",
     messagePlaceholder: "Message...",
     collectFeedback: true,
     regenerateMessages: true,
@@ -276,7 +276,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
               type="text"
               value={config.messagePlaceholder}
               onChange={(e) => handleConfigChange('messagePlaceholder', e.target.value)}
-              className="flex h-10 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-20 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
@@ -697,6 +697,35 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           )}
 
           <div className="p-4 border-t">
+            {/* Suggested Messages - Moved above input */}
+            <div className="mb-4 flex flex-wrap gap-2">
+              {config.suggestedMessages.split('\n').filter(msg => msg.trim()).map((message, index) => (
+                <button
+                  key={index}
+                  className="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-gray-200 transition-colors"
+                  onClick={() => {
+                    // Add message to chat (in preview only)
+                    const messagesContainer = document.querySelector('.overflow-y-auto');
+                    if (messagesContainer) {
+                      const newMessage = document.createElement('div');
+                      newMessage.className = `ml-auto p-3 ${
+                        config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                      } max-w-[80%] text-white`;
+                      newMessage.style.backgroundColor = config.userMessageColor;
+                      newMessage.textContent = message;
+                      messagesContainer.appendChild(newMessage);
+                      
+                      // Auto-scroll to bottom
+                      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    }
+                  }}
+                >
+                  {message}
+                </button>
+              ))}
+            </div>
+
+            {/* Message input area */}
             <div className="flex gap-2">
               <input 
                 type="text"
@@ -709,6 +738,8 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 <Send className="h-4 w-4" />
               </Button>
             </div>
+
+            {/* Footer */}
             <div className="mt-2 text-center text-sm text-gray-500 flex items-center justify-center gap-1">
               <span>Powered By ChatSA.co</span>
               <span>{config.footerText}</span>
