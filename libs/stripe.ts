@@ -11,6 +11,7 @@ interface CreateCheckoutParams {
     customerId?: string;
     email?: string;
   };
+  metadata: any;
 }
 
 interface CreateCustomerPortalParams {
@@ -27,6 +28,7 @@ export const createCheckout = async ({
   cancelUrl,
   priceId,
   couponId,
+  metadata
 }: CreateCheckoutParams): Promise<string> => {
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -41,7 +43,8 @@ export const createCheckout = async ({
       invoice_creation?: { enabled: boolean };
       payment_intent_data?: { setup_future_usage: "on_session" };
       tax_id_collection?: { enabled: boolean };
-    } = {};
+      metadata?: any
+    } = {metadata};
 
     if (user?.customerId) {
       extraParams.customer = user.customerId;
