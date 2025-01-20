@@ -108,9 +108,9 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
 
   return (
     <div>
-      <div className="bg-white rounded-lg p-8 border">
+      <div className={`rounded-lg p-8 border ${uploading ? 'bg-slate-200' : 'bg-while'}`}>
         <div {...getRootProps()} className="text-center cursor-pointer">
-          <input {...getInputProps()} />
+          <input {...getInputProps()} disabled={uploading}/>
           <div className="flex justify-center mb-4">
             {uploading ? (
               <IconUpload className="w-12 h-12 text-gray-400 animate-pulse" />
@@ -136,7 +136,10 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
             <p className="text-green-500 mt-4">{success}</p>
           )}
           {uploading && (
-            <p className="text-primary mt-4">Uploading...</p>
+            <p className="text-primary mt-4">
+              <span className="loading loading-spinner loading-xs"></span>
+              &nbsp;Uploading...
+            </p>
           )}
         </div>
       </div>

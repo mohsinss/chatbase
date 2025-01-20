@@ -29,6 +29,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
   const handleSubscription = async (priceID: string, planName: string) => {
     setIsLoading(true);
     console.log(planName, isYearly, priceID)
+    await new Promise(resolve => setTimeout(resolve, 3000));
     setIsLoading(false);
   }
 
@@ -150,7 +151,10 @@ export function PlansSettings({ teamId }: { teamId: string }) {
                 transition-colors`}
               disabled={isLoading}
             >
-              Upgrade
+              {isLoading ? (
+                <span className="loading loading-spinner loading-xs"></span>
+              ) : null}
+              &nbsp;Upgrade
             </button>
           </div>
         ))}

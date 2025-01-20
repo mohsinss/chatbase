@@ -250,6 +250,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                   <button
                     onClick={() => handleDownload(file.id, file.file_name)}
                     className="text-gray-600 hover:text-gray-900"
+                    disabled={deleting}
                   >
                     <IconDownload className="w-5 h-5" />
                   </button>
@@ -258,7 +259,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                     className="text-red-500 hover:text-red-700"
                     disabled={deleting}
                   >
-                    {file.id==dFileId ? 'deleting' :<IconTrash className="w-5 h-5" /> }
+                    {file.id==dFileId ? <span className="loading loading-spinner loading-xs"></span> :<IconTrash className="w-5 h-5" /> }
                   </button>
                 </div>
               </div>
