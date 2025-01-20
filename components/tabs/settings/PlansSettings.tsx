@@ -10,6 +10,7 @@ interface PlanFeature {
 
 interface Plan {
   name: string;
+  priceID: string;
   price: number;
   yearlyPrice: number;
   period: "Per Month" | "Per Year";
@@ -23,12 +24,21 @@ export function PlansSettings({ teamId }: { teamId: string }) {
   const [extraChatbots, setExtraChatbots] = useState(false);
   const [customDomains, setCustomDomains] = useState(false);
   const [removeBranding, setRemoveBranding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubscription = async (priceID: string, planName: string) => {
+    setIsLoading(true);
+    console.log(planName, isYearly, priceID)
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    setIsLoading(false);
+  }
 
   const plans: Plan[] = [
     {
       name: "Hobby",
       price: 19,
       yearlyPrice: 190,
+      priceID: isYearly ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HOBBY_YEARLY : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HOBBY,
       period: isYearly ? "Per Year" : "Per Month",
       features: [
         { name: "Everything in Free, plus..." },
@@ -46,6 +56,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
       name: "Standard",
       price: 99,
       yearlyPrice: 990,
+      priceID: isYearly ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STANDARD_YEARLY : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STANDARD,
       period: isYearly ? "Per Year" : "Per Month",
       features: [
         { name: "Everything in Hobby, plus..." },
@@ -59,6 +70,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
       name: "Unlimited",
       price: 399,
       yearlyPrice: 3990,
+      priceID: isYearly ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_UNLIMITED_YEARLY : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_UNLIMITED,
       period: isYearly ? "Per Year" : "Per Month",
       features: [
         { name: "Everything in Standard, plus..." },
@@ -79,14 +91,12 @@ export function PlansSettings({ teamId }: { teamId: string }) {
         <span className={`text-sm ${!isYearly ? 'text-gray-900' : 'text-gray-500'}`}>Monthly</span>
         <button
           onClick={() => setIsYearly(!isYearly)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-            isYearly ? 'bg-indigo-600' : 'bg-gray-200'
-          }`}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${isYearly ? 'bg-indigo-600' : 'bg-gray-200'
+            }`}
         >
           <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              isYearly ? 'translate-x-6' : 'translate-x-1'
-            }`}
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isYearly ? 'translate-x-6' : 'translate-x-1'
+              }`}
           />
         </button>
         <span className={`text-sm ${isYearly ? 'text-gray-900' : 'text-gray-500'}`}>Yearly</span>
@@ -97,48 +107,54 @@ export function PlansSettings({ teamId }: { teamId: string }) {
         {plans.map((plan) => (
           <div
             key={plan.name}
-            className="bg-white rounded-lg border border-gray-200 p-8 hover:shadow-lg transition-shadow"
+            className="bg-white flex flex-col justify-between rounded-lg border border-gray-200 p-8 hover:shadow-lg transition-shadow"
           >
-            <h3 className="text-xl font-semibold mb-4">{plan.name}</h3>
-            <div className="mb-4">
-              <span className="text-4xl font-bold">
-                ${isYearly ? plan.yearlyPrice : plan.price}
-              </span>
-              <span className="text-gray-500 ml-2">{plan.period}</span>
+            <div>
+              <h3 className="text-xl font-semibold mb-4">{plan.name}</h3>
+              <div className="mb-4">
+                <span className="text-4xl font-bold">
+                  ${isYearly ? plan.yearlyPrice : plan.price}
+                </span>
+                <span className="text-gray-500 ml-2">{plan.period}</span>
+              </div>
+              <ul className="space-y-4 mb-8">
+                {plan.features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <svg
+                      className="w-5 h-5 text-green-500 mt-0.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>{feature.name}</span>
+                    {feature.info && (
+                      <button className="ml-1 w-4 h-4 rounded-full border text-xs">?</button>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="space-y-4 mb-8">
-              {plan.features.map((feature, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <svg
-                    className="w-5 h-5 text-green-500 mt-0.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <span>{feature.name}</span>
-                  {feature.info && (
-                    <button className="ml-1 w-4 h-4 rounded-full border text-xs">?</button>
-                  )}
-                </li>
-              ))}
-            </ul>
             <button
+              onClick={() => handleSubscription(plan.priceID, plan.name)}
               className={`w-full py-2 px-4 rounded-lg border border-gray-200 
-                ${
-                  plan.name === "Standard"
-                    ? 'bg-gray-900 text-white hover:bg-gray-800'
-                    : 'bg-white text-gray-900 hover:bg-gray-50'
+                ${plan.name === "Standard"
+                  ? 'bg-gray-900 text-white hover:bg-gray-800'
+                  : 'bg-white text-gray-900 hover:bg-gray-50'
                 }
                 transition-colors`}
+              disabled={isLoading}
             >
-              Upgrade
+              {isLoading ? (
+                <span className="loading loading-spinner loading-xs"></span>
+              ) : null}
+              &nbsp;Upgrade
             </button>
           </div>
         ))}
@@ -157,7 +173,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
                   When your credits falls below a certain threshold, we&apos;ll automatically add credits that don&apos;t expire to your account, ensuring uninterrupted service.
                 </p>
               </div>
-              <Switch 
+              <Switch
                 checked={autoRecharge}
                 onCheckedChange={setAutoRecharge}
               />
@@ -171,7 +187,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
           <div className="mt-4">
             <div className="flex justify-between items-center">
               <div className="text-xl">$7 per 1000 messages / month</div>
-              <Switch 
+              <Switch
                 checked={extraMessages}
                 onCheckedChange={setExtraMessages}
               />
@@ -185,7 +201,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
           <div className="mt-4">
             <div className="flex justify-between items-center">
               <div className="text-xl">$7 per chatbot / month</div>
-              <Switch 
+              <Switch
                 checked={extraChatbots}
                 onCheckedChange={setExtraChatbots}
               />
@@ -204,7 +220,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
                   Use your own custom domains for the embed script, iframe, and chatbot link
                 </p>
               </div>
-              <Switch 
+              <Switch
                 checked={customDomains}
                 onCheckedChange={setCustomDomains}
               />
@@ -223,7 +239,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
                   Remove the Chatbase branding from the iframe and widget
                 </p>
               </div>
-              <Switch 
+              <Switch
                 checked={removeBranding}
                 onCheckedChange={setRemoveBranding}
               />
