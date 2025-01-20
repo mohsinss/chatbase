@@ -25,6 +25,7 @@ interface PlaygroundProps {
       language?: string;
     };
   };
+  embed?: boolean
 }
 
 const InfoTooltip = ({ content }: { content: string }) => (
@@ -48,10 +49,11 @@ interface ChatContainerProps {
   handleRefresh: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   aiSettings: any;
+  embed?: boolean;
 }
 
-const ChatContainer = ({ 
-  isSettingsOpen, 
+const ChatContainer = ({
+  isSettingsOpen,
   setIsSettingsOpen,
   messages,
   setMessages,
@@ -64,10 +66,11 @@ const ChatContainer = ({
   handleRefresh,
   messagesEndRef,
   chatbotId,
-  aiSettings
+  aiSettings,
+  embed = false,
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
-    if(confidenceScore === -1){
+    if (confidenceScore === -1) {
       return 'rgb(241, 241, 241)';
     }
     const normalizedScore = confidenceScore / 100;
@@ -110,7 +113,7 @@ const ChatContainer = ({
       },
       body: '{}'
     };
-    
+
     fetch('https://api.trieve.ai/api/chunks/scroll', options)
       .then(response => response.json())
       .then(response => setSources(response.chunks))
@@ -122,7 +125,7 @@ const ChatContainer = ({
   //@ts-ignore
   const Modal = ({ isOpen, onClose }) => {
     if (!isOpen) return null; // Don't render if not open
-  
+
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
         <div className="bg-white p-4 pt-8 rounded shadow-lg relative min-w-[400px] max-w-[800px] w-[80%] h-[80%] overflow-x-hidden overflow-y-scroll">
@@ -131,14 +134,14 @@ const ChatContainer = ({
           </button>
           <h1 className="font-bold text-2xl">Sources</h1>
           {sources.map((chunk, index) => {
-            if(chunk.metadata.filetype == "pdf") return null;
+            if (chunk.metadata.filetype == "pdf") return null;
             return <div key={'chunk-' + index} className="border-b-[1px] pt-2">{chunk.chunk_html}</div>
           })}
-          <button 
+          <button
             onClick={onClose} // Open modal on button click
             className="mt-2 w-full rounded-md border-[1px] bg-white p-2 text-center hover:bg-slate-100"
           >
-             Close
+            Close
           </button>
         </div>
       </div>
@@ -146,10 +149,10 @@ const ChatContainer = ({
   };
 
   return (
-    <div className="flex-1 flex justify-center pt-4 px-4">
-      <div className="w-[400px] relative">
-        {!isSettingsOpen && (
-          <button 
+    <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center `}>
+      <div className={`${embed ? 'w-full' : 'w-[400px]'} relative`}>
+        {!embed && !isSettingsOpen && (
+          <button
             onClick={() => setIsSettingsOpen(true)}
             className="absolute -left-12 h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white"
           >
@@ -157,61 +160,55 @@ const ChatContainer = ({
           </button>
         )}
 
-        <div className={`bg-white shadow-sm border ${
-          config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
-        } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
+        <div className={`bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+          } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
           {/* Chat Header */}
-          <div 
-            className={`flex items-center justify-between p-3 border-b ${
-              config.roundedHeaderCorners ? 'rounded-t-xl' : ''
-            }`}
+          <div
+            className={`flex items-center justify-between p-3 border-b ${config.roundedHeaderCorners ? 'rounded-t-xl' : ''
+              }`}
             style={{
               backgroundColor: config.syncColors ? config.userMessageColor : undefined,
               color: config.syncColors ? 'white' : undefined
             }}
           >
             <div className="text-sm">{config.displayName}</div>
-            <button 
+            <button
               onClick={handleRefresh}
-              className={`p-1.5 rounded-full ${
-                config.syncColors 
-                  ? 'hover:bg-white/10 text-white' 
-                  : 'hover:bg-gray-100'
-              }`}
+              className={`p-1.5 rounded-full ${config.syncColors
+                ? 'hover:bg-white/10 text-white'
+                : 'hover:bg-gray-100'
+                }`}
             >
               <IconRefresh className="w-4 h-4" />
             </button>
           </div>
 
           {/* Chat Messages */}
-          <div className="h-[calc(100vh-280px)] overflow-y-auto p-4">
+          <div className={`overflow-y-auto p-4 ${embed ? 'h-[calc(100vh-225px)] ' : 'h-[calc(100vh-280px)]'}`}>
             {messages.length === 0 && (
-              <div className={`text-gray-500 p-4 ${
-                config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-              } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+              <div className={`text-gray-500 p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
                 {config.initialMessage}
               </div>
             )}
             {messages.map((message, index) => (
               <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                <div className={`p-3 inline-block max-w-[80%] ${
-                  config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                } ${
-                  message.role === 'assistant' 
+                <div className={`p-3 inline-block max-w-[80%] ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                  } ${message.role === 'assistant'
                     ? 'prose prose-sm max-w-none bg-white'
                     : 'text-white'
-                }`}
-                style={{
-                  backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
-                  transition: 'background-color 0.3s ease'
-                }}>
+                  }`}
+                  style={{
+                    backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
+                    transition: 'background-color 0.3s ease'
+                  }}>
                   {message.role === 'assistant' ? (
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   ) : (
                     <p>{message.content}</p>
                   )}
-                  { message.role === 'assistant' && message.confidenceScore != -1 && <div>
-                    <span style={{backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px'}}>{message.confidenceScore}</span>
+                  {message.role === 'assistant' && message.confidenceScore != -1 && <div>
+                    <span style={{ backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px' }}>{message.confidenceScore}</span>
                   </div>}
                 </div>
               </div>
@@ -232,7 +229,7 @@ const ChatContainer = ({
                     const userMessage: Message = { role: 'user', content: message };
                     setMessages(prev => [...prev, userMessage]);
                     setInput('');
-                    
+
                     // Start the chat process
                     setIsLoading(true);
                     try {
@@ -251,7 +248,7 @@ const ChatContainer = ({
                       });
 
                       if (!response.ok) throw new Error('Stream failed');
-                      
+
                       const assistantMessage: Message = { role: 'assistant', content: '' };
                       setMessages(prev => [...prev, assistantMessage]);
 
@@ -264,26 +261,26 @@ const ChatContainer = ({
                           const result = await reader.read();
                           done = result.done;
                           if (done) break;
-                          
+
                           const chunk = decoder.decode(result.value);
                           const lines = chunk.split('\n');
 
                           for (const line of lines) {
                             if (line.startsWith('data: ')) {
                               const data = line.slice(5).trim();
-                              
+
                               if (data === '[DONE]') continue;
-                              
+
                               try {
                                 const parsed = JSON.parse(data);
                                 if (parsed.text) {
                                   setMessages(prev => {
                                     const lastMessage = prev[prev.length - 1];
                                     let lastMessage_content = lastMessage.content + parsed.text;
-                                    
+
                                     let confidenceScore1 = -1;
 
-                                    if(lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0){
+                                    if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
                                       const confidenceScore = lastMessage_content.split(":::")[1];
                                       confidenceScore1 = Number(confidenceScore)
                                       lastMessage_content = lastMessage_content.split(":::")[0];
@@ -321,12 +318,11 @@ const ChatContainer = ({
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={config.messagePlaceholder}
-                  className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${
-                    config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
-                  } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}
+                  className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
+                    } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}
                   disabled={isLoading}
                 />
-                <button 
+                <button
                   type="submit"
                   disabled={isLoading || !input.trim()}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
@@ -345,11 +341,11 @@ const ChatContainer = ({
             )}
           </div>
         </div>
-        <button 
-          onClick={() => {loadSources();setIsModalOpen(true);}} // Open modal on button click
-          className="mt-2 w-full rounded-md border-[1px] bg-white p-2 text-center hover:bg-slate-100"
+        <button
+          onClick={() => { loadSources(); setIsModalOpen(true); }} // Open modal on button click
+          className={`${embed ? 'hidden' : ""} mt-2 w-full rounded-md border-[1px] bg-white p-2 text-center hover:bg-slate-100`}
         >
-          {loadingSources? 'Loading Sources...' : "Show Sources"}
+          {loadingSources ? 'Loading Sources...' : "Show Sources"}
         </button>
         <Modal isOpen={isModalOpen && !loadingSources} onClose={() => setIsModalOpen(false)} /> {/* Modal component */}
       </div>
@@ -357,7 +353,7 @@ const ChatContainer = ({
   );
 };
 
-const Playground = ({ chatbot }: PlaygroundProps) => {
+const Playground = ({ chatbot, embed = false }: PlaygroundProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -401,7 +397,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
           createNew: true, // Signal to create a new conversation
         }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setConversationId(data._id);
@@ -414,7 +410,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
 
   const saveConversation = async () => {
     if (!conversationId) return;
-    
+
     try {
       await fetch('/api/chatbot/conversation', {
         method: 'POST',
@@ -462,7 +458,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
       });
 
       if (!response.ok) throw new Error('Stream failed');
-      
+
       const assistantMessage: Message = { role: 'assistant', content: '' };
       setMessages(prev => [...prev, assistantMessage]);
 
@@ -475,26 +471,26 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
           const result = await reader.read();
           done = result.done;
           if (done) break;
-          
+
           const chunk = decoder.decode(result.value);
           const lines = chunk.split('\n');
 
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.slice(5).trim();
-              
+
               if (data === '[DONE]') continue;
-              
+
               try {
                 const parsed = JSON.parse(data);
                 if (parsed.text) {
                   setMessages(prev => {
                     const lastMessage = prev[prev.length - 1];
                     let lastMessage_content = lastMessage.content + parsed.text;
-                    
+
                     let confidenceScore1 = -1;
 
-                    if(lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0){
+                    if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
                       const confidenceScore = lastMessage_content.split(":::")[1];
                       confidenceScore1 = Number(confidenceScore)
                       console.log(confidenceScore1)
@@ -530,6 +526,29 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
     // Handle the text and confidence score as needed
   };
 
+  if (embed) {
+    return (
+      <div className="relative min-h-[100vh]">
+        <ChatContainer
+          isSettingsOpen={isSettingsOpen}
+          setIsSettingsOpen={setIsSettingsOpen}
+          messages={messages}
+          setMessages={setMessages}
+          config={config}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+          input={input}
+          setInput={setInput}
+          handleSubmit={handleSubmit}
+          handleRefresh={handleRefresh}
+          messagesEndRef={messagesEndRef}
+          chatbotId={chatbot.id}
+          aiSettings={aiSettings}
+          embed={embed}
+        />
+      </div>
+    )
+  }
   return (
     <AISettingsProvider chatbotId={chatbot.id}>
       <div>
@@ -561,25 +580,24 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
         </div>
 
         {/* Main content area */}
-        <div className="relative min-h-[calc(100vh-80px)] pl-2" 
-             style={{ 
-               backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
-               backgroundSize: '20px 20px'
-             }}>
+        <div className="relative min-h-[calc(100vh-80px)] pl-2"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
+            backgroundSize: '20px 20px'
+          }}>
           <div className="flex">
             {/* Settings Panel */}
-            <div className={`w-[400px] transition-all duration-300 ${
-              isSettingsOpen ? 'mr-4' : '-ml-[400px]'
-            }`}>
-              <ChatSettings 
-                isVisible={isSettingsOpen} 
+            <div className={`w-[400px] transition-all duration-300 ${isSettingsOpen ? 'mr-4' : '-ml-[400px]'
+              }`}>
+              <ChatSettings
+                isVisible={isSettingsOpen}
                 onToggle={() => setIsSettingsOpen(false)}
                 chatbotId={chatbot.id}
               />
             </div>
 
             {/* Chat Container */}
-            <ChatContainer 
+            <ChatContainer
               isSettingsOpen={isSettingsOpen}
               setIsSettingsOpen={setIsSettingsOpen}
               messages={messages}
@@ -594,6 +612,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
               messagesEndRef={messagesEndRef}
               chatbotId={chatbot.id}
               aiSettings={aiSettings}
+              embed={embed}
             />
           </div>
         </div>
