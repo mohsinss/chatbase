@@ -21,7 +21,7 @@ export default function Home() {
           __html: `
             window.embeddedChatbotConfig = {
               chatbotId: "3Fio_IIfzQDKTGsjEKwil",
-              domain: "chatsa.co",
+              domain: "${process.env.NODE_ENV === 'development' ? 'localhost:3000' : 'chatsa.co'}",
               protocol: "${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}"
             }
           `
