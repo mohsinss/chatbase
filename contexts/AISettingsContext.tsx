@@ -6,6 +6,7 @@ interface AISettings {
   systemPrompt: string;
   maxTokens: number;
   language: string;
+  suggestedMessages: string;
 }
 
 interface AISettingsContextType {
@@ -21,7 +22,8 @@ export const AISettingsProvider = ({ children, chatbotId }: { children: React.Re
     temperature: 0.7,
     systemPrompt: "",
     maxTokens: 500,
-    language: "en"
+    language: "en",
+    suggestedMessages: ""
   });
 
   const updateSettings = (newSettings: Partial<AISettings>) => {

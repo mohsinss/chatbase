@@ -697,28 +697,12 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           )}
 
           <div className="p-4 border-t">
-            {/* Suggested Messages - Moved above input */}
+            {/* Suggested Messages - display only */}
             <div className="mb-4 flex flex-wrap gap-2">
               {config.suggestedMessages.split('\n').filter(msg => msg.trim()).map((message, index) => (
                 <button
                   key={index}
-                  className="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-gray-200 transition-colors"
-                  onClick={() => {
-                    // Add message to chat (in preview only)
-                    const messagesContainer = document.querySelector('.overflow-y-auto');
-                    if (messagesContainer) {
-                      const newMessage = document.createElement('div');
-                      newMessage.className = `ml-auto p-3 ${
-                        config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                      } max-w-[80%] text-white`;
-                      newMessage.style.backgroundColor = config.userMessageColor;
-                      newMessage.textContent = message;
-                      messagesContainer.appendChild(newMessage);
-                      
-                      // Auto-scroll to bottom
-                      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                    }
-                  }}
+                  className="px-4 py-2 bg-gray-100 rounded-full text-sm"
                 >
                   {message}
                 </button>

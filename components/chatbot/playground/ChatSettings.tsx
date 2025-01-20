@@ -378,6 +378,22 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsPro
               placeholder="Enter system prompt..."
             />
           </div>
+
+          <div className="space-y-2">
+            <h3 className="text-gray-700 font-medium">Suggested Messages</h3>
+            <textarea
+              value={localSettings.suggestedMessages}
+              onChange={(e) => setLocalSettings(prev => ({ 
+                ...prev, 
+                suggestedMessages: e.target.value 
+              }))}
+              placeholder="Enter each message in a new line"
+              className="w-full p-4 border rounded-lg text-sm text-gray-700 min-h-[100px]"
+            />
+            <p className="text-xs text-gray-500">
+              Enter each suggested message on a new line. These will appear as clickable buttons in your chatbot.
+            </p>
+          </div>
         </div>
       </div>
     </div>
