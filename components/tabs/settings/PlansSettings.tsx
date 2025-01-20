@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
-import { Check } from "lucide-react";
 
 interface PlanFeature {
   name: string;
