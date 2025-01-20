@@ -1,15 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 
-export default function PricingSection() {
+export default function PricingSection({is_signed, team} : {is_signed: boolean, team: any}) {
   const [isYearly, setIsYearly] = useState(false);
+  const router = useRouter();
+
+  const handleSubscribe = (priceID: string) => {
+    if(is_signed){
+      router.push(`dashboard/${team.id}/settings/plans`)
+    } else {
+      router.push("/auth/signin")
+    }
+  }
 
   const plans = [
     {
       name: "Free",
       price: "0",
       yearlyPrice: "0",
+      priceID: "",
       period: isYearly ? "Per Year" : "Forever",
       features: [
         "Access to fast models",
@@ -30,6 +41,7 @@ export default function PricingSection() {
       name: "Hobby",
       price: "19",
       yearlyPrice: "190",
+      priceID: isYearly ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HOBBY_YEARLY : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HOBBY,
       period: isYearly ? "Per Year" : "Per Month",
       features: [
         "Everything in Free, plus...",
@@ -50,6 +62,7 @@ export default function PricingSection() {
       name: "Standard",
       price: "99",
       yearlyPrice: "990",
+      priceID: isYearly ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STANDARD_YEARLY : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STANDARD,
       period: isYearly ? "Per Year" : "Per Month",
       features: [
         "Everything in Hobby, plus...",
@@ -65,6 +78,7 @@ export default function PricingSection() {
       name: "Unlimited",
       price: "399",
       yearlyPrice: "3,990",
+      priceID: isYearly ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_UNLIMITED_YEARLY : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_UNLIMITED,
       period: isYearly ? "Per Year" : "Per Month",
       features: [
         "Everything in Standard, plus...",
@@ -94,20 +108,18 @@ export default function PricingSection() {
           <p className="text-gray-600 mb-8">
             Get 2 months for free by subscribing yearly.
           </p>
-          
+
           {/* Pricing Toggle */}
           <div className="flex items-center justify-center gap-4 mb-12">
             <span className={`text-sm ${!isYearly ? 'text-gray-900' : 'text-gray-500'}`}>Monthly</span>
             <button
               onClick={() => setIsYearly(!isYearly)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                isYearly ? 'bg-indigo-600' : 'bg-gray-200'
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${isYearly ? 'bg-indigo-600' : 'bg-gray-200'
+                }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isYearly ? 'translate-x-6' : 'translate-x-1'
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isYearly ? 'translate-x-6' : 'translate-x-1'
+                  }`}
               />
             </button>
             <span className={`text-sm ${isYearly ? 'text-gray-900' : 'text-gray-500'}`}>Yearly</span>
@@ -118,44 +130,46 @@ export default function PricingSection() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className="bg-white rounded-lg border border-gray-200 p-8 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-lg border border-gray-200 p-8 hover:shadow-lg transition-shadow flex flex-col justify-between"
             >
-              <h3 className="text-xl font-semibold mb-4">{plan.name}</h3>
-              <div className="mb-4">
-                <span className="text-4xl font-bold">
-                  ${isYearly ? plan.yearlyPrice : plan.price}
-                </span>
-                <span className="text-gray-500 ml-2">{plan.period}</span>
+              <div>
+                <h3 className="text-xl font-semibold mb-4">{plan.name}</h3>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold">
+                    ${isYearly ? plan.yearlyPrice : plan.price}
+                  </span>
+                  <span className="text-gray-500 ml-2">{plan.period}</span>
+                </div>
+                <ul className="space-y-4 mb-8">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <svg
+                        className="w-5 h-5 text-green-500 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                {plan.footnote && (
+                  <p className="text-sm text-gray-500 mb-8">{plan.footnote}</p>
+                )}
               </div>
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <svg
-                      className="w-5 h-5 text-green-500 mt-0.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              {plan.footnote && (
-                <p className="text-sm text-gray-500 mb-8">{plan.footnote}</p>
-              )}
               <button
+                onClick={() => handleSubscribe(plan.priceID)}
                 className={`w-full py-2 px-4 rounded-lg border border-gray-200 
-                  ${
-                    plan.buttonStyle === 'dark'
-                      ? 'bg-gray-900 text-white hover:bg-gray-800'
-                      : 'bg-white text-gray-900 hover:bg-gray-50'
+                  ${plan.buttonStyle === 'dark'
+                    ? 'bg-gray-900 text-white hover:bg-gray-800'
+                    : 'bg-white text-gray-900 hover:bg-gray-50'
                   }
                   transition-colors`}
               >
