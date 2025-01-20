@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { Send } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  confidenceScore?: number;
 }
 
 interface ChatbotSettings {
@@ -25,6 +28,22 @@ export default function ChatbotPage({ params }: { params: { chatbotId: string } 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const { config } = useChatInterfaceSettings(params.chatbotId);
+
+  const getBackgroundColor = (confidenceScore: number) => {
+    if (confidenceScore === -1) {
+      return 'rgb(241, 241, 241)';
+    }
+    const normalizedScore = confidenceScore / 100;
+
+    // Calculate the color based on the normalized score
+    const red = Math.max(256 - Math.floor(normalizedScore * 15), 0); // Red decreases as score increases
+    const green = Math.min(Math.floor(normalizedScore * 241), 241); // Green increases as score increases
+    const blue = 241; // Keep blue constant
+
+    return `rgb(${red}, ${green}, ${blue})`; // Return the RGB color
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -90,6 +109,16 @@ export default function ChatbotPage({ params }: { params: { chatbotId: string } 
                     const lastMessage = newMessages[newMessages.length - 1];
                     if (lastMessage?.role === 'assistant') {
                       lastMessage.content = botResponse;
+                      let confidenceScore1 = -1;
+
+                      if (botResponse.split(":::").length > 1 && botResponse.split(":::")[1].length > 0) {
+                        const confidenceScore = botResponse.split(":::")[1];
+                        confidenceScore1 = Number(confidenceScore)
+                        console.log(confidenceScore1)
+                        lastMessage.content = botResponse.split(":::")[0];
+                        lastMessage.confidenceScore = confidenceScore1;
+                      }
+
                     } else {
                       newMessages.push({ role: 'assistant', content: botResponse });
                     }
@@ -115,10 +144,9 @@ export default function ChatbotPage({ params }: { params: { chatbotId: string } 
   return (
     <div className="flex flex-col h-screen bg-white">
       {/* Header */}
-      <div 
-        className={`p-4 border-b flex items-center justify-between ${
-          settings.roundedHeaderCorners ? 'rounded-t-xl' : ''
-        }`}
+      <div
+        className={`p-4 border-b flex items-center justify-between ${settings.roundedHeaderCorners ? 'rounded-t-xl' : ''
+          }`}
         style={{
           backgroundColor: settings.syncColors ? settings.userMessageColor : undefined,
           color: settings.syncColors ? 'white' : undefined
@@ -126,7 +154,7 @@ export default function ChatbotPage({ params }: { params: { chatbotId: string } 
       >
         <div className="flex items-center gap-3">
           {settings.profilePictureUrl && (
-            <div 
+            <div
               className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden"
               style={{
                 backgroundImage: `url(${settings.profilePictureUrl})`,
@@ -142,21 +170,24 @@ export default function ChatbotPage({ params }: { params: { chatbotId: string } 
       {/* Chat Area */}
       <div className="flex-1 p-4 overflow-y-auto">
         {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`mb-4 ${message.role === 'user' ? 'ml-auto' : ''} max-w-[80%]`}
-          >
-            <div
-              className={`p-3 ${
-                settings.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-              } ${
-                message.role === 'user' 
-                  ? 'text-white' 
-                  : 'bg-gray-100'
+          <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
+            <div className={`p-3 inline-block max-w-[80%] ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+              } ${message.role === 'assistant'
+                ? `${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} prose prose-sm max-w-none`
+                : 'text-white'
               }`}
-              style={message.role === 'user' ? { backgroundColor: settings.userMessageColor } : undefined}
-            >
-              {message.content}
+              style={{
+                backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
+                transition: 'background-color 0.3s ease'
+              }}>
+              {message.role === 'assistant' ? (
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              ) : (
+                <p>{message.content}</p>
+              )}
+              {message.role === 'assistant' && message.confidenceScore != -1 && <div>
+                <span style={{ backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px' }}>{message.confidenceScore}</span>
+              </div>}
             </div>
           </div>
         ))}
@@ -170,22 +201,20 @@ export default function ChatbotPage({ params }: { params: { chatbotId: string } 
       {/* Input Area */}
       <div className="p-4 border-t">
         <div className="flex gap-2">
-          <input 
+          <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder={settings.messagePlaceholder}
-            className={`flex h-10 w-full border border-input bg-background px-3 py-2 text-sm ${
-              settings.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
-            }`}
+            className={`flex h-10 w-full border border-input bg-background px-3 py-2 text-sm ${settings.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
+              }`}
           />
-          <button 
+          <button
             onClick={handleSendMessage}
             disabled={isLoading}
-            className={`p-2 bg-black text-white ${
-              settings.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
-            } ${isLoading ? 'opacity-50' : ''}`}
+            className={`p-2 bg-black text-white ${settings.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
+              } ${isLoading ? 'opacity-50' : ''}`}
           >
             <Send className="h-4 w-4" />
           </button>
