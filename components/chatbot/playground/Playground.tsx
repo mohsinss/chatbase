@@ -150,7 +150,7 @@ const ChatContainer = ({
 
   return (
     <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center h-full`}>
-      <div className={`${embed ? 'w-full' : 'w-[400px]'} relative h-full`}>
+      <div className={`${embed ? 'w-full' : 'w-[400px]'} relative h-full `}>
         {!embed && !isSettingsOpen && (
           <button
             onClick={() => setIsSettingsOpen(true)}
@@ -160,7 +160,7 @@ const ChatContainer = ({
           </button>
         )}
 
-        <div className={`h-full flex flex-col bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+        <div className={`h-full min-h-[calc(100vh-180px)] flex flex-col bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
           } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
           {/* Chat Header */}
           <div
@@ -174,7 +174,7 @@ const ChatContainer = ({
             <div className="text-sm">{config.displayName}</div>
             <button
               onClick={handleRefresh}
-              className={`p-1.5 pr-7 rounded-full ${config.syncColors
+              className={`p-1.5 mr-7 rounded-full ${config.syncColors
                 ? 'hover:bg-white/10 text-white'
                 : 'hover:bg-gray-100'
                 }`}
@@ -583,7 +583,7 @@ const Playground = ({ chatbot, embed = false }: PlaygroundProps) => {
             backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
             backgroundSize: '20px 20px'
           }}>
-          <div className="flex">
+          <div className="flex h-full">
             {/* Settings Panel */}
             <div className={`w-[400px] transition-all duration-300 ${isSettingsOpen ? 'mr-4' : '-ml-[400px]'
               }`}>
