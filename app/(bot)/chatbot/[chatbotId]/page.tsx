@@ -54,6 +54,8 @@ export default function ChatbotPage({ params }: { params: { chatbotId: string } 
         // Add initial message if it exists
         if (data.initialMessage) {
           setMessages([{ role: 'assistant', content: data.initialMessage }]);
+        } else {
+          setMessages([{ role: 'assistant', content: "Hi! What can I help you with?" }]);
         }
       } catch (error) {
         console.error('Error fetching settings:', error);
@@ -163,7 +165,7 @@ export default function ChatbotPage({ params }: { params: { chatbotId: string } 
               }}
             />
           )}
-          <div className="font-medium">{settings.displayName}</div>
+          <div className="font-medium">{settings.displayName || "Chatbot"}</div>
         </div>
       </div>
 

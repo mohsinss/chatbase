@@ -55,7 +55,7 @@ export default function PricingSection() {
         "Everything in Hobby, plus...",
         "10,000 message credits/month",
         "5 chatbots",
-        "2 AI Actions/chatbot",
+        // "2 AI Actions/chatbot",
         "3 team members"
       ],
       buttonText: "Subscribe",
@@ -70,7 +70,7 @@ export default function PricingSection() {
         "Everything in Standard, plus...",
         "40,000 message credits/month included",
         "10 chatbots",
-        "3 AI Actions/chatbot",
+        // "3 AI Actions/chatbot",
         "5 team members",
         "Remove 'Powered by Chatbase'",
         "Use your own custom domains",

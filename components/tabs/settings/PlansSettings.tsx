@@ -52,7 +52,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
         { name: "Everything in Hobby, plus..." },
         { name: "10,000 message credits/month" },
         { name: "5 chatbots" },
-        { name: "2 AI Actions/chatbot" },
+        // { name: "2 AI Actions/chatbot" },
         { name: "3 team members" }
       ]
     },
@@ -65,7 +65,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
         { name: "Everything in Standard, plus..." },
         { name: "40,000 message credits/month included (Messages over the limit will use your OpenAI API Key)" },
         { name: "10 chatbots" },
-        { name: "3 AI Actions/chatbot" },
+        // { name: "3 AI Actions/chatbot" },
         { name: "5 team members" },
         { name: "Remove &apos;Powered by Chatbase&apos;" },
         { name: "Advanced Analytics" }

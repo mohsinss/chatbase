@@ -52,10 +52,10 @@ export function BillingSettings({ teamId }: BillingSettingsProps) {
             <Check className="w-5 h-5 mt-0.5 text-green-500" />
             <span>6,000,000 characters/chatbot</span>
           </div>
-          <div className="flex items-start gap-2">
+          {/* <div className="flex items-start gap-2">
             <Check className="w-5 h-5 mt-0.5 text-green-500" />
             <span>2 AI Actions/chatbot</span>
-          </div>
+          </div> */}
           <div className="flex items-start gap-2">
             <Check className="w-5 h-5 mt-0.5 text-green-500" />
             <span>Unlimited links to train on</span>
