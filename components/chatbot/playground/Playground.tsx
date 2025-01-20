@@ -334,7 +334,7 @@ const ChatContainer = ({
 
             {/* Footer */}
             {embed && <div className="p-2 text-center text-sm text-gray-500">
-              <span>Powered by <a href={process.env.NEXT_PUBLIC_DOMAIN} target="_black" className="text-blue-600 hover:text-blue-800">Chatsa.co</a></span>
+              <span>Powered by <a href={`${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}//${process.env.NEXT_PUBLIC_DOMAIN}`} target="_black" className="text-blue-600 hover:text-blue-800">Chatsa.co</a></span>
               {config.footerText && <span className="ml-1">{config.footerText}</span>}
             </div>}
           </div>
