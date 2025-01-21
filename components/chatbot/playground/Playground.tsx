@@ -171,7 +171,20 @@ const ChatContainer = ({
               color: config.syncColors ? 'white' : undefined
             }}
           >
-            <div className="text-sm">{config.displayName}</div>
+            <div className="flex items-center gap-3">
+              {/* Profile Picture */}
+              {config.profilePictureUrl && (
+                <div
+                  className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden"
+                  style={{
+                    backgroundImage: `url(${config.profilePictureUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                />
+              )}
+              <div className="font-medium">{config.displayName}</div>
+            </div>
             <button
               onClick={handleRefresh}
               className={`p-1.5 mr-7 rounded-full ${config.syncColors
@@ -526,7 +539,7 @@ const Playground = ({ chatbot, embed = false }: PlaygroundProps) => {
 
   if (embed) {
     return (
-      <div className="relative" style={{height:'100dvh'}}>
+      <div className="relative" style={{ height: '100dvh' }}>
         <ChatContainer
           isSettingsOpen={isSettingsOpen}
           setIsSettingsOpen={setIsSettingsOpen}
