@@ -7,6 +7,8 @@ import ClientLayout from "@/components/LayoutClient";
 import config from "@/config";
 import "./globals.css";
 import Script from 'next/script';
+import dynamic from 'next/dynamic';
+const DocumentHeight = dynamic(() => import('../components/DocumentHeight'), { ssr: false });
 
 const font = Inter({ subsets: ["latin"] });
 
@@ -30,6 +32,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				<ClientLayout>{children}</ClientLayout>
+				<DocumentHeight/>
 			</body>
 		</html>
 	);
