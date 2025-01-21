@@ -526,7 +526,7 @@ const Playground = ({ chatbot, embed = false }: PlaygroundProps) => {
 
   if (embed) {
     return (
-      <div className="relative min-h-[100vh]">
+      <div className="relative" style={{height:'var(--doc-height)'}}>
         <ChatContainer
           isSettingsOpen={isSettingsOpen}
           setIsSettingsOpen={setIsSettingsOpen}
