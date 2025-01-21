@@ -4,6 +4,7 @@ import { authOptions } from "@/libs/next-auth";
 import { createCheckout } from "@/libs/stripe";
 import connectMongo from "@/libs/mongoose";
 import User from "@/models/User";
+import Team from "@/models/Team";
 
 // This function is used to create a Stripe Checkout Session (one-time payment or subscription)
 // It's called by the <ButtonCheckout /> component
@@ -21,12 +22,19 @@ export async function POST(req: NextRequest) {
       { error: "Success and cancel URLs are required" },
       { status: 400 }
     );
-  } else if (!body.mode) {
+  } else if (body.isYearly == undefined) {
     return NextResponse.json(
-      {
-        error:
-          "Mode is required (either 'payment' for one-time payments or 'subscription' for recurring subscription)",
-      },
+      { error: "isYearly is required", },
+      { status: 400 }
+    );
+  } else if (!body.teamId) {
+    return NextResponse.json(
+      { error: "teamId is required", },
+      { status: 400 }
+    );
+  } else if (!body.plan) {
+    return NextResponse.json(
+      { error: "plan is required", },
       { status: 400 }
     );
   }
@@ -34,11 +42,13 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
+    const { priceId, mode, successUrl, cancelUrl, teamId, isYearly, plan } = body;
+
     await connectMongo();
 
     const user = await User.findById(session?.user?.id);
-
-    const { priceId, mode, successUrl, cancelUrl } = body;
+    const team = await Team.findOne({teamId});
+    console.log(team._id)
 
     const stripeSessionURL = await createCheckout({
       priceId,
@@ -46,13 +56,21 @@ export async function POST(req: NextRequest) {
       successUrl,
       cancelUrl,
       // If user is logged in, it will pass the user ID to the Stripe Session so it can be retrieved in the webhook later
-      clientReferenceId: user?._id?.toString(),
+      // clientReferenceId: user?._id?.toString(),
       // If user is logged in, this will automatically prefill Checkout data like email and/or credit card for faster checkout
-      user,
+      user: {
+        customerId: team?.customerId,
+        email: user?.email
+      },
+      metadata: {
+        teamId: team._id.toString(),
+        isYearly,
+        plan,
+      }
       // If you send coupons from the frontend, you can pass it here
       // couponId: body.couponId,
     });
-
+    console.log('stripeSessionURL', stripeSessionURL)
     return NextResponse.json({ url: stripeSessionURL });
   } catch (e) {
     console.error(e);

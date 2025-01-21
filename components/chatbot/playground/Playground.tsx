@@ -149,8 +149,8 @@ const ChatContainer = ({
   };
 
   return (
-    <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center `}>
-      <div className={`${embed ? 'w-full' : 'w-[400px]'} relative`}>
+    <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center h-full`}>
+      <div className={`${embed ? 'w-full' : 'w-[400px]'} relative h-full `}>
         {!embed && !isSettingsOpen && (
           <button
             onClick={() => setIsSettingsOpen(true)}
@@ -160,7 +160,7 @@ const ChatContainer = ({
           </button>
         )}
 
-        <div className={`bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+        <div className={`h-full min-h-[calc(100vh-180px)] flex flex-col bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
           } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
           {/* Chat Header */}
           <div
@@ -174,7 +174,7 @@ const ChatContainer = ({
             <div className="text-sm">{config.displayName}</div>
             <button
               onClick={handleRefresh}
-              className={`p-1.5 rounded-full ${config.syncColors
+              className={`p-1.5 mr-7 rounded-full ${config.syncColors
                 ? 'hover:bg-white/10 text-white'
                 : 'hover:bg-gray-100'
                 }`}
@@ -184,7 +184,7 @@ const ChatContainer = ({
           </div>
 
           {/* Chat Messages */}
-          <div className={`overflow-y-auto p-4 ${embed ? 'h-[calc(100vh-225px)] ' : 'h-[calc(100vh-280px)]'}`}>
+          <div className={`overflow-y-auto p-4 flex-grow`}>
             {messages.length === 0 && (
               <div className={`text-gray-500 p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
                 } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
@@ -216,7 +216,7 @@ const ChatContainer = ({
             <div ref={messagesEndRef} />
           </div>
 
-          <div>
+          <div className="flex flex-col justify-between">
             {/* Suggested Messages - Horizontal scrollable */}
             <div className="px-3 overflow-x-auto whitespace-nowrap flex gap-2 mb-4 pb-2">
               {config.suggestedMessages?.split('\n').filter((msg: string) => msg.trim()).map((message: string, index: number) => (
@@ -311,7 +311,7 @@ const ChatContainer = ({
             </div>
 
             {/* Chat Input */}
-            <div className="border-t p-3">
+            <form onSubmit={handleSubmit} className="border-t p-3">
               <div className="relative">
                 <input
                   type="text"
@@ -330,15 +330,13 @@ const ChatContainer = ({
                   <IconSend className="w-4 h-4" />
                 </button>
               </div>
-            </div>
+            </form>
 
             {/* Footer */}
-            {config.footerText && (
-              <div className="p-2 text-center text-sm text-gray-500">
-                <span>Powered by Chatsa.co</span>
-                <span className="ml-1">{config.footerText}</span>
-              </div>
-            )}
+            {embed && <div className="p-2 text-center text-sm text-gray-500">
+              <span>Powered by <a href={`${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}//${process.env.NEXT_PUBLIC_DOMAIN}`} target="_black" className="text-blue-600 hover:text-blue-800">Chatsa.co</a></span>
+              {config.footerText && <span className="ml-1">{config.footerText}</span>}
+            </div>}
           </div>
         </div>
         <button
@@ -347,7 +345,7 @@ const ChatContainer = ({
         >
           {loadingSources ? 'Loading Sources...' : "Show Sources"}
         </button>
-        <Modal isOpen={isModalOpen && !loadingSources} onClose={() => setIsModalOpen(false)} /> {/* Modal component */}
+        {!embed && <Modal isOpen={isModalOpen && !loadingSources} onClose={() => setIsModalOpen(false)} />}
       </div>
     </div>
   );
@@ -528,7 +526,7 @@ const Playground = ({ chatbot, embed = false }: PlaygroundProps) => {
 
   if (embed) {
     return (
-      <div className="relative min-h-[100vh]">
+      <div className="relative" style={{height:'100dvh'}}>
         <ChatContainer
           isSettingsOpen={isSettingsOpen}
           setIsSettingsOpen={setIsSettingsOpen}
@@ -585,7 +583,7 @@ const Playground = ({ chatbot, embed = false }: PlaygroundProps) => {
             backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
             backgroundSize: '20px 20px'
           }}>
-          <div className="flex">
+          <div className="flex h-full">
             {/* Settings Panel */}
             <div className={`w-[400px] transition-all duration-300 ${isSettingsOpen ? 'mr-4' : '-ml-[400px]'
               }`}>
