@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
-const DocumentHeight = (): JSX.Element => {
+const DocumentHeight = (): React.ReactElement => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       let timeoutId: ReturnType<typeof setTimeout> | null = null;
