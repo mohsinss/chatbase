@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
 
         break;
 
-      case 'payment_method.attached':
+      case 'payment_method.attached': {
         const paymentMethod: Stripe.PaymentMethod = event.data.object as Stripe.PaymentMethod;
 
         // Extract the necessary information from the paymentMethod object
@@ -157,7 +157,8 @@ export async function POST(req: NextRequest) {
           await team.save();
         }
 
-          break;
+        break;
+      }
 
       default:
       // Unhandled event type
