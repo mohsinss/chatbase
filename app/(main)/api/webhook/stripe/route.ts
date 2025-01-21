@@ -136,10 +136,10 @@ export async function POST(req: NextRequest) {
         const paymentMethod: Stripe.PaymentMethod = event.data.object as Stripe.PaymentMethod;
 
         // Extract the necessary information from the paymentMethod object
-        const paymentMethodId = paymentMethod.id;
+        // const paymentMethodId = paymentMethod.id;
         const customerId = paymentMethod.customer;
         const card = paymentMethod.card;
-        const billingDetails = paymentMethod.billing_details;
+        // const billingDetails = paymentMethod.billing_details;
 
         // Find the team associated with this customer
         const team = await Team.findOne({ customerId: customerId as string });
@@ -147,12 +147,10 @@ export async function POST(req: NextRequest) {
         if (team) {
           // Update the paymentMethods field with the new card and billing details
           team.billingInfo.paymentMethod.push({
-            // id: paymentMethodId,
             brand: card.brand,
             last4: card.last4,
             exp_month: card.exp_month,
             exp_year: card.exp_year,
-            // billingDetails: billingDetails,
           });
 
           // Save the updated team

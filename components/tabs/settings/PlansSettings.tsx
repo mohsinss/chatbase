@@ -65,7 +65,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
         { name: "Access to advanced models", info: "?" },
         { name: "2,000 message credits/month" },
         { name: "2 chatbots" },
-        { name: "1 AI Action/chatbot" },
+        // { name: "1 AI Action/chatbot" },
         { name: "11,000,000 characters/chatbot" },
         { name: "Unlimited links to train on" },
         { name: "Integrations", info: "?" },
