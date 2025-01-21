@@ -37,9 +37,14 @@ const teamSchema = new mongoose.Schema(
         postal_code: { type: String },
         country: { type: String },
       },
-      paymentMethod: {
-        type: String,
-      },
+      paymentMethod: [{
+        type: {
+          brand: { type: String },
+          last4: { type: String },
+          exp_month: { type: Number },
+          exp_year: { type: Number },
+        },
+      }],
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

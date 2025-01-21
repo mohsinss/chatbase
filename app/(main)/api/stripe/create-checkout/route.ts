@@ -47,7 +47,8 @@ export async function POST(req: NextRequest) {
     await connectMongo();
 
     const user = await User.findById(session?.user?.id);
-    const team = await User.findOne({teamId});
+    const team = await Team.findOne({teamId});
+    console.log(team._id)
 
     const stripeSessionURL = await createCheckout({
       priceId,
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
         email: user?.email
       },
       metadata: {
-        teamId: team._id,
+        teamId: team._id.toString(),
         isYearly,
         plan,
       }

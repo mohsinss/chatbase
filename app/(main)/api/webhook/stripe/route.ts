@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import connectMongo from "@/libs/mongoose";
 import configFile from "@/config";
 import User from "@/models/User";
+import Team from "@/models/Team";
 import { findCheckoutSession } from "@/libs/stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -34,9 +35,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
-  
+
   eventType = event.type;
-  
+
   console.log("eventType :", eventType)
 
   try {
@@ -47,12 +48,16 @@ export async function POST(req: NextRequest) {
         const stripeObject: Stripe.Checkout.Session = event.data
           .object as Stripe.Checkout.Session;
 
-        const session = await findCheckoutSession(stripeObject.id);
+        const sessionId = stripeObject.id;
+        const customerId = stripeObject?.customer;
+        const metadata = stripeObject?.metadata;
+        const plan = metadata.plan;
+        const teamId = metadata.teamId;
+        const isYearly = metadata.isYearly;
+        const paymentIntendId = stripeObject.payment_intent
 
-        const customerId = session?.customer;
-        const priceId = session?.line_items?.data[0]?.price.id;
-        const userId = stripeObject.client_reference_id;
-        const plan = configFile.stripe.plans.find((p) => p.priceId === priceId);
+        // const paymetIntend = stripe.paymentIntents.retrieve(paymentIntendId as string, {expand:['latest_charge']})
+        // console.log(stripeObject)
 
         if (!plan) break;
 
@@ -60,32 +65,18 @@ export async function POST(req: NextRequest) {
           customerId as string
         )) as Stripe.Customer;
 
-        let user;
+        let team;
 
         // Get or create the user. userId is normally pass in the checkout session (clientReferenceID) to identify the user when we get the webhook event
-        if (userId) {
-          user = await User.findById(userId);
-        } else if (customer.email) {
-          user = await User.findOne({ email: customer.email });
+        if (teamId) {
+          team = await Team.findById(teamId);
+          team.plan = plan;
+          team.customerId = customerId;
+          team.dueDate = isYearly ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) : new Date(new Date().setMonth(new Date().getMonth() + 1));
+          team.billingInfo = {...team.billingInfo, ...stripeObject?.customer_details};
 
-          if (!user) {
-            user = await User.create({
-              email: customer.email,
-              name: customer.name,
-            });
-
-            await user.save();
-          }
-        } else {
-          console.error("No user found");
-          throw new Error("No user found");
+          await team.save();
         }
-
-        // Update user data + Grant user access to your product. It's a boolean in the database, but could be a number of credits, etc...
-        user.priceId = priceId;
-        user.customerId = customerId;
-        user.hasAccess = true;
-        await user.save();
 
         // Extra: send email with user link, product page, etc...
         // try {
@@ -119,11 +110,6 @@ export async function POST(req: NextRequest) {
         const subscription = await stripe.subscriptions.retrieve(
           stripeObject.id
         );
-        const user = await User.findOne({ customerId: subscription.customer });
-
-        // Revoke access to your product
-        user.hasAccess = false;
-        await user.save();
 
         break;
       }
@@ -134,19 +120,6 @@ export async function POST(req: NextRequest) {
 
         const stripeObject: Stripe.Invoice = event.data
           .object as Stripe.Invoice;
-
-        const priceId = stripeObject.lines.data[0].price.id;
-        const customerId = stripeObject.customer;
-
-        const user = await User.findOne({ customerId });
-
-        // Make sure the invoice is for the same plan (priceId) the user subscribed to
-        if (user.priceId !== priceId) break;
-
-        // Grant user access to your product. It's a boolean in the database, but could be a number of credits, etc...
-        user.hasAccess = true;
-        await user.save();
-
         break;
       }
 
@@ -158,6 +131,35 @@ export async function POST(req: NextRequest) {
         //      - We will receive a "customer.subscription.deleted" when all retries were made and the subscription has expired
 
         break;
+
+      case 'payment_method.attached':
+        const paymentMethod: Stripe.PaymentMethod = event.data.object as Stripe.PaymentMethod;
+
+        // Extract the necessary information from the paymentMethod object
+        const paymentMethodId = paymentMethod.id;
+        const customerId = paymentMethod.customer;
+        const card = paymentMethod.card;
+        const billingDetails = paymentMethod.billing_details;
+
+        // Find the team associated with this customer
+        const team = await Team.findOne({ customerId: customerId as string });
+
+        if (team) {
+          // Update the paymentMethods field with the new card and billing details
+          team.billingInfo.paymentMethod.push({
+            // id: paymentMethodId,
+            brand: card.brand,
+            last4: card.last4,
+            exp_month: card.exp_month,
+            exp_year: card.exp_year,
+            // billingDetails: billingDetails,
+          });
+
+          // Save the updated team
+          await team.save();
+        }
+
+          break;
 
       default:
       // Unhandled event type
