@@ -6,6 +6,10 @@ import { usePathname } from "next/navigation";
 import { IconMessage, IconPlus } from "@tabler/icons-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ConfigPanel from "@/components/chatbot/ConfigPanel";
+import Team from "@/models/Team";
+import { DocumentType } from "@typegoose/typegoose";
+import config from "@/config";
+import toast from "react-hot-toast";
 
 interface Chatbot {
   chatbotId: string;
@@ -17,9 +21,10 @@ interface Chatbot {
 
 interface ChatbotsTabProps {
   teamId: string;
+  team: DocumentType<typeof Team>;
 }
 
-const ChatbotsTab = ({ teamId }: ChatbotsTabProps) => {
+const ChatbotsTab = ({ teamId, team }: ChatbotsTabProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const [chatbots, setChatbots] = useState<Chatbot[]>([]);
@@ -63,7 +68,14 @@ const ChatbotsTab = ({ teamId }: ChatbotsTabProps) => {
   }, [teamId]);
 
   const handleNewChatbot = () => {
-    setIsCreateModalOpen(true);
+    // console.log(config.stripe.plans[team.plan].chatbotLimit)
+    //@ts-ignore
+    if(chatbots.length < config.stripe.plans[team.plan].chatbotLimit){
+      setIsCreateModalOpen(true);
+    } else {
+      //@ts-ignore
+      toast.error(`Please update your plan, You can't create more than ${config.stripe.plans[team.plan].chatbotLimit} chatbots`)
+    }
   };
 
   const handleCreateModalClose = () => {

@@ -4,9 +4,12 @@ import { useRouter, usePathname } from "next/navigation";
 import ChatbotsTab from "@/components/tabs/chatbot/ChatbotsTab";
 import UsageTab from "@/components/tabs/usage/UsageTab";
 import SettingsTab from "@/components/tabs/settings/SettingsTab";
+import Team from "@/models/Team";
+import { DocumentType } from "@typegoose/typegoose";
 
 interface TabComponentProps {
   teamId: string;
+  team: DocumentType<typeof Team>;
 }
 
 const TABS = [
@@ -30,7 +33,7 @@ const TABS = [
   },
 ] as const;
 
-const DashboardTabs = ({ teamId }: { teamId: string }) => {
+const DashboardTabs = ({ teamId, team }: TabComponentProps) => {
   const router = useRouter();
   const pathname = usePathname();
   
@@ -61,7 +64,7 @@ const DashboardTabs = ({ teamId }: { teamId: string }) => {
 
       <div className="mt-8 max-w-7xl mx-auto px-4">
         {ActiveComponent && (
-          <ActiveComponent teamId={teamId} />
+          <ActiveComponent teamId={teamId} team={team}/>
         )}
       </div>
     </div>
