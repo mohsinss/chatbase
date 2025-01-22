@@ -5,11 +5,10 @@ import ChatbotsTab from "@/components/tabs/chatbot/ChatbotsTab";
 import UsageTab from "@/components/tabs/usage/UsageTab";
 import SettingsTab from "@/components/tabs/settings/SettingsTab";
 import Team from "@/models/Team";
-import { DocumentType } from "@typegoose/typegoose";
 
 interface TabComponentProps {
   teamId: string;
-  team: DocumentType<typeof Team>;
+  team: any;
 }
 
 const TABS = [

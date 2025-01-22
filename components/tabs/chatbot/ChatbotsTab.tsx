@@ -7,7 +7,6 @@ import { IconMessage, IconPlus } from "@tabler/icons-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ConfigPanel from "@/components/chatbot/ConfigPanel";
 import Team from "@/models/Team";
-import { DocumentType } from "@typegoose/typegoose";
 import config from "@/config";
 import toast from "react-hot-toast";
 
@@ -21,7 +20,7 @@ interface Chatbot {
 
 interface ChatbotsTabProps {
   teamId: string;
-  team: DocumentType<typeof Team>;
+  team: any;
 }
 
 const ChatbotsTab = ({ teamId, team }: ChatbotsTabProps) => {
