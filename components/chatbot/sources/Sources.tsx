@@ -10,6 +10,7 @@ import WebsiteInput from './WebsiteInput';
 import QAInput from './QAInput';
 import NotionInput from './NotionInput';
 import toast, { Toaster } from 'react-hot-toast';
+import config from "@/config";
 
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
@@ -22,16 +23,19 @@ const SOURCE_TABS = [
 const Sources = ({ 
   teamId, 
   chatbotId,
-  chatbot
+  chatbot,
+  team
 }: { 
   teamId: string;
   chatbotId: string;
   chatbot: any;
+  team: any;
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'files';
   const [fileCount, setFileCount] = useState<number>(0);
+  const [totalChars, setTotalChars] = useState<number>(0);
   const [fileSize, setFileSize] = useState<number>(0);
   const [fileChars, setFileChars] = useState<number>(0);
   const [isTraining, setIsTraining] = useState(false);
@@ -39,6 +43,8 @@ const Sources = ({
   const [text, setText] = useState<string>('');
   const [qaPairs, setQaPairs] = useState<{ id: string; question: string; answer: string }[]>([]);
   const [links, setLinks] = useState<{ id: string; link: string, chars: number}[]>([]);
+  //@ts-ignore
+  const planConfig = config.stripe.plans[team.plan];
 
   const fetchFiles = async () => {
     try {
@@ -167,6 +173,10 @@ const Sources = ({
   };
 
   const retrain = async () => {
+    if( totalChars > planConfig.charactersLimit ) {
+      toast.error(`Please udpate your plan, you can train your bot upto ${(planConfig.charactersLimit/1000000).toFixed(1)}M characters.`)
+      return;
+    }
     try {
       setIsTraining(true);
 
@@ -209,7 +219,9 @@ const Sources = ({
   const renderContent = () => {
     switch (currentTab) {
       case "files":
-        return <FileUpload teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount} setFileSize={setFileSize} setFileChars={setFileChars}/>;
+        return <FileUpload teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount} 
+                        setFileSize={setFileSize} setFileChars={setFileChars} 
+                        limitChars={planConfig.charactersLimit} totalChars={totalChars}/>;
       case "text":
         return <TextInput text={text} setText={setText} />;
       case "website":
@@ -274,7 +286,8 @@ const Sources = ({
             fileCount={fileCount}
             fileChars={fileChars}
             textInputChars={text ? text.length : 0}
-            charLimit={6_000_000}
+            charLimit={planConfig.charactersLimit}
+            setTotalChars={setTotalChars}
             onRetrain={retrain}
             isTraining={isTraining}
             qaInputCount={qaPairs.length}

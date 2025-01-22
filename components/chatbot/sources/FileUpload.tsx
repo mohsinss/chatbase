@@ -4,16 +4,19 @@ import { useState, useCallback, useEffect } from "react";
 import { IconFile, IconUpload } from "@tabler/icons-react";
 import { useDropzone } from "react-dropzone";
 import { DatasetList } from "./DatasetList";
+import toast from "react-hot-toast";
 
 interface FileUploadProps {
   teamId: string;
   chatbotId: string;
+  totalChars: number;
+  limitChars: number
   setFileCount: (value: number | ((prevState: number) => number)) => void;
   setFileChars: (value: number | ((prevState: number) => number)) => void;
   setFileSize: (value: number | ((prevState: number) => number)) => void;
 }
 
-export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFileChars }: FileUploadProps) => {
+export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFileChars, totalChars, limitChars }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -52,6 +55,11 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
   }, [])
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if( totalChars > limitChars ) {
+      toast.error(`Please udpate your plan, you can train your bot upto ${(limitChars/1000000).toFixed(1)}M characters.`)
+      return;
+    }
+
     setUploading(true);
     setError(null);
     setSuccess(null);

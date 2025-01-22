@@ -19,6 +19,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
+import config from "@/config";
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#22c55e', '#ef4444', '#f97316', '#06b6d4', '#ec4899', '#14b8a6'];
 
@@ -50,9 +51,10 @@ interface UsageData {
 
 interface UsageTabProps {
   teamId: string;
+  team?: any;
 }
 
-export default function UsageTab({ teamId }: UsageTabProps) {
+export default function UsageTab({ teamId, team }: UsageTabProps) {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -69,6 +71,8 @@ export default function UsageTab({ teamId }: UsageTabProps) {
       languageDistribution: {}
     }
   });
+  //@ts-ignore
+  const planConfig = config.stripe.plans[team.plan];
 
   useEffect(() => {
     fetchUsageData();
@@ -121,12 +125,12 @@ export default function UsageTab({ teamId }: UsageTabProps) {
       </div>
       
       {/* Main Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="p-6">
           <div className="flex flex-col">
             <div className="text-5xl font-bold">
               {usageData.chatbots.creditsUsed}
-              <span className="text-xl text-gray-500 font-normal"> / {usageData.chatbots.creditLimit}</span>
+              <span className="text-xl text-gray-500 font-normal"> / {planConfig.creditLimit}</span>
             </div>
             <div className="text-gray-500 mt-2">Total Credits Used</div>
           </div>
@@ -142,7 +146,7 @@ export default function UsageTab({ teamId }: UsageTabProps) {
           </div>
         </Card>
 
-        <Card className="p-6">
+        {/* <Card className="p-6">
           <div className="flex flex-col">
             <div className="text-5xl font-bold">
               {usageData.aggregatedData.totalMessages.toLocaleString()}
@@ -158,7 +162,7 @@ export default function UsageTab({ teamId }: UsageTabProps) {
             </div>
             <div className="text-gray-500 mt-2">Total Characters</div>
           </div>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Usage Over Time */}

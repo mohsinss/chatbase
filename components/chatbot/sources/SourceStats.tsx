@@ -11,6 +11,7 @@ interface SourceStatsProps {
   linkInputCount: number;
   linkInputChars: number;
   onRetrain: () => void;
+  setTotalChars: (totalChars: number) => void;
   isTraining: boolean;
 }
 
@@ -25,8 +26,11 @@ const SourceStats = ({
   charLimit, 
   onRetrain,
   isTraining,
+  setTotalChars,
 }: SourceStatsProps) => {
   const totalChars = fileChars + textInputChars + linkInputChars + qaInputChars;
+  setTotalChars(totalChars);
+  // console.log('charLimit', charLimit)
 
   return (
     <div className="w-[300px] bg-white rounded-lg p-6 border shadow-sm">

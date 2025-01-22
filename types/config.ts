@@ -22,7 +22,7 @@ export type Theme =
   | "dracula"
   | "";
 
-interface PLAN {
+export interface PLAN {
   isFeatured?: boolean;
   priceId: string;
   name: string;
