@@ -6,6 +6,7 @@ import { ChatSettings } from './ChatSettings';
 import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings';
 import { useAISettings } from '@/hooks/useAISettings';
 import { AISettingsProvider } from '@/contexts/AISettingsContext';
+import toast from "react-hot-toast";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -469,7 +470,16 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
         }),
       });
 
-      if (!response.ok) throw new Error('Stream failed');
+      if (!response.ok) {
+        if (response.status === 500) {
+          const data = await response.json();
+          if (data.error === 'Credits are limited') {
+            // Handle the 'Credits are limited' error here
+            console.error('Credits are limited');
+          }
+        }
+        throw new Error('Stream failed');
+      }
 
       const assistantMessage: Message = { role: 'assistant', content: '' };
       setMessages(prev => [...prev, assistantMessage]);
@@ -528,6 +538,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
       }
     } catch (error) {
       console.error('Chat error:', error);
+      toast.error(error)
     } finally {
       setIsLoading(false);
     }

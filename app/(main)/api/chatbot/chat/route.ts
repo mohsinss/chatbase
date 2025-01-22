@@ -62,6 +62,15 @@ export async function OPTIONS(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { messages, chatbotId } = await req.json();
+    return setCorsHeaders(new Response(
+      JSON.stringify({
+        error: 'Credits are limited',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    ));
 
     await connectMongo();
     console.time('MongoDB Connection Time'); // Start timing MongoDB connection
@@ -374,6 +383,7 @@ export async function POST(req: NextRequest) {
           }
         },
       });
+
       const team = await Team.findOne({ teamId: chatbot.teamId });
       if (team) {
         team.credits += 1;

@@ -8,7 +8,7 @@ interface ChatSettingsProps {
   isVisible: boolean;
   onToggle: () => void;
   chatbotId: string;
-  team: any;
+  team?: any;
 }
 
 type NotificationType = {
