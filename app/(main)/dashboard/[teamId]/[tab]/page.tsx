@@ -36,7 +36,7 @@ export default async function TeamTabPage({
       <DashboardNav teamId={params.teamId} />
       <main className="min-h-screen">
         <section className="max-w-7xl mx-auto pt-8">
-          <DashboardTabs teamId={params.teamId} />
+          <DashboardTabs teamId={params.teamId} team={team}/>
         </section>
       </main>
     </>
