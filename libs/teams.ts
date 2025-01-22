@@ -19,6 +19,7 @@ export async function getTeams(userId: string) {
 
   return teams.map((team, index) => ({
     id: team.teamId,
+    plan: team.plan,
     name: team.name ? team.name : `Team ${team.teamId.slice(-4)}`, // Use last 4 chars of ID as name
     chatbotsCount: chatbotsCounts[index], // Use the count of chatbots for each team
     createdAt: team.createdAt

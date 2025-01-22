@@ -9,6 +9,8 @@ import { usePathname } from "next/navigation";
 import { IconSearch, IconPlus, IconMenu2 } from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
 import ButtonAccount from "./ButtonAccount";
+import toast from "react-hot-toast";
+import config from "@/config";
 
 interface Chatbot {
   chatbotId: string;
@@ -67,6 +69,7 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
           throw new Error('Failed to fetch teams');
         }
         const data = await response.json();
+        console.log(data.teams)
         setTeams(data.teams || []);
       } catch (error) {
         console.error("Failed to fetch teams:", error);
@@ -296,7 +299,17 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
                       <div className="border-t px-2 py-2">
                         <button
                           onClick={() => {
-                            router.push(`/dashboard/${teamId}/create-new-chatbot`);
+                            if(teamId){
+                              //@ts-ignore
+                              const chatbotLimit = config.stripe.plans[teams.find(t => t.id == teamId).plan].chatbotLimit;
+                              console.log("chatbotLimit", chatbotLimit)
+                              if(chatbots.length < chatbotLimit){
+                                router.push(`/dashboard/${teamId}/create-new-chatbot`);
+                              } else {
+                                //@ts-ignore
+                                toast.error(`Please update your plan, You can't create more than ${chatbotLimit} chatbots`)
+                              }
+                            }
                             setIsChatbotMenuOpen(false);
                           }}
                           className="w-full px-2 py-2 text-left rounded-md hover:bg-base-200 text-primary flex items-center gap-2"
