@@ -20,7 +20,7 @@ interface Chatbot {
 
 interface ChatbotsTabProps {
   teamId: string;
-  team: any;
+  team?: any;
 }
 
 const ChatbotsTab = ({ teamId, team }: ChatbotsTabProps) => {

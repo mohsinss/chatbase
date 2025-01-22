@@ -8,7 +8,7 @@ import Team from "@/models/Team";
 
 interface TabComponentProps {
   teamId: string;
-  team: any;
+  team?: any;
 }
 
 const TABS = [
