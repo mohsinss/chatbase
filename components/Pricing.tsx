@@ -17,7 +17,7 @@ const Pricing = () => {
         </div>
 
         <div className="relative flex justify-center flex-col lg:flex-row items-center lg:items-stretch gap-8">
-          {config.stripe.plans.map((plan) => (
+          {/* {config.stripe.plans.map((plan) => (
             <div key={plan.priceId} className="relative w-full max-w-lg">
               {plan.isFeatured && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
@@ -97,7 +97,7 @@ const Pricing = () => {
                 </div>
               </div>
             </div>
-          ))}
+          ))} */}
         </div>
       </div>
     </section>
