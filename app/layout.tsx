@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 			</head>
 			<body>
 				<ClientLayout>{children}</ClientLayout>
-				<DocumentHeight/>
+				{/* <DocumentHeight/> */}
 			</body>
 		</html>
 	);
