@@ -1,9 +1,19 @@
 {
-    "functions": {
-      "app/api/**/route.ts": {
-        "includeFiles": "node_modules/tesseract.js-core/tesseract-core-simd.wasm",
-        "memory": 1024,
-        "maxDuration": 60
-      }
+  "functions": {
+    "app/api/**/route.ts": {
+      "includeFiles": "node_modules/tesseract.js-core/tesseract-core-simd.wasm",
+      "memory": 1024,
+      "maxDuration": 60
     }
-  }
+  },  
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/dailyCron",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
