@@ -11,9 +11,11 @@ import { OpenAISettings } from "./OpenAISettings";
 
 interface SettingsTabProps {
   teamId: string;
+  team?: any;
 }
 
-const SettingsTab = ({ teamId }: SettingsTabProps) => {
+const SettingsTab = ({ teamId, team }: SettingsTabProps) => {
+  console.log("team", team)
   const params = useParams();
   const currentSubTab = params.subtab as string || "general";
 
@@ -26,7 +28,7 @@ const SettingsTab = ({ teamId }: SettingsTabProps) => {
       case "plans":
         return <PlansSettings teamId={teamId} />;
       case "billing":
-        return <BillingSettings teamId={teamId} />;
+        return <BillingSettings teamId={teamId} team={team}/>;
       case "api-keys":
         return <ApiKeysSettings teamId={teamId} />;
       case "openai-key":

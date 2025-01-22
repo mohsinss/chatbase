@@ -262,8 +262,17 @@ const ChatContainer = ({
                         }),
                       });
 
-                      if (!response.ok) throw new Error('Stream failed');
-
+                      if (!response.ok) {                        
+                        if (response.status === 500) {
+                          const data = await response.json();
+                          if (data.error === 'No more credits') {
+                            // Handle the 'Credits are limited' error here
+                            console.error('No more credits');
+                            throw new Error('No more credits');
+                          }
+                        }
+                        throw new Error('Stream failed.');
+                      }
                       const assistantMessage: Message = { role: 'assistant', content: '' };
                       setMessages(prev => [...prev, assistantMessage]);
 

@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 
 interface BillingSettingsProps {
   teamId: string;
+  team?: any;
 }
 
 interface BillingDetails {
@@ -17,13 +18,14 @@ interface BillingDetails {
   taxId: string;
 }
 
-export function BillingSettings({ teamId }: BillingSettingsProps) {
+export function BillingSettings({ teamId, team }: BillingSettingsProps) {
+  console.log("team", team)
   const router = useRouter();
   const [billingDetails, setBillingDetails] = useState<BillingDetails>({
-    organizationName: "",
-    country: "United States",
-    addressLine1: "",
-    billingEmail: "maljoaithen@gmail.com",
+    organizationName: team?.name || "",
+    country: team?.billingInfo?.address?.country || "United States",
+    addressLine1: team?.billingInfo?.address?.line1 || "",
+    billingEmail: team?.billingInfo?.email || "maljoaithen@gmail.com",
     taxType: "None",
     taxId: "N/A"
   });

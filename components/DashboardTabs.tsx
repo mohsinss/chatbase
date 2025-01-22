@@ -27,7 +27,7 @@ const TABS = [
   {
     id: "settings",
     label: "Settings",
-    href: (teamId: string) => `/dashboard/${teamId}/settings/general`,
+    href: (teamId: string) => `/dashboard/${teamId}/settings`,
     component: (props: TabComponentProps) => <SettingsTab {...props} />,
   },
 ] as const;

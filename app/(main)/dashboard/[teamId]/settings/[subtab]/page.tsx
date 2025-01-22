@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import DashboardNav from "@/components/DashboardNav";
 import DashboardTabs from "@/components/DashboardTabs";
+import Team from "@/models/Team";
+import connectMongo from "@/libs/mongoose";
 
 interface PageProps {
   params: {
@@ -18,10 +20,21 @@ export default async function SettingsPage({ params }: PageProps) {
     redirect("/api/auth/signin");
   }
 
+  await connectMongo();
+  const team = await Team.findOne({ teamId: params.teamId });
+
+  if (!team) {
+    redirect("/dashboard");
+  }
+
   return (
     <>
       <DashboardNav teamId={params.teamId} />
-      <DashboardTabs teamId={params.teamId} />
+      <main className="min-h-screen">
+        <section className="max-w-7xl mx-auto pt-8">
+          <DashboardTabs teamId={params.teamId} team={team}/>
+        </section>
+      </main>
     </>
   );
 } 
