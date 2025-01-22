@@ -7,6 +7,7 @@ import ChatbotAISettings from "@/models/ChatbotAISettings";
 import Chatbot from '@/models/Chatbot';
 import Dataset from "@/models/Dataset";
 import Team from '@/models/Team';
+import config from '@/config';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -62,20 +63,8 @@ export async function OPTIONS(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { messages, chatbotId } = await req.json();
-    return setCorsHeaders(new Response(
-      JSON.stringify({
-        error: 'Credits are limited',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    ));
 
     await connectMongo();
-    console.time('MongoDB Connection Time'); // Start timing MongoDB connection
-    await connectMongo();
-    console.timeEnd('MongoDB Connection Time'); // End timing MongoDB connection
 
     // Measure time for fetching AI settings and dataset
     const fetchStart = Date.now();
@@ -83,6 +72,24 @@ export async function POST(req: NextRequest) {
     const chatbot = await Chatbot.findOne({ chatbotId })
     const dataset = await Dataset.findOne({ chatbotId });
     console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
+    
+    const team = await Team.findOne({ teamId: chatbot.teamId });
+
+    if (team) {
+      //@ts-ignore
+      const creditLimit = config.stripe.plans[team.plan].credits;
+      if(team.credits >= creditLimit){
+        return setCorsHeaders(new Response(
+          JSON.stringify({
+            error: 'No more credits',
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        ));
+      }
+    }
 
     if (!dataset) {
       return setCorsHeaders(NextResponse.json(
@@ -384,7 +391,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      const team = await Team.findOne({ teamId: chatbot.teamId });
       if (team) {
         team.credits += 1;
         await team.save();

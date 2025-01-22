@@ -473,12 +473,13 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
       if (!response.ok) {
         if (response.status === 500) {
           const data = await response.json();
-          if (data.error === 'Credits are limited') {
+          if (data.error === 'No more credits') {
             // Handle the 'Credits are limited' error here
-            console.error('Credits are limited');
+            console.error('No more credits');
+            throw new Error('No more credits');
           }
         }
-        throw new Error('Stream failed');
+        throw new Error('Stream failed.');
       }
 
       const assistantMessage: Message = { role: 'assistant', content: '' };
@@ -538,7 +539,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
       }
     } catch (error) {
       console.error('Chat error:', error);
-      toast.error(error)
+      toast.error(error.message)
     } finally {
       setIsLoading(false);
     }
