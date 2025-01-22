@@ -2,11 +2,13 @@ import { IconRefresh } from "@tabler/icons-react";
 import { useAISettings } from '@/contexts/AISettingsContext';
 import React, { useState, useEffect } from 'react';
 import { SUPPORTED_LANGUAGES } from '../settings/AISettings';
+import config from "@/config";
 
 interface ChatSettingsProps {
   isVisible: boolean;
   onToggle: () => void;
   chatbotId: string;
+  team: any;
 }
 
 type NotificationType = {
@@ -38,22 +40,22 @@ const InfoTooltip = ({ content }: { content: string }) => (
 
 const AI_MODELS = {
   OpenAI: [
-    { value: "gpt-4o", label: "GPT-4o (Flagship)" },
-    { value: "gpt-4o-mini", label: "GPT-4o Mini" },
-    { value: "o1", label: "O1 (Advanced Reasoning)" },
-    { value: "o1-mini", label: "O1 Mini" },
-    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" }
+    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo", default: true },
+    { value: "gpt-4o", label: "GPT-4o (Flagship)", default: false },
+    { value: "gpt-4o-mini", label: "GPT-4o Mini", default: false },
+    { value: "o1", label: "O1 (Advanced Reasoning)", default: false },
+    { value: "o1-mini", label: "O1 Mini", default: false },
   ],
   Anthropic: [
-    { value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet" },
-    { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku" },
-    { value: "claude-3-opus-20240229", label: "Claude 3 Opus" }
+    { value: "claude-3-opus-20240229", label: "Claude 3 Opus", default: true },
+    { value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet", default: false },
+    { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku", default: false },
   ],
   Gemini: [
-    { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash" },
-    { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
-    { value: "gemini-1.5-flash-8b", label: "Gemini 1.5 Flash-8B" },
-    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" }
+    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro", default: true },
+    { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash", default: false },
+    { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash", default: false },
+    { value: "gemini-1.5-flash-8b", label: "Gemini 1.5 Flash-8B", default: false },
   ]
 };
 
@@ -66,7 +68,7 @@ const getSelectedProvider = (model: string): keyof typeof AI_MODELS => {
   return 'OpenAI';
 };
 
-export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsProps) => {
+export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSettingsProps) => {
   const { settings: globalSettings, updateSettings: updateGlobalSettings } = useAISettings();
   const [isSaving, setIsSaving] = useState(false);
   const [localSettings, setLocalSettings] = useState(globalSettings);
@@ -242,7 +244,7 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId }: ChatSettingsPro
               className="w-full p-2.5 border rounded-lg bg-white text-gray-700"
             >
               {AI_MODELS[getSelectedProvider(localSettings.model)].map(model => (
-                <option key={model.value} value={model.value}>
+                <option key={model.value} value={model.value} disabled={!model.default && team.plan == "Free"}>
                   {model.label}
                 </option>
               ))}

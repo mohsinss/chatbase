@@ -21,7 +21,8 @@ export async function GET() {
         nextRenewalDate.setHours(0, 0, 0, 0);
         team.nextRenewalDate = nextRenewalDate;
         //@ts-ignore
-        team.credits = config.stripe.plans[team.plan].credits;
+        team.credits = 0;
+        // team.credits = config.stripe.plans[team.plan].credits;
 
         // Save the updated team
         await team.save();
@@ -34,7 +35,8 @@ export async function GET() {
     for (const team of dueTeams) {
         team.plan = 'Free';
         //@ts-ignore
-        team.credits = config.stripe.plans[team.plan].credits;
+        team.credits = 0;
+        // team.credits = config.stripe.plans[team.plan].credits;
 
         // Save the updated team
         await team.save();

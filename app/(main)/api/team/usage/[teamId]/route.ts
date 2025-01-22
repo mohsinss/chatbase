@@ -4,6 +4,7 @@ import Chatbot from "@/models/Chatbot";
 import ChatbotConversation from "@/models/ChatbotConversation";
 import ChatbotAISettings from "@/models/ChatbotAISettings";
 import Dataset from "@/models/Dataset";
+import Team from "@/models/Team";
 
 interface ChatbotUsage {
   name: string;
@@ -29,13 +30,14 @@ export async function POST(
     // Get all chatbots for this team
     const chatbots = await Chatbot.find({ teamId: params.teamId });
     const chatbotIds = chatbots.map(bot => bot.chatbotId);
+    const team = await Team.findOne({ teamId: params.teamId });
 
     // Initialize response structure
     const usageData = {
       chatbots: {
         total: chatbots.length,
         active: 0,
-        creditsUsed: 0,
+        creditsUsed: team.credits,
         creditLimit: 5000 * chatbots.length // Assuming 5000 per chatbot
       },
       usage: {} as Record<string, ChatbotUsage>,
@@ -125,7 +127,7 @@ export async function POST(
       // Update aggregated totals
       usageData.aggregatedData.totalMessages += chatbotTotalMessages;
       usageData.aggregatedData.totalChars += chatbotTotalChars;
-      usageData.chatbots.creditsUsed += Math.round(chatbotTotalChars / 4); // Assuming 4 chars = 1 credit
+      // usageData.chatbots.creditsUsed += Math.round(chatbotTotalChars / 4); // Assuming 4 chars = 1 credit
     }
 
     // Convert messagesByDate to sorted array format

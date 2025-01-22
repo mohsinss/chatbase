@@ -25,7 +25,8 @@ interface PlaygroundProps {
       language?: string;
     };
   };
-  embed?: boolean
+  embed?: boolean,
+  team?: any,
 }
 
 const InfoTooltip = ({ content }: { content: string }) => (
@@ -364,7 +365,7 @@ const ChatContainer = ({
   );
 };
 
-const Playground = ({ chatbot, embed = false }: PlaygroundProps) => {
+const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -604,6 +605,7 @@ const Playground = ({ chatbot, embed = false }: PlaygroundProps) => {
                 isVisible={isSettingsOpen}
                 onToggle={() => setIsSettingsOpen(false)}
                 chatbotId={chatbot.id}
+                team={team}
               />
             </div>
 

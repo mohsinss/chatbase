@@ -57,7 +57,7 @@ export default async function ChatbotPage({
   return (
     <>
       <main className="min-h-[80vh]">
-        <Playground chatbot={serializedChatbot} />
+        <Playground chatbot={serializedChatbot} team={team}/>
       </main>
     </>
   );

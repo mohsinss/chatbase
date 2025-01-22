@@ -4,7 +4,9 @@ import OpenAI from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
 import connectMongo from "@/libs/mongoose";
 import ChatbotAISettings from "@/models/ChatbotAISettings";
+import Chatbot from '@/models/Chatbot';
 import Dataset from "@/models/Dataset";
+import Team from '@/models/Team';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -69,6 +71,7 @@ export async function POST(req: NextRequest) {
     // Measure time for fetching AI settings and dataset
     const fetchStart = Date.now();
     const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
+    const chatbot = await Chatbot.findOne({ chatbotId })
     const dataset = await Dataset.findOne({ chatbotId });
     console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
 
@@ -371,6 +374,11 @@ export async function POST(req: NextRequest) {
           }
         },
       });
+      const team = await Team.findOne({ teamId: chatbot.teamId });
+      if (team) {
+        team.credits += 1;
+        await team.save();
+      }
 
       return setCorsHeaders(new Response(stream, {
         headers: {

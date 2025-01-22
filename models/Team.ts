@@ -31,7 +31,7 @@ const teamSchema = new mongoose.Schema(
     },
     credits: {
       type: mongoose.Schema.Types.Number,
-      default: 20,
+      default: 0,
     },
     // Used in the Stripe webhook to identify the user in Stripe and later create Customer Portal or prefill user credit card details
     customerId: {
