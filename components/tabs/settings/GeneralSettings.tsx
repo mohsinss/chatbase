@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 interface GeneralSettingsProps {
   teamId: string;
@@ -16,6 +17,7 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
     name: "",
     url: ""
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchTeamData = async () => {
@@ -36,6 +38,7 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
   }, [teamId]);
 
   const handleSave = async () => {
+    setIsSaving(true);
     try {
       const response = await fetch(`/api/team/${teamId}`, {
         method: 'PUT',
@@ -51,12 +54,14 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
       if (!response.ok) throw new Error('Failed to update team data');
       
       const data = await response.json();
+      // toast.success('team')
       // if (data.teamId !== teamId) {
-        window.location.href = `/dashboard/team-${data.teamId}/settings/general`;
+        // window.location.href = `/dashboard/${teamData.url}/settings/general`;
       // }
     } catch (error) {
       console.error("Error updating team data:", error);
     }
+    setIsSaving(false);
   };
 
   return (
@@ -93,8 +98,9 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
           <button 
             onClick={handleSave}
             className="rounded-lg bg-gray-800 px-6 py-2 text-white"
+            disabled={isSaving}
           >
-            Save
+            {isSaving? <span className="loading loading-spinner loading-xs"></span> : 'Save'}
           </button>
         </div>
       </div>

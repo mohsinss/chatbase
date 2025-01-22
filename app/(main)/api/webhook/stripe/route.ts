@@ -5,7 +5,8 @@ import connectMongo from "@/libs/mongoose";
 import configFile from "@/config";
 import User from "@/models/User";
 import Team from "@/models/Team";
-import { findCheckoutSession } from "@/libs/stripe";
+import { findCheckoutSession, getPlanAndYearlyFromPriceId } from "@/libs/stripe";
+import config from "@/config";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-08-16",
@@ -65,15 +66,22 @@ export async function POST(req: NextRequest) {
           customerId as string
         )) as Stripe.Customer;
 
-        let team;
+        let team: any;
 
         // Get or create the user. userId is normally pass in the checkout session (clientReferenceID) to identify the user when we get the webhook event
         if (teamId) {
           team = await Team.findById(teamId);
           team.plan = plan;
           team.customerId = customerId;
-          team.dueDate = isYearly ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) : new Date(new Date().setMonth(new Date().getMonth() + 1));
+          let dueDate = isYearly ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) : new Date(new Date().setMonth(new Date().getMonth() + 1));
+          dueDate.setHours(0, 0, 0, 0);
+          let nextRenewalDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
+          nextRenewalDate.setHours(0, 0, 0, 0);
+          team.dueDate = dueDate;
+          team.nextRenewalDate = nextRenewalDate;
           team.billingInfo = {...team.billingInfo, ...stripeObject?.customer_details};
+          //@ts-ignore
+          team.credits = config.stripe.plans[team.plan].credits;
 
           await team.save();
         }
@@ -95,6 +103,26 @@ export async function POST(req: NextRequest) {
       }
 
       case "customer.subscription.updated": {
+        //@ts-ignore
+        const {plan, isYearly} = getPlanAndYearlyFromPriceId(event.data.object.plan.id);
+        //@ts-ignore
+        const customerId = event.data.object.customer;
+        console.log(plan, isYearly, customerId)
+        let team = await Team.findOne({customerId});
+        if (team) {
+          team.plan = plan;
+          team.customerId = customerId;
+          let dueDate = isYearly ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) : new Date(new Date().setMonth(new Date().getMonth() + 1));
+          dueDate.setHours(0, 0, 0, 0);
+          let nextRenewalDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
+          nextRenewalDate.setHours(0, 0, 0, 0);
+          team.dueDate = dueDate;
+          team.nextRenewalDate = nextRenewalDate;
+          //@ts-ignore
+          team.credits = config.stripe.plans[team.plan].credits;
+
+          await team.save();
+        }
         // The customer might have changed the plan (higher or lower plan, cancel soon etc...)
         // You don't need to do anything here, because Stripe will let us know when the subscription is canceled for good (at the end of the billing cycle) in the "customer.subscription.deleted" event
         // You can update the user data to show a "Cancel soon" badge for instance

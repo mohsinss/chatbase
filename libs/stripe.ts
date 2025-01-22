@@ -105,6 +105,8 @@ export const createCustomerPortal = async ({
     return_url: returnUrl,
   });
 
+  console.log(portalSession)
+
   return portalSession.url;
 };
 
@@ -124,5 +126,24 @@ export const findCheckoutSession = async (sessionId: string) => {
   } catch (e) {
     console.error(e);
     return null;
+  }
+};
+
+export const getPlanAndYearlyFromPriceId = (priceId: string) => {
+  switch (priceId) {
+    case process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HOBBY:
+      return { plan: 'Hobby', isYearly: false };
+    case process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STANDARD:
+      return { plan: 'Standard', isYearly: false };
+    case process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_UNLIMITED:
+      return { plan: 'Unlimited', isYearly: false };
+    case process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HOBBY_YEARLY:
+      return { plan: 'Hobby', isYearly: true };
+    case process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STANDARD_YEARLY:
+      return { plan: 'Standard', isYearly: true };
+    case process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_UNLIMITED_YEARLY:
+      return { plan: 'Unlimited', isYearly: true };
+    default:
+      return { plan: 'Unknown', isYearly: false };
   }
 };

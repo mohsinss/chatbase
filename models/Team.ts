@@ -14,9 +14,24 @@ const teamSchema = new mongoose.Schema(
     },
     plan: {
       type: String,
+      enum: ["Free", "Standard", "Hobby", "Unlimited"], // Add enum property
+      default: "Free", // Set default to "Free"
     },
     dueDate: {
       type: mongoose.Schema.Types.Date,
+    },
+    nextRenewalDate: {
+      type: mongoose.Schema.Types.Date,
+      default: () => { // Add a function that returns the date one month from now
+        const date = new Date();
+        date.setMonth(date.getMonth() + 1);
+        date.setHours(0, 0, 0, 0);
+        return date;
+      },
+    },
+    credits: {
+      type: mongoose.Schema.Types.Number,
+      default: 20,
     },
     // Used in the Stripe webhook to identify the user in Stripe and later create Customer Portal or prefill user credit card details
     customerId: {

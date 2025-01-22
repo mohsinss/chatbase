@@ -17,15 +17,12 @@ const config = {
   },
   stripe: {
     // Create multiple plans in your Stripe dashboard, then add them here. You can add as many plans as you want, just make sure to add the priceId
-    plans: [
-      {
+    plans: {
+      Free: {
         // REQUIRED — we use this to find the plan in the webhook (for instance if you want to update the user's credits based on the plan)
-        priceId:
-          process.env.NODE_ENV === "development"
-            ? "price_1Niyy5AxyNprDp7iZIqEyD2h"
-            : "price_456",
+        priceId: "",
         //  REQUIRED - Name of the plan, displayed on the pricing page
-        name: "Starter",
+        name: "Free",
         // A friendly description of the plan, displayed on the pricing page. Tip: explain why this plan and not others
         description: "Perfect for small businesses and startups",
         // The price you want to display, the one user will be charged on Stripe.
@@ -33,37 +30,63 @@ const config = {
         // If you have an anchor price (i.e. $29) that you want to display crossed out, put it here. Otherwise, leave it empty
         priceAnchor: 149,
         features: [
-          {
-            name: "Custom trained AI chatbot",
-          },
+          { name: "Custom trained AI chatbot" },
           { name: "Knowledge base integration" },
           { name: "Basic analytics" },
           { name: "Email support" },
         ],
+        credits: 20,
+        charactersLimit: 400000,
+        teamMemberLimit: 1,
+        chatbotLimit: 1,
+        linksLimit: 10,
       },
-      {
-        priceId:
-          process.env.NODE_ENV === "development"
-            ? "price_1O5KtcAxyNprDp7iftKnrrpw"
-            : "price_456",
+      Hobby: {
+        priceId: "",
         // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
         isFeatured: true,
-        name: "Advanced",
         description: "For growing teams needing more power",
         price: 149,
         priceAnchor: 299,
-        features: [
-          {
-            name: "Everything in Starter",
-          },
-          { name: "Advanced AI training" },
-          { name: "Multiple knowledge bases" },
-          { name: "Real-time analytics" },
-          { name: "Priority support" },
-          { name: "Custom integrations" },
-        ],
+        features: [],
+        name: "Hobby",
+        credits: 2000,
+        charactersLimit: 11000000,
+        teamMemberLimit: 1,
+        chatbotLimit: 2,
+        linksLimit: 0,
       },
-    ],
+      Standard: {
+        priceId: "",
+        // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
+        isFeatured: true,
+        description: "For growing teams needing more power",
+        price: 149,
+        priceAnchor: 299,
+        features: [],
+        name: "Standard",
+        credits: 10000,
+        charactersLimit: 0,
+        teamMemberLimit: 3,
+        chatbotLimit: 5,
+        linksLimit: 0,
+      },
+      Unlimited: {
+        priceId: "",
+        // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
+        isFeatured: true,
+        description: "For growing teams needing more power",
+        price: 149,
+        priceAnchor: 299,
+        features: [],
+        name: "unlimited",
+        credits: 40000,
+        charactersLimit: 0,
+        teamMemberLimit: 5,
+        chatbotLimit: 10,
+        linksLimit: 0,
+      },
+    },
   },
   aws: {
     // If you use AWS S3/Cloudfront, put values in here
