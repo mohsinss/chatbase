@@ -46,7 +46,7 @@ export default async function ChatbotPage({
 
   return (
     <>
-      <main className="flex flex-col h-screen bg-white">
+      <main className="flex flex-col h-[100dvh] bg-white">
         <Playground chatbot={serializedChatbot} embed={true}/>
       </main>
     </>

@@ -76,7 +76,7 @@ const ClientLayout = ({ children }: { children: ReactNode }) => {
         />
 
         {/* Set Crisp customer chat support */}
-        <CrispChat />
+        {/* <CrispChat /> */}
       </SessionProvider>
     </>
   );
