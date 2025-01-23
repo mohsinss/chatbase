@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     // Fetch chatbots for the given team ID and created by the current user
     const chatbots = await Chatbot.find({ 
       teamId,
-      createdBy: session.user.id 
+      // createdBy: session.user.id
     })
       .select('chatbotId name createdAt sourcesCount')
       .sort({ createdAt: -1 });

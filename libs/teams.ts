@@ -5,9 +5,14 @@ import connectMongo from "@/libs/mongoose";
 export async function getTeams(userId: string) {
   await connectMongo();
   
-  const teams = await Team.find({ createdBy: userId })
-    .sort({ createdAt: -1 })
-    .lean();
+  const teams = await Team.find({
+    $or: [
+      { 'members.user': userId },
+      { createdBy: userId }
+    ]
+  })
+  .sort({ createdAt: -1 })
+  .lean();
 
   const teamIds = teams.map(team => team.teamId);
 
