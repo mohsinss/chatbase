@@ -56,6 +56,10 @@ const AI_MODELS = {
     { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash", default: false },
     { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash", default: false },
     { value: "gemini-1.5-flash-8b", label: "Gemini 1.5 Flash-8B", default: false },
+  ],
+  Deepseek: [
+    { value: "deepseek-chat", label: "Deepseek Chat", default: true },
+    { value: "deepseek-reasoner", label: "Deepseek Reasoner", default: false },
   ]
 };
 
