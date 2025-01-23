@@ -57,6 +57,10 @@ export function MembersSettings({ teamId, team }: { teamId: string, team: any })
     setIsLoading(true);
     try {
       // Validate emails before sending invites
+      //@ts-ignore
+      const existingEmails = team.members.map(member => member.email); // Get existing emails
+      const inviteEmails = inviteFields.map(field => field.email); // Get invite emails
+      
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       for (let field of inviteFields) {
         if (field.email.trim().length == 0) {
@@ -66,6 +70,12 @@ export function MembersSettings({ teamId, team }: { teamId: string, team: any })
         }
         if (!emailRegex.test(field.email)) {
           toast.error(`Invalid email: ${field.email}`);
+          setIsLoading(false);
+          return;
+        }
+        // Check for duplicate emails in existing members and invite fields
+        if (existingEmails.includes(field.email) || inviteEmails.filter(email => email === field.email).length > 1) {
+          toast.error(`Duplicate email: ${field.email}`);
           setIsLoading(false);
           return;
         }
