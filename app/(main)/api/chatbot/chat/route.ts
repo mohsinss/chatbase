@@ -28,7 +28,10 @@ const MODEL_MAPPING: { [key: string]: string } = {
   'gemini-2.0-flash-exp': 'gemini-2.0-flash-exp',
   'gemini-1.5-flash': 'gemini-1.5-flash',
   'gemini-1.5-flash-8b': 'gemini-1.5-flash-8b',
-  'gemini-1.5-pro': 'gemini-1.5-pro'
+  'gemini-1.5-pro': 'gemini-1.5-pro',
+  // Deepseek models
+  'deepseek-chat': 'deepseek-chat',
+  'deepseek-reasoner': 'deepseek-reasoner',
 };
 
 // Add model type mapping with specific O1 model versions
@@ -72,13 +75,13 @@ export async function POST(req: NextRequest) {
     const chatbot = await Chatbot.findOne({ chatbotId })
     const dataset = await Dataset.findOne({ chatbotId });
     console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
-    
+
     const team = await Team.findOne({ teamId: chatbot.teamId });
 
     if (team) {
       //@ts-ignore
       const creditLimit = config.stripe.plans[team.plan].credits;
-      if(team.credits >= creditLimit){
+      if (team.credits >= creditLimit) {
         return setCorsHeaders(new Response(
           JSON.stringify({
             error: 'No more credits',
@@ -182,6 +185,11 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      if (team) {
+        team.credits += 1;
+        await team.save();
+      }
+
       return setCorsHeaders(new Response(stream, {
         headers: {
           'Content-Type': 'text/event-stream',
@@ -191,6 +199,7 @@ export async function POST(req: NextRequest) {
       }));
     } else if (internalModel.startsWith('gemini-')) {
       console.log('Using Gemini Model:', internalModel);
+
       const stream = new ReadableStream({
         async start(controller) {
           try {
@@ -220,6 +229,86 @@ export async function POST(req: NextRequest) {
           }
         },
       });
+
+      if (team) {
+        team.credits += 1;
+        await team.save();
+      }
+
+      return setCorsHeaders(new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      }));
+    } else if (internalModel.startsWith('deepseek-')) {
+      console.log('Using Deepseek Model:', MODEL_MAPPING[internalModel] || 'deepseek-chat');
+
+      // For O1 models, prepend system message as a user message
+      let formattedMessages;
+      formattedMessages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: relevant_chunk },
+        ...messages,
+        { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'" }
+      ];
+
+      // Configure model-specific parameters
+      const modelParams = {
+          max_tokens: maxTokens,
+          temperature,
+          model: MODEL_MAPPING[internalModel] || 'deepseek-chat',
+        };
+
+      const response = await openai.chat.completions.create({
+        ...modelParams,
+        messages: formattedMessages,
+        stream: true,
+        logprobs: true,
+      });
+
+      console.log(`Model processing took ${Date.now() - modelProcessingStart}ms`);
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            let log_probs_len = 0;
+            let log_probs_sum = 0.0;
+            for await (const chunk of response) {
+              const text = chunk.choices[0]?.delta?.content || '';
+              log_probs_len++;
+              log_probs_sum += chunk.choices[0].logprobs?.content[0]?.logprob || 0.0;
+
+              if (text) {
+                const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
+                controller.enqueue(encoder.encode(sseMessage));
+              }
+            }
+
+            // Calculate average log probability
+            const averageLogProb = log_probs_sum / log_probs_len;
+            let confidenceScore;
+            if (averageLogProb === 0) {
+              confidenceScore = 100; // If average is zero, confidence is perfect (100%)
+            } else {
+              confidenceScore = (1 + averageLogProb) * 100; // Adjust as needed
+            }
+
+            // Send confidence score as part of the response
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            // controller.enqueue(encoder.encode('score:' + confidenceScore));
+            controller.close();
+          } catch (error) {
+            controller.error(error);
+          }
+        },
+      });
+
+      if (team) {
+        team.credits += 1;
+        await team.save();
+      }
 
       return setCorsHeaders(new Response(stream, {
         headers: {
@@ -365,13 +454,13 @@ export async function POST(req: NextRequest) {
               const text = chunk.choices[0]?.delta?.content || '';
               log_probs_len++;
               log_probs_sum += chunk.choices[0].logprobs?.content[0]?.logprob || 0.0;
-              
+
               if (text) {
                 const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
                 controller.enqueue(encoder.encode(sseMessage));
               }
             }
-            
+
             // Calculate average log probability
             const averageLogProb = log_probs_sum / log_probs_len;
             let confidenceScore;

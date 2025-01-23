@@ -324,6 +324,7 @@ const ChatContainer = ({
                       }
                     } catch (error) {
                       console.error('Chat error:', error);
+                      toast.error(error.message)
                     } finally {
                       setIsLoading(false);
                     }
