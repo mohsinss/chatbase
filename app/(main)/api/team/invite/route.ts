@@ -29,6 +29,7 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: `User with email ${member.email} does not exist` }, { status: 400 });
             }
             member.user = user._id.toString();
+            member.memberSince = Date.now();
         }
 
         const team = await Team.findOne({teamId: body.teamId}); // find the team using teamId

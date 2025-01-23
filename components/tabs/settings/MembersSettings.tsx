@@ -153,7 +153,11 @@ export function MembersSettings({ teamId, team }: { teamId: string, team: any })
 
         <div className="grid grid-cols-3 gap-4 p-4 items-center border-t">
           <div>{currentMember.email}</div>
-          <div>{currentMember.memberSince}</div>
+          <div>{new Date(team.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</div>
           <div className="flex items-center justify-between">
             <span>Admin</span>
             {/* <button className="p-2 hover:bg-gray-100 rounded-full">⋮</button> */}
@@ -164,7 +168,11 @@ export function MembersSettings({ teamId, team }: { teamId: string, team: any })
           team?.members.map((member, index) => (
             <div key={index} className="grid grid-cols-3 gap-4 p-4 items-center border-t">
               <div>{member.email}</div>
-              <div>{new Date(member.memberSince).toLocaleDateString()}</div>
+              <div>{new Date(member.memberSince).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</div>
               <div className="flex items-center justify-between">
                 <span>{member.role}</span>
                 <button className="p-1 hover:bg-gray-100 rounded-full relative"
