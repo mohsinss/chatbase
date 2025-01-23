@@ -33,6 +33,7 @@ const TABS = [
 ] as const;
 
 const DashboardTabs = ({ teamId, team }: TabComponentProps) => {
+  team = JSON.parse(team)
   const router = useRouter();
   const pathname = usePathname();
   

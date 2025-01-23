@@ -59,7 +59,7 @@ export default async function ChatbotPage({
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <Playground chatbot={serializedChatbot} team={team}/>
+        <Playground chatbot={serializedChatbot} team={JSON.stringify(team)}/>
       </main>
     </>
   );

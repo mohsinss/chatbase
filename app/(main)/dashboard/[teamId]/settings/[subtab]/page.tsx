@@ -32,7 +32,7 @@ export default async function SettingsPage({ params }: PageProps) {
       <DashboardNav teamId={params.teamId} />
       <main className="min-h-screen">
         <section className="max-w-7xl mx-auto pt-8">
-          <DashboardTabs teamId={params.teamId} team={team}/>
+          <DashboardTabs teamId={params.teamId} team={JSON.stringify(team)}/>
         </section>
       </main>
     </>

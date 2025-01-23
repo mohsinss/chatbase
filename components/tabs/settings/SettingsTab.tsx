@@ -15,7 +15,6 @@ interface SettingsTabProps {
 }
 
 const SettingsTab = ({ teamId, team }: SettingsTabProps) => {
-  console.log("team", team)
   const params = useParams();
   const currentSubTab = params.subtab as string || "general";
 
@@ -24,7 +23,7 @@ const SettingsTab = ({ teamId, team }: SettingsTabProps) => {
       case "general":
         return <GeneralSettings teamId={teamId} />;
       case "members":
-        return <MembersSettings teamId={teamId} />;
+        return <MembersSettings teamId={teamId} team={team}/>;
       case "plans":
         return <PlansSettings teamId={teamId} />;
       case "billing":

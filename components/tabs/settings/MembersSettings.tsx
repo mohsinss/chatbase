@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
+import { IconPlus, IconTrash } from '@tabler/icons-react';
 
 interface Member {
   email: string;
@@ -11,7 +13,7 @@ interface Member {
   memberSince: string;
 }
 
-export function MembersSettings({ teamId }: { teamId: string }) {
+export function MembersSettings({ teamId, team }: { teamId: string, team: any }) {
   const { data: session } = useSession();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteFields, setInviteFields] = useState([{ email: "", role: "Member" }]);
@@ -24,6 +26,9 @@ export function MembersSettings({ teamId }: { teamId: string }) {
       day: 'numeric'
     })
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [activeMember, setActiveMember] = useState(-1);
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -48,6 +53,81 @@ export function MembersSettings({ teamId }: { teamId: string }) {
     setInviteFields(newFields);
   };
 
+  const sendInvites = async () => {
+    setIsLoading(true);
+    try {
+      // Validate emails before sending invites
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      for (let field of inviteFields) {
+        if (field.email.trim().length == 0) {
+          toast.error(`Please fill the values`);
+          setIsLoading(false);
+          return;
+        }
+        if (!emailRegex.test(field.email)) {
+          toast.error(`Invalid email: ${field.email}`);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      const response = await fetch('/api/team/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ members: inviteFields, teamId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json(); // Get error data from response
+        throw new Error(errorData.error); // Throw error with message from response
+      }
+
+      const responseData = await response.json(); // Get response data
+
+      if (responseData.success) { // Check if success property is true
+        toast.success('Invites sent successfully'); // Display success toast
+      }
+      
+      window.location.reload();
+
+      // Close the invite dialog after successful invite
+      setIsInviteOpen(false);
+    } catch (error) {
+      console.error('Failed to send invites:', error);
+      toast.error(error.message);
+    }
+    setIsLoading(false)
+  };
+
+  const deleteMember = async (index: number) => {
+    setIsLoading(true);
+    try {
+      const member = team.members[index];
+      const response = await fetch('/api/team/remove-member', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamId, email: member.email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json(); // Get error data from response
+        throw new Error(errorData.error); // Throw error with message from response
+      }
+      
+      window.location.reload();
+
+      toast.success('Member removed successfully'); 
+    } catch (error) {
+      console.error('Failed to remove member:', error);
+      toast.error(error.message);
+    }
+    setIsLoading(false);
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -65,14 +145,37 @@ export function MembersSettings({ teamId }: { teamId: string }) {
           <div>{currentMember.email}</div>
           <div>{currentMember.memberSince}</div>
           <div className="flex items-center justify-between">
-            <span>Owner</span>
-            <button className="p-2 hover:bg-gray-100 rounded-full">⋮</button>
+            <span>Admin</span>
+            {/* <button className="p-2 hover:bg-gray-100 rounded-full">⋮</button> */}
           </div>
         </div>
+        {
+          //@ts-ignore
+          team?.members.map((member, index) => (
+            <div key={index} className="grid grid-cols-3 gap-4 p-4 items-center border-t">
+              <div>{member.email}</div>
+              <div>{new Date(member.memberSince).toLocaleDateString()}</div>
+              <div className="flex items-center justify-between">
+                <span>{member.role}</span>
+                <button className="p-1 hover:bg-gray-100 rounded-full relative"
+                  onClick={() => { setDropdownOpen(!dropdownOpen); setActiveMember(index) }}>
+                  ⋮
+                  {dropdownOpen && activeMember == index && (
+                    <div className="absolute right-4 -top-0 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                      <button onClick={() => { deleteMember(index); setDropdownOpen(false) }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-red-500 ">
+                        <IconTrash className="h-5 w-5" />
+                      </button>
+                    </div>
+                  )}
+                </button>
+              </div>
+            </div>
+          ))
+        }
       </div>
 
       <div className="mt-6 flex justify-end">
-        <button 
+        <button
           onClick={() => setIsInviteOpen(true)}
           className="rounded-lg bg-black px-6 py-2 text-white"
         >
@@ -82,9 +185,9 @@ export function MembersSettings({ teamId }: { teamId: string }) {
 
       <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
         <DialogContent className="sm:max-w-[500px]">
-          <button 
+          <button
             onClick={() => setIsInviteOpen(false)}
-            className="absolute right-4 top-4 p-2 hover:bg-gray-100 rounded-full"
+            className="absolute hidden right-4 top-4 p-2 hover:bg-gray-100 rounded-full"
           >
             <X className="w-4 h-4" />
           </button>
@@ -117,7 +220,7 @@ export function MembersSettings({ teamId }: { teamId: string }) {
                   <option>Member</option>
                   <option>Admin</option>
                 </select>
-                <button 
+                <button
                   onClick={() => removeInviteField(index)}
                   className="p-2 hover:bg-gray-100 rounded-lg"
                 >
@@ -141,8 +244,11 @@ export function MembersSettings({ teamId }: { teamId: string }) {
             >
               Cancel
             </button>
-            <button className="px-4 py-2 rounded-lg bg-black text-white">
-              Send invite(s)
+            <button
+              onClick={sendInvites}
+              className="px-4 py-2 rounded-lg bg-black text-white"
+              disabled={isLoading}>
+              {isLoading ? <span className="loading loading-spinner loading-xs"></span> : 'Send invite(s)'}
             </button>
           </div>
         </DialogContent>

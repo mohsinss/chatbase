@@ -20,6 +20,31 @@ const teamSchema = new mongoose.Schema(
     dueDate: {
       type: mongoose.Schema.Types.Date,
     },
+    members: [{
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      email: {
+        type: String,
+        required: true,
+      },
+      role: {
+        type: String,
+        enum: ['Admin', 'Member'], // Define the possible roles
+        default: 'Member', // Set default role to 'member'
+      },
+      status: { // Add status field
+        type: String,
+        enum: ['Pending', 'Active'], // Define the possible statuses
+        default: 'Pending', // Set default status to 'Pending'
+      },
+      memberSince: { // Add memberSince field
+        type: mongoose.Schema.Types.Date,
+        default: Date.now, // Set default to current date
+      },
+    }],
     nextRenewalDate: {
       type: mongoose.Schema.Types.Date,
       default: () => { // Add a function that returns the date one month from now
@@ -37,7 +62,7 @@ const teamSchema = new mongoose.Schema(
     customerId: {
       type: String,
       validate(value: string) {
-        return value.includes("cus_");
+        return !value || value.includes("cus_");
       },
     },
     billingInfo: {
@@ -74,5 +99,16 @@ const teamSchema = new mongoose.Schema(
 );
 
 teamSchema.plugin(toJSON);
+
+teamSchema.methods.toJSON = function() {
+  const team = this.toObject();
+  //@ts-ignore
+  team.members = team.members.map(member => ({
+    ...member,
+    user: member.user.toString(),
+    _id: null
+  }));
+  return team;
+};
 
 export default mongoose.models.Team || mongoose.model("Team", teamSchema); 

@@ -377,6 +377,7 @@ const ChatContainer = ({
 };
 
 const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
+  team = JSON.parse(team)
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
