@@ -1,14 +1,7 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
-import Team from "@/models/Team";
 import Chatbot from "@/models/Chatbot";
 import ChatbotAISettings from "@/models/ChatbotAISettings";
-import DashboardNav from "@/components/DashboardNav";
-import ChatbotTabs from "@/components/chatbot/ChatbotTabs";
 import Playground from "@/components/chatbot/playground/Playground";
-import PlaygroundChat from "@/components/chatbot/playground/PlaygroundChat";  
 
 interface ChatbotData {
   id: string;
