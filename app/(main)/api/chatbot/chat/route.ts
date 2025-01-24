@@ -13,10 +13,45 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const depseek = new OpenAI({
+const deepseek = new OpenAI({
   baseURL: 'https://api.deepseek.com',
   apiKey: process.env.DEEPSEEK_API_KEY,
 });
+
+// Helper function to process messages for deepseek-reasoner
+//@ts-ignore
+function processMessagesForReasoner(systemPrompt, relevant_chunk, messages, confidencePrompt) {
+  let formattedMessages = [{
+    role: 'user',
+    content: `${systemPrompt}\n${relevant_chunk}`
+  }];
+
+  // Process existing messages
+  for (const msg of messages) {
+    const lastMsg = formattedMessages[formattedMessages.length - 1];
+    if (msg.role === lastMsg.role) {
+      // Merge consecutive same-role messages
+      lastMsg.content += `\n${msg.content}`;
+    } else {
+      formattedMessages.push(msg);
+    }
+  }
+
+  // Handle confidence prompt
+  const lastMsg = formattedMessages[formattedMessages.length - 1];
+  const confidenceMessage = {
+    role: 'user',
+    content: confidencePrompt
+  };
+  
+  if (lastMsg.role === 'user') {
+    lastMsg.content += `\n${confidencePrompt}`;
+  } else {
+    formattedMessages.push(confidenceMessage);
+  }
+
+  return formattedMessages;
+}
 
 const MODEL_MAPPING: { [key: string]: string } = {
   // OpenAI models
@@ -252,12 +287,22 @@ export async function POST(req: NextRequest) {
 
       // For O1 models, prepend system message as a user message
       let formattedMessages;
-      formattedMessages = [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: relevant_chunk },
-        ...messages,
-        { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'" }
-      ];
+      const confidencePrompt = "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'";
+      if(MODEL_MAPPING[internalModel] == 'deepseek-reasoner'){
+        formattedMessages = processMessagesForReasoner(
+          systemPrompt,
+          relevant_chunk,
+          messages,
+          confidencePrompt
+        );
+      } else{
+        formattedMessages = [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: relevant_chunk },
+          ...messages,
+          { role: 'user', content: confidencePrompt }
+        ];
+      }
 
       // Configure model-specific parameters
       const modelParams = {
@@ -266,7 +311,7 @@ export async function POST(req: NextRequest) {
           model: MODEL_MAPPING[internalModel] || 'deepseek-chat',
         };
 
-      const response = await depseek.chat.completions.create({
+      const response = await deepseek.chat.completions.create({
         ...modelParams,
         messages: formattedMessages,
         stream: true,
