@@ -162,7 +162,7 @@ const ChatContainer = ({
           </button>
         )}
 
-        <div className={`h-full min-h-[calc(100vh-180px)] flex flex-col bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+        <div className={`h-full h-[calc(100vh-180px)] flex flex-col bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
           } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
           {/* Chat Header */}
           <div
