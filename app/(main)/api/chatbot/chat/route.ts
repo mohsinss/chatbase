@@ -13,6 +13,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const depseek = new OpenAI({
+  baseURL: 'https://api.deepseek.com',
+  apiKey: process.env.DEEPSEEK_API_KEY,
+});
+
 const MODEL_MAPPING: { [key: string]: string } = {
   // OpenAI models
   'gpt-4o': 'gpt-4o',
@@ -261,11 +266,10 @@ export async function POST(req: NextRequest) {
           model: MODEL_MAPPING[internalModel] || 'deepseek-chat',
         };
 
-      const response = await openai.chat.completions.create({
+      const response = await depseek.chat.completions.create({
         ...modelParams,
         messages: formattedMessages,
         stream: true,
-        logprobs: true,
       });
 
       console.log(`Model processing took ${Date.now() - modelProcessingStart}ms`);
@@ -277,8 +281,8 @@ export async function POST(req: NextRequest) {
             let log_probs_sum = 0.0;
             for await (const chunk of response) {
               const text = chunk.choices[0]?.delta?.content || '';
-              log_probs_len++;
-              log_probs_sum += chunk.choices[0].logprobs?.content[0]?.logprob || 0.0;
+              // log_probs_len++;
+              // log_probs_sum += chunk.choices[0].logprobs?.content[0]?.logprob || 0.0;
 
               if (text) {
                 const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
@@ -287,13 +291,13 @@ export async function POST(req: NextRequest) {
             }
 
             // Calculate average log probability
-            const averageLogProb = log_probs_sum / log_probs_len;
-            let confidenceScore;
-            if (averageLogProb === 0) {
-              confidenceScore = 100; // If average is zero, confidence is perfect (100%)
-            } else {
-              confidenceScore = (1 + averageLogProb) * 100; // Adjust as needed
-            }
+            // const averageLogProb = log_probs_sum / log_probs_len;
+            // let confidenceScore;
+            // if (averageLogProb === 0) {
+            //   confidenceScore = 100; // If average is zero, confidence is perfect (100%)
+            // } else {
+            //   confidenceScore = (1 + averageLogProb) * 100; // Adjust as needed
+            // }
 
             // Send confidence score as part of the response
             controller.enqueue(encoder.encode('data: [DONE]\n\n'));
