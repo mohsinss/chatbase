@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/libs/mongoose";
 import ChatbotAISettings from "@/models/ChatbotAISettings";
+import Chatbot from "@/models/Chatbot";
 
 export async function GET(request: Request) {
   try {
@@ -9,10 +10,12 @@ export async function GET(request: Request) {
     const chatbotId = searchParams.get("chatbotId");
 
     const settings = await ChatbotAISettings.findOne({ chatbotId });
+    const chatbot = await Chatbot.findOne({ chatbotId });
 
     // If no settings exist, return defaults
     if (!settings) {
       return NextResponse.json({
+        lastTrained: chatbot.lastTrained.toLocaleString(),
         chatbotId,
         model: "gpt-3.5-turbo",
         temperature: 0.7,
@@ -23,12 +26,13 @@ export async function GET(request: Request) {
         language: "en",
         topP: 1,
         frequencyPenalty: 0,
-        presencePenalty: 0
+        presencePenalty: 0,
       });
     }
 
-    console.log("Found settings:", settings);
-    return NextResponse.json(settings);
+    console.log("Found settings:", chatbot.lastTrained.toLocaleString());
+    //@ts-ignore
+    return NextResponse.json({...settings._doc, lastTrained: chatbot.lastTrained.toLocaleString()});
   } catch (error) {
     console.error("GET error:", error);
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });

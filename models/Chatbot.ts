@@ -37,7 +37,11 @@ const ChatbotSchema = new mongoose.Schema(
     creditLimit: {
       type: Number,
       default: null,
-    }
+    },
+    lastTrained: {
+      type: mongoose.Schema.Types.Date,
+      default: Date.now
+    },
   },
   {
     timestamps: true,

@@ -38,27 +38,32 @@ type AIModelProviders = {
   OpenAI: ModelInfo[];
   Anthropic: ModelInfo[];
   Gemini: ModelInfo[];
+  Deepseek: ModelInfo[];
 }
 
 // Group models by provider with proper typing
 const AI_MODELS: AIModelProviders = {
   OpenAI: [
-    { value: "gpt-4o", label: "GPT-4o (Flagship)" },
-    { value: "gpt-4o-mini", label: "GPT-4o Mini" },
-    { value: "o1", label: "O1 (Advanced Reasoning)" },
-    { value: "o1-mini", label: "O1 Mini" },
-    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" }
+    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo", },
+    { value: "gpt-4o", label: "GPT-4o (Flagship)",  },
+    { value: "gpt-4o-mini", label: "GPT-4o Mini",  },
+    { value: "o1", label: "O1 (Advanced Reasoning)",  },
+    { value: "o1-mini", label: "O1 Mini",  },
   ],
   Anthropic: [
-    { value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet" },
-    { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku" },
-    { value: "claude-3-opus-20240229", label: "Claude 3 Opus" }
+    { value: "claude-3-opus-20240229", label: "Claude 3 Opus", },
+    { value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet",  },
+    { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku",  },
   ],
   Gemini: [
-    { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash" },
-    { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
-    { value: "gemini-1.5-flash-8b", label: "Gemini 1.5 Flash-8B" },
-    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" }
+    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro", },
+    { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash",  },
+    { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash",  },
+    { value: "gemini-1.5-flash-8b", label: "Gemini 1.5 Flash-8B",  },
+  ],
+  Deepseek: [
+    { value: "deepseek-chat", label: "Deepseek Chat", },
+    { value: "deepseek-reasoner", label: "Deepseek Reasoner",  },
   ]
 };
 
@@ -90,6 +95,7 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
   const [loading, setLoading] = useState(false)
   const [notification, setNotification] = useState<NotificationType | null>(null);
   const [language, setLanguage] = useState("en")
+  const [lastTrained, setLastTrained] = useState('')
 
   useEffect(() => {
     fetchSettings();
@@ -109,6 +115,7 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
         setMaxTokens(data.maxTokens ?? 500);
         setContextWindow(data.contextWindow ?? 16000);
         setLanguage(data.language ?? "en");
+        setLastTrained(data.lastTrained);
       }
     } catch (error) {
       console.error("Fetch error:", error);
@@ -342,7 +349,11 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
               Last trained at
             </label>
             <p className="text-lg">
-              December 26, 2024 at 12:11 AM
+              {new Date(lastTrained).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
             </p>
           </div>
         </Card>

@@ -379,6 +379,8 @@ export async function POST(req: Request) {
     sourcesCount += files.length
     // Update the chatbot with the sourcesCount
     existingChatbot.sourcesCount = sourcesCount; // Assuming sourcesCount is a field in the Chatbot model
+    existingChatbot.lastTrained = new Date();
+
     await existingChatbot.save(); // Save the updated chatbot
 
     return NextResponse.json({
