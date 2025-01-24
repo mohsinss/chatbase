@@ -186,9 +186,9 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
                     {/* Teams Section */}
                     <div className="px-2 py-1">
                       <p className="px-2 py-1 text-sm text-base-content/70">Teams</p>
-                      {filteredTeams.map((team) => (
-                        <button 
-                          key={team.teamId}
+                      {filteredTeams.map((team, index) => (
+                        <button
+                          key={team.id + "-team"}
                           onClick={() => router.push(`/dashboard/${team.id}`)}
                           className="w-full px-2 py-2 text-left rounded-md hover:bg-base-200 flex items-center justify-between group"
                         >
