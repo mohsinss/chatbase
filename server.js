@@ -11,7 +11,13 @@ const handle = app.getRequestHandler();
 app.prepare().then(async () => {
     const server = express();
     const httpServer = createServer(server);
-    const io = new Server(httpServer);
+    
+    const io = new Server(httpServer, {
+      cors: {
+        origin: "*", // Adjust for production
+        methods: ["GET", "POST"],
+      },
+    });
 
     server.use(express.static('public'));
 
