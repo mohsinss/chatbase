@@ -287,7 +287,7 @@ const AISettings = ({ chatbotId }: AISettingsProps) => {
               <p className="text-sm text-gray-500">Define the AI&apos;s personality and behavior</p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 hidden">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Knowledge Cutoff
               </label>
