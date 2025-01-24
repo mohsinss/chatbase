@@ -55,7 +55,7 @@ const SourceStats = ({
         <p className="font-medium">Total detected characters</p>
         <p className="text-center">
           <span className="text-lg font-semibold">{totalChars.toLocaleString()}</span>
-          <span className="text-gray-500">/ {(charLimit/1_000_000).toFixed(1)}M limit</span>
+          <span className="text-gray-500">/ {charLimit == 0 ? "Unlimited" : (charLimit/1_000_000).toFixed(1)+'M limit' }</span>
         </p>
       </div>
 

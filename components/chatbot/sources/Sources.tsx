@@ -46,6 +46,7 @@ const Sources = ({
   const [links, setLinks] = useState<{ id: string; link: string, chars: number}[]>([]);
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
+  console.log("team", planConfig)
 
   const fetchFiles = async () => {
     try {
@@ -174,7 +175,7 @@ const Sources = ({
   };
 
   const retrain = async () => {
-    if( totalChars > planConfig.charactersLimit ) {
+    if( totalChars > planConfig.charactersLimit && planConfig.charactersLimit != 0) {
       toast.error(`Please udpate your plan, you can train your bot upto ${(planConfig.charactersLimit/1000000).toFixed(1)}M characters.`)
       return;
     }
