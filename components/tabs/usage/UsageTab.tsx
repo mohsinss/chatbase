@@ -130,7 +130,7 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
           <div className="flex flex-col">
             <div className="text-5xl font-bold">
               {usageData.chatbots.creditsUsed}
-              <span className="text-xl text-gray-500 font-normal"> / {planConfig.creditLimit}</span>
+              <span className="text-xl text-gray-500 font-normal"> / {planConfig.credits}</span>
             </div>
             <div className="text-gray-500 mt-2">Total Credits Used</div>
           </div>
