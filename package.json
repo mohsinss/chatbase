@@ -6,9 +6,9 @@
     "dev-base": "next dev",
     "postbuild": "next-sitemap",
     "lint": "next lint",
-    "dev": "node server.js",
+    "dev": "next dev",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js"
+    "start": "next start"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",

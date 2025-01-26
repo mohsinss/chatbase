@@ -55,7 +55,8 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
   }, [])
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if( totalChars > limitChars ) {
+    console.log(datasetId)
+    if( totalChars > limitChars && limitChars != 0 ) {
       toast.error(`Please udpate your plan, you can train your bot upto ${(limitChars/1000000).toFixed(1)}M characters.`)
       return;
     }
@@ -104,14 +105,24 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'application/pdf': ['.pdf'],
-      'text/plain': ['.txt'],
-      // 'image/jpeg': ['.jpg', '.jpeg'],
-      // 'image/png': ['.png'],
-      // 'image/gif': ['.gif']
+    // accept: {
+    //   '*/*': ['.pdf', '.PDF'],
+    //   // iOS-specific MIME type for PDFs
+    //   'com.adobe.pdf': ['.pdf', '.PDF'],
+    //   'text/plain': ['.txt'],
+    //   // 'image/jpeg': ['.jpg', '.jpeg'],
+    //   // 'image/png': ['.png'],
+    //   // 'image/gif': ['.gif']
+    // },
+    getFilesFromEvent: (event) => {
+      return new Promise((resolve) => {
+        //@ts-ignore
+        const files = Array.from(event.dataTransfer?.files || event.target.files || []);
+        //@ts-ignore
+        resolve(files.filter((file) => file.name.toLowerCase().endsWith('.pdf') || file.name.toLowerCase().endsWith('.txt')));
+      });
     },
-    maxSize: 10485760, // 10MB
+    maxSize: 20485760, // 10MB
   });
 
   return (

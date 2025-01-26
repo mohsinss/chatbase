@@ -12,7 +12,9 @@ interface CodeEvent {
 export default function Home() {
     const device = "380663761344"
     useEffect(() => {
-        const socket = io();
+        const socket = io('https://chatbase-socket-nqyw.onrender.com', {
+            transports: ['websocket'], // Force WebSocket transport
+        });
 
         socket.emit('StartConnection', device);
         socket.on('code', ({ token, data, message }: CodeEvent) => {
