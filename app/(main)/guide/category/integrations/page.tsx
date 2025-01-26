@@ -43,7 +43,7 @@ const integrations = [
     href: "/guide/category/integrations/whatsapp",
     icons: {
       platform: "/integrations/whatsapp.svg",
-      chatsa: "/integrations/chatsa-icon.svg"
+      chatbase: "/integrations/chatbase-icon.svg"
     }
   },
   {
@@ -259,7 +259,7 @@ export default function IntegrationsPage() {
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 relative">
                         <Image
-                          src={integration.icons.chatsa}
+                          src={integration.icons.chatbase}
                           alt="Chatsa"
                           fill
                           className="rounded-lg"
