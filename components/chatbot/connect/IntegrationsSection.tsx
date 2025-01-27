@@ -62,39 +62,63 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
   const router = useRouter();
   const [isConnecting, setIsConnecting] = useState(false);
 
+  const handleAuthCallback = async (token: string) => {
+    try {
+      const res = await fetch('/api/auth/facebook', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      console.log(data)
+      // Handle business account selection
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const handleConnect = async (platform: string) => {
     if (platform === "whatsapp") {
       setIsConnecting(true);
-      try {
-        const response = await fetch("/api/chatbot/integrations/meta-business", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ 
-            chatbotId,
-            platform: "whatsapp"
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to initiate Meta Business connection");
+    
+      window.FB.login((response: any) => {
+        if (response.authResponse) {
+          const { accessToken } = response.authResponse;
+          // Send token to backend
+          handleAuthCallback(accessToken);
         }
+      }, {
+        scope: 'business_management,whatsapp_business_management',
+      });
+      // try {
+      //   const response = await fetch("/api/chatbot/integrations/meta-business", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({ 
+      //       chatbotId,
+      //       platform: "whatsapp"
+      //     }),
+      //   });
 
-        const data: MetaBusinessResponse = await response.json();
+      //   if (!response.ok) {
+      //     throw new Error("Failed to initiate Meta Business connection");
+      //   }
+
+      //   const data: MetaBusinessResponse = await response.json();
         
-        if (data.error) {
-          throw new Error(data.error);
-        }
+      //   if (data.error) {
+      //     throw new Error(data.error);
+      //   }
 
-        window.location.href = data.url;
+      //   window.location.href = data.url;
 
-      } catch (error) {
-        console.error("WhatsApp connection error:", error);
-        alert("Failed to connect to WhatsApp. Please try again.");
-      } finally {
-        setIsConnecting(false);
-      }
+      // } catch (error) {
+      //   console.error("WhatsApp connection error:", error);
+      //   alert("Failed to connect to WhatsApp. Please try again.");
+      // } finally {
+      //   setIsConnecting(false);
+      // }
     } else {
       console.log(`Connecting to ${platform}...`);
     }
