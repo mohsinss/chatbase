@@ -152,7 +152,7 @@ const ChatContainer = ({
 
   return (
     <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center h-full`}>
-      <div className={`${embed ? 'w-full' : 'w-[400px]'} relative h-full `}>
+      <div className={`${embed ? 'w-full h-full' : 'w-[400px]'} relative`}>
         {!embed && !isSettingsOpen && (
           <button
             onClick={() => setIsSettingsOpen(true)}
@@ -162,8 +162,9 @@ const ChatContainer = ({
           </button>
         )}
 
-        <div className={`h-[calc(100vh-180px)] flex flex-col bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
-          } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
+        <div className={`h-full flex flex-col bg-white shadow-sm border ${
+          config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+        } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
           {/* Chat Header */}
           <div
             className={`flex items-center justify-between p-3 border-b ${config.roundedHeaderCorners ? 'rounded-t-xl' : ''

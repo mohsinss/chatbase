@@ -85,41 +85,29 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
-    } else if (file.type === 'application/pdf') { // Check if the file is an image
-      // } else if (file.type.startsWith('image/')) { // Check if the file is an image
+    } else if (file.type === 'application/pdf' || file.type === 'application/pdf-v1') {
       try {
-        // Read file into buffer
-        // const buffer = await file.arrayBuffer();
-        // const dataUrl = 'data:image/png;base64,' + Buffer.from(buffer).toString('base64');
-
-        // const worker = await createWorker('eng');
-        // const { data: { text } } = await worker.recognize(dataUrl);
-        // console.log(text);
-        // await worker.terminate();
-
-        const response = await fetch("https:///pdf2md.trieve.ai/api/task", {
+        const response = await fetch("https://pdf2md.trieve.ai/api/task", {
           method: "POST",
           headers: {
             "Authorization": `${process.env.TRIEVE_PDF2MD_API_KEY}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(
-            {
-              file_name: fileName,
-              base64_file: base64String,
-              provider: "LLM",
-              llm_model: "openai/gpt-4o-mini",
-              system_prompt: "Convert the following PDF page to markdown. Return only the markdown with no explanation text. Do not exclude any content from the page."
-            }
-          )
+          body: JSON.stringify({
+            file_name: fileName,
+            base64_file: base64String,
+            provider: "LLM",
+            llm_model: "openai/gpt-4-turbo",
+            system_prompt: "Convert the following PDF page to markdown. Return only the markdown with no explanation text. Do not exclude any content from the page."
+          })
         });
-        const data = await response.json();
-        console.log(data)
 
-        if (!response.ok || data.status != "Created") {
-          console.error("Failed to create read PDF task:", data);
-          throw new Error(data.message || "Failed to create read PDF task.");
+        if (!response.ok) {
+          throw new Error("Failed to create PDF conversion task");
         }
+
+        const data = await response.json();
+        console.log("PDF2MD Task Created:", data);
 
         let pages = [];
         let done = false;
@@ -196,9 +184,9 @@ export async function POST(req: Request) {
 
         metadata.filetype = 'pdf';
       } catch (ocrError) {
-        console.error("PDF2MD trieve error:", ocrError);
+        console.error("PDF2MD error details:", ocrError);
         return NextResponse.json(
-          { error: "Failed to extract text from pdf." },
+          { error: `Failed to extract text from PDF: ${ocrError.message}` },
           { status: 400 }
         );
       }

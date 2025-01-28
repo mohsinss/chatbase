@@ -10,7 +10,7 @@ interface ShareSectionProps {
 
 const ShareSection = ({ chatbotId, domain }: ShareSectionProps) => {
   const [copied, setCopied] = useState(false);
-  const chatbotUrl = `http://${domain}/chatbot/${chatbotId}`;
+  const chatbotUrl = `http://${domain}/chatbot/${chatbotId}?standalone=true`;
 
   const handleCopy = async () => {
     try {
