@@ -5,6 +5,7 @@ import { IconCode, IconShare, IconPuzzle } from "@tabler/icons-react";
 import EmbedSection from './EmbedSection';
 import ShareSection from './ShareSection';
 import IntegrationsSection from './IntegrationsSection';
+import FacebookSDK from "@/components/facebook/FacebookSDK";
 
 const CONNECT_TABS = [
   { id: "embed", label: "Embed", icon: <IconCode className="w-5 h-5" /> },
@@ -63,6 +64,7 @@ const Connect = ({
           </div>
         </div>
       </div>
+      <FacebookSDK/>
     </div>
   );
 };

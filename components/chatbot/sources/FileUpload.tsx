@@ -74,6 +74,11 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
           datasetId
         }); // Debug log
 
+        if (file.size > 10245760) { // 10MB in bytes
+          toast.error(`File size exceeds 10MB. Please upload a smaller file.`);
+          return;
+        }
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('fileName', file.name);
@@ -105,15 +110,15 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    // accept: {
-    //   '*/*': ['.pdf', '.PDF'],
+    accept: {
+      '*/*': ['.pdf', '.PDF'],
     //   // iOS-specific MIME type for PDFs
     //   'com.adobe.pdf': ['.pdf', '.PDF'],
-    //   'text/plain': ['.txt'],
+      'text/plain': ['.txt'],
     //   // 'image/jpeg': ['.jpg', '.jpeg'],
     //   // 'image/png': ['.png'],
     //   // 'image/gif': ['.gif']
-    // },
+    },
     getFilesFromEvent: (event) => {
       return new Promise((resolve) => {
         //@ts-ignore
@@ -122,7 +127,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
         resolve(files.filter((file) => file.name.toLowerCase().endsWith('.pdf') || file.name.toLowerCase().endsWith('.txt')));
       });
     },
-    maxSize: 40485760, // 10MB
+    // maxSize: 10245760, // 10MB
   });
 
   return (
