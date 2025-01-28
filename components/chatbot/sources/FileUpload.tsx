@@ -122,7 +122,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
         resolve(files.filter((file) => file.name.toLowerCase().endsWith('.pdf') || file.name.toLowerCase().endsWith('.txt')));
       });
     },
-    maxSize: 20485760, // 10MB
+    maxSize: 40485760, // 10MB
   });
 
   return (
