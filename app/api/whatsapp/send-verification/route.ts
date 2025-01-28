@@ -2,10 +2,10 @@
 import { NextResponse } from 'next/server';
 import WhatsAppVerification from '@/models/WhatsAppVerification';
 import { generateRandomCode } from '@/lib/utils'; // Implement your code generator
-import connectDB from '@/lib/mongodb';
+import connectMongo from '@/libs/mongoose';
 
 export async function POST(req: Request) {
-  await connectDB();
+  await connectMongo();
   
   const { phoneNumber, wabaId, businessId, accessToken } = await req.json();
 
@@ -32,14 +32,14 @@ export async function POST(req: Request) {
 
 async function sendSMS(to: string, body: string) {
   // Implement using Twilio or other SMS service
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  // const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  // const authToken = process.env.TWILIO_AUTH_TOKEN;
   
-  const client = require('twilio')(accountSid, authToken);
+  // const client = require('twilio')(accountSid, authToken);
   
-  return client.messages.create({
-    body,
-    from: process.env.TWILIO_PHONE_NUMBER,
-    to: `+${to}`
-  });
+  // return client.messages.create({
+  //   body,
+  //   from: process.env.TWILIO_PHONE_NUMBER,
+  //   to: `+${to}`
+  // });
 }

@@ -4,7 +4,8 @@
 /node_modules
 /.pnp
 .pnp.js
-
+test.js
+page1.jpg
 # .env
 .env
 .env.local
