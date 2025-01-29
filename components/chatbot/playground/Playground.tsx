@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { IconSend, IconRefresh } from "@tabler/icons-react";
+import { IconSend, IconRefresh, IconX } from "@tabler/icons-react";
 import ReactMarkdown from 'react-markdown';
 import { ChatSettings } from './ChatSettings';
 import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings';
@@ -88,6 +88,7 @@ const ChatContainer = ({
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const [loadingSources, setLoadingSources] = useState(false);
   const [sources, setSources] = useState([])
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(window.navigator.userAgent);
 
   const fetchDataset = async () => {
     try {
@@ -150,8 +151,31 @@ const ChatContainer = ({
     );
   };
 
+  const toggleChatWindow = () => {
+    const chatContainer = document.getElementById('chatbot-widget')
+    const closeButton = document.getElementById('close-button')
+    const chatIcon = document.getElementById('chatbot-widget-icon')
+    if (chatContainer.style.display === 'none' || chatContainer.style.display === '') {
+      chatContainer.style.display = 'block';
+      closeButton.style.display = 'block';
+      if (!config?.chatIconUrl) {
+        chatIcon.innerHTML = `<svg id="closeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.3" stroke="white" width="24" height="24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
+            </svg>`;
+      }
+      document.getElementsByTagName('body')[0].style.overflow = 'hidden';
+    } else {
+      chatContainer.style.display = 'none';
+      closeButton.style.display = 'none';
+      if (!config?.chatIconUrl) {
+        chatIcon.innerHTML = '<div>💬</div>';
+      }
+      document.getElementsByTagName('body')[0].style.overflowY = 'scroll';
+    }
+  }
+
   return (
-    <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center h-full`}>
+    <div className={`${embed ? '' : 'pt-4 px-4'} min-h-[calc(100dvh-80px)] flex-1 flex justify-center h-full`}>
       <div className={`${embed ? 'w-full h-full' : 'w-[400px]'} relative`}>
         {!embed && !isSettingsOpen && (
           <button
@@ -162,9 +186,8 @@ const ChatContainer = ({
           </button>
         )}
 
-        <div className={`h-full flex flex-col bg-white shadow-sm border ${
-          config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
-        } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
+        <div className={`h-full flex flex-col bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+          } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
           {/* Chat Header */}
           <div
             className={`flex items-center justify-between p-3 border-b ${config.roundedHeaderCorners ? 'rounded-t-xl' : ''
@@ -188,15 +211,26 @@ const ChatContainer = ({
               )}
               <div className="font-medium">{config.displayName}</div>
             </div>
-            <button
-              onClick={handleRefresh}
-              className={`p-1.5 mr-7 rounded-full ${config.syncColors
-                ? 'hover:bg-white/10 text-white'
-                : 'hover:bg-gray-100'
-                }`}
-            >
-              <IconRefresh className="w-4 h-4" />
-            </button>
+            <div className="flex justify-center items-center">
+              <button
+                onClick={() => { handleRefresh() }}
+                className={`p-1.5 rounded-full ${config.syncColors
+                  ? 'hover:bg-white/10 text-white'
+                  : 'hover:bg-gray-100'
+                  }`}
+              >
+                <IconRefresh className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => { window.parent.postMessage({ action: 'closeIframe' }, '*') }}
+                className={`p-1.5 rounded-full ${config.syncColors
+                  ? 'hover:bg-white/10 text-white'
+                  : 'hover:bg-gray-100'
+                  } ${isMobile ? '' : 'hidden'}`}
+              >
+                <IconX className="w-5 h-5"/>
+              </button>
+            </div>
           </div>
 
           {/* Chat Messages */}
@@ -263,7 +297,7 @@ const ChatContainer = ({
                         }),
                       });
 
-                      if (!response.ok) {                        
+                      if (!response.ok) {
                         if (response.status === 500) {
                           const data = await response.json();
                           if (data.error === 'No more credits') {
@@ -378,7 +412,7 @@ const ChatContainer = ({
 };
 
 const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
-  if(team){
+  if (team) {
     team = JSON.parse(team)
   }
   const [messages, setMessages] = useState<Message[]>([]);
