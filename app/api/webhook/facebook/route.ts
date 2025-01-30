@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  // const body = await request.json();
   
   // Verify webhook challenge
   // const mode = request.nextUrl.searchParams.get('hub.mode');
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
  
 
   // Handle incoming messages
-  console.log('Webhook received:', body);
-  
-  return NextResponse.json({ status: 'ok' });
+  return NextResponse.json({
+    aaa:1,
+  });
 }
