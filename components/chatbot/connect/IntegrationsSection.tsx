@@ -87,7 +87,7 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
           handleAuthCallback(accessToken);
         }
       }, {
-        scope: 'business_management,whatsapp_business_management',
+        scope: 'business_management,whatsapp_business_management,whatsapp_business_messaging',
       });
       // try {
       //   const response = await fetch("/api/chatbot/integrations/meta-business", {
