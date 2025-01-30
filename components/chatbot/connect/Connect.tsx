@@ -64,7 +64,7 @@ const Connect = ({
           </div>
         </div>
       </div>
-      <FacebookSDK/>
+      {/* <FacebookSDK/> */}
     </div>
   );
 };

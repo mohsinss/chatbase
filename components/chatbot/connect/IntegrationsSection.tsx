@@ -209,7 +209,7 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
           />
         ))}
       </div>
-      <FacebookSDK/>
+      {/* <FacebookSDK/> */}
     </div>
   );
 };
