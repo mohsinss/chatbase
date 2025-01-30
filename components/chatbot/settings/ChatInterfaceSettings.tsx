@@ -26,6 +26,7 @@ interface ChatConfig {
   roundedChatCorners: boolean
   profilePictureUrl: string
   chatIconUrl: string
+  chatWidth: number
 }
 
 interface ChatInterfaceSettingsProps {
@@ -50,7 +51,8 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     roundedHeaderCorners: false,
     roundedChatCorners: false,
     profilePictureUrl: "",
-    chatIconUrl: ""
+    chatIconUrl: "",
+    chatWidth: 448
   })
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{
@@ -83,6 +85,8 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       const response = await fetch(`/api/chatbot/interface-settings?chatbotId=${chatbotId}`);
       const data = await response.json();
       
+      console.log('Fetched settings:', data);
+      
       if (data) {
         setConfig(prev => ({
           ...prev,
@@ -92,6 +96,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         setChatIcon(data.chatIconUrl || "");
       }
     } catch (error) {
+      console.error('Fetch error:', error);
       setNotification({
         message: "Failed to load settings",
         type: "error"
@@ -108,21 +113,28 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         chatIconUrl: chatIcon,
       };
 
-      const response = await fetch("/api/chatbot/interface-settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      console.log('Saving config:', configToSave);
+
+      const response = await fetch('/api/chatbot/interface-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           chatbotId,
           ...configToSave
         }),
       });
 
-      if (!response.ok) throw new Error();
+      const savedData = await response.json();
+      console.log('Server response:', savedData);
 
-      // Notify the chat bubble of all setting changes
+      if (!response.ok) throw new Error('Failed to save settings');
+
+      // Send message to update embedded chat
       window.postMessage({
         type: 'chatbot-settings-update',
-        settings: config
+        settings: configToSave
       }, '*');
 
       setNotification({
@@ -130,12 +142,14 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         type: "success"
       });
     } catch (error) {
+      console.error('Save error:', error);
       setNotification({
         message: "Failed to save settings",
         type: "error"
       });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const [showUserColorPicker, setShowUserColorPicker] = useState(false)
@@ -512,6 +526,24 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
             </div>
           </div>
 
+          {/* Chat Window Width */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Chat Window Width
+            </label>
+            <div className="flex items-center gap-2">
+              <input 
+                type="number"
+                value={config.chatWidth}
+                onChange={(e) => handleConfigChange('chatWidth', Math.max(300, Math.min(800, parseInt(e.target.value))))}
+                min="300"
+                max="800"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <span className="text-sm text-gray-500">pixels (300-800)</span>
+            </div>
+          </div>
+
           {/* Image Uploads */}
           <div className="space-y-4">
             <div className="space-y-2">
@@ -635,7 +667,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         </div>
 
         {/* Preview Panel */}
-        <Card className="h-full flex flex-col max-h-[70%]">
+        <Card className="h-full flex flex-col max-h-[70%]" style={{ width: `${config.chatWidth}px` }}>
           <div 
             className={`p-4 border-b flex items-center justify-between ${
               config.roundedHeaderCorners ? 'rounded-t-xl' : ''

@@ -89,6 +89,10 @@ const ChatbotInterfaceSettingsSchema = new mongoose.Schema(
         message: 'Please enter a valid URL'
       }
     },
+    chatWidth: {
+      type: Number,
+      default: 448,
+    },
   },
   {
     timestamps: true,
