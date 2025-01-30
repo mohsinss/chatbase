@@ -21,6 +21,19 @@ export async function POST(request: Request) {
 
     // Process the incoming message or message status
     console.log('Received webhook event:', data);
+    // Send data to the specified URL
+    const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Check if the request was successful
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
     // Respond with a 200 OK status
     return NextResponse.json({ status: 'OK' }, { status: 200 });
