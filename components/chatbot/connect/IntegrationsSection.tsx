@@ -4,6 +4,7 @@ import Image from "next/image";
 import { IconDeviceLaptop } from "@tabler/icons-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import FacebookSDK from "@/components/facebook/FacebookSDK";
 
 interface IntegrationCardProps {
   title: string;
@@ -208,6 +209,7 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
           />
         ))}
       </div>
+      <FacebookSDK/>
     </div>
   );
 };
