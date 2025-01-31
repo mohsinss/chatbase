@@ -146,7 +146,7 @@ const ChatContainer = ({
   };
 
   return (
-    <div className="flex-1 flex justify-center pt-4 px-4">
+    <div className="flex-1 flex justify-end pt-4 px-4">
       <div className="w-[400px] relative">
         {!isSettingsOpen && (
           <button 

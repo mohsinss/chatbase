@@ -11,6 +11,7 @@ interface ChatInterfaceSettings {
   roundedChatCorners: boolean;
   syncColors: boolean;
   suggestedMessages: string;
+  chatWidth: number;
 }
 
 export const useChatInterfaceSettings = (chatbotId: string) => {
@@ -25,6 +26,7 @@ export const useChatInterfaceSettings = (chatbotId: string) => {
     roundedChatCorners: true,
     syncColors: false,
     suggestedMessages: "how are you ?\nwho are they ?\nwhat dates the event will start",
+    chatWidth: 448,
   });
 
   const [loading, setLoading] = useState(true);

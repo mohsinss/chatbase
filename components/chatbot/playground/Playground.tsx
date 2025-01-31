@@ -52,6 +52,7 @@ interface ChatContainerProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
   aiSettings: any;
   embed?: boolean;
+  setConfig: React.Dispatch<React.SetStateAction<any>>;
 }
 
 const ChatContainer = ({
@@ -70,6 +71,7 @@ const ChatContainer = ({
   chatbotId,
   aiSettings,
   embed = false,
+  setConfig,
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
     if (confidenceScore === -1) {
@@ -174,9 +176,26 @@ const ChatContainer = ({
     }
   }
 
+  // Add this useEffect to listen for settings updates
+  useEffect(() => {
+    const handleSettingsUpdate = (event: MessageEvent) => {
+      if (event.data.type === 'chatbot-settings-update') {
+        const newSettings = event.data.settings;
+        // Update the config with new settings
+        setConfig(prev => ({
+          ...prev,
+          ...newSettings
+        }));
+      }
+    };
+
+    window.addEventListener('message', handleSettingsUpdate);
+    return () => window.removeEventListener('message', handleSettingsUpdate);
+  }, [setConfig]);
+
   return (
-    <div className={`${embed ? '' : 'pt-4 px-4'} min-h-[calc(100dvh-80px)] flex-1 flex justify-center h-full`}>
-      <div className={`${embed ? 'w-full h-full' : 'w-[400px]'} relative`}>
+    <div className={`${embed ? '' : 'pt-4 px-4'} min-h-[calc(100dvh-80px)] flex-1 flex justify-end h-full`}>
+      <div className={`${embed ? 'w-full h-full' : 'w-[400px]'} relative`} style={{ width: `${config.chatWidth}px` }}>
         {!embed && !isSettingsOpen && (
           <button
             onClick={() => setIsSettingsOpen(true)}
@@ -422,7 +441,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showPlaygroundInfo, setShowPlaygroundInfo] = useState(false);
-  const { config } = useChatInterfaceSettings(chatbot.id);
+  const { config, setConfig } = useChatInterfaceSettings(chatbot.id);
   const { settings: aiSettings, fetchSettings } = useAISettings(chatbot.id);
   const [confidenceScore, setConfidenceScore] = useState(0);
 
@@ -617,6 +636,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
           chatbotId={chatbot.id}
           aiSettings={aiSettings}
           embed={embed}
+          setConfig={setConfig}
         />
       </div>
     )
@@ -676,6 +696,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
               messages={messages}
               setMessages={setMessages}
               config={config}
+              setConfig={setConfig}
               isLoading={isLoading}
               setIsLoading={setIsLoading}
               input={input}

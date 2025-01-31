@@ -134,7 +134,8 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         profilePictureUrl: profilePicture,
         chatIconUrl: chatIcon,
         chatBackgroundUrl: config.chatBackgroundUrl,
-        chatBackgroundOpacity: config.chatBackgroundOpacity ?? 0.1
+        chatBackgroundOpacity: config.chatBackgroundOpacity ?? 0.1,
+        chatWidth: config.chatWidth
       };
 
       console.log('Before save - Full config:', configToSave);
@@ -184,7 +185,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       // Send message to update embedded chat
       window.postMessage({
         type: 'chatbot-settings-update',
-        settings: savedData
+        settings: configToSave
       }, '*');
 
       setNotification({
@@ -786,122 +787,127 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           </div>
         </div>
 
-        {/* Preview Panel */}
-        <Card className="h-full flex flex-col max-h-[70%]" style={{ width: `${config.chatWidth}px` }}>
-          <div 
-            className={`p-4 border-b flex items-center justify-between ${
-              config.roundedHeaderCorners ? 'rounded-t-xl' : ''
-            }`}
-            style={{
-              backgroundColor: config.syncColors ? config.userMessageColor : undefined,
-              color: config.syncColors ? 'white' : undefined
-            }}
+        {/* Preview Panel - Add position relative and move to right */}
+        <div className="relative">
+          <Card 
+            className="h-full flex flex-col max-h-[70%] absolute right-0" 
+            style={{ width: `${config.chatWidth}px` }}
           >
-            <div className="flex items-center gap-3">
-              {/* Profile Picture */}
-              {config.profilePictureUrl && (
-                <div 
-                  className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden"
-                  style={{
-                    backgroundImage: `url(${config.profilePictureUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                />
-              )}
-              <div className="font-medium">{config.displayName}</div>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className={config.syncColors ? 'text-white hover:bg-white/10' : ''}
-            >
-              <RefreshCcw className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div 
-            className="flex-1 p-4 space-y-4 overflow-y-auto relative"
-            style={{
-              backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
-            {/* Add a background overlay div to control opacity */}
-            {config.chatBackgroundUrl && (
-              <div 
-                className="absolute inset-0" 
-                style={{
-                  backgroundColor: 'white',
-                  opacity: 1 - config.chatBackgroundOpacity
-                }}
-              />
-            )}
-            {/* Keep existing chat messages */}
-            <div className="relative z-10">
-              <div className={`bg-gray-100 p-3 ${
-                config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-              } max-w-[80%]`}>
-                {config.initialMessage}
-              </div>
-              <div 
-                className={`ml-auto p-3 ${
-                  config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                } max-w-[80%] text-white`}
-                style={{ backgroundColor: config.userMessageColor }}
-              >
-                Hello
-              </div>
-            </div>
-          </div>
-
-          {/* Chat Icon in the bottom right */}
-          {config.chatIconUrl && (
             <div 
-              className="absolute -bottom-5 right-14 h-12 w-12 rounded-full shadow-lg overflow-hidden cursor-pointer"
+              className={`p-4 border-b flex items-center justify-between ${
+                config.roundedHeaderCorners ? 'rounded-t-xl' : ''
+              }`}
               style={{
-                backgroundImage: `url(${config.chatIconUrl})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
+                backgroundColor: config.syncColors ? config.userMessageColor : undefined,
+                color: config.syncColors ? 'white' : undefined
               }}
-            />
-          )}
-
-          <div className="p-4 border-t">
-            {/* Suggested Messages - display only */}
-            <div className="mb-4 flex flex-wrap gap-2">
-              {config.suggestedMessages.split('\n').filter(msg => msg.trim()).map((message, index) => (
-                <button
-                  key={index}
-                  className="px-4 py-2 bg-gray-100 rounded-full text-sm"
-                >
-                  {message}
-                </button>
-              ))}
-            </div>
-
-            {/* Message input area */}
-            <div className="flex gap-2">
-              <input 
-                type="text"
-                placeholder={config.messagePlaceholder}
-                className={`flex h-10 w-full border border-input bg-background px-3 py-2 text-sm ${
-                  config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
-                }`}
-              />
-              <Button size="icon" className={config.roundedChatCorners ? 'rounded-lg' : ''}>
-                <Send className="h-4 w-4" />
+            >
+              <div className="flex items-center gap-3">
+                {/* Profile Picture */}
+                {config.profilePictureUrl && (
+                  <div 
+                    className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden"
+                    style={{
+                      backgroundImage: `url(${config.profilePictureUrl})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                  />
+                )}
+                <div className="font-medium">{config.displayName}</div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className={config.syncColors ? 'text-white hover:bg-white/10' : ''}
+              >
+                <RefreshCcw className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* Footer */}
-            <div className="mt-2 text-center text-sm text-gray-500 flex items-center justify-center gap-1">
-              <span>Powered By ChatSA.co</span>
-              <span>{config.footerText}</span>
+            <div 
+              className="flex-1 p-4 space-y-4 overflow-y-auto relative"
+              style={{
+                backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
+              {/* Add a background overlay div to control opacity */}
+              {config.chatBackgroundUrl && (
+                <div 
+                  className="absolute inset-0" 
+                  style={{
+                    backgroundColor: 'white',
+                    opacity: 1 - config.chatBackgroundOpacity
+                  }}
+                />
+              )}
+              {/* Keep existing chat messages */}
+              <div className="relative z-10">
+                <div className={`bg-gray-100 p-3 ${
+                  config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                } max-w-[80%]`}>
+                  {config.initialMessage}
+                </div>
+                <div 
+                  className={`ml-auto p-3 ${
+                    config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                  } max-w-[80%] text-white`}
+                  style={{ backgroundColor: config.userMessageColor }}
+                >
+                  Hello
+                </div>
+              </div>
             </div>
-          </div>
-        </Card>
+
+            {/* Chat Icon in the bottom right */}
+            {config.chatIconUrl && (
+              <div 
+                className="absolute -bottom-5 right-14 h-12 w-12 rounded-full shadow-lg overflow-hidden cursor-pointer"
+                style={{
+                  backgroundImage: `url(${config.chatIconUrl})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              />
+            )}
+
+            <div className="p-4 border-t">
+              {/* Suggested Messages - display only */}
+              <div className="mb-4 flex flex-wrap gap-2">
+                {config.suggestedMessages.split('\n').filter(msg => msg.trim()).map((message, index) => (
+                  <button
+                    key={index}
+                    className="px-4 py-2 bg-gray-100 rounded-full text-sm"
+                  >
+                    {message}
+                  </button>
+                ))}
+              </div>
+
+              {/* Message input area */}
+              <div className="flex gap-2">
+                <input 
+                  type="text"
+                  placeholder={config.messagePlaceholder}
+                  className={`flex h-10 w-full border border-input bg-background px-3 py-2 text-sm ${
+                    config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
+                  }`}
+                />
+                <Button size="icon" className={config.roundedChatCorners ? 'rounded-lg' : ''}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Footer */}
+              <div className="mt-2 text-center text-sm text-gray-500 flex items-center justify-center gap-1">
+                <span>Powered By ChatSA.co</span>
+                <span>{config.footerText}</span>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
     </>
   )
