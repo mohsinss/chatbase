@@ -257,14 +257,14 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         throw new Error(data.details || data.error || 'Upload failed');
       }
 
-      // Update state and config
+      // Update state and config based on image type
       if (type === 'profile') {
         setProfilePicture(data.url);
         handleConfigChange('profilePictureUrl', data.url);
       } else if (type === 'icon') {
         setChatIcon(data.url);
         handleConfigChange('chatIconUrl', data.url);
-      } else {
+      } else if (type === 'background') {
         handleConfigChange('chatBackgroundUrl', data.url);
       }
 
