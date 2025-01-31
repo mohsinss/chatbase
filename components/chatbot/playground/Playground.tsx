@@ -12,6 +12,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   confidenceScore?: number;
+  reasonal_content?: string;
 }
 
 interface PlaygroundProps {
@@ -313,10 +314,13 @@ const ChatContainer = ({
                       backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
                       transition: 'background-color 0.3s ease'
                     }}>
+                    {message.reasonal_content && 
+                      <p className="p-1 rounded-sm bg-slate-100 pb-3 hidden">{message.reasonal_content}</p>
+                    }
                     {message.role === 'assistant' ? (
                       <ReactMarkdown>{message.content}</ReactMarkdown>
                     ) : (
-                      <p>{message.content}</p>
+                      <p className="p-1">{message.content}</p>
                     )}
                     {message.role === 'assistant' && message.confidenceScore != -1 && <div>
                       <span style={{ backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px' }}>{message.confidenceScore}</span>
@@ -324,6 +328,7 @@ const ChatContainer = ({
                   </div>
                 </div>
               ))}
+              {isLoading && <span className="loading loading-spinner loading-xs"></span>}
             </div>
             <div ref={messagesEndRef} />
           </div>
@@ -370,7 +375,7 @@ const ChatContainer = ({
                         }
                         throw new Error('Stream failed.');
                       }
-                      const assistantMessage: Message = { role: 'assistant', content: '' };
+                      const assistantMessage: Message = { role: 'assistant', content: '', reasonal_content: '' };
                       setMessages(prev => [...prev, assistantMessage]);
 
                       const reader = response.body?.getReader();
@@ -592,7 +597,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
         throw new Error('Stream failed.');
       }
 
-      const assistantMessage: Message = { role: 'assistant', content: '' };
+      const assistantMessage: Message = { role: 'assistant', content: '', reasonal_content: '' };
       setMessages(prev => [...prev, assistantMessage]);
 
       const reader = response.body?.getReader();
@@ -602,11 +607,13 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
         let done = false;
         while (!done) {
           const result = await reader.read();
+          setIsLoading(false);
           done = result.done;
           if (done) break;
 
           const chunk = decoder.decode(result.value);
           const lines = chunk.split('\n');
+          console.log(lines)
 
           for (const line of lines) {
             if (line.startsWith('data: ')) {
@@ -639,7 +646,29 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
                 console.log('Skipping unparseable chunk');
               }
             }
-            if (line.startsWith('score: ')) {
+            else if (line.startsWith('reason: ')) {
+              const data = line.slice(7).trim();
+              console.log(data)
+              
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.reasonal_text) {
+                  
+                  setMessages(prev => {
+                    const lastMessage = prev[prev.length - 1];
+                    let lastMessage_reasonal_content = lastMessage?.reasonal_content + parsed.reasonal_text;
+                    return [
+                      ...prev.slice(0, -1),
+                      { ...lastMessage, reasonal_content: lastMessage_reasonal_content }
+                    ];
+                  });
+                }
+
+              } catch (e) {
+                console.log(e)
+              }
+            }
+            else if (line.startsWith('score: ')) {
               const score = line.slice(6).trim();
               setConfidenceScore(Number(score))
               console.log(score)
@@ -650,6 +679,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
     } catch (error) {
       console.error('Chat error:', error);
       toast.error(error.message)
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }

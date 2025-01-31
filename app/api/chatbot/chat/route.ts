@@ -326,11 +326,17 @@ export async function POST(req: NextRequest) {
             let log_probs_sum = 0.0;
             for await (const chunk of response) {
               const text = chunk.choices[0]?.delta?.content || '';
+              //@ts-ignore
+              const reasonal_text = chunk.choices[0]?.delta?.reasoning_content || '';
               // log_probs_len++;
               // log_probs_sum += chunk.choices[0].logprobs?.content[0]?.logprob || 0.0;
 
               if (text) {
                 const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
+                controller.enqueue(encoder.encode(sseMessage));
+              }
+              if (reasonal_text){
+                const sseMessage = `reason: ${JSON.stringify({ reasonal_text })}\n\n`;
                 controller.enqueue(encoder.encode(sseMessage));
               }
             }
