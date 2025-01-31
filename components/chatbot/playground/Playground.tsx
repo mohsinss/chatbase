@@ -55,6 +55,23 @@ interface ChatContainerProps {
   setConfig: React.Dispatch<React.SetStateAction<any>>;
 }
 
+interface ChatConfig {
+  chatWidth: number;
+  theme: string;
+  roundedHeaderCorners: boolean;
+  roundedChatCorners: boolean;
+  userMessageColor: string;
+  displayName: string;
+  profilePictureUrl?: string;
+  chatIconUrl?: string;
+  initialMessage: string;
+  messagePlaceholder: string;
+  suggestedMessages?: string;
+  footerText?: string;
+  syncColors: boolean;
+  bubbleAlignment: string;
+}
+
 const ChatContainer = ({
   isSettingsOpen,
   setIsSettingsOpen,
@@ -182,7 +199,7 @@ const ChatContainer = ({
       if (event.data.type === 'chatbot-settings-update') {
         const newSettings = event.data.settings;
         // Update the config with new settings
-        setConfig(prev => ({
+        setConfig((prev: ChatConfig) => ({
           ...prev,
           ...newSettings
         }));
@@ -194,12 +211,15 @@ const ChatContainer = ({
   }, [setConfig]);
 
   return (
-    <div className={`${embed ? '' : 'pt-4 px-4'} min-h-[calc(100dvh-80px)] flex-1 flex justify-end h-full`}>
-      <div className={`${embed ? 'w-full h-full' : 'w-[400px]'} relative`} style={{ width: `${config.chatWidth}px` }}>
+    <div className={`${embed ? '' : 'pt-4 px-4'} min-h-[calc(100dvh-80px)] flex-1 flex ${config.bubbleAlignment === 'right' ? 'justify-end' : 'justify-start'} h-full`}>
+      <div 
+        className={`${embed ? 'w-full h-full' : ''} relative`} 
+        style={{ width: `${config.chatWidth}px` }}
+      >
         {!embed && !isSettingsOpen && (
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="absolute -left-12 h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white"
+            className={`absolute ${config.bubbleAlignment === 'right' ? '-left-12' : '-right-12'} h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white`}
           >
             ☰
           </button>

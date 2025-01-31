@@ -12,6 +12,7 @@ interface ChatInterfaceSettings {
   syncColors: boolean;
   suggestedMessages: string;
   chatWidth: number;
+  bubbleAlignment: 'left' | 'right';
 }
 
 export const useChatInterfaceSettings = (chatbotId: string) => {
@@ -27,6 +28,7 @@ export const useChatInterfaceSettings = (chatbotId: string) => {
     syncColors: false,
     suggestedMessages: "how are you ?\nwho are they ?\nwhat dates the event will start",
     chatWidth: 448,
+    bubbleAlignment: 'right',
   });
 
   const [loading, setLoading] = useState(true);
