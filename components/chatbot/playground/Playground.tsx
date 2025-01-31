@@ -213,7 +213,7 @@ const ChatContainer = ({
   }, [setConfig]);
 
   return (
-    <div className={`${embed ? '' : 'pt-4 px-4'} min-h-[calc(100dvh-80px)] flex-1 flex ${config.bubbleAlignment === 'right' ? 'justify-end' : 'justify-start'} h-full`}>
+    <div className={`${embed ? '' : 'pt-4 px-4'} min-h-[calc(100dvh-80px)] flex-1 flex justify-center h-full`}>
       <div 
         className={`${embed ? 'w-full h-full' : ''} relative`} 
         style={{ width: `${config.chatWidth}px` }}
