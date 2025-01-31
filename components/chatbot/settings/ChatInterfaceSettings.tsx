@@ -27,6 +27,8 @@ interface ChatConfig {
   profilePictureUrl: string
   chatIconUrl: string
   chatWidth: number
+  chatBackgroundUrl: string
+  chatBackgroundOpacity: number
 }
 
 interface ChatInterfaceSettingsProps {
@@ -52,7 +54,9 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     roundedChatCorners: false,
     profilePictureUrl: "",
     chatIconUrl: "",
-    chatWidth: 448
+    chatWidth: 448,
+    chatBackgroundUrl: "",
+    chatBackgroundOpacity: 0.1
   })
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{
@@ -63,6 +67,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   const [chatIcon, setChatIcon] = useState<string>("");
   const profileInputRef = useRef<HTMLInputElement>(null);
   const chatIconInputRef = useRef<HTMLInputElement>(null);
+  const backgroundInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -82,18 +87,35 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
 
   const fetchSettings = async () => {
     try {
+      console.log('Fetching settings for chatbotId:', chatbotId);
       const response = await fetch(`/api/chatbot/interface-settings?chatbotId=${chatbotId}`);
       const data = await response.json();
       
-      console.log('Fetched settings:', data);
-      
-      if (data) {
-        setConfig(prev => ({
-          ...prev,
-          ...data
-        }));
-        setProfilePicture(data.profilePictureUrl || "");
-        setChatIcon(data.chatIconUrl || "");
+      if (response.ok) {
+        console.log('Fetched settings - Full data:', data);
+        console.log('Fetched settings - Background:', {
+          url: data.chatBackgroundUrl,
+          opacity: data.chatBackgroundOpacity
+        });
+        
+        if (data) {
+          const newConfig = {
+            ...config,
+            ...data,
+            chatBackgroundOpacity: data.chatBackgroundOpacity ?? 0.1
+          };
+          console.log('Setting new config:', newConfig);
+          console.log('New config background:', {
+            url: newConfig.chatBackgroundUrl,
+            opacity: newConfig.chatBackgroundOpacity
+          });
+          
+          setConfig(newConfig);
+          setProfilePicture(data.profilePictureUrl || "");
+          setChatIcon(data.chatIconUrl || "");
+        }
+      } else {
+        throw new Error(data.error || 'Failed to fetch settings');
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -111,9 +133,15 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         ...config,
         profilePictureUrl: profilePicture,
         chatIconUrl: chatIcon,
+        chatBackgroundUrl: config.chatBackgroundUrl,
+        chatBackgroundOpacity: config.chatBackgroundOpacity ?? 0.1
       };
 
-      console.log('Saving config:', configToSave);
+      console.log('Before save - Full config:', configToSave);
+      console.log('Before save - Background settings:', {
+        url: configToSave.chatBackgroundUrl,
+        opacity: configToSave.chatBackgroundOpacity
+      });
 
       const response = await fetch('/api/chatbot/interface-settings', {
         method: 'POST',
@@ -127,14 +155,36 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       });
 
       const savedData = await response.json();
-      console.log('Server response:', savedData);
 
-      if (!response.ok) throw new Error('Failed to save settings');
+      if (!response.ok) {
+        throw new Error(savedData.error || 'Failed to save settings');
+      }
+
+      console.log('After save - Server response:', savedData);
+      console.log('After save - Background in response:', {
+        url: savedData.chatBackgroundUrl,
+        opacity: savedData.chatBackgroundOpacity
+      });
+
+      // Verify the save worked
+      const verifyResponse = await fetch(`/api/chatbot/interface-settings?chatbotId=${chatbotId}`);
+      const verifyData = await verifyResponse.json();
+      console.log('Verification fetch - Full data:', verifyData);
+      console.log('Verification fetch - Background:', {
+        url: verifyData.chatBackgroundUrl,
+        opacity: verifyData.chatBackgroundOpacity
+      });
+
+      // Update local state
+      setConfig(prev => ({
+        ...prev,
+        ...savedData
+      }));
 
       // Send message to update embedded chat
       window.postMessage({
         type: 'chatbot-settings-update',
-        settings: configToSave
+        settings: savedData
       }, '*');
 
       setNotification({
@@ -144,7 +194,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     } catch (error) {
       console.error('Save error:', error);
       setNotification({
-        message: "Failed to save settings",
+        message: error instanceof Error ? error.message : "Failed to save settings",
         type: "error"
       });
     } finally {
@@ -162,12 +212,12 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     }))
   }
 
-  const handleImageUpload = async (type: 'profile' | 'icon') => {
-    const inputRef = type === 'profile' ? profileInputRef : chatIconInputRef;
+  const handleImageUpload = async (type: 'profile' | 'icon' | 'background') => {
+    const inputRef = type === 'profile' ? profileInputRef : type === 'icon' ? chatIconInputRef : backgroundInputRef;
     inputRef.current?.click();
   };
 
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>, type: 'profile' | 'icon') => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>, type: 'profile' | 'icon' | 'background') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -210,9 +260,11 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       if (type === 'profile') {
         setProfilePicture(data.url);
         handleConfigChange('profilePictureUrl', data.url);
-      } else {
+      } else if (type === 'icon') {
         setChatIcon(data.url);
         handleConfigChange('chatIconUrl', data.url);
+      } else {
+        handleConfigChange('chatBackgroundUrl', data.url);
       }
 
       setNotification({
@@ -654,6 +706,74 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
               </div>
             </div>
           </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Chat Background
+            </label>
+            <div className="space-y-4">
+              {/* Preview */}
+              <div 
+                className="h-32 w-full rounded-lg bg-gray-200 overflow-hidden"
+                style={{
+                  backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: config.chatBackgroundOpacity
+                }}
+              />
+              {/* Upload controls */}
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-4">
+                  <input
+                    type="file"
+                    ref={backgroundInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, 'background')}
+                  />
+                  <Button onClick={() => handleImageUpload('background')}>
+                    Upload Background
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    type="url"
+                    placeholder="Or enter image URL..."
+                    value={config.chatBackgroundUrl}
+                    onChange={(e) => handleConfigChange('chatBackgroundUrl', e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    variant="outline"
+                    onClick={() => handleConfigChange('chatBackgroundUrl', "")}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Opacity Control */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Background Opacity</label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={config.chatBackgroundOpacity}
+                    onChange={(e) => handleConfigChange('chatBackgroundOpacity', parseFloat(e.target.value))}
+                    className="flex-1"
+                  />
+                  <span className="text-sm text-gray-500">
+                    {Math.round(config.chatBackgroundOpacity * 100)}%
+                  </span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
+            </div>
+          </div>
           <div className="bottom-0 pb-4 pt-2 bg-background">
             <Button 
               className="w-full" 
@@ -700,19 +820,39 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
             </Button>
           </div>
 
-          <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-            <div className={`bg-gray-100 p-3 ${
-              config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-            } max-w-[80%]`}>
-              {config.initialMessage}
-            </div>
-            <div 
-              className={`ml-auto p-3 ${
+          <div 
+            className="flex-1 p-4 space-y-4 overflow-y-auto relative"
+            style={{
+              backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            {/* Add a background overlay div to control opacity */}
+            {config.chatBackgroundUrl && (
+              <div 
+                className="absolute inset-0" 
+                style={{
+                  backgroundColor: 'white',
+                  opacity: 1 - config.chatBackgroundOpacity
+                }}
+              />
+            )}
+            {/* Keep existing chat messages */}
+            <div className="relative z-10">
+              <div className={`bg-gray-100 p-3 ${
                 config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-              } max-w-[80%] text-white`}
-              style={{ backgroundColor: config.userMessageColor }}
-            >
-              Hello
+              } max-w-[80%]`}>
+                {config.initialMessage}
+              </div>
+              <div 
+                className={`ml-auto p-3 ${
+                  config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                } max-w-[80%] text-white`}
+                style={{ backgroundColor: config.userMessageColor }}
+              >
+                Hello
+              </div>
             </div>
           </div>
 
