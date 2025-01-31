@@ -11,6 +11,10 @@ const ChatbotLeadsSettingsSchema = new mongoose.Schema(
       type: String,
       default: "Let us know how to contact you",
     },
+    enableLead: {
+      type: String,
+      default: "never",
+    },
     nameEnabled: {
       type: Boolean,
       default: true,
@@ -22,6 +26,10 @@ const ChatbotLeadsSettingsSchema = new mongoose.Schema(
     phoneEnabled: {
       type: Boolean,
       default: true,
+    },
+    delay: {
+      type: Number,
+      default: 0,
     },
   },
   {

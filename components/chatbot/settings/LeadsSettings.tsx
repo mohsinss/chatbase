@@ -18,6 +18,8 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
     message: string;
     type: 'success' | 'error';
   } | null>(null);
+  const [delay, setDelay] = useState(1);
+  const [enableLead, setEnableLead] = useState('never');
 
   useEffect(() => {
     fetchSettings();
@@ -27,12 +29,14 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
     try {
       const response = await fetch(`/api/chatbot/leads-settings?chatbotId=${chatbotId}`);
       const data = await response.json();
-      
+
       if (data) {
         setTitle(data.title || "Let us know how to contact you");
         setNameEnabled(data.nameEnabled ?? true);
         setEmailEnabled(data.emailEnabled ?? true);
         setPhoneEnabled(data.phoneEnabled ?? true);
+        setDelay(data.delay ?? 0);
+        setEnableLead(data.enableLead);
       }
     } catch (error) {
       setNotification({
@@ -54,6 +58,8 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
           nameEnabled,
           emailEnabled,
           phoneEnabled,
+          delay,
+          enableLead,
         }),
       });
 
@@ -91,11 +97,46 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
             Note: Leads form only appears when chatting through the iframe or the chat bubble.
           </p>
 
+          {/* enableLead Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-base font-medium">When to show</label>
+            </div>
+            <select
+              value={enableLead}
+              //@ts-ignore
+              onChange={(e) => setEnableLead(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2"
+            >
+              <option value="immediately">Immediately</option>
+              <option value="after">After (x) messages</option>
+              <option value="never">Never</option>
+            </select>
+          </div>
+
+          {/* Delay Field */}
+          {
+            enableLead == "after" && 
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-base font-medium">Delay</label>
+              </div>
+              <input
+                type="number"
+                value={delay}
+                onChange={(e) => setDelay(Number(e.target.value))}
+                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                placeholder="Enter delay in messages"
+                min={1}
+              />
+            </div>
+          }
+
           {/* Title Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-base font-medium">Title</label>
-              <button 
+              <button
                 onClick={handleReset}
                 className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md"
               >
@@ -113,6 +154,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
 
           {/* Fields Section */}
           <div className="space-y-4">
+
             {/* Name Field */}
             <div className="flex items-center justify-between py-4 border-t">
               <label className="text-base font-medium">Name</label>
@@ -188,7 +230,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
 
           {/* Save Button */}
           <div className="flex justify-end pt-4">
-            <Button 
+            <Button
               onClick={handleSave}
               disabled={loading}
               className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800"
