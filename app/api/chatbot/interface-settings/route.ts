@@ -27,9 +27,11 @@ export async function GET(req: Request) {
     );
   } catch (error) {
     console.error("Error fetching interface settings:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch interface settings" },
-      { status: 500 }
+    return setCorsHeaders(
+        NextResponse.json(
+        { error: "Failed to fetch interface settings" },
+        { status: 500 }
+      )
     );
   }
 }
@@ -56,12 +58,15 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json(settings);
+    return setCorsHeaders(
+      NextResponse.json(settings)
+    );
   } catch (error) {
     console.error("Error saving interface settings:", error);
-    return NextResponse.json(
-      { error: "Failed to save interface settings" },
-      { status: 500 }
+    return setCorsHeaders(NextResponse.json(
+        { error: "Failed to save interface settings" },
+        { status: 500 }
+      )
     );
   }
 } 
