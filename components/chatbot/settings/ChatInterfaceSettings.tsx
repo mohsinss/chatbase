@@ -404,7 +404,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
             <textarea 
               value={config.footerText}
               onChange={(e) => handleConfigChange('footerText', e.target.value)}
-              className="flex mx-auto w-[90%] min-h-[50px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-[90%] min-h-[50px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
@@ -555,7 +555,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
             <select
               value={config.bubbleAlignment}
               onChange={(e) => handleConfigChange('bubbleAlignment', e.target.value as 'left' | 'right')}
-              className="flex h-10 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 w-[100px] max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="left">Left</option>
               <option value="right">Right</option>
@@ -573,7 +573,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 value={config.autoShowDelay}
                 onChange={(e) => handleConfigChange('autoShowDelay', parseInt(e.target.value))}
                 min="-1"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
               <span className="text-sm text-gray-500">seconds (negative to disable)</span>
             </div>
@@ -591,7 +591,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 onChange={(e) => handleConfigChange('chatWidth', Math.max(300, Math.min(800, parseInt(e.target.value))))}
                 min="300"
                 max="800"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
               <span className="text-sm text-gray-500">pixels (300-800)</span>
             </div>
