@@ -83,12 +83,22 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
     
       window.FB.login((response: any) => {
         if (response.authResponse) {
-          const { accessToken } = response.authResponse;
-          // Send token to backend
-          handleAuthCallback(accessToken);
+          const code = response.authResponse.code;
+          console.log(code)
+          // The returned code must be transmitted to your backend first and then
+          // perform a server-to-server call from there to our servers for an access token.
+        } else {
+          console.error('User cancelled login or did not fully authorize.');
         }
       }, {
-        scope: 'business_management,whatsapp_business_management,whatsapp_business_messaging',
+        config_id: '1448482203183254', // configuration ID goes here
+        response_type: 'code', // must be set to 'code' for System User access token
+        override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
+        extras: {
+          setup: {},
+          featureType: '',
+          sessionInfoVersion: '2',
+        }
       });
       // try {
       //   const response = await fetch("/api/chatbot/integrations/meta-business", {
