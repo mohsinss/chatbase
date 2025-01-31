@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     await dbConnect();
     const { searchParams } = new URL(req.url);
     const chatbotId = searchParams.get("chatbotId");
-
+    
     const settings = await ChatbotInterfaceSettings.findOne({ chatbotId });
     return setCorsHeaders(
       NextResponse.json(settings || {})
