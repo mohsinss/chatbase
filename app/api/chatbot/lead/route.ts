@@ -7,13 +7,33 @@ export async function POST(req: Request) {
 
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+      // Initialize text and html strings
+      let text = '';
+      let html = '';
+  
+      // Update text and html strings if fields are present
+      if (name) {
+        text += `Name: ${name}\n`;
+        html += `<p>Name: ${name}</p>`;
+      }
+      if (email) {
+        text += `Email: ${email}\n`;
+        html += `<p>Email: ${email}</p>`;
+      }
+      if (phone) {
+        text += `Phone: ${phone}\n`;
+        html += `<p>Phone: ${phone}</p>`;
+      }
+  
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  
       // Create email data
       const msg = {
-        to: process.env.LEAD_EMAIL, // Change the recipient to the specific email defined in env
+        to: process.env.LEAD_EMAIL,
         from: process.env.EMAIL_FROM,
-        subject: `New POST request data`,
-        text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\n`, // Update the text to include the name, email, and phone from the POST request
-        html: `<p>Name: ${name}</p><p>Email: ${email}</p><p>Phone: ${phone}</p>`, // Update the HTML to include the name, email, and phone from the POST request
+        subject: `New customer from chatsa.co`,
+        text: text, // Use updated text
+        html: html, // Use updated html
       };
     
       // Send email

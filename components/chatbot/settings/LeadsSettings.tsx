@@ -47,6 +47,15 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
   };
 
   const handleSave = async () => {
+    // Check if at least one setting is enabled
+    if (!nameEnabled && !emailEnabled && !phoneEnabled) {
+      setNotification({
+        message: "At least one setting must be enabled in Name, Email, Phone",
+        type: "error"
+      });
+      return;
+    }
+    
     setLoading(true);
     try {
       const response = await fetch("/api/chatbot/leads-settings", {
@@ -80,6 +89,17 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
 
   const handleReset = () => {
     setTitle("Let us know how to contact you");
+  };
+
+  const checkAndUpdate = (setter: React.Dispatch<React.SetStateAction<boolean>>, updatable: boolean, value: boolean) => {
+    if (updatable) {
+      setNotification({
+        message: "At least one setting must be enabled",
+        type: "error"
+      });
+    } else {
+      setter(value);
+    }
   };
 
   return (
@@ -162,7 +182,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
                 <input
                   type="checkbox"
                   checked={nameEnabled}
-                  onChange={(e) => setNameEnabled(e.target.checked)}
+                  onChange={(e) => checkAndUpdate(setNameEnabled, nameEnabled && !emailEnabled && !phoneEnabled, e.target.checked)}
                   className="peer sr-only"
                   id="name-toggle"
                 />
@@ -186,7 +206,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
                 <input
                   type="checkbox"
                   checked={emailEnabled}
-                  onChange={(e) => setEmailEnabled(e.target.checked)}
+                  onChange={(e) => checkAndUpdate(setEmailEnabled, !nameEnabled && emailEnabled && !phoneEnabled, e.target.checked)}
                   className="peer sr-only"
                   id="email-toggle"
                 />
@@ -210,7 +230,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
                 <input
                   type="checkbox"
                   checked={phoneEnabled}
-                  onChange={(e) => setPhoneEnabled(e.target.checked)}
+                  onChange={(e) => checkAndUpdate(setPhoneEnabled, !nameEnabled && !emailEnabled && phoneEnabled, e.target.checked)}
                   className="peer sr-only"
                   id="phone-toggle"
                 />
