@@ -366,9 +366,9 @@ const ChatContainer = ({
               ))}
               {isLoading && <span className="loading loading-spinner loading-xs"></span>}
               {
-                !isLoading && showLead && (leadSetting.enable == "immediately"
-                  || (leadSetting.enable == "after"
-                    && messages.filter(message => message.role === 'user').length >= leadSetting.delay))
+                !isLoading && showLead && (leadSetting?.enable == "immediately"
+                  || (leadSetting?.enable == "after"
+                    && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))
                 &&
                 <div className="px-3">
                   <div className="hyphens-auto break-words rounded-[20px] text-left text-sm leading-5 antialiased relative inline-block max-w-full rounded-r-[20px] rounded-l px-5 py-4 only:rounded-[20px] last:rounded-tl first:rounded-tl-[20px] first:rounded-bl only:rounded-bl last:rounded-bl-[20px] bg-zinc-200/50 text-zinc-800 group-data-[theme=dark]:bg-zinc-800/80 group-data-[theme=dark]:text-zinc-300">
@@ -378,7 +378,7 @@ const ChatContainer = ({
                           <div className="text-left text-inherit">
                             <form onSubmit={handleLeadFormSubmit}>
                               <div className="mb-4 flex items-start justify-between">
-                                <h4 className="pr-8 font-semibold text-sm">{leadSetting.title}</h4>
+                                <h4 className="pr-8 font-semibold text-sm">{leadSetting?.title}</h4>
                                 <button 
                                   className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 underline-offset-4 hover:underline dark:text-zinc-50 h-9 w-9 absolute top-0 right-0 p-0 group-data-[theme=dark]:hover:text-zinc-400 group-data-[theme=dark]:text-zinc-300 text-zinc-700 hover:text-zinc-600" 
                                   type="button"
@@ -391,7 +391,7 @@ const ChatContainer = ({
                                 </button>
                               </div>
                                 {
-                                leadSetting.name
+                                leadSetting?.name
                                 && <div className="mb-4">
                                   <label className="mb-1 block font-medium text-sm" htmlFor="name">Name</label>
                                   <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
@@ -400,7 +400,7 @@ const ChatContainer = ({
                                 </div>
                               }
                               {
-                                leadSetting.email
+                                leadSetting?.email
                                 && <div className="mb-4">
                                   <label className="mb-1 block font-medium text-sm" htmlFor="email">Email</label>
                                   <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
@@ -409,7 +409,7 @@ const ChatContainer = ({
                                 </div>
                               }
                               {
-                                leadSetting.phone
+                                leadSetting?.phone
                                 && <div className="mb-4">
                                   <label className="mb-1 block font-medium text-sm" htmlFor="phone">Phone Number</label>
                                   <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
