@@ -8,7 +8,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function getEmailValidation(email : string) {
   try {
-    const response = await axios.get(`https://emailvalidation.abstractapi.com/v1/?api_key=5bd232cfc9bc4bdd8b42be70b2b800b5&email=${email}`);
+    const response = await axios.get(`https://emailvalidation.abstractapi.com/v1/?api_key=${process.env.ABSTRACTAPI_KEY}&email=${email}`);
     console.log(response.data);
     return Number(response.data.quality_score) > 0.00;
   } catch (error) {
