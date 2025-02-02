@@ -324,7 +324,7 @@ const ChatContainer = ({
               backgroundPosition: 'center',
             }}
           >
-            <div className="absolute inset-0 p-4 overflow-y-auto" 
+            <div className="absolute inset-0 p-4 overflow-y-auto"
               style={{
                 backgroundColor: 'white',
                 opacity: config.chatBackgroundUrl ? 1 - (config.chatBackgroundOpacity || 0.1) : 1,
@@ -387,18 +387,18 @@ const ChatContainer = ({
                               <form onSubmit={handleLeadFormSubmit}>
                                 <div className="mb-4 flex items-start justify-between">
                                   <h4 className="pr-8 font-semibold text-sm">{leadSetting?.title}</h4>
-                                  <button 
-                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 underline-offset-4 hover:underline dark:text-zinc-50 h-9 w-9 absolute top-0 right-0 p-0 group-data-[theme=dark]:hover:text-zinc-400 group-data-[theme=dark]:text-zinc-300 text-zinc-700 hover:text-zinc-600" 
+                                  <button
+                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 underline-offset-4 hover:underline dark:text-zinc-50 h-9 w-9 absolute top-0 right-0 p-0 group-data-[theme=dark]:hover:text-zinc-400 group-data-[theme=dark]:text-zinc-300 text-zinc-700 hover:text-zinc-600"
                                     type="button"
                                     onClick={() => setShowLead(false)}
-                                    aria-label="Close contact form" 
+                                    aria-label="Close contact form"
                                     title="Close contact form">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true" className="h-4 w-4">
                                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                                     </svg>
                                   </button>
                                 </div>
-                                  {
+                                {
                                   leadSetting?.name
                                   && <div className="mb-4">
                                     <label className="mb-1 block font-medium text-sm" htmlFor="name">Name</label>
@@ -467,6 +467,13 @@ const ChatContainer = ({
                     // Start the chat process
                     setIsLoading(true);
                     try {
+                      if (!isLoading && showLead && (leadSetting?.enable == "immediately"
+                        || (leadSetting?.enable == "after"
+                          && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
+                        toast.error('Please submit the form. 🙂');
+                        setIsLoading(true);
+                        return;
+                      }
                       const response = await fetch('/api/chatbot/chat', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -555,7 +562,16 @@ const ChatContainer = ({
             </div>
 
             {/* Chat Input */}
-            <form onSubmit={handleSubmit} className="border-t p-3">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (!isLoading && showLead && (leadSetting?.enable == "immediately"
+                || (leadSetting?.enable == "after"
+                  && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
+                toast.error('Please submit the form. 🙂');
+                return;
+              }
+              handleSubmit(e)
+            }} className="border-t p-3">
               <div className="relative">
                 <input
                   type="text"
