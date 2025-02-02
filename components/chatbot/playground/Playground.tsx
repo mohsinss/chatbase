@@ -378,7 +378,7 @@ const ChatContainer = ({
                     || (leadSetting?.enable == "after"
                       && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))
                   &&
-                  <div className="px-3">
+                  <div className="py-3">
                     <div className="hyphens-auto break-words rounded-[20px] text-left text-sm leading-5 antialiased relative inline-block max-w-full rounded-r-[20px] rounded-l px-5 py-4 only:rounded-[20px] last:rounded-tl first:rounded-tl-[20px] first:rounded-bl only:rounded-bl last:rounded-bl-[20px] bg-zinc-200/50 text-zinc-800 group-data-[theme=dark]:bg-zinc-800/80 group-data-[theme=dark]:text-zinc-300">
                       <div className="float-left clear-both">
                         <div className="flex space-x-3">
