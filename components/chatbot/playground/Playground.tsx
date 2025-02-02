@@ -241,12 +241,15 @@ const ChatContainer = ({
         throw new Error('Failed to submit lead');
       }
 
+      toast.success('Email sent successfully to Admin.');
       // Handle successful lead submission here
       // For example, you might want to clear the form and show a success message
     } catch (error) {
       console.error('Error submitting lead:', error);
+
+      toast.error('Sth went wrong.');
     } finally {
-      setShowLead(false);
+      // setShowLead(false);
     }
   };
 
