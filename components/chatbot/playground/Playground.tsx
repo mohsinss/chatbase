@@ -238,7 +238,14 @@ const ChatContainer = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit lead');
+        if (response.status === 400) {
+          // Handle invalid email error
+          const data = await response.json();
+          toast.error(data.error);
+          return;
+        } else {
+          throw new Error('Failed to submit lead');
+        }
       }
 
       toast.success('Email sent successfully to Admin.');
