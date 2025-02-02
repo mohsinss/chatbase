@@ -241,6 +241,7 @@ const ChatContainer = ({
         if (response.status === 400) {
           // Handle invalid email error
           const data = await response.json();
+          setShowLead(false);
           toast.error(data.error);
           return;
         } else {
@@ -256,7 +257,7 @@ const ChatContainer = ({
 
       toast.error('Sth went wrong.');
     } finally {
-      // setShowLead(false);
+      setShowLead(false);
     }
   };
 
