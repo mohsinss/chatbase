@@ -88,11 +88,20 @@ export async function DELETE(
   const url = new URL(req.url);
   const datasetId = url.searchParams.get("datasetId"); // Extract datasetId from query parameters
   const trieveId = url.searchParams.get("trieveId"); // Extract datasetId from query parameters
+  const chatbotId = url.searchParams.get("chatbotId"); // Extract datasetId from query parameters
 
   // Check if datasetId is provided
   if (!datasetId) {
     return NextResponse.json(
       { error: "datasetId is required" },
+      { status: 400 } // Bad Request
+    );
+  }
+
+  // Check if chatbotId is provided
+  if (!chatbotId) {
+    return NextResponse.json(
+      { error: "chatbotId is required" },
       { status: 400 } // Bad Request
     );
   }
@@ -167,7 +176,7 @@ export async function DELETE(
       }
 
       await ChatbotModel.findOneAndUpdate(
-        { teamId: datasetId },
+        { chatbotId },
         { $inc: { sourcesCount: -1 } }
       );
     }

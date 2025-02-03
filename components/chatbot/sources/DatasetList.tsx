@@ -88,7 +88,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
     setDFileId(fileId)
 
     try {
-      const response = await fetch(`/api/chatbot/sources/file/${fileId}?datasetId=${datasetId}&trieveId=${trieveId}`, {
+      const response = await fetch(`/api/chatbot/sources/file/${fileId}?datasetId=${datasetId}&trieveId=${trieveId}&chatbotId=${chatbotId}`, {
         method: "DELETE"
       });
 
