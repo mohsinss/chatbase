@@ -11,6 +11,17 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+interface IFile {
+  trieveId: string;
+  trieveTaskId: string;
+  url: string;
+  name: string;
+  text: string;
+  charCount: number;
+  status: string;
+  trained: boolean;
+}
+
 //@ts-ignore
 async function uploadFile(fileBuffer, fileName) {
   try {
@@ -194,6 +205,7 @@ export async function POST(req: Request) {
         validateBeforeSave: true
       }
     );
+
     if (!updatedDataset) {
       // Check if the document still exists
       const checkDataset = await DatasetModel.findOne({ chatbotId });
@@ -201,87 +213,18 @@ export async function POST(req: Request) {
       throw new Error("Dataset not found during update");
     }
 
-    // Delete associated chunks using the uniqueTag from the file metadata
-    const delete_text_response = await fetch(`https://api.trieve.ai/api/chunk`, {
-      method: "DELETE",
+    const clear_dataset_response = await fetch(`https://api.trieve.ai/api/dataset/clear/${existingDataset.datasetId}`, {
+      method: "PUT",
       headers: {
         "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
-        "TR-Dataset": existingDataset.datasetId, // Use datasetId since it's guaranteed to be present
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(
-        {
-          filter: {
-            must: [
-              {
-                field:"metadata.type",
-                match_all: ['text']
-              }
-            ]
-          }
-        }
-      )
+        "TR-Dataset": existingDataset.datasetId,
+      }
     });
 
-    // Check if the chunk deletion was successful
-    if (!delete_text_response.ok) {
-      // throw new Error(`Failed to delete chunks: ${delete_text_response.statusText}`);
+    if (!clear_dataset_response.ok) {
+      throw new Error(`Failed to clear dataset: ${clear_dataset_response.statusText}`);
     }
-
-    // Delete associated chunks using the uniqueTag from the file metadata
-    const delete_qa_response = await fetch(`https://api.trieve.ai/api/chunk`, {
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
-        "TR-Dataset": existingDataset.datasetId, // Use datasetId since it's guaranteed to be present
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(
-        {
-          filter: {
-            must: [
-              {
-                field:"metadata.type",
-                match_all: ['qa']
-              }
-            ]
-          }
-        }
-      )
-    });
-
-    // Check if the chunk deletion was successful
-    if (!delete_qa_response.ok) {
-      // throw new Error(`Failed to delete chunks: ${delete_qa_response.statusText}`);
-    }
-
-    // Delete associated chunks using the uniqueTag from the file metadata
-    const delete_links_response = await fetch(`https://api.trieve.ai/api/chunk`, {
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
-        "TR-Dataset": existingDataset.datasetId, // Use datasetId since it's guaranteed to be present
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(
-        {
-          filter: {
-            must: [
-              {
-                field:"metadata.type",
-                match_all: ['link']
-              }
-            ]
-          }
-        }
-      )
-    });
-
-    // Check if the chunk deletion was successful
-    if (!delete_links_response.ok) {
-      // throw new Error(`Failed to delete chunks: ${delete_links_response.statusText}`);
-    }
-
+    
     const add_text_response = await fetch("https://api.trieve.ai/api/file", {
       method: "POST",
       headers: {
@@ -354,26 +297,91 @@ export async function POST(req: Request) {
       throw new Error(`Failed to update text for qa: ${add_links_response.statusText} - ${JSON.stringify(responseData)}`);
     }
 
+    // Iterate over the files in existingDataset
+    for (let file of existingDataset.files) {
+      // Check if the file status is "Completed" and it is not trained
+      if (file.status === "Completed") {
+        let text = '';
+
+        if(file.trieveTaskId){
+          const resp = await fetch(
+            `https://pdf2md.trieve.ai/api/task/${file.trieveTaskId}?limit=1000`,
+            {
+              headers: {
+                Authorization: process.env.NEXT_PUBLIC_TRIEVE_PDF2MD_API_KEY,
+              },
+            }
+          );
+  
+          if (!resp.ok) throw new Error("Failed to fetch pages");
+  
+          const data = await resp.json();
+  
+          if (data.pages) {
+            //@ts-ignore
+            data.pages.forEach(page => {
+              text += page.content + "\n";
+            });
+          }
+        }
+
+        // Check if the file name ends with .txt
+        if (file.name.endsWith('.txt')) {
+          // Fetch the text from the file URL
+          const response = await fetch(file.url);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch content from ${file.url}: ${response.statusText}`);
+          }
+          text = await response.text();
+        }
+        
+        const base64PDFText = Buffer.from(text, 'utf-8').toString('base64')
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+$/, '');
+
+        const metadata = {
+            uniqueTag: `${file.name}-${Date.now()}` // Append timestamp to ensure uniqueness
+          };
+
+        const add_pdf_response = await fetch("https://api.trieve.ai/api/file", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+            "TR-Dataset": existingDataset.datasetId,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(
+            {
+              base64_file: base64PDFText,
+              file_name: changeExtensionToTxt(file.name),
+              metadata
+            }
+          )
+        });
+    
+        responseData = await add_pdf_response.json();
+    
+        if (!add_pdf_response.ok) {
+          throw new Error(`Failed to update text for qa: ${add_pdf_response.statusText} - ${JSON.stringify(responseData)}`);
+        }
+
+        // Mark the file as trained
+        file.trieveId = responseData.file_metadata.id;
+        file.trained = true;
+      }
+    }
+
+    // Save the updated dataset
+    await existingDataset.save();
+
     // Find the chatbot by its ID
     let existingChatbot = await Chatbot.findOne({ chatbotId });
     if (!existingChatbot) {
       return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
     }
     
-    // First get the dataset ID
-    const datasetsResponse = await fetch("https://api.trieve.ai/api/dataset/files/"+existingDataset.datasetId+"/1", {
-      headers: {
-        "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
-        "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
-        "TR-Dataset": existingDataset.datasetId,
-      }
-    });
-    
-    if (!datasetsResponse.ok) throw new Error("Failed to fetch datasets");
-    
-    const datasets = await datasetsResponse.json();
-    // @ts-ignore
-    const files = datasets.file_and_group_ids.filter(item => item.file.file_name != 'texttexttexttext.txt').filter(item => item.file.file_name != 'texttexttexttextqa.txt').filter(item => item.file.file_name != 'texttexttexttextlink.txt');
+    const files = existingDataset?.files || [];
     // @ts-ignore
 
     sourcesCount += files.length
@@ -394,4 +402,11 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-} 
+}
+
+function changeExtensionToTxt(filename: string) {
+  let parsedPath = path.parse(filename);
+  parsedPath.ext = '.txt';
+  parsedPath.base = `${parsedPath.name}${parsedPath.ext}`;
+  return path.format(parsedPath);
+}

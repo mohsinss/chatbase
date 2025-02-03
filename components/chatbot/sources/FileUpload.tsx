@@ -55,7 +55,12 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
   }, [])
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    console.log(datasetId)
+    // Limit the number of files to 1
+    if (acceptedFiles.length > 1) {
+      toast.error("You can only upload one file at a time.");
+      return;
+    }
+
     if( totalChars > limitChars && limitChars != 0 ) {
       toast.error(`Please udpate your plan, you can train your bot upto ${(limitChars/1000000).toFixed(1)}M characters.`)
       return;
@@ -99,7 +104,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
         console.log("Upload response:", data); // Debug log
       }
       
-      setSuccess(`Successfully uploaded ${acceptedFiles.length} file(s)`);
+      setSuccess(`Successfully uploaded file`);
     } catch (err) {
       console.error("Upload error:", err);
       setError(err instanceof Error ? err.message : "Failed to upload file");
@@ -111,21 +116,11 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      '*/*': ['.pdf', '.PDF'],
-    //   // iOS-specific MIME type for PDFs
-    //   'com.adobe.pdf': ['.pdf', '.PDF'],
+      'application/PDF': ['.pdf', '.PDF'],
       'text/plain': ['.txt'],
-    //   // 'image/jpeg': ['.jpg', '.jpeg'],
-    //   // 'image/png': ['.png'],
-    //   // 'image/gif': ['.gif']
-    },
-    getFilesFromEvent: (event) => {
-      return new Promise((resolve) => {
-        //@ts-ignore
-        const files = Array.from(event.dataTransfer?.files || event.target.files || []);
-        //@ts-ignore
-        resolve(files.filter((file) => file.name.toLowerCase().endsWith('.pdf') || file.name.toLowerCase().endsWith('.txt')));
-      });
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/gif': ['.gif']
     },
     // maxSize: 10245760, // 10MB
   });
@@ -148,7 +143,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
               : "Drag & drop files here, or click to select files"}
           </h3>
           <p className="text-gray-500 mb-4">
-            Supported File Types: PDF, TXT
+            Supported File Types: PDF, TXT, IMAGES
           </p>
           <p className="text-gray-500">
             Maximum file size: 10MB
@@ -168,7 +163,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
         </div>
       </div>
       
-      <DatasetList 
+      <DatasetList
         teamId={teamId} 
         chatbotId={chatbotId} 
         datasetId={datasetId}

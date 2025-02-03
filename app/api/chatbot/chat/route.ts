@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         query: messages[messages.length - 1].content,
         search_type: 'semantic',
-        page_size: 4
+        page_size: 1
       })
     };
 
@@ -162,11 +162,12 @@ export async function POST(req: NextRequest) {
       console.error("Dataset creation failed:", chunk_response_data);
       throw new Error(chunk_response_data.message || "Failed to create dataset");
     }
-    console.log(chunk_response_data)
     let relevant_chunk = "Please use the following information for answering.\n";
     for (let i = 0; i < chunk_response_data.chunks.length; i++) {
       relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
     }
+    console.log(messages[messages.length - 1].content)
+    console.log(relevant_chunk)
 
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;

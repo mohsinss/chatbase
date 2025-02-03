@@ -12,6 +12,18 @@ import NotionInput from './NotionInput';
 import toast, { Toaster } from 'react-hot-toast';
 import config from "@/config";
 
+interface IFile {
+  trieveId: string;
+  trieveTaskId: string;
+  url: string;
+  name: string;
+  text: string;
+  charCount: number;
+  status: string;
+  trained: boolean;
+  _id: string;
+}
+
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
   { id: "text", label: "Text", icon: <IconAlignLeft className="w-5 h-5" /> },
@@ -20,18 +32,18 @@ const SOURCE_TABS = [
   { id: "notion", label: "Notion", icon: <IconBrandNotion className="w-5 h-5" /> },
 ];
 
-const Sources = ({ 
-  teamId, 
+const Sources = ({
+  teamId,
   chatbotId,
   chatbot,
   team
-}: { 
+}: {
   teamId: string;
   chatbotId: string;
   chatbot: any;
   team: any;
 }) => {
-  team=JSON.parse(team)
+  team = JSON.parse(team)
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'files';
@@ -43,107 +55,9 @@ const Sources = ({
   const [dataset, setDataset] = useState<any>(null);
   const [text, setText] = useState<string>('');
   const [qaPairs, setQaPairs] = useState<{ id: string; question: string; answer: string }[]>([]);
-  const [links, setLinks] = useState<{ id: string; link: string, chars: number}[]>([]);
+  const [links, setLinks] = useState<{ id: string; link: string, chars: number }[]>([]);
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
-  console.log("team", planConfig)
-
-  const fetchFiles = async () => {
-    try {
-      if(!dataset?.datasetId)
-        return;
-      // First get the dataset ID
-      const datasetsResponse = await fetch("https://api.trieve.ai/api/dataset/files/"+dataset?.datasetId+"/1", {
-        headers: {
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
-          "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
-          "TR-Dataset": dataset?.datasetId,
-        }
-      });
-      
-      if (!datasetsResponse.ok) throw new Error("Failed to fetch datasets");
-      
-      const datasets = await datasetsResponse.json();
-      console.log(datasets.file_and_group_ids)
-      // @ts-ignore
-      const files = datasets.file_and_group_ids.filter(item => item.file.file_name != 'texttexttexttext.txt').filter(item => item.file.file_name != 'texttexttexttextqa.txt').filter(item => item.file.file_name != 'texttexttexttextlink.txt');
-      // @ts-ignore
-      // setFiles(files.map(item => item.file));
-      setFileCount(files.length);
-      // @ts-ignore
-      setFileSize(files.reduce((size, file) => {
-        return size + file.file.metadata.sizeInBytes;
-      }, 0.0));
-      // @ts-ignore
-      setFileChars(files.reduce((size, file) => {
-        return size + file.file.metadata.sizeInCharacters;
-      }, 0));
-      
-      //@ts-ignore
-      const texts = datasets.file_and_group_ids.filter(item => item.file.file_name == 'texttexttexttext.txt');
-
-      for(let i = 0 ; i < texts.length ; i++){
-        // Delete the file using the provided fileId
-        const response = await fetch(`https://api.trieve.ai/api/file/${texts[i].file.id}`, {
-          method: "DELETE",
-          headers: {
-            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
-            "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
-            "TR-Dataset": dataset?.datasetId, // Use datasetId since it's guaranteed to be present
-          }
-        });
-
-        // Check if the file deletion was successful
-        if (!response.ok) {
-          throw new Error(`Failed to delete file: ${response.statusText}`);
-        }
-      }
-      //@ts-ignore
-      const qas = datasets.file_and_group_ids.filter(item => item.file.file_name == 'texttexttexttextqa.txt');
-
-      for(let i = 0 ; i < qas.length ; i++){
-        // Delete the file using the provided fileId
-        const response = await fetch(`https://api.trieve.ai/api/file/${qas[i].file.id}`, {
-          method: "DELETE",
-          headers: {
-            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
-            "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
-            "TR-Dataset": dataset?.datasetId, // Use datasetId since it's guaranteed to be present
-          }
-        });
-
-        // Check if the file deletion was successful
-        if (!response.ok) {
-          throw new Error(`Failed to delete file: ${response.statusText}`);
-        }
-      }
-
-      //@ts-ignore
-      const links = datasets.file_and_group_ids.filter(item => item.file.file_name == 'texttexttexttextlink.txt');
-
-      for(let i = 0 ; i < links.length ; i++){
-        // Delete the file using the provided fileId
-        const response = await fetch(`https://api.trieve.ai/api/file/${links[i].file.id}`, {
-          method: "DELETE",
-          headers: {
-            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
-            "TR-Organization": process.env.NEXT_PUBLIC_TRIEVE_ORG_ID!,
-            "TR-Dataset": dataset?.datasetId, // Use datasetId since it's guaranteed to be present
-          }
-        });
-
-        // Check if the file deletion was successful
-        if (!response.ok) {
-          throw new Error(`Failed to delete file: ${response.statusText}`);
-        }
-      }
-      
-    } catch (err) {
-      // setError(err instanceof Error ? err.message : "Failed to fetch files");
-    } finally {
-      // setLoading(false);
-    }
-  };
 
   useEffect(() => {
     const fetchDataset = async () => {
@@ -154,16 +68,23 @@ const Sources = ({
         }
         const data = await response.json();
         setDataset(data); // Assuming the API returns the dataset directly
-        if(data.qaPairs)
+        if (data.qaPairs)
           setQaPairs(data.qaPairs)
-        if(data.text)
+        if (data.text)
           setText(data.text)
-        if(data.links)
+        if (data.links)
           setLinks(data.links)
-        fetchFiles()
+        if (data.files) {
+          // @ts-ignore
+          setFileCount(data.files.length);
+          //@ts-ignore
+          setFileChars(data.files.reduce((size, file) => {
+            return size + file.charCount;
+          }, 0))
+        }
       } catch (error) {
         console.error("Error fetching dataset:", error);
-        toast.error("Failed to load dataset");
+        toast.error("Failed to load dataset" + error.message);
       }
     };
 
@@ -175,8 +96,8 @@ const Sources = ({
   };
 
   const retrain = async () => {
-    if( totalChars > planConfig.charactersLimit && planConfig.charactersLimit != 0) {
-      toast.error(`Please udpate your plan, you can train your bot upto ${(planConfig.charactersLimit/1000000).toFixed(1)}M characters.`)
+    if (totalChars > planConfig.charactersLimit && planConfig.charactersLimit != 0) {
+      toast.error(`Please udpate your plan, you can train your bot upto ${(planConfig.charactersLimit / 1000000).toFixed(1)}M characters.`)
       return;
     }
     try {
@@ -188,7 +109,7 @@ const Sources = ({
         },
         method: "POST",
         body: JSON.stringify({
-          chatbotId, 
+          chatbotId,
           text,
           qaPairs,
           links,
@@ -202,16 +123,16 @@ const Sources = ({
 
       const data = await response.json();
       console.log("Retrain response:", data);
-      
+
       toast.success("Retraining completed successfully!");
-      
+
       // Redirect to the sources page without the tab query parameter
       router.push(`/dashboard/${teamId}/chatbot/${chatbotId}`);
     } catch (err) {
       console.error("Retrain error:", err);
-      
+
       toast.error(err instanceof Error ? err.message : "Failed to retrain");
-      
+
       // setError(err instanceof Error ? err.message : "Failed to upload file");
     } finally {
       setIsTraining(false);
@@ -221,17 +142,17 @@ const Sources = ({
   const renderContent = () => {
     switch (currentTab) {
       case "files":
-        return <FileUpload teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount} 
-                        setFileSize={setFileSize} setFileChars={setFileChars} 
-                        limitChars={planConfig.charactersLimit} totalChars={totalChars}/>;
+        return <FileUpload teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount}
+          setFileSize={setFileSize} setFileChars={setFileChars}
+          limitChars={planConfig.charactersLimit} totalChars={totalChars} />;
       case "text":
         return <TextInput text={text} setText={setText} />;
       case "website":
         return <WebsiteInput links={links} setLinks={setLinks} />;
       case "qa":
-        return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs}/>;
+        return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs} />;
       case "notion":
-        return <NotionInput 
+        return <NotionInput
           onConnect={() => {
             console.log('Connecting to Notion...');
           }}
@@ -265,8 +186,8 @@ const Sources = ({
                   md:px-4 md:py-2
                   max-md:px-6 max-md:py-3
                   rounded-lg
-                  ${currentTab === tab.id 
-                    ? "bg-primary/10 text-primary" 
+                  ${currentTab === tab.id
+                    ? "bg-primary/10 text-primary"
                     : "text-gray-600 hover:bg-gray-100"}
                 `}
               >

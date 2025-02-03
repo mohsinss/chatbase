@@ -306,8 +306,8 @@ fileUploadInput.addEventListener("change", (event) => {
             file_name,
             base64_file,
             provider,
-            llm_model: model,
-            system_prompt: conversionPrompt || undefined,
+            llm_model: model || 'openai/gpt-4o-mini',
+            system_prompt: conversionPrompt || 'Convert the following PDF page to markdown. Return only the markdown with no explanation text. Do not exclude any content from the page.',
         };
 
         fetch("https://pdf2md.trieve.ai/api/task", {
