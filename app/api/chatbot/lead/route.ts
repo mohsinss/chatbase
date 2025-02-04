@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import sgMail from '@sendgrid/mail';
 import client from "@sendgrid/client";
+import User from "@/models/User";
+
 const axios = require('axios');
 
 client.setApiKey(process.env.SENDGRID_API_KEY);

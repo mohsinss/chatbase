@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { IconCopy, IconExternalLink } from "@tabler/icons-react";
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface ShareSectionProps {
   chatbotId: string;
@@ -55,7 +56,7 @@ const ShareSection = ({ chatbotId, domain }: ShareSectionProps) => {
             <IconCopy className="w-4 h-4" />
             <span>{copied ? "Copied!" : "Copy"}</span>
           </button>
-          
+
           <button
             onClick={handleVisit}
             className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 bg-white transition-colors"
@@ -66,7 +67,10 @@ const ShareSection = ({ chatbotId, domain }: ShareSectionProps) => {
         </div>
       </div>
 
-      {/* QR Code section could be added here in the future */}
+      {/* QR Code Display */}
+      <div className="flex justify-center py-4">
+        <QRCodeCanvas value={chatbotUrl} />
+      </div>
     </div>
   );
 };
