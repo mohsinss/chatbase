@@ -30,7 +30,7 @@ const nextConfig = {
   },
   api: {
     bodyParser: {
-      sizeLimit: '10mb', // Increase the limit (e.g., to 10 MB)
+      sizeLimit: '20mb', // Increase the limit (e.g., to 10 MB)
     },
   },
 };
