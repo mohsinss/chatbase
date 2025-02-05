@@ -249,7 +249,7 @@ const ChatContainer = ({
         }
       }
 
-      toast.success('Email sent successfully to Admin.');
+      toast.success('Thank you for your attention.');
       // Handle successful lead submission here
       // For example, you might want to clear the form and show a success message
     } catch (error) {

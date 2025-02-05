@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CustomNotification } from './GeneralSettings'
+import toast from "react-hot-toast";
 
 interface LeadsSettingsProps {
   chatbotId: string;
@@ -20,10 +21,25 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
   } | null>(null);
   const [delay, setDelay] = useState(1);
   const [enableLead, setEnableLead] = useState('never');
+  const [leads, setLeads] = useState([]);
 
   useEffect(() => {
     fetchSettings();
+    fetchLeads();
   }, [chatbotId]);
+
+  const fetchLeads = async () => {
+    try {
+      const response = await fetch(`/api/chatbot/lead?chatbotId=${chatbotId}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      setLeads(data);
+    } catch (error) {
+      toast.error("Failed to load leads " + error.message)
+    }
+  };
 
   const fetchSettings = async () => {
     try {
@@ -39,10 +55,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
         setEnableLead(data.enableLead);
       }
     } catch (error) {
-      setNotification({
-        message: "Failed to load settings",
-        type: "error"
-      });
+      toast.error("Failed to load settings " + error.message);
     }
   };
 
@@ -55,7 +68,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
       });
       return;
     }
-    
+
     setLoading(true);
     try {
       const response = await fetch("/api/chatbot/leads-settings", {
@@ -93,10 +106,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
 
   const checkAndUpdate = (setter: React.Dispatch<React.SetStateAction<boolean>>, updatable: boolean, value: boolean) => {
     if (updatable) {
-      setNotification({
-        message: "At least one setting must be enabled",
-        type: "error"
-      });
+      toast.error("At least one setting must be enabled")
     } else {
       setter(value);
     }
@@ -136,7 +146,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
 
           {/* Delay Field */}
           {
-            enableLead == "after" && 
+            enableLead == "after" &&
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <label className="text-base font-medium">Delay</label>
@@ -259,6 +269,32 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
             </Button>
           </div>
         </div>
+
+        {/* Leads Section */}
+        <div className="">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold mb-2">Lead Results</h2>
+          </div>
+          <table className="table-auto w-full">
+            <thead>
+              <tr>
+                {nameEnabled && <th className="px-4 py-2 text-left">Name</th>}
+                {emailEnabled && <th className="px-4 py-2 text-left">Email</th>}
+                {phoneEnabled && <th className="px-4 py-2 text-left">Phone</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map((lead, index) => (
+                <tr key={index}>
+                  {nameEnabled && <td className="border px-4 py-2">{lead.name}</td>}
+                  {emailEnabled && <td className="border px-4 py-2">{lead.email}</td>}
+                  {phoneEnabled && <td className="border px-4 py-2">{lead.phone}</td>}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </>
   );

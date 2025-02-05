@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import sgMail from '@sendgrid/mail';
 import client from "@sendgrid/client";
 import User from "@/models/User";
+import Lead from "@/models/Lead";
 
 const axios = require('axios');
 
 client.setApiKey(process.env.SENDGRID_API_KEY);
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-async function getEmailValidation(email : string) {
+async function getEmailValidation(email: string) {
   try {
     const response = await axios.get(`https://emailvalidation.abstractapi.com/v1/?api_key=${process.env.ABSTRACTAPI_KEY}&email=${email}`);
     console.log(response.data);
@@ -21,16 +22,13 @@ async function getEmailValidation(email : string) {
 
 export async function POST(req: Request) {
   try {
-    const { name, email, phone } = await req.json();
-    const data = {
-      email
-    };
+    const { name, email, phone, chatbotId } = await req.json();
 
-    const request = {
-      url: `/v3/validations/email`,
-      method: "POST" as const,
-      body: data,
-    };
+    // Check for email duplication
+    const existingLead = await Lead.findOne({ email: email });
+    // if (existingLead) {
+    //   return NextResponse.json({ error: "Email already exists" }, { status: 400 });
+    // }
 
     const email_valid = await getEmailValidation(email);
     if (!email_valid) {
@@ -68,11 +66,34 @@ export async function POST(req: Request) {
     };
 
     // Send email
-    await sgMail.send(msg);
+    // await sgMail.send(msg);
+
+    if (!existingLead) {
+      const lead = new Lead({
+        email: email,
+        name: name,
+        phone: phone,
+        chatbotId: chatbotId
+      });
+      await lead.save();
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.log(error)
     return NextResponse.json({ error: "Failed to save leads settings" }, { status: 500 });
   }
-} 
+}
+
+export async function GET(req: Request) {
+  try { 
+    const url = new URL(req.url);
+    const chatbotId = url.searchParams.get("chatbotId"); // Extract datasetId from query parameters
+    
+    const leads = await Lead.find({chatbotId});
+    return NextResponse.json(leads);
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json({ error: "Failed to fetch leads" }, { status: 500 });
+  }
+}
