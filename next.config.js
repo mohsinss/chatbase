@@ -27,7 +27,12 @@ const nextConfig = {
     outputFileTracingIncludes: {
       '/api/**/*': ['./node_modules/**/*.wasm', './node_modules/**/*.proto']
     }
-  }
+  },
+  api: {
+    bodyParser: {
+      sizeLimit: '20mb', // Increase the limit (e.g., to 10 MB)
+    },
+  },
 };
 
 export default nextConfig;

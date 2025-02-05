@@ -238,13 +238,24 @@ const ChatContainer = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit lead');
+        if (response.status === 400) {
+          // Handle invalid email error
+          const data = await response.json();
+          setShowLead(false);
+          toast.error(data.error);
+          return;
+        } else {
+          throw new Error('Failed to submit lead');
+        }
       }
 
+      toast.success('Email sent successfully to Admin.');
       // Handle successful lead submission here
       // For example, you might want to clear the form and show a success message
     } catch (error) {
       console.error('Error submitting lead:', error);
+
+      toast.error('Sth went wrong.');
     } finally {
       setShowLead(false);
     }
@@ -314,134 +325,140 @@ const ChatContainer = ({
 
           {/* Chat Messages */}
           <div
-            className={`overflow-y-auto p-4 flex-grow relative`}
+            className={`overflow-y-hidden p-4 flex-grow relative`}
             style={{
               backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}
           >
-            {/* Add a background overlay div to control opacity */}
-            {config.chatBackgroundUrl && (
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundColor: 'white',
-                  opacity: 1 - (config.chatBackgroundOpacity || 0.1)
-                }}
-              />
-            )}
-            {/* Keep existing chat messages but wrap them in a relative div */}
-            <div className="relative z-10">
-              {messages.length === 0 && (
-                <div className={`text-gray-500 p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                  } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                  {config.initialMessage}
-                </div>
-              )}
-              {messages.map((message, index) => (
-                <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                  <div className={`p-3 inline-block max-w-[80%] ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                    } ${message.role === 'assistant'
-                      ? 'prose prose-sm max-w-none bg-white'
-                      : 'text-white'
-                    }`}
-                    style={{
-                      backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
-                      transition: 'background-color 0.3s ease'
-                    }}>
-                    {message.reasonal_content &&
-                      <p className="p-1 rounded-sm bg-slate-100 pb-3 hidden">{message.reasonal_content}</p>
-                    }
-                    {message.role === 'assistant' ? (
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
-                    ) : (
-                      <p className="p-1">{message.content}</p>
-                    )}
-                    {message.role === 'assistant' && message.confidenceScore != -1 && <div>
-                      <span style={{ backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px' }}>{message.confidenceScore}</span>
-                    </div>}
+            <div className="absolute inset-0 p-4 overflow-y-auto"
+              style={{
+                backgroundColor: 'white',
+                opacity: config.chatBackgroundUrl ? 1 - (config.chatBackgroundOpacity || 0.1) : 1,
+              }}>
+              {/* Add a background overlay div to control opacity */}
+              {/* {config.chatBackgroundUrl && (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundColor: 'white',
+                    opacity: 1 - (config.chatBackgroundOpacity || 0.1)
+                  }}
+                />
+              )} */}
+              {/* Keep existing chat messages but wrap them in a relative div */}
+              <div className="relative z-10">
+                {messages.length === 0 && (
+                  <div className={`text-gray-500 p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                    } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    {config.initialMessage}
                   </div>
-                </div>
-              ))}
-              {isLoading && <span className="loading loading-spinner loading-xs"></span>}
-              {
-                !isLoading && showLead && (leadSetting?.enable == "immediately"
-                  || (leadSetting?.enable == "after"
-                    && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))
-                &&
-                <div className="px-3">
-                  <div className="hyphens-auto break-words rounded-[20px] text-left text-sm leading-5 antialiased relative inline-block max-w-full rounded-r-[20px] rounded-l px-5 py-4 only:rounded-[20px] last:rounded-tl first:rounded-tl-[20px] first:rounded-bl only:rounded-bl last:rounded-bl-[20px] bg-zinc-200/50 text-zinc-800 group-data-[theme=dark]:bg-zinc-800/80 group-data-[theme=dark]:text-zinc-300">
-                    <div className="float-left clear-both">
-                      <div className="flex space-x-3">
-                        <div className="flex-1 gap-4">
-                          <div className="text-left text-inherit">
-                            <form onSubmit={handleLeadFormSubmit}>
-                              <div className="mb-4 flex items-start justify-between">
-                                <h4 className="pr-8 font-semibold text-sm">{leadSetting?.title}</h4>
-                                <button 
-                                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 underline-offset-4 hover:underline dark:text-zinc-50 h-9 w-9 absolute top-0 right-0 p-0 group-data-[theme=dark]:hover:text-zinc-400 group-data-[theme=dark]:text-zinc-300 text-zinc-700 hover:text-zinc-600" 
-                                  type="button"
-                                  onClick={() => setShowLead(false)}
-                                  aria-label="Close contact form" 
-                                  title="Close contact form">
-                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true" className="h-4 w-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                                  </svg>
-                                </button>
-                              </div>
+                )}
+                {messages.map((message, index) => (
+                  <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
+                    <div className={`p-3 inline-block max-w-[80%] ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                      } ${message.role === 'assistant'
+                        ? 'prose prose-sm max-w-none bg-white'
+                        : 'text-white'
+                      }`}
+                      style={{
+                        backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
+                        transition: 'background-color 0.3s ease'
+                      }}>
+                      {message.reasonal_content &&
+                        <p className="p-1 rounded-sm bg-slate-100 pb-3 hidden">{message.reasonal_content}</p>
+                      }
+                      {message.role === 'assistant' ? (
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      ) : (
+                        <p className="p-1">{message.content}</p>
+                      )}
+                      {message.role === 'assistant' && message.confidenceScore != -1 && <div>
+                        <span style={{ backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px' }}>{message.confidenceScore}</span>
+                      </div>}
+                    </div>
+                  </div>
+                ))}
+                {isLoading && <span className="loading loading-spinner loading-xs"></span>}
+                {
+                  !isLoading && showLead && (leadSetting?.enable == "immediately"
+                    || (leadSetting?.enable == "after"
+                      && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))
+                  &&
+                  <div className="py-3">
+                    <div className="hyphens-auto break-words rounded-[20px] text-left text-sm leading-5 antialiased relative inline-block max-w-full rounded-r-[20px] rounded-l px-5 py-4 only:rounded-[20px] last:rounded-tl first:rounded-tl-[20px] first:rounded-bl only:rounded-bl last:rounded-bl-[20px] bg-zinc-200/50 text-zinc-800 group-data-[theme=dark]:bg-zinc-800/80 group-data-[theme=dark]:text-zinc-300">
+                      <div className="float-left clear-both">
+                        <div className="flex space-x-3">
+                          <div className="flex-1 gap-4">
+                            <div className="text-left text-inherit">
+                              <form onSubmit={handleLeadFormSubmit}>
+                                <div className="mb-4 flex items-start justify-between">
+                                  <h4 className="pr-8 font-semibold text-sm">{leadSetting?.title}</h4>
+                                  <button
+                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 underline-offset-4 hover:underline dark:text-zinc-50 h-9 w-9 absolute top-0 right-0 p-0 group-data-[theme=dark]:hover:text-zinc-400 group-data-[theme=dark]:text-zinc-300 text-zinc-700 hover:text-zinc-600"
+                                    type="button"
+                                    onClick={() => setShowLead(false)}
+                                    aria-label="Close contact form"
+                                    title="Close contact form">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true" className="h-4 w-4">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                  </button>
+                                </div>
                                 {
-                                leadSetting?.name
-                                && <div className="mb-4">
-                                  <label className="mb-1 block font-medium text-sm" htmlFor="name">Name</label>
-                                  <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
-                                    <input id="name" autoComplete="name" className="w-full min-w-0 flex-auto appearance-none rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" maxLength={70} aria-label="Name" title="Name" name="name" />
+                                  leadSetting?.name
+                                  && <div className="mb-4">
+                                    <label className="mb-1 block font-medium text-sm" htmlFor="name">Name</label>
+                                    <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
+                                      <input id="name" autoComplete="name" className="w-full min-w-0 flex-auto appearance-none rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" maxLength={70} aria-label="Name" title="Name" name="name" />
+                                    </div>
                                   </div>
-                                </div>
-                              }
-                              {
-                                leadSetting?.email
-                                && <div className="mb-4">
-                                  <label className="mb-1 block font-medium text-sm" htmlFor="email">Email</label>
-                                  <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
-                                    <input id="email" autoComplete="email" required={true} className="w-full min-w-0 flex-auto rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" aria-label="Email" title="Email" type="email" name="email" />
+                                }
+                                {
+                                  leadSetting?.email
+                                  && <div className="mb-4">
+                                    <label className="mb-1 block font-medium text-sm" htmlFor="email">Email</label>
+                                    <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
+                                      <input id="email" autoComplete="email" required={true} className="w-full min-w-0 flex-auto rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" aria-label="Email" title="Email" type="email" name="email" />
+                                    </div>
                                   </div>
-                                </div>
-                              }
-                              {
-                                leadSetting?.phone
-                                && <div className="mb-4">
-                                  <label className="mb-1 block font-medium text-sm" htmlFor="phone">Phone Number</label>
-                                  <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
-                                    <input id="phone" autoComplete="tel" required={true} className="w-full min-w-0 flex-auto appearance-none rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" aria-label="Phone Number" title="Phone Number" type="tel" name="phone" />
+                                }
+                                {
+                                  leadSetting?.phone
+                                  && <div className="mb-4">
+                                    <label className="mb-1 block font-medium text-sm" htmlFor="phone">Phone Number</label>
+                                    <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
+                                      <input id="phone" autoComplete="tel" required={true} className="w-full min-w-0 flex-auto appearance-none rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" aria-label="Phone Number" title="Phone Number" type="tel" name="phone" />
+                                    </div>
                                   </div>
+                                }
+                                <div className="flex items-end justify-between">
+                                  <button
+                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 bg-zinc-900 text-zinc-50 shadow hover:bg-zinc-800/90 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/90 h-9 px-4 py-1"
+                                    aria-label="Send your contact info"
+                                    title="Send your contact info"
+                                    type="submit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="h-4 w-4">
+                                      <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z">
+                                      </path>
+                                    </svg>
+                                  </button>
                                 </div>
-                              }
-                              <div className="flex items-end justify-between">
-                                <button
-                                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 bg-zinc-900 text-zinc-50 shadow hover:bg-zinc-800/90 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/90 h-9 px-4 py-1"
-                                  aria-label="Send your contact info"
-                                  title="Send your contact info"
-                                  type="submit">
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="h-4 w-4">
-                                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z">
-                                    </path>
-                                  </svg>
-                                </button>
-                              </div>
-                            </form>
+                              </form>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              }
+                }
+              </div>
+              <div ref={messagesEndRef} />
             </div>
-            <div ref={messagesEndRef} />
           </div>
 
-          <div className="flex flex-col justify-between">
+          <div className="flex flex-col justify-between pt-2">
             {/* Suggested Messages - Horizontal scrollable */}
             <div className="px-3 overflow-x-auto whitespace-nowrap flex gap-2 mb-4 pb-2">
               {config.suggestedMessages?.split('\n').filter((msg: string) => msg.trim()).map((message: string, index: number) => (
@@ -458,6 +475,13 @@ const ChatContainer = ({
                     // Start the chat process
                     setIsLoading(true);
                     try {
+                      if (!isLoading && showLead && (leadSetting?.enable == "immediately"
+                        || (leadSetting?.enable == "after"
+                          && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
+                        toast.error('Please submit the form. 🙂');
+                        setIsLoading(true);
+                        return;
+                      }
                       const response = await fetch('/api/chatbot/chat', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -546,7 +570,16 @@ const ChatContainer = ({
             </div>
 
             {/* Chat Input */}
-            <form onSubmit={handleSubmit} className="border-t p-3">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (!isLoading && showLead && (leadSetting?.enable == "immediately"
+                || (leadSetting?.enable == "after"
+                  && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
+                toast.error('Please submit the form. 🙂');
+                return;
+              }
+              handleSubmit(e)
+            }} className="border-t p-3">
               <div className="relative">
                 <input
                   type="text"

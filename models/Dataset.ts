@@ -15,14 +15,24 @@ interface ILink {
   chars: number;
 }
 
+interface IFile {
+    trieveId: string;
+    trieveTaskId: string;
+    url: string;
+    name: string;
+    text: string;
+    charCount: number;
+    status: string;
+    trained: boolean;
+}
+
 interface IDataset {
   chatbotId: string;
   datasetId: string;
   text: string;
   qaPairs?: IQAPair[];
   links?: ILink[];
-//   vectorStoreId?: string | null;
-//   openaiAssistantId?: string | null;
+  files?: IFile[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -62,6 +72,19 @@ const datasetSchema = new mongoose.Schema<IDataset>({
             id: { type: String, required: true },
             link: { type: String, required: true },
             chars: { type: Number, required: false },
+        }],
+        default: []
+    },
+    files: {
+        type: [{ 
+            trieveId: { type: String, required: false },
+            trieveTaskId: { type: String, required: false },
+            name: { type: String, required: true },
+            url: { type: String, required: true },
+            text: { type: String, required: false },
+            charCount: {type: Number, required: false, default: 0 },
+            status: { type: String, required: false },
+            trained: { type: Boolean, required: true, default: false },
         }],
         default: []
     },
