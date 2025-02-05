@@ -271,7 +271,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
         </div>
 
         {/* Leads Section */}
-        <div className="">
+        {leads.length > 0 && <div className="">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold mb-2">Lead Results</h2>
           </div>
@@ -293,7 +293,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
               ))}
             </tbody>
           </table>
-        </div>
+        </div>}
 
       </div>
     </>
