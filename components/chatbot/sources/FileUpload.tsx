@@ -82,8 +82,8 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
     try {
       if(!datasetId) return;
       for (const file of acceptedFiles) {
-        if (file.size > 10245760) { // 10MB in bytes
-          toast.error(`File size exceeds 10MB. Please upload a smaller file.`);
+        if (file.size > 15245760) { // 10MB in bytes
+          toast.error(`File size exceeds 15MB. Please upload a smaller file.`);
           return;
         }
 
@@ -185,7 +185,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
             Supported File Types: PDF, TXT, IMAGES
           </p>
           <p className="text-gray-500">
-            Maximum file size: 10MB
+            Maximum file size: 15MB
           </p>
           {error && (
             <p className="text-red-500 mt-4">{error}</p>
