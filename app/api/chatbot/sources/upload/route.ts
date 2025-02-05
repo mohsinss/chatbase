@@ -1,66 +1,52 @@
 import { NextResponse } from "next/server";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import connectMongo from "@/libs/mongoose";
 import DatasetModel from "@/models/Dataset";
+import { pipeline } from 'stream';
+import { promisify } from 'util';
 
 export const dynamic = 'force-dynamic';
 
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
+const pipelineAsync = promisify(pipeline);
+
+async function blobToBuffer(blob: Blob) {
+  const reader = blob.stream().getReader();
+  let chunks = [];
+  let result;
+  while (!(result = await reader.read()).done) {
+    chunks.push(result.value);
+  }
+  return Buffer.concat(chunks);
+}
+
+async function blobToFile(blob: Blob, fileName: string, type: string): Promise<File> {
+  return new File([blob], fileName, { type: type });
+}
 
 export async function POST(req: Request) {
   try {
     const reqformData = await req.formData();
     // Validate form data
-    const file = reqformData.get('file') as File | null;
+    
     const fileName = reqformData.get('fileName') as string | null;
+    const newFileName = reqformData.get('newFileName') as string | null;
+    const fileUrl = reqformData.get('fileUrl') as string | null;
     const datasetId = reqformData.get('datasetId') as string | null;
     const conversionPrompt = reqformData.get('conversionPrompt') as string | null;
     const model = reqformData.get('model') as string | null;
 
-    if (!file || !fileName || !datasetId) {
+    if (!fileUrl || !datasetId || !newFileName) {
       return NextResponse.json(
-        { error: "Missing required fields: file, fileName, or datasetId." },
+        { error: "Missing required fields: fileUrl, newFileName or datasetId." },
         { status: 400 }
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const fileNameParts = fileName.split('.');
-    const name = fileNameParts.slice(0, -1).join('.');
-    const extension = fileNameParts.slice(-1)[0];
-
-    // Insert the date between the name and extension
-    const newFileName = `${name}-${Date.now()}.${extension}`;
-
-    const key = `${datasetId}/${newFileName}`;
-    let fileUrl;
-
-    console.log("Uploading file to S3:", {
-      bucket: process.env.AWS_S3_BUCKET_NAME,
-      key,
-      contentType: file.type
-    });
-
-    try {
-      await s3Client.send(
-        new PutObjectCommand({
-          Bucket: process.env.AWS_S3_BUCKET_NAME,
-          Key: key,
-          Body: buffer,
-          ContentType: file.type,
-        })
-      );
-    } catch (s3Error) {
-      console.error("S3 upload error:", s3Error);
-      throw new Error(`S3 upload failed: ${s3Error.message}`);
-    }
-    fileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    // Fetch the file from the URL and get the buffer
+    const fileResponse = await fetch(fileUrl);
+    const blob = await fileResponse.blob();
+    const fileType = fileResponse.headers.get('content-type');
+    const buffer = await blobToBuffer(blob);
+    const file = await blobToFile(blob, fileName, fileType);
 
     let trieve_data;
     let charCount;
@@ -76,7 +62,7 @@ export async function POST(req: Request) {
       throw new Error(`No dataset found with id: ${datasetId}`);
     }
 
-    if (file.type === 'application/pdf') {
+    if (fileType === 'application/pdf') {
       // create OCR task for pdf
       const provider = model === "Chunkr" ? "Chunkr" : "LLM";
       const formData = {
@@ -101,7 +87,7 @@ export async function POST(req: Request) {
       }
 
       trieve_data = await trieve_response.json();
-    } else if (file.type.startsWith('image/')) {
+    } else if (fileType.startsWith('image/')) {
       const formData = new FormData();
       formData.append('Files[0]', file, fileName);
       formData.append('StoreFile', 'true');
@@ -153,7 +139,7 @@ export async function POST(req: Request) {
       }
 
       trieve_data = await trieve_response.json();
-    } else if (file.type === 'text/plain') {
+    } else if (fileType === 'text/plain') {
       charCount = Buffer.byteLength(buffer.toString(), 'utf8');
       status = 'Completed';
       console.log(`Text file character count: ${charCount}`);

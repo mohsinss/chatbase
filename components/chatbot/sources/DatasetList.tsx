@@ -157,7 +157,8 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
 
   const handleViewText = async (fileId: string, fileName: string, fileStatus: string, trieveTaskId: string) => {
     if (fileStatus != "Completed") {
-      toast.error("You can't view text for this file, sth went wrong, please contact with ADMIN!")
+      toast.error("You can't view text until the status is completed.")
+      return;
     }
 
     if (fileName.endsWith(".txt")) {

@@ -89,7 +89,9 @@ export async function DELETE(
   const datasetId = url.searchParams.get("datasetId"); // Extract datasetId from query parameters
   const trieveId = url.searchParams.get("trieveId"); // Extract datasetId from query parameters
   const chatbotId = url.searchParams.get("chatbotId"); // Extract datasetId from query parameters
-
+  
+  console.log(`trieveId: ${trieveId}`); 
+  
   // Check if datasetId is provided
   if (!datasetId) {
     return NextResponse.json(
@@ -115,7 +117,7 @@ export async function DELETE(
       { $pull: { files: { _id: params.fileId } } }
     );
 
-    if (trieveId) {
+    if (trieveId !== undefined && trieveId !== "undefined") {
       // Fetch the file metadata before deletion
       const response1 = await fetch(`https://api.trieve.ai/api/file/${trieveId}`, {
         method: "GET",
