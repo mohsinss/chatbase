@@ -23,8 +23,6 @@ export default async function ChatbotPage({
   const chatbot = await Chatbot.findOne({ chatbotId: params.chatbotId });
   const aiSettings = await ChatbotAISettings.findOne({ chatbotId: params.chatbotId });
 
-  console.log('AI Settings found:', aiSettings);
-
   // Serialize the chatbot data with AI settings
   const serializedChatbot: ChatbotData = {
     id: chatbot.chatbotId,

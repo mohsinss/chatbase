@@ -40,8 +40,6 @@ export default async function ChatbotPage({
     redirect("/dashboard");
   }
 
-  console.log('AI Settings found:', aiSettings);
-
   // Serialize the chatbot data with AI settings
   const serializedChatbot: ChatbotData = {
     id: chatbot.chatbotId,

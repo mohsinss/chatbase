@@ -7,6 +7,9 @@ import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import config from "@/config";
 import connectMongo from "./mongo";
 import sgMail from '@sendgrid/mail';
+import User from "@/models/User";
+import connectMongo1 from "@/libs/mongoose";
+import Account from "@/models/Account";
 
 interface NextAuthOptionsExtended extends NextAuthOptions {
   adapter: any;
@@ -71,6 +74,63 @@ export const authOptions: NextAuthOptionsExtended = {
         session.user.id = token.sub;
       }
       return session;
+    },
+    async signIn({ user, account, profile }) {
+      if (account.provider === 'google' && user.email) {
+        await connectMongo1();
+        const existingUser = await User.findOne({ email: user.email });
+
+        if (existingUser) {          
+          // If the user already exists, link the Google account to the existing user
+          const existingAccount = await Account.findOne({
+            provider: 'google',
+            providerAccountId: profile.sub,
+          });
+
+          if (!existingAccount) {
+            // Create a new account linked to the existing user
+            const newAccount = new Account({
+              userId: existingUser._id,
+              type: 'oauth',
+              provider: 'google',
+              providerAccountId: profile.sub,
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              token_type: account.token_type,
+              scope: account.scope,
+            });
+
+            await newAccount.save();
+          }
+          
+          return true; // Allow sign-inp
+        } else {
+          // If the user doesn't exist, create a new user with the Google account
+          const newUser = new User({
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            createdAt: new Date(),
+          });
+          await newUser.save();
+
+          const newAccount = new Account({
+            userId: newUser._id,
+            type: 'oauth',
+            provider: 'google',
+            providerAccountId: profile.sub,
+            access_token: account.access_token,
+            expires_at: account.expires_at,
+            token_type: account.token_type,
+            scope: account.scope,
+          });
+
+          await newAccount.save();
+
+          return true; // Allow sign-in
+        }
+      }
+      return true; // Allow sign-in for other providers
     },
   },
   session: {

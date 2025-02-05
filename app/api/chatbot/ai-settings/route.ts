@@ -30,7 +30,6 @@ export async function GET(request: Request) {
       });
     }
 
-    console.log("Found settings:", chatbot.lastTrained.toLocaleString());
     //@ts-ignore
     return NextResponse.json({...settings._doc, lastTrained: chatbot.lastTrained.toLocaleString()});
   } catch (error) {
