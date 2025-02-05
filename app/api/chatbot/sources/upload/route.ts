@@ -139,12 +139,11 @@ export async function POST(req: Request) {
           }
         }
 
-        // Now you can process the pages
-        console.log(pages);
+        // Combine all pages content
         let allContent = '';
         //@ts-ignore
         pages.forEach(page => {
-          allContent += page.content; // Access the content property of each page
+          allContent += page.content;
         });
 
         metadata = {
@@ -183,6 +182,12 @@ export async function POST(req: Request) {
         }
 
         metadata.filetype = 'pdf';
+
+        // Return the data along with the extracted text
+        return NextResponse.json({
+          ...data,
+          extractedText: allContent // Add the extracted text to the response
+        });
       } catch (ocrError) {
         console.error("PDF2MD error details:", ocrError);
         return NextResponse.json(

@@ -21,6 +21,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [datasetId, setDatasetId] = useState<string | null>(null);
+  const [extractedText, setExtractedText] = useState<string | null>(null);
 
   useEffect(() => {
     const createDataset = async () => {
@@ -96,7 +97,8 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
         }
 
         const data = await response.json();
-        console.log("Upload response:", data); // Debug log
+        console.log("Upload response:", data);
+        setExtractedText(data.extractedText);
       }
       
       setSuccess(`Successfully uploaded ${acceptedFiles.length} file(s)`);
@@ -176,8 +178,22 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
         setFileCount={setFileCount}
         setFileSize={setFileSize}
         setFileChars={setFileChars}
-        onDelete={() => setSuccess(null)} 
+        onDelete={() => {
+          setSuccess(null);
+          setExtractedText(null);
+        }} 
       />
+
+      {extractedText && (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold mb-2">Extracted Text Preview</h3>
+          <div className="p-4 border rounded-lg bg-gray-50 max-h-96 overflow-y-auto">
+            <pre className="whitespace-pre-wrap font-mono text-sm">
+              {extractedText}
+            </pre>
+          </div>
+        </div>
+      )}
     </div>
   );
 }; 
