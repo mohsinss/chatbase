@@ -109,7 +109,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
             new PutObjectCommand({
               Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME,
               Key: key,
-              Body: file.slice(0, file.size, file.type),
+              Body: buffer,
               ContentType: file.type,
             })
           );
