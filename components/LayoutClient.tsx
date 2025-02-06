@@ -55,11 +55,6 @@ const ClientLayout = ({ children }: { children: ReactNode }) => {
   return (
     <>
       <SessionProvider>
-        {/* Show a progress bar at the top when navigating between pages */}
-        <NextTopLoader color={config.colors.main} showSpinner={false} />
-
-        {/* Content inside app/page.js files  */}
-        {children}
 
         {/* Show Success/Error messages anywhere from the app with toast() */}
         <Toaster
@@ -68,6 +63,12 @@ const ClientLayout = ({ children }: { children: ReactNode }) => {
             position: 'top-right'
           }}
         />
+        
+        {/* Show a progress bar at the top when navigating between pages */}
+        <NextTopLoader color={config.colors.main} showSpinner={false} />
+
+        {/* Content inside app/page.js files  */}
+        {children}
 
         {/* Show tooltips if any JSX elements has these 2 attributes: data-tooltip-id="tooltip" data-tooltip-content="" */}
         <Tooltip

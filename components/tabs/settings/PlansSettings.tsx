@@ -39,8 +39,8 @@ export function PlansSettings({ teamId }: { teamId: string }) {
         teamId,
         isYearly,
         mode: "subscription",
-        successUrl: window.location.href.split('?')[0] + "?checkout=1&plan=" + planName,
-        cancelUrl: window.location.href.split('?')[0] + "?checkout=2&plan=" + planName,
+        successUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=1&plan=" + planName,
+        cancelUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=2&plan=" + planName,
       });
       console.log(res)
       // @ts-ignore

@@ -8,13 +8,13 @@ import DashboardNav from "@/components/DashboardNav";
 
 const VALID_TABS = ["chatbots", "usage", "settings"];
 
-export default async function TeamTabPage({ 
-  params 
-}: { 
-  params: { teamId: string; tab: string } 
+export default async function TeamTabPage({
+  params
+}: {
+  params: { teamId: string; tab: string }
 }) {
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user?.id) {
     redirect("/api/auth/signin");
   }
@@ -36,7 +36,7 @@ export default async function TeamTabPage({
       <DashboardNav teamId={params.teamId} />
       <main className="min-h-screen">
         <section className="max-w-7xl mx-auto pt-8">
-          <DashboardTabs teamId={params.teamId} team={JSON.stringify(team)}/>
+          <DashboardTabs teamId={params.teamId} team={JSON.stringify(team)} />
         </section>
       </main>
     </>
