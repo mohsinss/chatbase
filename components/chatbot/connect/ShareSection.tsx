@@ -11,6 +11,7 @@ interface ShareSectionProps {
 
 const ShareSection = ({ chatbotId, domain }: ShareSectionProps) => {
   const [copied, setCopied] = useState(false);
+  const [copiedQR, setCopiedQR] = useState(false);
   const chatbotUrl = `http://${domain}/chatbot/${chatbotId}?standalone=true`;
 
   const handleCopy = async () => {
@@ -25,6 +26,24 @@ const ShareSection = ({ chatbotId, domain }: ShareSectionProps) => {
 
   const handleVisit = () => {
     window.open(chatbotUrl, '_blank');
+  };
+
+  const handleCopyQR = async () => {
+    const canvas = document.getElementById('qr-code-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve));
+    if (!blob) return;
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/png': blob
+        })
+      ]);
+      setCopiedQR(true);
+      setTimeout(() => setCopiedQR(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
   };
 
   return (
@@ -52,6 +71,7 @@ const ShareSection = ({ chatbotId, domain }: ShareSectionProps) => {
           <button
             onClick={handleCopy}
             className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 bg-white transition-colors"
+            disabled={copied}
           >
             <IconCopy className="w-4 h-4" />
             <span>{copied ? "Copied!" : "Copy"}</span>
@@ -68,8 +88,27 @@ const ShareSection = ({ chatbotId, domain }: ShareSectionProps) => {
       </div>
 
       {/* QR Code Display */}
-      <div className="flex justify-center py-4">
-        <QRCodeCanvas value={chatbotUrl} />
+      <div className="flex flex-col justify-center items-center py-4">
+        <QRCodeCanvas id="qr-code-canvas" value={chatbotUrl} />
+        {/* Action Buttons for QR Code */}
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={handleCopyQR}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 bg-white transition-colors"
+            disabled={copiedQR}
+          >
+            <IconCopy className="w-4 h-4" />
+            <span>{copiedQR ? "Copied!" : "Copy"}</span>
+          </button>
+
+          <button
+            onClick={handleVisit}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 bg-white transition-colors"
+          >
+            <IconExternalLink className="w-4 h-4" />
+            <span>Visit</span>
+          </button>
+        </div>
       </div>
     </div>
   );
