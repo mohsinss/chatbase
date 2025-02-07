@@ -53,6 +53,7 @@ const TABS: ReadonlyArray<Tab> = [
   },
   { id: "sources", label: "Sources" },
   { id: "actions", label: "Actions", badge: "New" },
+  { id: "contacts", label: "Contacts", badge: "New" },
   { id: "connect", label: "Connect", defaultSubRoute: "embed" },
   { 
     id: "settings", 

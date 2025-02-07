@@ -6,12 +6,12 @@ import Team from "@/models/Team";
 import Chatbot from "@/models/Chatbot";
 import DashboardNav from "@/components/DashboardNav";
 import ChatbotTabs from "@/components/chatbot/ChatbotTabs";
-import Connect from "@/components/chatbot/connect/Connect";
+import Contacts from "@/components/chatbot/contacts/Contacts";
 
-export default async function ConnectPage({ 
+export default async function SourcesPage({ 
   params 
 }: { 
-  params: { teamId: string; chatbotId: string; path?: string[] } 
+  params: { teamId: string; chatbotId: string } 
 }) {
   const session = await getServerSession(authOptions);
   
@@ -32,8 +32,8 @@ export default async function ConnectPage({
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <Connect teamId={params.teamId} chatbotId={params.chatbotId} domain={process.env.LIVE_DOMAIN}/>
+        <Contacts chatbotId={params.chatbotId}/>
       </main>
     </>
   );
-}
+} 

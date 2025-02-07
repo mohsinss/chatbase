@@ -270,31 +270,6 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
           </div>
         </div>
 
-        {/* Leads Section */}
-        {leads.length > 0 && <div className="">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold mb-2">Lead Results</h2>
-          </div>
-          <table className="table-auto w-full">
-            <thead>
-              <tr>
-                {nameEnabled && <th className="px-4 py-2 text-left">Name</th>}
-                {emailEnabled && <th className="px-4 py-2 text-left">Email</th>}
-                {phoneEnabled && <th className="px-4 py-2 text-left">Phone</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {leads.map((lead, index) => (
-                <tr key={index}>
-                  {nameEnabled && <td className="border px-4 py-2">{lead.name}</td>}
-                  {emailEnabled && <td className="border px-4 py-2">{lead.email}</td>}
-                  {phoneEnabled && <td className="border px-4 py-2">{lead.phone}</td>}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>}
-
       </div>
     </>
   );
