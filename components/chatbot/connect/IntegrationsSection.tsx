@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { IconDeviceLaptop } from "@tabler/icons-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import FacebookSDK from "@/components/facebook/FacebookSDK";
 
@@ -36,7 +36,7 @@ const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = f
         className="object-contain"
       />
     </div>
-    
+
     <div>
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
       <p className="text-gray-600 text-sm mb-4">{description}</p>
@@ -63,35 +63,55 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
   const router = useRouter();
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const handleAuthCallback = async (token: string) => {
-    try {
-      const res = await fetch('/api/auth/facebook', {
-        method: 'POST',
-        body: JSON.stringify({ token }),
-      });
-      const data = await res.json();
-      console.log(data)
-      // Handle business account selection
-    } finally {
-      setIsConnecting(false);
+  useEffect(() => {
+    const messageEventListener = (event: MessageEvent) => {
+      if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") return;
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+          console.log('WhatsApp Embedded Signup response:', data);
+
+          // Handle successful signup
+          if (data.status === 'success') {
+            const credentials = {
+              phoneNumberId: data.phone_number_id,
+              wabaId: data.waba_id,
+              // accessToken: data.access_token,
+            };
+            saveWhatsAppCredentials(credentials);
+          } else {
+            console.error('WhatsApp Embedded Signup failed:', data.error);
+            alert('Failed to connect to WhatsApp. Please try again.');
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing WhatsApp Embedded Signup response:', error);
+      }
+    };
+
+    window.addEventListener('message', messageEventListener);
+
+    // Cleanup function to remove the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('message', messageEventListener);
+    };
+  }, []);
+
+  const fbLoginCallback = (response: any) => {
+    if (response.authResponse) {
+      const code = response.authResponse.code;
+      console.log('response: ', code);
+    } else {
+      console.log('response: ', response);
     }
-  };
+  }
 
   const handleConnect = async (platform: string) => {
     if (platform === "whatsapp") {
       setIsConnecting(true);
-    
-      window.FB.login((response: any) => {
-        if (response.authResponse) {
-          const code = response.authResponse.code;
-          console.log(code)
-          // The returned code must be transmitted to your backend first and then
-          // perform a server-to-server call from there to our servers for an access token.
-        } else {
-          console.error('User cancelled login or did not fully authorize.');
-        }
-      }, {
-        config_id: '1448482203183254', // configuration ID goes here
+
+      window.FB.login(fbLoginCallback, {
+        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID, // configuration ID goes here
         response_type: 'code', // must be set to 'code' for System User access token
         override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
         extras: {
@@ -117,7 +137,7 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
       //   }
 
       //   const data: MetaBusinessResponse = await response.json();
-        
+
       //   if (data.error) {
       //     throw new Error(data.error);
       //   }
