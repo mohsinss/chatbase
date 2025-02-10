@@ -47,6 +47,11 @@ export default function Contacts({ chatbotId }: ContactsProps) {
         }
     };
 
+    const formatDate = (dateString: string) => {
+        let date = new Date(dateString);
+        return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+    };
+
     return (
         <div className="max-w-6xl mx-auto p-4 md:p-8">
             {/* Contacts Section */}
@@ -57,17 +62,21 @@ export default function Contacts({ chatbotId }: ContactsProps) {
                 <table className="table-auto w-full">
                     <thead>
                         <tr>
+                            <th className="px-4 py-2 text-left">#</th> {/* Add this line */}
                             {nameEnabled && <th className="px-4 py-2 text-left">Name</th>}
                             {emailEnabled && <th className="px-4 py-2 text-left">Email</th>}
                             {phoneEnabled && <th className="px-4 py-2 text-left">Phone</th>}
+                            <th className="px-4 py-2 text-left">Created At</th>
                         </tr>
                     </thead>
                     <tbody>
                         {leads.map((lead, index) => (
                             <tr key={index}>
+                                <td className="border px-4 py-2">{index + 1}</td>
                                 {nameEnabled && <td className="border px-4 py-2">{lead.name}</td>}
                                 {emailEnabled && <td className="border px-4 py-2">{lead.email}</td>}
                                 {phoneEnabled && <td className="border px-4 py-2">{lead.phone}</td>}
+                                <td className="border px-4 py-2">{formatDate(lead.createdAt)}</td>
                             </tr>
                         ))}
                     </tbody>
