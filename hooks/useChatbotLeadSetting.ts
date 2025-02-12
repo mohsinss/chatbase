@@ -8,6 +8,7 @@ export interface ChatbotLeadSettings {
   email: boolean,
   name: boolean,
   phone: boolean,
+  customQuestions?: string[],
 }
 
 export const useChatbotLeadSetting = (chatbotId: string) => {
@@ -36,6 +37,7 @@ export const useChatbotLeadSetting = (chatbotId: string) => {
           name: data.nameEnabled ?? true,
           email: data.emailEnabled ?? true,
           phone: data.phoneEnabled ?? true,
+          customQuestions: data?.customQuestions,
         }));
       }
     } catch (error) {

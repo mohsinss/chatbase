@@ -35,7 +35,7 @@ export default async function SettingsPage({ params }: PageProps) {
     <>
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
-      <main className="min-h-screen">
+      <main className="min-h-screen ">
         <Settings teamId={params.teamId} chatbotId={params.chatbotId} />
       </main>
     </>

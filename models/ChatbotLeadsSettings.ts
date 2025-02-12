@@ -27,6 +27,10 @@ const ChatbotLeadsSettingsSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    customQuestions: { // Add customQuestions field
+      type: [String],
+      default: [],
+    },
     delay: {
       type: Number,
       default: 0,

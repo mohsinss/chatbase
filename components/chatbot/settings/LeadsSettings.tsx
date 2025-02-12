@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CustomNotification } from './GeneralSettings'
 import toast from "react-hot-toast";
+import { IconTrash, IconRefresh, IconFile, IconDownload, IconEye, IconImageInPicture, IconPdf } from "@tabler/icons-react";
 
 interface LeadsSettingsProps {
   chatbotId: string;
@@ -22,6 +23,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
   const [delay, setDelay] = useState(1);
   const [enableLead, setEnableLead] = useState('never');
   const [leads, setLeads] = useState([]);
+  const [customQuestions, setCustomQuestions] = useState<string[]>([]);
 
   useEffect(() => {
     fetchSettings();
@@ -53,6 +55,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
         setPhoneEnabled(data.phoneEnabled ?? true);
         setDelay(data.delay ?? 0);
         setEnableLead(data.enableLead);
+        setCustomQuestions(data?.customQuestions);
       }
     } catch (error) {
       toast.error("Failed to load settings " + error.message);
@@ -82,20 +85,15 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
           phoneEnabled,
           delay,
           enableLead,
+          customQuestions
         }),
       });
 
       if (!response.ok) throw new Error();
-
-      setNotification({
-        message: "Settings saved successfully",
-        type: "success"
-      });
+      
+      toast.success('Settings saved successfully.')
     } catch (error) {
-      setNotification({
-        message: "Failed to save settings",
-        type: "error"
-      });
+      toast.error('Failed to save settings.')
     }
     setLoading(false);
   };
@@ -110,6 +108,28 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
     } else {
       setter(value);
     }
+  };
+
+  const handleAddQuestion = () => {
+        // Check if there's an empty question
+        if (customQuestions.some(question => question.trim() === "")) {
+          toast.error("Please fill out all questions before adding a new one.");
+          return;
+        }
+
+    setCustomQuestions([...customQuestions, ""]);
+  };
+
+  const handleQuestionChange = (index: number, value: string) => {
+    const newQuestions = [...customQuestions];
+    newQuestions[index] = value;
+    setCustomQuestions(newQuestions);
+  };
+
+  const handleDeleteQuestion = (index: number) => {
+    const newQuestions = [...customQuestions];
+    newQuestions.splice(index, 1);
+    setCustomQuestions(newQuestions);
   };
 
   return (
@@ -256,6 +276,37 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Custom Questions Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-base font-medium">Custom Questions</label>
+              <button
+                onClick={handleAddQuestion}
+                className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md bg-gray-300"
+              >
+                Add Question
+              </button>
+            </div>
+        {customQuestions.map((question, index) => (
+          <div className="flex items-center space-x-2">
+            <input
+              key={index}
+              type="text"
+              value={question}
+              onChange={(e) => handleQuestionChange(index, e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2"
+              placeholder="Enter custom question"
+            />
+            <button
+              onClick={() => handleDeleteQuestion(index)}
+              className="text-red-500 hover:text-red-700 flex"
+            >
+              <IconTrash className="w-5 h-5"  />
+            </button>
+          </div>
+        ))}
           </div>
 
           {/* Save Button */}

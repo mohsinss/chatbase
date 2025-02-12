@@ -23,6 +23,10 @@ const leadSchema = new mongoose.Schema(
       trim: true,
       required: true,
     },
+    customAnswers: { // Add customAnswers field
+      type: Map,
+      of: String,
+    },
   },
   {
     timestamps: true,
