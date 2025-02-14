@@ -52,7 +52,7 @@ export default function Contacts({ chatbotId }: ContactsProps) {
 
     const formatDate = (dateString: string) => {
         let date = new Date(dateString);
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+        return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
     };
 
     return (
@@ -69,7 +69,9 @@ export default function Contacts({ chatbotId }: ContactsProps) {
                             {nameEnabled && <th className="px-4 py-2 text-left">Name</th>}
                             {emailEnabled && <th className="px-4 py-2 text-left">Email</th>}
                             {phoneEnabled && <th className="px-4 py-2 text-left">Phone</th>}
-                            <th className="px-4 py-2 text-left">Custom Questions</th>
+                            {customQuestions.map((question, index) => ( // Add this block
+                                <th key={index} className="px-4 py-2 text-left">{question}</th>
+                            ))}
                             <th className="px-4 py-2 text-left">Created At</th>
                         </tr>
                     </thead>
@@ -80,21 +82,9 @@ export default function Contacts({ chatbotId }: ContactsProps) {
                                 {nameEnabled && <td className="border px-4 py-2">{lead.name}</td>}
                                 {emailEnabled && <td className="border px-4 py-2">{lead.email}</td>}
                                 {phoneEnabled && <td className="border px-4 py-2">{lead.phone}</td>}
-                                <td className="border px-4 py-2">
-                                    <div className="contacts-tooltip">
-                                        <button>View Answers</button>
-                                        <div className="contacts-tooltip-content">
-                                            <table className="p-4">
-                                                {customQuestions.map((question, index) => (
-                                                    <tr key={index} className="">
-                                                        <td className="pl-2"><strong>{question}:</strong></td>
-                                                        <td>{lead.customAnswers[question]}</td>
-                                                    </tr>
-                                                ))}
-                                            </table>
-                                        </div>
-                                    </div>
-                                </td>
+                                {customQuestions.map((question, index) => ( // Add this block
+                                    <td key={index} className="border px-4 py-2">{lead?.customAnswers[question]}</td>
+                                ))}
                                 <td className="border px-4 py-2">{formatDate(lead.createdAt)}</td>
                             </tr>
                         ))}
