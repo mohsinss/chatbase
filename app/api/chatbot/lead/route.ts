@@ -22,7 +22,7 @@ async function getEmailValidation(email: string) {
 
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, chatbotId } = await req.json();
+    const { name, email, phone, chatbotId, customAnswers } = await req.json();
 
     // Check for email duplication
     const existingLead = await Lead.findOne({ email: email });
@@ -73,7 +73,8 @@ export async function POST(req: Request) {
         email: email,
         name: name,
         phone: phone,
-        chatbotId: chatbotId
+        chatbotId: chatbotId,
+        customAnswers
       });
       await lead.save();
     }

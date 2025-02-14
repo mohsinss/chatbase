@@ -55,7 +55,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
         setPhoneEnabled(data.phoneEnabled ?? true);
         setDelay(data.delay ?? 0);
         setEnableLead(data.enableLead);
-        setCustomQuestions(data?.customQuestions);
+        setCustomQuestions(data?.customQuestions || []);
       }
     } catch (error) {
       toast.error("Failed to load settings " + error.message);
@@ -74,6 +74,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
 
     setLoading(true);
     try {
+
       const response = await fetch("/api/chatbot/leads-settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,7 +91,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
       });
 
       if (!response.ok) throw new Error();
-      
+
       toast.success('Settings saved successfully.')
     } catch (error) {
       toast.error('Failed to save settings.')
@@ -111,11 +112,11 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
   };
 
   const handleAddQuestion = () => {
-        // Check if there's an empty question
-        if (customQuestions.some(question => question.trim() === "")) {
-          toast.error("Please fill out all questions before adding a new one.");
-          return;
-        }
+    // Check if there's an empty question
+    if (customQuestions.some(question => question.trim() === "")) {
+      toast.error("Please fill out all questions before adding a new one.");
+      return;
+    }
 
     setCustomQuestions([...customQuestions, ""]);
   };
@@ -289,24 +290,24 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
                 Add Question
               </button>
             </div>
-        {customQuestions.map((question, index) => (
-          <div className="flex items-center space-x-2">
-            <input
-              key={index}
-              type="text"
-              value={question}
-              onChange={(e) => handleQuestionChange(index, e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2"
-              placeholder="Enter custom question"
-            />
-            <button
-              onClick={() => handleDeleteQuestion(index)}
-              className="text-red-500 hover:text-red-700 flex"
-            >
-              <IconTrash className="w-5 h-5"  />
-            </button>
-          </div>
-        ))}
+            {customQuestions.map((question, index) => (
+              <div className="flex items-center space-x-2">
+                <input
+                  key={index}
+                  type="text"
+                  value={question}
+                  onChange={(e) => handleQuestionChange(index, e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2"
+                  placeholder="Enter custom question"
+                />
+                <button
+                  onClick={() => handleDeleteQuestion(index)}
+                  className="text-red-500 hover:text-red-700 flex"
+                >
+                  <IconTrash className="w-5 h-5" />
+                </button>
+              </div>
+            ))}
           </div>
 
           {/* Save Button */}

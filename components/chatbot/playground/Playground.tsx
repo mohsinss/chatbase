@@ -225,6 +225,12 @@ const ChatContainer = ({
     const email = formData.get('email');
     const phone = formData.get('phone');
 
+    const customQuestions = leadSetting?.customQuestions || [];
+    const customAnswers = customQuestions.reduce((answers, question) => {
+      answers[question] = formData.get(question) as string;
+      return answers;
+    }, {} as Record<string, string>);
+
     try {
       const response = await fetch('/api/chatbot/lead', {
         method: 'POST',
@@ -233,7 +239,8 @@ const ChatContainer = ({
           chatbotId: chatbotId,
           name,
           email,
-          phone
+          phone,
+          customAnswers
         }),
       });
 
@@ -432,6 +439,16 @@ const ChatContainer = ({
                                       <input id="phone" autoComplete="tel" required={true} className="w-full min-w-0 flex-auto appearance-none rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" aria-label="Phone Number" title="Phone Number" type="tel" name="phone" />
                                     </div>
                                   </div>
+                                }
+                                {
+                                  leadSetting?.customQuestions?.map((question, index) => (
+                                    <div key={index} className="mb-4">
+                                      <label className="mb-1 block font-medium text-sm" htmlFor={`customQuestion-${index}`}>{question}</label>
+                                      <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
+                                        <input id={`${question}`} className="w-full min-w-0 flex-auto rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" aria-label={question} title={question} name={question} />
+                                      </div>
+                                    </div>
+                                  ))
                                 }
                                 <div className="flex items-end justify-between">
                                   <button

@@ -13,6 +13,7 @@ export default function Contacts({ chatbotId }: ContactsProps) {
     const [nameEnabled, setNameEnabled] = useState(true);
     const [emailEnabled, setEmailEnabled] = useState(true);
     const [phoneEnabled, setPhoneEnabled] = useState(true);
+    const [customQuestions, setCustomQuestions] = useState<string[]>([]);
 
     useEffect(() => {
         fetchLeads();
@@ -27,6 +28,7 @@ export default function Contacts({ chatbotId }: ContactsProps) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             setLeads(data);
+            console.log(data)
         } catch (error) {
             toast.error("Failed to load leads " + error.message)
         }
@@ -41,6 +43,7 @@ export default function Contacts({ chatbotId }: ContactsProps) {
                 setNameEnabled(data.nameEnabled ?? true);
                 setEmailEnabled(data.emailEnabled ?? true);
                 setPhoneEnabled(data.phoneEnabled ?? true);
+                setCustomQuestions(data.customQuestions ?? []);
             }
         } catch (error) {
             toast.error("Failed to load settings " + error.message);
@@ -66,6 +69,9 @@ export default function Contacts({ chatbotId }: ContactsProps) {
                             {nameEnabled && <th className="px-4 py-2 text-left">Name</th>}
                             {emailEnabled && <th className="px-4 py-2 text-left">Email</th>}
                             {phoneEnabled && <th className="px-4 py-2 text-left">Phone</th>}
+                            {customQuestions.map((question, index) => ( // Add this block
+                                <th key={index} className="px-4 py-2 text-left">{question}</th>
+                            ))}
                             <th className="px-4 py-2 text-left">Created At</th>
                         </tr>
                     </thead>
@@ -76,6 +82,9 @@ export default function Contacts({ chatbotId }: ContactsProps) {
                                 {nameEnabled && <td className="border px-4 py-2">{lead.name}</td>}
                                 {emailEnabled && <td className="border px-4 py-2">{lead.email}</td>}
                                 {phoneEnabled && <td className="border px-4 py-2">{lead.phone}</td>}
+                                {customQuestions.map((question, index) => ( // Add this block
+                                    <td key={index} className="border px-4 py-2">{lead?.customAnswers[question]}</td>
+                                ))}
                                 <td className="border px-4 py-2">{formatDate(lead.createdAt)}</td>
                             </tr>
                         ))}
