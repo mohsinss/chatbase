@@ -291,7 +291,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
               </button>
             </div>
             {customQuestions.map((question, index) => (
-              <div className="flex items-center space-x-2">
+              <div key={`question-${index}`} className="flex items-center space-x-2">
                 <input
                   key={index}
                   type="text"
