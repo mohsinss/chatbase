@@ -88,7 +88,7 @@ export default function Contacts({ chatbotId }: ContactsProps) {
                                                 {customQuestions.map((question, index) => (
                                                     <tr key={index} className="">
                                                         <td className="pl-2"><strong>{question}:</strong></td>
-                                                        <td>{lead.customAnswers[question]}</td>
+                                                        <td>{lead.customAnswers?.[question] || 'No answer'}</td>
                                                     </tr>
                                                 ))}
                                             </table>

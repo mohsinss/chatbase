@@ -19,8 +19,8 @@ export async function GET(req: Request) {
 
     await connectMongo();
 
-    // Get all users with their teams and chatbots
-    const users = await User.find().lean();
+    // Get all users with their teams, chatbots, and plan
+    const users = await User.find().select('name email plan').lean();
 
     // Enhance user data with teams and chatbots
     const enhancedUsers = await Promise.all(users.map(async (user) => {
@@ -50,7 +50,8 @@ export async function GET(req: Request) {
         ...user,
         teams: enhancedTeams,
         totalTeams: teams.length,
-        totalChatbots: enhancedTeams.reduce((acc, team) => acc + team.chatbots.length, 0)
+        totalChatbots: enhancedTeams.reduce((acc, team) => acc + team.chatbots.length, 0),
+        plan: user.plan || 'Free' // Ensure plan is included with a default value
       };
     }));
 
