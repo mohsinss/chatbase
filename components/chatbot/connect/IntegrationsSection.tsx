@@ -72,16 +72,15 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
           console.log('WhatsApp Embedded Signup response:', data);
 
           // Handle successful signup
-          if (data.status === 'success') {
+          if (data.event === 'FINISH') {
             const credentials = {
               phoneNumberId: data.phone_number_id,
               wabaId: data.waba_id,
               // accessToken: data.access_token,
             };
-            saveWhatsAppCredentials(credentials);
+            // saveWhatsAppCredentials(credentials);
           } else {
             console.error('WhatsApp Embedded Signup failed:', data.error);
-            alert('Failed to connect to WhatsApp. Please try again.');
           }
         }
       } catch (error) {
@@ -104,11 +103,12 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
     } else {
       console.log('response: ', response);
     }
+    setIsConnecting(false);
   }
 
   const handleConnect = async (platform: string) => {
     if (platform === "whatsapp") {
-      setIsConnecting(true);
+      // setIsConnecting(true);
 
       window.FB.login(fbLoginCallback, {
         config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID, // configuration ID goes here

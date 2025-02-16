@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSEOTags } from "@/libs/seo";
 import config from "@/config";
+import { Metadata } from "next";
 
 // CHATGPT PROMPT TO GENERATE YOUR TERMS & SERVICES — replace with your own data 👇
 
@@ -25,10 +26,12 @@ import config from "@/config";
 
 // Please write a simple Terms & Services for my site. Add the current date. Do not add or explain your reasoning. Answer:
 
-export const metadata = getSEOTags({
+export const metadata = {
   title: `Terms and Conditions | ${config.appName}`,
-  canonicalUrlRelative: "/tos",
-});
+  alternates: {
+    canonical: "/tos"
+  }
+} satisfies Metadata;
 
 const TOS = () => {
   return (
@@ -103,6 +106,52 @@ These Terms are governed by the laws of Saudi Arabia.
 6. Updates to the Terms
 
 We may update these Terms from time to time. Users will be notified of any changes via email.
+
+1. Acceptance of Terms
+By using Chatsa (the "App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not use the App.
+
+2. Eligibility
+You must be at least 13 years old to use the App. By using the App, you confirm that you meet this requirement.
+
+3. License to Use the App
+We grant you a limited, non-exclusive, non-transferable license to use the App for personal, non-commercial purposes, subject to these Terms.
+
+4. User Responsibilities
+You agree to:
+- Use the App only for lawful purposes.
+- Not engage in any activity that disrupts or interferes with the App.
+- Not attempt to access data or systems you are not authorized to use.
+
+5. Prohibited Activities
+You may not:
+- Reverse engineer, decompile, or disassemble the App.
+- Use the App to harass, abuse, or harm others.
+- Violate any applicable laws or regulations.
+
+6. Intellectual Property
+All content and materials in the App, including but not limited to text, graphics, logos, and software, are the property of Chatsa and are protected by intellectual property laws.
+
+7. Privacy
+Your use of the App is subject to our Privacy Policy, which explains how we collect, use, and protect your information. By using the App, you agree to the terms of the Privacy Policy.
+
+8. Termination
+We reserve the right to terminate or suspend your access to the App at any time, without notice, for any reason, including but not limited to a violation of these Terms.
+
+9. Disclaimers
+The App is provided "as is" and "as available" without warranties of any kind, either express or implied. We do not guarantee that the App will be error-free or uninterrupted.
+
+10. Limitation of Liability
+To the fullest extent permitted by law, chatsa shall not be liable for any indirect, incidental, or consequential damages arising out of your use of the App.
+
+11. Changes to These Terms
+We may update these Terms from time to time. The updated version will be posted on this page, and your continued use of the App after the changes constitutes acceptance of the new Terms.
+
+12. Governing Law
+These Terms are governed by the laws of USA, without regard to its conflict of law principles.
+
+13. Contact Us
+If you have any questions about these Terms, please contact us at mohsinb.alshammari@gmail.com.
+
 
 For any questions or concerns regarding these Terms of Service, please contact us at mohsinb.alshammari@gmail.com.
 

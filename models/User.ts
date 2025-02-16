@@ -17,6 +17,10 @@ const userSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    plan: {
+      type: String,
+      default: 'Free'
+    },
   },
   {
     timestamps: true,

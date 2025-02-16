@@ -15,6 +15,7 @@ interface TeamType {
   teamId: string;
   chatbots: ChatbotType[];
   isExpanded?: boolean;
+  plan: string;
 }
 
 interface UserType {
@@ -25,6 +26,7 @@ interface UserType {
   totalTeams: number;
   totalChatbots: number;
   isExpanded?: boolean;
+  plan?: string;
 }
 
 export default function AdminDashboard() {
@@ -35,6 +37,7 @@ export default function AdminDashboard() {
   const [deletingTeam, setDeletingTeam] = useState<string | null>(null);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
+  const [updatingPlan, setUpdatingPlan] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -202,6 +205,34 @@ export default function AdminDashboard() {
     router.push(`/dashboard/admin/conversations/${chatbotId}`);
   };
 
+  const handlePlanChange = async (teamId: string, newPlan: string) => {
+    setUpdatingPlan(teamId);
+    try {
+      const response = await fetch('/api/admin/user/update-plan', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamId, plan: newPlan }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update plan');
+
+      // Update local state
+      setUsers(users.map(user => ({
+        ...user,
+        teams: user.teams.map(team => 
+          team.teamId === teamId ? { ...team, plan: newPlan } : team
+        )
+      })));
+    } catch (error) {
+      console.error('Error updating plan:', error);
+      alert('Failed to update plan');
+    } finally {
+      setUpdatingPlan(null);
+    }
+  };
+
   if (authChecking || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -261,10 +292,32 @@ export default function AdminDashboard() {
                         className="p-2 hover:bg-gray-50 group flex justify-between items-center"
                       >
                         <div 
-                          className="flex-grow cursor-pointer flex justify-between"
+                          className="flex-grow cursor-pointer flex justify-between items-center"
                           onClick={() => toggleTeamExpansion(user._id, team.teamId)}
                         >
-                          <span>Team: {team.teamId}</span>
+                          <div className="flex items-center gap-4">
+                            <span>Team: {team.teamId}</span>
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={team.plan}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  handlePlanChange(team.teamId, e.target.value);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                disabled={updatingPlan === team.teamId}
+                                className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full border-none focus:ring-2 focus:ring-blue-300"
+                              >
+                                <option value="Free">Free</option>
+                                <option value="Standard">Standard</option>
+                                <option value="Hobby">Hobby</option>
+                                <option value="Unlimited">Unlimited</option>
+                              </select>
+                              {updatingPlan === team.teamId && (
+                                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                              )}
+                            </div>
+                          </div>
                           <span>{team.chatbots.length} Chatbots</span>
                         </div>
                         <button
