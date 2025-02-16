@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
       if (team.credits >= creditLimit) {
         return setCorsHeaders(new Response(
           JSON.stringify({
-            error: 'No more credits',
+            error: 'limit reached, upgrade for more messages.',
           }),
           {
             status: 500,

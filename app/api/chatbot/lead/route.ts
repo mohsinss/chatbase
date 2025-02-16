@@ -29,12 +29,6 @@ export async function POST(req: Request) {
     // if (existingLead) {
     //   return NextResponse.json({ error: "Email already exists" }, { status: 400 });
     // }
-
-    const email_valid = await getEmailValidation(email);
-    if (!email_valid) {
-      // If email is not valid, return a response indicating the invalid email
-      return NextResponse.json({ error: "Invalid email" }, { status: 400 });
-    }
     // const valication_res = await client.request(request);
     // console.log(valication_res)
 
@@ -48,6 +42,12 @@ export async function POST(req: Request) {
       html += `<p>Name: ${name}</p>`;
     }
     if (email) {
+      const email_valid = await getEmailValidation(email);
+      if (!email_valid) {
+        // If email is not valid, return a response indicating the invalid email
+        return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+      }
+
       text += `Email: ${email}\n`;
       html += `<p>Email: ${email}</p>`;
     }

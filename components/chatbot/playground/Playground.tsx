@@ -516,10 +516,10 @@ const ChatContainer = ({
                       if (!response.ok) {
                         if (response.status === 500) {
                           const data = await response.json();
-                          if (data.error === 'No more credits') {
+                          if (data.error === 'limit reached, upgrade for more messages.') {
                             // Handle the 'Credits are limited' error here
-                            console.error('No more credits');
-                            throw new Error('No more credits');
+                            console.error('limit reached, upgrade for more messages.');
+                            throw new Error('limit reached, upgrade for more messages.');
                           }
                         }
                         throw new Error('Stream failed.');
@@ -747,10 +747,10 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
       if (!response.ok) {
         if (response.status === 500) {
           const data = await response.json();
-          if (data.error === 'No more credits') {
+          if (data.error === 'limit reached, upgrade for more messages.') {
             // Handle the 'Credits are limited' error here
-            console.error('No more credits');
-            throw new Error('No more credits');
+            console.error('limit reached, upgrade for more messages.');
+            throw new Error('limit reached, upgrade for more messages.');
           }
         }
         throw new Error('Stream failed.');
