@@ -377,7 +377,8 @@ const ChatContainer = ({
                         <p className="p-1 rounded-sm bg-slate-100 pb-3 hidden">{message.reasonal_content}</p>
                       }
                       {message.role === 'assistant' ? (
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                        <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
+                        // <ReactMarkdown>{message.content}</ReactMarkdown>
                       ) : (
                         <p className="p-1">{message.content}</p>
                       )}
