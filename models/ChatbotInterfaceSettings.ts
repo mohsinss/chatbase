@@ -89,6 +89,20 @@ const ChatbotInterfaceSettingsSchema = new mongoose.Schema(
         message: 'Please enter a valid URL'
       }
     },
+    chatBackgroundUrl: {
+      type: String,
+      default: "",
+      validate: {
+        validator: function(v: string) {
+          return v === "" || /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(v);
+        },
+        message: 'Please enter a valid URL'
+      }
+    },
+    chatBackgroundOpacity: {
+      type: Number,
+      default: 0.9
+    },
     chatWidth: {
       type: Number,
       default: 448,

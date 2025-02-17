@@ -334,30 +334,29 @@ const ChatContainer = ({
           <div
             className={`overflow-y-hidden p-4 flex-grow relative`}
             style={{
-              backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
+              // backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}
           >
             <div className="absolute inset-0 p-4 overflow-y-auto"
               style={{
+                backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
                 backgroundColor: 'white',
-                opacity: config.chatBackgroundUrl ? 1 - (config.chatBackgroundOpacity || 0.1) : 1,
+                opacity: config.chatBackgroundOpacity,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                // opacity: config.chatBackgroundUrl ? 1 - (config.chatBackgroundOpacity || 0.1) : 1,
               }}>
-              {/* Add a background overlay div to control opacity */}
-              {/* {config.chatBackgroundUrl && (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundColor: 'white',
-                    opacity: 1 - (config.chatBackgroundOpacity || 0.1)
-                  }}
-                />
-              )} */}
+            </div>
+            <div className="absolute inset-0 p-4 overflow-y-auto"
+              style={{
+                backgroundColor: 'none',
+              }}>
               {/* Keep existing chat messages but wrap them in a relative div */}
               <div className="relative z-10">
                 {messages.length === 0 && (
-                  <div className={`text-gray-500 p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                  <div className={` p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
                     } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
                     {config.initialMessage}
                   </div>

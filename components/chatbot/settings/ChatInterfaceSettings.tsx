@@ -7,6 +7,7 @@ import { RefreshCcw, Bold, Italic, Underline, Link2, Undo2, Redo2, AlignLeft, Al
 import { HexColorPicker } from "react-colorful"
 import { CustomNotification } from './GeneralSettings'
 import { Input } from "@/components/ui/input"
+import toast from 'react-hot-toast'
 
 interface ChatConfig {
   initialMessage: string
@@ -119,10 +120,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       }
     } catch (error) {
       console.error('Fetch error:', error);
-      setNotification({
-        message: "Failed to load settings",
-        type: "error"
-      });
+      toast.error("Failed to load settings.")
     }
   };
 
@@ -187,17 +185,11 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         type: 'chatbot-settings-update',
         settings: configToSave
       }, '*');
-
-      setNotification({
-        message: "Settings saved successfully",
-        type: "success"
-      });
+      
+      toast.success('Settings saved successfully.')
     } catch (error) {
       console.error('Save error:', error);
-      setNotification({
-        message: error instanceof Error ? error.message : "Failed to save settings",
-        type: "error"
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to save settings.")
     } finally {
       setLoading(false);
     }
@@ -224,19 +216,13 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
 
     // Validate file size (1MB limit)
     if (file.size > 1024 * 1024) {
-      setNotification({
-        message: "File size must be less than 1MB",
-        type: "error"
-      });
+      toast.error("File size must be less than 1MB");
       return;
     }
 
     // Validate file type
     if (!['image/jpeg', 'image/png', 'image/svg+xml'].includes(file.type)) {
-      setNotification({
-        message: "Only JPG, PNG, and SVG files are supported",
-        type: "error"
-      });
+      toast.error("Only JPG, PNG, and SVG files are supported.");
       return;
     }
 
@@ -267,17 +253,12 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       } else if (type === 'background') {
         handleConfigChange('chatBackgroundUrl', data.url);
       }
-
-      setNotification({
-        message: "Image uploaded successfully",
-        type: "success"
-      });
+      
+      toast.success("Image uploaded successfully.")
     } catch (error) {
       console.error('Upload error:', error);
-      setNotification({
-        message: error instanceof Error ? error.message : "Failed to upload image",
-        type: "error"
-      });
+
+      toast.error(error instanceof Error ? error.message : "Failed to upload image.")
     }
   };
 
@@ -293,13 +274,13 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
 
   return (
     <>
-      {notification && (
+      {/* {notification && (
         <CustomNotification
           message={notification.message}
           type={notification.type}
           onClose={() => setNotification(null)}
         />
-      )}
+      )} */}
       <div className="grid grid-cols-[1fr_400px] gap-10 p-4 h-screen">
         {/* Configuration Panel */}
         <div className="space-y-6 overflow-y-auto relative pb-16">
@@ -851,7 +832,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                   {config.initialMessage}
                 </div>
                 <div 
-                  className={`ml-auto p-3 ${
+                  className={`ml-auto p-3 mt-3 ${
                     config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
                   } max-w-[80%] text-white`}
                   style={{ backgroundColor: config.userMessageColor }}
