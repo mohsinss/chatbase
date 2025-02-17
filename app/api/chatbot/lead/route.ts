@@ -24,14 +24,6 @@ export async function POST(req: Request) {
   try {
     const { name, email, phone, chatbotId, customAnswers } = await req.json();
 
-    // Check for email duplication
-    const existingLead = await Lead.findOne({ email: email });
-    // if (existingLead) {
-    //   return NextResponse.json({ error: "Email already exists" }, { status: 400 });
-    // }
-    // const valication_res = await client.request(request);
-    // console.log(valication_res)
-
     // Initialize text and html strings
     let text = '';
     let html = '';
@@ -67,17 +59,14 @@ export async function POST(req: Request) {
 
     // Send email
     // await sgMail.send(msg);
-
-    if (!existingLead) {
-      const lead = new Lead({
-        email: email,
-        name: name,
-        phone: phone,
-        chatbotId: chatbotId,
-        customAnswers
-      });
-      await lead.save();
-    }
+    const lead = new Lead({
+      email: email,
+      name: name,
+      phone: phone,
+      chatbotId: chatbotId,
+      customAnswers
+    });
+    await lead.save();
 
     return NextResponse.json({ success: true });
   } catch (error) {
