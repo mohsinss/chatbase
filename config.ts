@@ -3,7 +3,7 @@ import { ConfigProps } from "./types/config";
 
 const config = {
   // REQUIRED
-  appName: "أنظمة الأعمال النتقدمة",
+  appName: "أنظمة الأعمال المتقدمة",
   // REQUIRED: a short description of your app for SEO tags (can be overwritten)
   appDescription:
     "Create intelligent AI chatbots trained on your custom knowledge base. Build conversational AI that understands your business.",
