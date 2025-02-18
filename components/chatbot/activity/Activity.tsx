@@ -239,7 +239,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                     <div className={`rounded-lg p-4 inline-block max-w-[80%] ${
                       message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'
                     }`}>
-                      <p>{message.content}</p>
+                      <div className="html-content" dangerouslySetInnerHTML={{ __html:message.content }}/>
                     </div>
                   </div>
                 ))}
