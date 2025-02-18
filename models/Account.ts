@@ -8,7 +8,8 @@ const accountSchema = new mongoose.Schema({
   token_type: String,
   scope: String,
   access_token: String,
-  expires_at: Date,
+  expires_at: Number,
+  id_token: String,
 });
 
 export default mongoose.models.Account || mongoose.model("Account", accountSchema);

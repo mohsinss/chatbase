@@ -80,7 +80,7 @@ export const authOptions: NextAuthOptionsExtended = {
         await connectMongo1();
         const existingUser = await User.findOne({ email: user.email });
 
-        if (existingUser) {          
+        if (existingUser) {
           // If the user already exists, link the Google account to the existing user
           const existingAccount = await Account.findOne({
             provider: 'google',
@@ -102,7 +102,7 @@ export const authOptions: NextAuthOptionsExtended = {
 
             await newAccount.save();
           }
-          
+
           return true; // Allow sign-inp
         } else {
           // If the user doesn't exist, create a new user with the Google account
@@ -122,6 +122,7 @@ export const authOptions: NextAuthOptionsExtended = {
             access_token: account.access_token,
             expires_at: account.expires_at,
             token_type: account.token_type,
+            id_token: account.id_token,
             scope: account.scope,
           });
 
