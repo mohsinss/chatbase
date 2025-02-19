@@ -7,6 +7,12 @@ const ChatbotConversationSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    leadId: {
+      type: mongoose.Schema.Types.ObjectId, // Change type to ObjectId
+      ref: 'Lead', // Add reference to Lead model
+      required: false,
+      index: false,
+    },
     messages: [{
       role: {
         type: String,

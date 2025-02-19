@@ -56,6 +56,7 @@ interface ChatContainerProps {
   embed?: boolean;
   setConfig: React.Dispatch<React.SetStateAction<any>>;
   leadSetting?: ChatbotLeadSettings;
+  conversationId?: string;
 }
 
 interface ChatConfig {
@@ -75,6 +76,7 @@ interface ChatConfig {
   bubbleAlignment: string;
   chatBackgroundUrl?: string;
   chatBackgroundOpacity?: number;
+  conversationId?: string;
 }
 
 const ChatContainer = ({
@@ -95,6 +97,7 @@ const ChatContainer = ({
   embed = false,
   setConfig,
   leadSetting,
+  conversationId,
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
     if (confidenceScore === -1) {
@@ -240,7 +243,8 @@ const ChatContainer = ({
           name,
           email,
           phone,
-          customAnswers
+          customAnswers,
+          conversationId
         }),
       });
 
@@ -870,6 +874,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
           embed={embed}
           setConfig={setConfig}
           leadSetting={leadSetting}
+          conversationId={conversationId}
         />
       </div>
     )

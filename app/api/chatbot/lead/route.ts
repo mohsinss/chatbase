@@ -3,6 +3,7 @@ import sgMail from '@sendgrid/mail';
 import client from "@sendgrid/client";
 import User from "@/models/User";
 import Lead from "@/models/Lead";
+import ChatbotConversation from "@/models/ChatbotConversation";
 
 const axios = require('axios');
 
@@ -22,7 +23,7 @@ async function getEmailValidation(email: string) {
 
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, chatbotId, customAnswers } = await req.json();
+    const { name, email, phone, chatbotId, customAnswers, conversationId } = await req.json();
 
     // Initialize text and html strings
     let text = '';
@@ -68,6 +69,13 @@ export async function POST(req: Request) {
     });
     await lead.save();
 
+    // Update ChatbotConversation with new Lead ID
+    await ChatbotConversation.findOneAndUpdate(
+      { _id: conversationId }, // find a document with _id
+      { leadId: lead._id },
+      { new: false } // return the updated document
+    );
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.log(error)
@@ -76,11 +84,11 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  try { 
+  try {
     const url = new URL(req.url);
     const chatbotId = url.searchParams.get("chatbotId"); // Extract datasetId from query parameters
-    
-    const leads = await Lead.find({chatbotId});
+
+    const leads = await Lead.find({ chatbotId });
     return NextResponse.json(leads);
   } catch (error) {
     console.log(error);
