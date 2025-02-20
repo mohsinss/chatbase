@@ -40,7 +40,7 @@ export async function POST(request: Request) {
             body: text
         }
       }, {
-        headers: { Authorization: `${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+        headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
       });
       
     }
