@@ -80,8 +80,8 @@ const Header = () => {
   }, []);
 
   return (
-    <header className={`fixed top-[32px] w-full bg-white z-40 transition-all duration-200 ${
-      isScrolled ? 'border-b border-gray-100 shadow-sm' : ''
+    <header className={`fixed top-[8px] w-full z-40 transition-all duration-200 ${
+      isScrolled ? 'backdrop-blur-md bg-white/75 shadow-sm' : 'bg-white'
     }`}>
       {/* <Announcement /> */}
       <nav className="max-w-7xl mx-auto flex items-center justify-between h-16 px-8">
@@ -188,7 +188,7 @@ const Header = () => {
 
       {/* Mobile menu */}
       {isOpen && (
-        <div className="lg:hidden px-4 py-2 bg-white border-t border-gray-200">
+        <div className="lg:hidden px-4 py-2 backdrop-blur-md bg-white/75 border-t border-gray-200">
           {links.map((link) => 
             link.hasDropdown ? (
               <div key={link.href}>
