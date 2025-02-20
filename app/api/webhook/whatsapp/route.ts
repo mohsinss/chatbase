@@ -1,5 +1,6 @@
 // src/app/api/webhook/route.ts
 import { NextResponse } from 'next/server';
+import axios from 'axios';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -29,6 +30,23 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify(data),
     });
+
+    if (data?.entry?.changes?.value?.messages[0]?.type == "text") {
+      const from = data?.entry?.changes?.value?.messages[0]?.from;
+      const phone_number_id = data?.entry?.changes?.value?.metadata.phone_number_id;
+      const text = data?.entry?.changes?.value?.messages[0]?.text?.body;
+      
+      const response1 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
+        messaging_product: "whatsapp",
+        to: from,
+        text: {
+            body: text
+        }
+      }, {
+        headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+      });
+      
+    }
 
     // Check if the request was successful
     if (!response.ok) {

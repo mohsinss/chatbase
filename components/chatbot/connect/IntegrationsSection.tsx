@@ -5,6 +5,7 @@ import { IconDeviceLaptop } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import FacebookSDK from "@/components/facebook/FacebookSDK";
+import toast from "react-hot-toast";
 
 interface IntegrationCardProps {
   title: string;
@@ -61,7 +62,7 @@ const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = f
 
 const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
   const router = useRouter();
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectingTitle, setConnectingTitle] = useState('');
 
   useEffect(() => {
     const messageEventListener = (event: MessageEvent) => {
@@ -74,17 +75,18 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
           // Handle successful signup
           if (data.event === 'FINISH') {
             const credentials = {
-              phoneNumberId: data.phone_number_id,
-              wabaId: data.waba_id,
+              phoneNumberId: data.data.phone_number_id,
+              wabaId: data.data.waba_id,
               // accessToken: data.access_token,
             };
-            // saveWhatsAppCredentials(credentials);
+            saveWhatsAppCredentials(credentials);
           } else {
             console.error('WhatsApp Embedded Signup failed:', data.error);
+            toast.error(data.error);
+            setConnectingTitle('');
           }
         }
       } catch (error) {
-        console.error('Error parsing WhatsApp Embedded Signup response:', error);
       }
     };
 
@@ -99,17 +101,14 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
   const fbLoginCallback = (response: any) => {
     if (response.authResponse) {
       const code = response.authResponse.code;
-      console.log('response: ', code);
     } else {
-      console.log('response: ', response);
     }
-    setIsConnecting(false);
   }
 
   const handleConnect = async (platform: string) => {
-    if (platform === "whatsapp") {
-      // setIsConnecting(true);
+    setConnectingTitle(platform);
 
+    if (platform === "Whatsapp") {
       window.FB.login(fbLoginCallback, {
         config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID, // configuration ID goes here
         response_type: 'code', // must be set to 'code' for System User access token
@@ -120,38 +119,9 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
           sessionInfoVersion: '2',
         }
       });
-      // try {
-      //   const response = await fetch("/api/chatbot/integrations/meta-business", {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({ 
-      //       chatbotId,
-      //       platform: "whatsapp"
-      //     }),
-      //   });
-
-      //   if (!response.ok) {
-      //     throw new Error("Failed to initiate Meta Business connection");
-      //   }
-
-      //   const data: MetaBusinessResponse = await response.json();
-
-      //   if (data.error) {
-      //     throw new Error(data.error);
-      //   }
-
-      //   window.location.href = data.url;
-
-      // } catch (error) {
-      //   console.error("WhatsApp connection error:", error);
-      //   alert("Failed to connect to WhatsApp. Please try again.");
-      // } finally {
-      //   setIsConnecting(false);
-      // }
     } else {
       console.log(`Connecting to ${platform}...`);
+      setConnectingTitle("");
     }
   };
 
@@ -164,7 +134,7 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
         },
         body: JSON.stringify({
           chatbotId,
-          credentials,
+          ...credentials,
         }),
       });
 
@@ -172,11 +142,12 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
         throw new Error("Failed to save WhatsApp credentials");
       }
 
-      alert("Successfully connected to WhatsApp!");
+      toast.success("Successfully connected to WhatsApp!");
     } catch (error) {
       console.error("Error saving WhatsApp credentials:", error);
-      alert("Failed to save WhatsApp connection. Please try again.");
+      toast.error("Failed to save WhatsApp Number. Please check integration guide again.");
     }
+    setConnectingTitle('');
   };
 
   const integrations = [
@@ -184,47 +155,47 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
       title: "Zapier",
       description: "Connect your chatbot with thousands of apps using Zapier.",
       icon: "/integrations/zapier.svg",
-      onClick: () => handleConnect("zapier")
+      onClick: () => handleConnect("Zapier")
     },
     {
       title: "Slack",
       description: "Connect your chatbot with Slack, mention it, and have it reply to any message.",
       icon: "/integrations/slack.svg",
-      onClick: () => handleConnect("slack"),
+      onClick: () => handleConnect("Slack"),
       showDeviceIcon: true
     },
     {
       title: "Wordpress",
       description: "Use the official Chatsa plugin for Wordpress to add the chat widget to your website.",
       icon: "/integrations/wordpress.svg",
-      onClick: () => handleConnect("wordpress")
+      onClick: () => handleConnect("Wordpress")
     },
     {
       title: "Whatsapp",
       description: "Connect your chatbot to a WhatsApp number and let it respond to messages from your customers.",
       icon: "/integrations/whatsapp.svg",
-      onClick: () => handleConnect("whatsapp"),
+      onClick: () => handleConnect("Whatsapp"),
       showDeviceIcon: true
     },
     {
       title: "Messenger",
       description: "Connect your chatbot to a facebook page and let it respond to messages from your customers.",
       icon: "/integrations/messenger.svg",
-      onClick: () => handleConnect("messenger"),
+      onClick: () => handleConnect("Messenger"),
       showDeviceIcon: true
     },
     {
       title: "Instagram",
       description: "Connect your chatbot to a instagram page and let it respond to messages from your customers.",
       icon: "/integrations/instagram.svg",
-      onClick: () => handleConnect("instagram"),
+      onClick: () => handleConnect("Instagram"),
       showDeviceIcon: true
     },
     {
       title: "Shopify",
       description: "Add your chatbot to your Shopify store to help customers with their questions.",
       icon: "/integrations/shopify.svg",
-      onClick: () => handleConnect("shopify")
+      onClick: () => handleConnect("Shopify")
     }
   ];
 
@@ -235,11 +206,10 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
           <IntegrationCard
             key={integration.title}
             {...integration}
-            isConnecting={isConnecting}
+            isConnecting={integration.title == connectingTitle}
           />
         ))}
       </div>
-      {/* <FacebookSDK/> */}
     </div>
   );
 };

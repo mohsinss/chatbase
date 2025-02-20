@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
-import mongoose from "mongoose";
+import WhatsAppNumber from "@/models/WhatsAppNumber";
+import axios from "axios";
 
 export async function POST(req: Request) {
   try {
@@ -11,17 +12,53 @@ export async function POST(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { chatbotId, credentials } = await req.json();
+    const { chatbotId, wabaId, phoneNumberId } = await req.json();
+    
+    // Check if all required parameters are provided
+    if (!chatbotId || !wabaId || !phoneNumberId) {
+      return NextResponse.json({ success: false, message: 'Missing required parameters' });
+    }
+    
     await connectMongo();
 
-    // Save WhatsApp credentials to database
-    await mongoose.connection.collection('chatbotIntegrations').insertOne({
-      chatbotId,
-      platform: "whatsapp",
-      credentials: credentials,
-      userId: session.user.id,
-      createdAt: new Date()
+    // Subscribe App to webhook
+    const response1 = await axios.post(`https://graph.facebook.com/v22.0/${wabaId}/subscribed_apps`, {}, {
+      headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
     });
+    if (!response1.data.success) {
+      return NextResponse.json({ success: false, message: response1.data.error?.message || 'App Subscription failed.' });
+    }
+
+    // Register phone number to Business
+    const response2 = await axios.post(`https://graph.facebook.com/v22.0/${phoneNumberId}/register`, {
+      messaging_product: "whatsapp",
+      pin: "111111"
+    }, {
+      headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+    });
+    if (!response2.data.success) {
+      return NextResponse.json({ success: false, message: response2.data.error?.message || 'Phone Number Registration failed.' });
+    }
+
+    // Retrive Phone Number and save.
+    const response3 = await axios.get(`https://graph.facebook.com/v22.0/${phoneNumberId}`, {
+      headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+    });
+    const data = response3.data;
+
+    // Save to WhatsAppNumber model
+    const whatsappNumber = new WhatsAppNumber({
+      chatbotId,
+      wabaId,
+      phoneNumberId,
+      verified_name: data.verified_name,
+      code_verification_status: data.code_verification_status,
+      display_phone_number: data.display_phone_number,
+      quality_rating: data.quality_rating,
+      platform_type: data.platform_type,
+      last_onboarded_time: data.last_onboarded_time,
+    });
+    await whatsappNumber.save();
 
     return NextResponse.json({ success: true });
   } catch (error) {
