@@ -35,6 +35,7 @@ export async function POST(request: Request) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          phone_number_id,
           messaging_product: "whatsapp",
           to: from,
           text: {
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
             body: text
         }
       }, {
-        headers: { Authorization: `${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+        headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
       });
 
       // Check if the request was successful
