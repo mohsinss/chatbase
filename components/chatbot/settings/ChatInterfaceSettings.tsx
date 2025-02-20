@@ -8,6 +8,7 @@ import { HexColorPicker } from "react-colorful"
 import { CustomNotification } from './GeneralSettings'
 import { Input } from "@/components/ui/input"
 import toast from 'react-hot-toast'
+import { Slider } from "../../../components/ui/slider"
 
 interface ChatConfig {
   initialMessage: string
@@ -69,6 +70,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   const profileInputRef = useRef<HTMLInputElement>(null);
   const chatIconInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
+  const [widthInputValue, setWidthInputValue] = useState(config.chatWidth.toString())
 
   useEffect(() => {
     fetchSettings();
@@ -85,6 +87,10 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       `;
     }
   }, [config.chatIconUrl]);
+
+  useEffect(() => {
+    setWidthInputValue(config.chatWidth.toString())
+  }, [config.chatWidth])
 
   const fetchSettings = async () => {
     try {
@@ -565,16 +571,57 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Chat Window Width
             </label>
-            <div className="flex items-center gap-2">
-              <input 
-                type="number"
-                value={config.chatWidth}
-                onChange={(e) => handleConfigChange('chatWidth', Math.max(300, Math.min(800, parseInt(e.target.value))))}
-                min="300"
-                max="800"
-                className="flex h-10 w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            <div className="flex flex-col gap-4">
+              <Slider 
+                value={[config.chatWidth]}
+                onValueChange={(value: number[]) => {
+                  handleConfigChange('chatWidth', value[0])
+                  setWidthInputValue(value[0].toString())
+                }}
+                min={200}
+                max={900}
+                step={1}
+                className="w-full"
               />
-              <span className="text-sm text-gray-500">pixels (300-800)</span>
+              <div className="flex items-center">
+                <button
+                  className="px-2 py-1 border rounded-l"
+                  onClick={() => {
+                    const newWidth = Math.max(200, config.chatWidth - 10)
+                    handleConfigChange('chatWidth', newWidth)
+                    setWidthInputValue(newWidth.toString())
+                  }}
+                >
+                  -
+                </button>
+                <input 
+                  type="number"
+                  value={widthInputValue}
+                  onChange={(e) => {
+                    setWidthInputValue(e.target.value)
+                  }}
+                  onBlur={(e) => {
+                    const num = parseInt(e.target.value)
+                    const validNum = Math.max(200, Math.min(900, num || 200))
+                    handleConfigChange('chatWidth', validNum)
+                    setWidthInputValue(validNum.toString())
+                  }}
+                  min="200"
+                  max="900"
+                  className="flex h-10 w-[100px] border-y bg-background px-3 py-2 text-sm text-center"
+                />
+                <button
+                  className="px-2 py-1 border rounded-r"
+                  onClick={() => {
+                    const newWidth = Math.min(900, config.chatWidth + 10)
+                    handleConfigChange('chatWidth', newWidth)
+                    setWidthInputValue(newWidth.toString())
+                  }}
+                >
+                  +
+                </button>
+                <span className="ml-2 text-sm text-gray-500">pixels</span>
+              </div>
             </div>
           </div>
 
@@ -893,4 +940,3 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     </>
   )
 }
-
