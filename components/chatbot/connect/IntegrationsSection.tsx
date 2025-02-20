@@ -87,6 +87,7 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
           }
         }
       } catch (error) {
+        console.log(error)
       }
     };
 
@@ -102,6 +103,7 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
     if (response.authResponse) {
       const code = response.authResponse.code;
     } else {
+      console.log(response)
     }
   }
 
