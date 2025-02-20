@@ -32,9 +32,9 @@ export async function POST(request: Request) {
     });
 
     if (data?.entry[0]?.changes[0]?.value?.messages[0]?.type == "text") {
-      const from = data?.entry?.changes?.value?.messages[0]?.from;
-      const phone_number_id = data?.entry?.changes?.value?.metadata.phone_number_id;
-      const text = data?.entry?.changes?.value?.messages[0]?.text?.body;
+      const from = data?.entry[0]?.changes[0]?.value?.messages[0]?.from;
+      const phone_number_id = data?.entry[0]?.changes[0]?.value?.metadata.phone_number_id;
+      const text = data?.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
       
       const response1 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
         messaging_product: "whatsapp",
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
             body: text
         }
       }, {
-        headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+        headers: { Authorization: `${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
       });
       
     }
