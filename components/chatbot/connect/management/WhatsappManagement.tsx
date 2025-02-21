@@ -299,7 +299,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                     <div className="py-1">
                                         {phoneNumbers?.map((phone, index) => {
                                             return (
-                                                <Menu.Item>
+                                                <Menu.Item key={`phonenumber-${index}`}>
                                                     {({ active }) => (
                                                         <div
                                                             className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
