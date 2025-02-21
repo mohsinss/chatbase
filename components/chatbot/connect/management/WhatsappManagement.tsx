@@ -23,7 +23,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
     const handleNumberChange = (phoneNumber: string) => () => {
         setPhoneNumber(phoneNumber)
     }
-        
+
     const fetchPhoneNumbers = async () => {
         try {
             const response = await fetch(`/api/chatbot/integrations/whatsapp?chatbotId=${chatbotId}`, {
@@ -46,9 +46,11 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
     };
 
     useEffect(() => {
-        let refinePhoneNumber = phoneNumber;
-        refinePhoneNumber = refinePhoneNumber.replace(/\D/g,''); // removes all non-digit characters
-        setIntegrationUrl(`https://wa.me/${refinePhoneNumber}?text=Hello%2C%20this%20is%20a%20test%20message`);
+        if (phoneNumber) {
+            let refinePhoneNumber = phoneNumber;
+            refinePhoneNumber = refinePhoneNumber.replace(/\D/g, ''); // removes all non-digit characters
+            setIntegrationUrl(`https://wa.me/${refinePhoneNumber}?text=Hello%2C%20this%20is%20a%20test%20message`);
+        }
     }, [phoneNumber])
 
     useEffect(() => {
