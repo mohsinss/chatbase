@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
 import WhatsAppNumber from "@/models/WhatsAppNumber";
+import Chatbot from "@/models/Chatbot";
 import axios from "axios";
 
 export async function DELETE(req: Request) {
@@ -12,7 +13,12 @@ export async function DELETE(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { phoneNumberId, wabaId } = await req.json();
+    const { phoneNumberId, wabaId, chatbotId } = await req.json();
+
+    // Check if chatbotId is provided
+    if (!chatbotId) {
+      return new NextResponse("chatbotId is missing.", { status: 400 });
+    }
 
     // Check if chatbotId is provided
     if (!phoneNumberId) {
@@ -44,6 +50,14 @@ export async function DELETE(req: Request) {
     const result = await WhatsAppNumber.deleteOne({ phoneNumberId });
 
     if (result.deletedCount > 0) {
+      // Check if there are any more numbers for this chatbotId
+      const remainingNumbers = await WhatsAppNumber.find({ chatbotId });
+      if (remainingNumbers.length === 0) {
+        // If no more numbers, set integrations.whatsapp to false
+        const chatbot = await Chatbot.findOne({ chatbotId });
+        chatbot.integrations.whatsapp = false;
+        await chatbot.save();
+      }
       return NextResponse.json({ message: "Deleted successfully" });
     } else {
       return new NextResponse("Not Found", { status: 404 });

@@ -8,6 +8,16 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { QRCodeCanvas } from 'qrcode.react';
 import { IndentDecrease } from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader,
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 const WhatsappManagement = ({ chatbotId, domain, teamId }:
     {
@@ -15,10 +25,12 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
         domain: string,
         teamId: string
     }) => {
-    const [isConnecting, setIsConnecting] = useState(false)
-    const [phoneNumbers, setPhoneNumbers] = useState([])
-    const [phoneNumber, setPhoneNumber] = useState('')
-    const [integrationUrl, setIntegrationUrl] = useState('')
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [phoneNumbers, setPhoneNumbers] = useState([]);
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [deletePhone, setDeletePhone] = useState(null);
+    const [integrationUrl, setIntegrationUrl] = useState('');
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     const handleNumberChange = (phoneNumber: string) => () => {
         setPhoneNumber(phoneNumber)
@@ -140,8 +152,15 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
         });
     }
 
-    const handleDelete = (phone: any) => async () => {
-        console.log('handleDelete', phone);
+    const handleDeleteMenu = (phone: any) => () => {
+        setDeletePhone(phone);
+        setIsDeleteDialogOpen(true);
+    }
+
+    const handleDelete = async () => {
+        if(!deletePhone)
+            return;
+        console.log('handleDelete', deletePhone);
         setIsConnecting(true);
         try {
             const response = await fetch("/api/chatbot/integrations/whatsapp", {
@@ -150,8 +169,9 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    phoneNumberId: phone?.phoneNumberId,
-                    wabaId: phone?.wabaId,
+                    phoneNumberId: deletePhone?.phoneNumberId,
+                    wabaId: deletePhone?.wabaId,
+                    chatbotId,
                 }),
             });
 
@@ -167,6 +187,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
 
         fetchPhoneNumbers();
         setIsConnecting(false);
+        setIsDeleteDialogOpen(false);
     }
 
     return (
@@ -269,7 +290,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                                             <div
                                                                 className={`${active ? 'bg-gray-100 text-red-900 ' : 'text-red-700'
                                                                     } flex px-4 py-2 text-sm cursor-pointer`}
-                                                                onClick={handleDelete(phone)}
+                                                                onClick={handleDeleteMenu(phone)}
                                                             >
                                                                 Delete
                                                             </div>
@@ -348,6 +369,32 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
 
                 <QRCodeCanvas id="qr-code-canvas" value={integrationUrl} className="w-[400px]" />
             </div>
+
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete WhatsApp Number</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete this WhatsApp Number?.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteDialogOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={isConnecting}
+                        >
+                            {isConnecting? "Deleting" : "Delete"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }
