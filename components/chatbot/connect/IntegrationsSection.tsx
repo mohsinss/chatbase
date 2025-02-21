@@ -156,6 +156,7 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
         throw new Error("Failed to save WhatsApp credentials");
       }
 
+      router.refresh();
       toast.success("Successfully connected to WhatsApp!");
     } catch (error) {
       console.error("Error saving WhatsApp credentials:", error);
