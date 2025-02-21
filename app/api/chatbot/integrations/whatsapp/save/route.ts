@@ -13,12 +13,12 @@ export async function POST(req: Request) {
     }
 
     const { chatbotId, wabaId, phoneNumberId } = await req.json();
-    
+
     // Check if all required parameters are provided
     if (!chatbotId || !wabaId || !phoneNumberId) {
       return NextResponse.json({ success: false, message: 'Missing required parameters' });
     }
-    
+
     await connectMongo();
 
     // Subscribe App to webhook
@@ -46,19 +46,26 @@ export async function POST(req: Request) {
     });
     const data = response3.data;
 
-    // Save to WhatsAppNumber model
-    const whatsappNumber = new WhatsAppNumber({
-      chatbotId,
-      wabaId,
-      phoneNumberId,
-      verified_name: data.verified_name,
-      code_verification_status: data.code_verification_status,
-      display_phone_number: data.display_phone_number,
-      quality_rating: data.quality_rating,
-      platform_type: data.platform_type,
-      last_onboarded_time: data.last_onboarded_time,
-    });
-    await whatsappNumber.save();
+    // Find WhatsAppNumber with phoneNumberId and update it
+    const whatsappNumber = await WhatsAppNumber.findOneAndUpdate(
+      { phoneNumberId }, // find a document with phoneNumberId
+      {
+        // update these fields
+        chatbotId,
+        wabaId,
+        phoneNumberId,
+        verified_name: data.verified_name,
+        code_verification_status: data.code_verification_status,
+        display_phone_number: data.display_phone_number,
+        quality_rating: data.quality_rating,
+        platform_type: data.platform_type,
+        last_onboarded_time: data.last_onboarded_time,
+      },
+      {
+        new: true, // return the new WhatsAppNumber instead of the old one
+        upsert: true, // make this update into an upsert
+      }
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,6 +1,8 @@
 // src/app/api/webhook/route.ts
 import { NextResponse } from 'next/server';
 import axios from 'axios';
+import WhatsAppNumber from '@/models/WhatsAppNumber';
+import connectMongo from "@/libs/mongoose";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -29,20 +31,26 @@ export async function POST(request: Request) {
     });
 
     if (data?.entry[0]?.changes[0]?.value?.messages[0]?.type == "text") {
+      await connectMongo();
+
       const from = data?.entry[0]?.changes[0]?.value?.messages[0]?.from;
       const phone_number_id = data?.entry[0]?.changes[0]?.value?.metadata.phone_number_id;
       const text = data?.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
-      
+
+      // Fetch the existing WhatsAppNumber model
+      const whatsappNumber = await WhatsAppNumber.findOne({ phone_number_id: phone_number_id });
+      const chatbotId = whatsappNumber.chatbotId;
+
       const response1 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
         messaging_product: "whatsapp",
         to: from,
         text: {
-            body: text
+          body: text + `from ${chatbotId}`
         }
       }, {
         headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
       });
-      
+
     }
 
     // Check if the request was successful
