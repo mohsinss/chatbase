@@ -50,8 +50,6 @@ export const sendGemini = async (
     const result = await chat.sendMessageStream([{
       text: lastMessage.content
     }]);
-    console.log("result")
-    console.log(result)
     for await (const chunk of result.stream) {
       const text = chunk.text();
       const confidenceScore = 1;

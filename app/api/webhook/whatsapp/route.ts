@@ -22,7 +22,7 @@ const deepseek = new OpenAI({
 });
 // Helper function to process messages for deepseek-reasoner
 //@ts-ignore
-function processMessagesForReasoner(systemPrompt, relevant_chunk, messages, confidencePrompt) {
+function processMessagesForReasoner(systemPrompt, relevant_chunk, messages) {
   let formattedMessages = [{
     role: 'user',
     content: `${systemPrompt}\n${relevant_chunk}`
@@ -37,19 +37,6 @@ function processMessagesForReasoner(systemPrompt, relevant_chunk, messages, conf
     } else {
       formattedMessages.push(msg);
     }
-  }
-
-  // Handle confidence prompt
-  const lastMsg = formattedMessages[formattedMessages.length - 1];
-  const confidenceMessage = {
-    role: 'user',
-    content: confidencePrompt
-  };
-
-  if (lastMsg.role === 'user') {
-    lastMsg.content += `\n${confidencePrompt}`;
-  } else {
-    formattedMessages.push(confidenceMessage);
   }
 
   return formattedMessages;
@@ -209,7 +196,6 @@ export async function POST(request: Request) {
                   { role: 'system', content: systemPrompt },
                   { role: 'user', content: relevant_chunk },
                   ...messages,
-                  { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value at the end of your response with 3 letters only like ':::100'" }
                 ],
                 'user-1',
                 onContent,
@@ -248,7 +234,6 @@ export async function POST(request: Request) {
                   { role: 'system', content: systemPrompt },
                   { role: 'user', content: relevant_chunk },
                   ...messages,
-                  { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put this value at the end of your response with 3 letters only like ':::100'" }
                 ],
                 'user-1',
                 onContent,
@@ -275,20 +260,17 @@ export async function POST(request: Request) {
 
         // For O1 models, prepend system message as a user message
         let formattedMessages;
-        const confidencePrompt = "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'";
         if (MODEL_MAPPING[internalModel] == 'deepseek-reasoner') {
           formattedMessages = processMessagesForReasoner(
             systemPrompt,
             relevant_chunk,
             messages,
-            confidencePrompt
           );
         } else {
           formattedMessages = [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: relevant_chunk },
             ...messages,
-            { role: 'user', content: confidencePrompt }
           ];
         }
 
@@ -329,18 +311,7 @@ export async function POST(request: Request) {
                 }
               }
 
-              // Calculate average log probability
-              // const averageLogProb = log_probs_sum / log_probs_len;
-              // let confidenceScore;
-              // if (averageLogProb === 0) {
-              //   confidenceScore = 100; // If average is zero, confidence is perfect (100%)
-              // } else {
-              //   confidenceScore = (1 + averageLogProb) * 100; // Adjust as needed
-              // }
-
-              // Send confidence score as part of the response
               controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-              // controller.enqueue(encoder.encode('score:' + confidenceScore));
               controller.close();
             } catch (error) {
               controller.error(error);
@@ -361,14 +332,12 @@ export async function POST(request: Request) {
             { role: 'user', content: systemPrompt },
             { role: 'user', content: relevant_chunk },
             ...messages,
-            { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'" }
           ];
         } else {
           formattedMessages = [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: relevant_chunk },
             ...messages,
-            { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'" }
           ];
         }
 
@@ -415,18 +384,7 @@ export async function POST(request: Request) {
                 }
               }
 
-              // Calculate average log probability
-              const averageLogProb = log_probs_sum / log_probs_len;
-              let confidenceScore;
-              if (averageLogProb === 0) {
-                confidenceScore = 100; // If average is zero, confidence is perfect (100%)
-              } else {
-                confidenceScore = (1 + averageLogProb) * 100; // Adjust as needed
-              }
-
-              // Send confidence score as part of the response
               controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-              // controller.enqueue(encoder.encode('score:' + confidenceScore));
               controller.close();
             } catch (error) {
               controller.error(error);
