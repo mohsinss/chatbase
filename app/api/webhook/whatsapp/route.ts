@@ -113,6 +113,11 @@ export async function POST(request: Request) {
       await connectMongo();
 
       const from = data?.entry[0]?.changes[0]?.value?.messages[0]?.from;
+      const timestamp = data?.entry[0]?.changes[0]?.value?.messages[0]?.timestamp;
+      const currentTimestamp = (new Date().getTime())/1000;
+      if(timestamp + 60 < currentTimestamp) {
+        return NextResponse.json({ status: 'Delievery denied coz long delay' }, { status: 200 });
+      }
       const phone_number_id = data?.entry[0]?.changes[0]?.value?.metadata.phone_number_id;
       const text = data?.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
       let messages = [{role: 'user', content: text}];
