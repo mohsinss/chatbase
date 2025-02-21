@@ -442,6 +442,7 @@ export async function POST(request: Request) {
       
       const reader = stream.getReader();
 
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { done } = await reader.read();
         if (done) {
