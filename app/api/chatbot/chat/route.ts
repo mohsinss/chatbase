@@ -166,8 +166,6 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < chunk_response_data.chunks.length; i++) {
       relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
     }
-    console.log(messages[messages.length - 1].content)
-    console.log(relevant_chunk)
 
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;

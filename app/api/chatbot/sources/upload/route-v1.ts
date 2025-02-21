@@ -140,7 +140,6 @@ export async function POST(req: Request) {
         }
 
         // Now you can process the pages
-        console.log(pages);
         let allContent = '';
         //@ts-ignore
         pages.forEach(page => {

@@ -105,7 +105,6 @@ export async function POST(req: Request) {
       }
 
       const convertApiData = await convertApiResponse.json();
-      console.log(convertApiData);
       const pdfUrl = convertApiData.Files[0].Url;
 
       // Fetch the PDF file

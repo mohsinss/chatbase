@@ -29,7 +29,6 @@ export async function GET(req: Request) {
     }
     
     const datasets = await datasetsResponse.json();
-    console.log('Found datasets:', datasets);
 
     // Find the dataset for this chatbot
     const dataset = datasets.find((d: any) => {
@@ -41,8 +40,6 @@ export async function GET(req: Request) {
       console.log('No dataset found for chatbot:', chatbotId);
       return NextResponse.json({ files: [] });
     }
-
-    console.log('Found dataset:', dataset);
 
     // Get files using correct endpoint structure
     const filesResponse = await fetch(`https://api.trieve.ai/api/dataset/${dataset.id}/files`, {
@@ -60,7 +57,6 @@ export async function GET(req: Request) {
     }
 
     const files = await filesResponse.json();
-    console.log('Found files:', files);
     return NextResponse.json({ files: files.files || [] });
 
   } catch (error) {

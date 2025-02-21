@@ -51,7 +51,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Member limit exceeded" }, { status: 400 });
         }
 
-        console.log(body.members);
         team.members.push(...body.members); // update the members field in the Team model
         await team.save(); // save the updated team
 

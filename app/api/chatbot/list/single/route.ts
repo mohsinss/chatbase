@@ -19,7 +19,6 @@ export async function GET(request: Request) {
     }
 
     const chatbot = await Chatbot.findOne({ chatbotId }).lean();
-    console.log('Found chatbot:', chatbot); // Debug log
 
     if (!chatbot) {
       return NextResponse.json(

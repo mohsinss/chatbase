@@ -5,7 +5,7 @@ import { IconCode, IconShare, IconPuzzle } from "@tabler/icons-react";
 import EmbedSection from './EmbedSection';
 import ShareSection from './ShareSection';
 import IntegrationsSection from './IntegrationsSection';
-import FacebookSDK from "@/components/facebook/FacebookSDK";
+import WhatsappManagement from "./management/WhatsappManagement";
 
 const CONNECT_TABS = [
   { id: "embed", label: "Embed", icon: <IconCode className="w-5 h-5" /> },
@@ -13,18 +13,25 @@ const CONNECT_TABS = [
   { id: "integrations", label: "Integrations", icon: <IconPuzzle className="w-5 h-5" /> },
 ];
 
-const Connect = ({ 
-  teamId, 
+interface ChatbotData {
+  integrations: Object
+}
+
+const Connect = ({
+  teamId,
   chatbotId,
-  domain
-}: { 
+  domain,
+  chatbot
+}: {
   teamId: string;
   chatbotId: string;
   domain: string;
+  chatbot: ChatbotData
 }) => {
   const router = useRouter();
   const pathname = usePathname();
   const currentTab = pathname.split('/').pop() || 'embed';
+  console.log(pathname, "pathname")
 
   const handleTabChange = (tabId: string) => {
     router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/connect/${tabId}`);
@@ -45,8 +52,8 @@ const Connect = ({
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap w-full
-                    ${currentTab === tab.id 
-                      ? "bg-primary/10 text-primary" 
+                    ${currentTab === tab.id
+                      ? "bg-primary/10 text-primary"
                       : "text-gray-600 hover:bg-gray-100"}`}
                 >
                   {tab.icon}
@@ -58,9 +65,10 @@ const Connect = ({
 
           {/* Content Area */}
           <div className="flex-1">
-            {currentTab === 'embed' && <EmbedSection chatbotId={chatbotId} domain={domain}/>}
-            {currentTab === 'share' && <ShareSection chatbotId={chatbotId} domain={domain}/>}
-            {currentTab === 'integrations' && <IntegrationsSection chatbotId={chatbotId} />}
+            {currentTab === 'embed' && <EmbedSection chatbotId={chatbotId} domain={domain} />}
+            {currentTab === 'share' && <ShareSection chatbotId={chatbotId} domain={domain} />}
+            {currentTab === 'integrations' && <IntegrationsSection teamId={teamId} chatbot={chatbot} chatbotId={chatbotId} />}
+            {currentTab === 'whatsapp' && <WhatsappManagement chatbotId={chatbotId} domain={domain} teamId={teamId} />}
           </div>
         </div>
       </div>

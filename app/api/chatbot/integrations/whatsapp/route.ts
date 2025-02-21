@@ -1,8 +1,19 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
+import connectMongo from "@/libs/mongoose";
+import WhatsAppNumber from "@/models/WhatsAppNumber";
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const chatbotId = url.searchParams.get("chatbotId");
+
+  await connectMongo();
+  const WhatsAppNumbers = await WhatsAppNumber.find({ chatbotId });
+  return NextResponse.json(WhatsAppNumbers);
+
+}
+  export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

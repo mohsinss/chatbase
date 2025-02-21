@@ -36,8 +36,6 @@ export async function GET(req: Request) {
       .select('chatbotId name createdAt sourcesCount')
       .sort({ createdAt: -1 });
 
-    console.log('Found chatbots:', chatbots); // Debug log
-
     return NextResponse.json({ chatbots });
 
   } catch (error) {

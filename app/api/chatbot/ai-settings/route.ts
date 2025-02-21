@@ -43,7 +43,6 @@ export async function POST(req: Request) {
     await connectDB();
     
     const body = await req.json();
-    console.log("Received body:", body);
 
     // Explicitly construct the update object
     const updateData = {
@@ -71,8 +70,6 @@ export async function POST(req: Request) {
         setDefaultsOnInsert: true // Apply defaults on upsert
       }
     ).lean();
-
-    console.log("Updated settings:", updatedSettings);
 
     return Response.json(updatedSettings);
   } catch (error) {

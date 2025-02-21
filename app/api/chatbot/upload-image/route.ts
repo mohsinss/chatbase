@@ -25,20 +25,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    console.log("File details:", {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
+    // console.log("File details:", {
+    //   name: file.name,
+    //   type: file.type,
+    //   size: file.size
+    // });
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const key = `${chatbotId}/${imageType}-${Date.now()}${getExtension(file.type)}`;
 
-    console.log("Uploading to S3:", {
-      bucket: process.env.AWS_S3_BUCKET_NAME,
-      key,
-      contentType: file.type
-    });
+    // console.log("Uploading to S3:", {
+    //   bucket: process.env.AWS_S3_BUCKET_NAME,
+    //   key,
+    //   contentType: file.type
+    // });
 
     try {
       await s3Client.send(

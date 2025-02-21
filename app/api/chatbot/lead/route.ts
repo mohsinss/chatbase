@@ -4,6 +4,7 @@ import client from "@sendgrid/client";
 import User from "@/models/User";
 import Lead from "@/models/Lead";
 import ChatbotConversation from "@/models/ChatbotConversation";
+import connectMongo from "@/libs/mongoose";
 
 const axios = require('axios');
 
@@ -87,7 +88,8 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const chatbotId = url.searchParams.get("chatbotId"); // Extract datasetId from query parameters
-
+    
+    await connectMongo();
     const leads = await Lead.find({ chatbotId });
     return NextResponse.json(leads);
   } catch (error) {

@@ -8,6 +8,10 @@ import DashboardNav from "@/components/DashboardNav";
 import ChatbotTabs from "@/components/chatbot/ChatbotTabs";
 import Connect from "@/components/chatbot/connect/Connect";
 
+interface ChatbotData {
+  integrations: Object
+}
+
 export default async function ConnectPage({ 
   params 
 }: { 
@@ -27,12 +31,17 @@ export default async function ConnectPage({
     redirect("/dashboard");
   }
 
+  // Serialize the chatbot data with AI settings
+  const serializedChatbot: ChatbotData = {
+    integrations: chatbot.integrations
+  };
+
   return (
     <>
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <Connect teamId={params.teamId} chatbotId={params.chatbotId} domain={process.env.LIVE_DOMAIN}/>
+        <Connect chatbot={serializedChatbot} teamId={params.teamId} chatbotId={params.chatbotId} domain={process.env.LIVE_DOMAIN}/>
       </main>
     </>
   );

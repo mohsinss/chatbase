@@ -14,6 +14,11 @@ interface IntegrationCardProps {
   onClick: () => void;
   showDeviceIcon?: boolean;
   isConnecting: boolean;
+  connected: boolean;
+}
+
+interface ChatbotData {
+  integrations: Object
 }
 
 interface WhatsAppAuthResponse {
@@ -26,7 +31,7 @@ interface MetaBusinessResponse {
   error?: string;
 }
 
-const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = false, isConnecting }: IntegrationCardProps) => (
+const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = false, isConnecting, connected }: IntegrationCardProps) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
     <div className="w-12 h-12">
       <Image
@@ -49,7 +54,7 @@ const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = f
         className="flex-1 px-4 py-2 text-center rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50"
         disabled={isConnecting}
       >
-        {isConnecting ? "Connecting..." : "Connect"}
+        {connected? "Manage" : isConnecting ? "Connecting..." : "Connect"}
       </button>
       {showDeviceIcon && (
         <button className="p-2 rounded-lg border border-gray-200 hover:border-gray-300">
@@ -60,7 +65,7 @@ const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = f
   </div>
 );
 
-const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
+const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, chatbotId: string, chatbot: ChatbotData }) => {
   const router = useRouter();
   const [connectingTitle, setConnectingTitle] = useState('');
 
@@ -104,10 +109,17 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
       const code = response.authResponse.code;
     } else {
       console.log(response)
+      setConnectingTitle('')
     }
   }
 
   const handleConnect = async (platform: string) => {
+    //@ts-ignore
+    if(chatbot?.integrations[platform.toLowerCase()]){
+      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/connect/integrations/manage/whatsapp`);
+      return;
+    }
+
     setConnectingTitle(platform);
 
     if (platform === "Whatsapp") {
@@ -209,6 +221,8 @@ const IntegrationsSection = ({ chatbotId }: { chatbotId: string }) => {
             key={integration.title}
             {...integration}
             isConnecting={integration.title == connectingTitle}
+            //@ts-ignore
+            connected={chatbot?.integrations[integration.title.toLowerCase()] || false}
           />
         ))}
       </div>
