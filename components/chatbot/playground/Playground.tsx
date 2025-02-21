@@ -189,8 +189,8 @@ const ChatContainer = ({
       chatContainer.style.display = 'block';
       closeButton.style.display = 'block';
       if (!config?.chatIconUrl) {
-        chatIcon.innerHTML = `<svg id="closeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.3" stroke="white" width="24" height="24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
+        chatIcon.innerHTML = `<svg id="closeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.3" stroke="white" width="24" height="24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
             </svg>`;
       }
       document.getElementsByTagName('body')[0].style.overflow = 'hidden';
@@ -413,7 +413,7 @@ const ChatContainer = ({
                                     aria-label="Close contact form"
                                     title="Close contact form">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true" className="h-4 w-4">
-                                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                                     </svg>
                                   </button>
                                 </div>

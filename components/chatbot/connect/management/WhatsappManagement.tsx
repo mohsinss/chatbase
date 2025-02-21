@@ -138,9 +138,33 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
         });
     }
 
-    const handleDelete = (phonenumber: string) => () => {
-        console.log('handleDelete', phonenumber)
+    const handleDelete = (phone: any) => async () => {
+        console.log('handleDelete', phone);
+        setIsConnecting(true);
+        try {
+            const response = await fetch("/api/chatbot/integrations/whatsapp", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    phoneNumberId: phone?.phoneNumberId,
+                    wabaid: phone?.wabaId,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to delete WhatsApp Number");
+            }
+
+            toast.success("Successfully delete WhatsApp Number!");
+        } catch (error) {
+            console.error("Error deleting WhatsApp number:", error);
+            toast.error("Failed to delete WhatsApp Number.");
+        }
+
         fetchPhoneNumbers();
+        setIsConnecting(false);
     }
 
     return (
@@ -198,7 +222,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {phoneNumbers?.map((phone) => (
-                            <tr key={phone.number}>
+                            <tr key={`phonenumberTR-${phone.phoneNumberId}`}>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{phone.display_phone_number}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{phone.verified_name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-green-500">{phone.code_verification_status}</td>
@@ -207,7 +231,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                         <div>
                                             <Menu.Button className="inline-flex justify-center w-full px-2 py-1 text-sm font-medium text-gray-700 bg-white rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                                                 <svg fill="#000000" height="20px" width="20px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 0 32.055 32.055" xmlSpace="preserve">
-                                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
+                                                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round">
                                                     </g>
                                                     <g id="SVGRepo_iconCarrier"> <g> <path d="M3.968,12.061C1.775,12.061,0,13.835,0,16.027c0,2.192,1.773,3.967,3.968,3.967c2.189,0,3.966-1.772,3.966-3.967 C7.934,13.835,6.157,12.061,3.968,12.061z M16.233,12.061c-2.188,0-3.968,1.773-3.968,3.965c0,2.192,1.778,3.967,3.968,3.967 s3.97-1.772,3.97-3.967C20.201,13.835,18.423,12.061,16.233,12.061z M28.09,12.061c-2.192,0-3.969,1.774-3.969,3.967 c0,2.19,1.774,3.965,3.969,3.965c2.188,0,3.965-1.772,3.965-3.965S30.278,12.061,28.09,12.061z">
                                                     </path>
@@ -243,7 +267,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                                             <div
                                                                 className={`${active ? 'bg-gray-100 text-red-900 ' : 'text-red-700'
                                                                     } flex px-4 py-2 text-sm cursor-pointer`}
-                                                                onClick={handleDelete(phone.number)}
+                                                                onClick={handleDelete(phone)}
                                                             >
                                                                 Delete
                                                             </div>
@@ -267,7 +291,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                     </button>
                 </div>
             </div>
-            <div className="flex items-center rounded-md border-1 border-[1px] border-gray-200 p-4 gap-10 justify-between">
+            <div className="flex items-center flex-col lg:flex-row lg:justify-between rounded-md border-1 border-[1px] border-gray-200 p-4 gap-10 justify-center">
                 <div className="max-w-[600px]">
                     <h2 className="text-xl font-extrabold text-gray-900">Test Your Integration</h2>
                     <div className="flex gap-4 mt-3 items-center text-gray-500">
@@ -302,6 +326,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                                 <Menu.Item key={`phonenumber-${index}`}>
                                                     {({ active }) => (
                                                         <div
+                                                            key={`phonenumberdiv-${index}`}
                                                             className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                                                 } flex px-4 py-2 text-sm cursor-pointer`}
                                                             onClick={handleNumberChange(phone.display_phone_number)}
@@ -319,7 +344,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                     </div>
                 </div>
 
-                <QRCodeCanvas id="qr-code-canvas" value={integrationUrl} className="w-[300px]" />
+                <QRCodeCanvas id="qr-code-canvas" value={integrationUrl} className="w-[400px]" />
             </div>
         </>
     )
