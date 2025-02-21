@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
 import WhatsAppNumber from "@/models/WhatsAppNumber";
+import Chatbot from "@/models/Chatbot";
 import axios from "axios";
 
 export async function POST(req: Request) {
@@ -64,6 +65,18 @@ export async function POST(req: Request) {
       {
         new: true, // return the new WhatsAppNumber instead of the old one
         upsert: true, // make this update into an upsert
+      }
+    );
+
+    // Find the Chatbot with chatbotId and update it
+    const chatbot = await Chatbot.findOneAndUpdate(
+      { chatbotId }, // find a document with chatbotId
+      {
+        // update the integrations field
+        $set: { "integrations.whatsapp": true }
+      },
+      {
+        new: true, // return the new Chatbot instead of the old one
       }
     );
 
