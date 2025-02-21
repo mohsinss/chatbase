@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       const text = data?.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
 
       // Fetch the existing WhatsAppNumber model
-      const whatsappNumber = await WhatsAppNumber.findOne({ phone_number_id: phone_number_id });
+      const whatsappNumber = await WhatsAppNumber.findOne({ phoneNumberId: phone_number_id });
       const chatbotId = whatsappNumber.chatbotId;
 
       const response1 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
