@@ -159,8 +159,8 @@ export async function POST(req: NextRequest) {
     const chunk_response_data = await chunk_response.json();
 
     if (!chunk_response.ok) {
-      console.error("Dataset creation failed:", chunk_response_data);
-      throw new Error(chunk_response_data.message || "Failed to create dataset");
+      console.error("semantic search failed:", chunk_response_data);
+      throw new Error(chunk_response_data.message || "semantic search failed.");
     }
     let relevant_chunk = "Please use the following information for answering.\n";
     for (let i = 0; i < chunk_response_data.chunks.length; i++) {
