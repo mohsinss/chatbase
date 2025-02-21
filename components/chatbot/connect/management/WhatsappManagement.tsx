@@ -149,7 +149,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                 },
                 body: JSON.stringify({
                     phoneNumberId: phone?.phoneNumberId,
-                    wabaid: phone?.wabaId,
+                    wabaId: phone?.wabaId,
                 }),
             });
 
