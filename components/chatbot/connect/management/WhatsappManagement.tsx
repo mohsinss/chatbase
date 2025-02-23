@@ -144,8 +144,8 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
             console.log(code)
         } else {
             console.log(response)
+            setIsConnecting(false);
         }
-        setIsConnecting(false);
     }
 
     const handleConnect = () => {

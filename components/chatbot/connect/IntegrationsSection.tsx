@@ -111,8 +111,8 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
       console.log(code)
     } else {
       console.log(response)
+      setConnectingTitle('')
     }
-    setConnectingTitle('')
   }
 
   const handleConnect = async (platform: string) => {
