@@ -95,31 +95,35 @@ export async function POST(request: Request) {
   try {
     // Parse the incoming request body
     const data = await request.json();
-    // Send data to the specified URL
-    const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    // Check if the request was successful
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
 
     if (data?.entry[0]?.changes[0]?.value?.messages[0]?.type == "text") {
+      // Send data to the specified URL
+      const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+  
+      // Check if the request was successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       await connectMongo();
 
       const from = data?.entry[0]?.changes[0]?.value?.messages[0]?.from;
       const timestamp = data?.entry[0]?.changes[0]?.value?.messages[0]?.timestamp;
       const currentTimestamp = (new Date().getTime())/1000;
+      const phone_number_id = data?.entry[0]?.changes[0]?.value?.metadata.phone_number_id;
+      const text = data?.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
+      const message_id = data?.entry[0]?.changes[0]?.value?.messages[0]?.id;
+
       if(timestamp + 60 < currentTimestamp) {
         return NextResponse.json({ status: 'Delievery denied coz long delay' }, { status: 200 });
       }
-      const phone_number_id = data?.entry[0]?.changes[0]?.value?.metadata.phone_number_id;
-      const text = data?.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
+
       let messages = [{role: 'user', content: text}];
 
       // Fetch the existing WhatsAppNumber model
@@ -413,7 +417,7 @@ export async function POST(request: Request) {
         }
       }
 
-
+      // send text msg to from number
       const response1 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
         messaging_product: "whatsapp",
         to: from,
@@ -424,12 +428,21 @@ export async function POST(request: Request) {
         headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
       });
 
+      // mark message as read
+      const response2 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
+        messaging_product: "whatsapp",
+        status: "read",
+        message_id
+      }, {
+        headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+      });
+
     }
 
     // Respond with a 200 OK status
     return NextResponse.json({ status: 'OK' }, { status: 200 });
   } catch (error) {
     console.error('Error processing webhook event:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error }, { status: 500 });
   }
 }
