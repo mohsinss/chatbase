@@ -420,8 +420,17 @@ export async function POST(request: Request) {
               }
             }
 
-            // send text msg to from number
+            // mark message as read
             const response1 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
+              messaging_product: "whatsapp",
+              status: "read",
+              message_id
+            }, {
+              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+            });
+
+            // send text msg to from number
+            const response2 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
               messaging_product: "whatsapp",
               to: from,
               text: {
@@ -431,29 +440,24 @@ export async function POST(request: Request) {
               headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
             });
 
-            // mark message as read
-            const response2 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-              messaging_product: "whatsapp",
-              status: "read",
-              message_id
-            }, {
-              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-            });
-
             // Find existing conversation or create a new one
             let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "whatsapp", "metadata.from": from });
             if (conversation) {
               // Update existing conversation
-              conversation.messages.push({ from, text, response_text });
+              conversation.messages.push({ role: "user", content: text });
+              conversation.messages.push({ role: "assistant", content: response_text });
             } else {
               // Create new conversation
               conversation = new ChatbotConversation({
                 chatbotId,
                 platform: "whatsapp",
                 metadata: { from },
-                messages: [{ from, text, response_text }]
+                messages: [{ role: "user", content: text },
+                { role: "assistant", content: response_text }
+                ]
               });
             }
+
             await conversation.save();
 
           }
