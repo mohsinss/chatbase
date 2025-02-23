@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import FacebookSDK from "@/components/facebook/FacebookSDK";
 import toast from "react-hot-toast";
+import Spinner from "@/components/Spinner";
 
 interface IntegrationCardProps {
   title: string;
@@ -107,10 +108,11 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
   const fbLoginCallback = (response: any) => {
     if (response.authResponse) {
       const code = response.authResponse.code;
+      console.log(code)
     } else {
       console.log(response)
-      setConnectingTitle('')
     }
+    setConnectingTitle('')
   }
 
   const handleConnect = async (platform: string) => {
@@ -226,6 +228,12 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
             connected={chatbot?.integrations[integration.title.toLowerCase()] || false}
           />
         ))}
+        {connectingTitle != "" && (
+          // Show the spinner when loading
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <Spinner />
+          </div>
+        )}
       </div>
     </div>
   );

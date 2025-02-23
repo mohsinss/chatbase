@@ -52,11 +52,21 @@ export async function DELETE(req: Request) {
     if (result.deletedCount > 0) {
       // Check if there are any more numbers for this chatbotId
       const remainingNumbers = await WhatsAppNumber.find({ chatbotId });
+      console.log("remainingNumbers")
+      console.log(remainingNumbers)
+      console.log(remainingNumbers.length)
       if (remainingNumbers.length === 0) {
-        // If no more numbers, set integrations.whatsapp to false
-        const chatbot = await Chatbot.findOne({ chatbotId });
-        chatbot.integrations.whatsapp = false;
-        await chatbot.save();
+        // Find the Chatbot with chatbotId and update integrations.whatsapp to false
+        const chatbot = await Chatbot.findOneAndUpdate(
+          { chatbotId }, // find a document with chatbotId
+          {
+            // update the integrations field
+            $set: { "integrations.whatsapp": false }
+          },
+          {
+            new: true, // return the new Chatbot instead of the old one
+          }
+        );
       }
       return NextResponse.json({ message: "Deleted successfully" });
     } else {
