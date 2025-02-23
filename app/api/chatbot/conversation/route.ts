@@ -10,7 +10,7 @@ interface ChatMessage {
 
 export async function POST(req: NextRequest) {
   try {
-    const { chatbotId, messages, createNew, conversationId } = await req.json();
+    const { chatbotId, messages, createNew, conversationId, source } = await req.json();
     await connectMongo();
 
     let conversation;
@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
       conversation = await ChatbotConversation.create({
         chatbotId,
         messages: [],
+        platform: source,
       });
     } else if (conversationId && hasValidMessages) {
       // Update existing conversation only if there are valid messages

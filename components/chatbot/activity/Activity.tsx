@@ -27,6 +27,7 @@ interface Conversation {
   createdAt: Date;
   updatedAt: Date;
   leadId?: Lead;
+  platform?: string;
 }
 
 const SUB_TABS = [
@@ -54,8 +55,6 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
             conv.messages.some((m: Message) => m.content?.trim())
           ) : [];
           setConversations(validConversations);
-          console.log("validConversations")
-          console.log(validConversations)
         }
       } catch (error) {
         console.error('Failed to fetch conversations:', error);
@@ -74,8 +73,6 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
             conv.messages.some((m: Message) => m.content?.trim())
           ) : [];
           setConversations(validConversations);
-          console.log("validConversations")
-          console.log(validConversations)
         }
       } catch (error) {
         console.error('Failed to fetch conversations:', error);
@@ -256,7 +253,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
               <div className="p-4 border-b bg-white sticky top-0 z-10">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold">Source: Playground</h3>
+                    <h3 className="text-lg font-semibold capitalize">Source: {selectedConversation?.platform ? selectedConversation.platform : "Playground"}</h3>
                     <div className="text-sm text-gray-500">
                       {formatDate(selectedConversation.createdAt)}
                     </div>

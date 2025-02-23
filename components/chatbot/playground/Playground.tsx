@@ -686,6 +686,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
           chatbotId: chatbot.id,
           messages: [],
           createNew: true, // Signal to create a new conversation
+          source: embed ? "Playground" : "Playground",
         }),
       });
 
