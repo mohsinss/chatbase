@@ -28,6 +28,7 @@ interface Conversation {
   updatedAt: Date;
   leadId?: Lead;
   platform?: string;
+  metadata?: {from?: string, to?: string};
 }
 
 const SUB_TABS = [
@@ -254,6 +255,10 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold capitalize">Source: {selectedConversation?.platform ? selectedConversation.platform : "Playground"}</h3>
+                    {selectedConversation?.platform == "whatsapp" && 
+                      <div>
+                        from {selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to}
+                      </div>}
                     <div className="text-sm text-gray-500">
                       {formatDate(selectedConversation.createdAt)}
                     </div>

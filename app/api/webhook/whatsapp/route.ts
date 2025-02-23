@@ -441,7 +441,7 @@ export async function POST(request: Request) {
             });
 
             // Find existing conversation or create a new one
-            let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "whatsapp", "metadata.from": from });
+            let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "whatsapp", "metadata.from": from, "metadata.to": whatsappNumber.display_phone_number });
             if (conversation) {
               // Update existing conversation
               conversation.messages.push({ role: "user", content: text });
@@ -451,7 +451,7 @@ export async function POST(request: Request) {
               conversation = new ChatbotConversation({
                 chatbotId,
                 platform: "whatsapp",
-                metadata: { from },
+                metadata: { from, to: whatsappNumber.display_phone_number },
                 messages: [{ role: "user", content: text },
                 { role: "assistant", content: response_text }
                 ]
