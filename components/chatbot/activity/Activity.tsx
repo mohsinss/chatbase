@@ -61,6 +61,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
             conv.messages.some((m: Message) => m.content?.trim())
           ) : [];
           setAllConversations(validConversations);
+          setConversations(validConversations);
         }
       } catch (error) {
         console.error('Failed to fetch conversations:', error);
