@@ -351,7 +351,10 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                 </div>
               </div>
               {/* Send chat */}
-              <div className="relative">
+              {
+                (selectedConversation?.platform == "whatsapp") 
+                &&
+                <div className="relative">
                 <input
                   type="text"
                   value={inputMsg}
@@ -367,7 +370,8 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                 >
                   <IconSend className="w-4 h-4" />
                 </button>
-              </div>
+                </div>
+              }
             </>
           ) : (
             <div className="flex-1 h-96 flex items-center justify-center text-gray-500">
