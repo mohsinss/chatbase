@@ -6,6 +6,19 @@ import WhatsAppNumber from "@/models/WhatsAppNumber";
 import Chatbot from "@/models/Chatbot";
 import axios from "axios";
 
+function formatPhoneNumber(phoneNumber: string) {
+  // Remove all non-numeric characters
+  let formattedNumber = phoneNumber.replace(/\D/g, '');
+
+  // Prepend with "1" if it's not already there
+  if (formattedNumber[0] !== '1') {
+    formattedNumber = '1' + formattedNumber;
+  }
+
+  return formattedNumber;
+}
+
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -57,7 +70,7 @@ export async function POST(req: Request) {
         phoneNumberId,
         verified_name: data.verified_name,
         code_verification_status: data.code_verification_status,
-        display_phone_number: data.display_phone_number,
+        display_phone_number: formatPhoneNumber(data.display_phone_number),
         quality_rating: data.quality_rating,
         platform_type: data.platform_type,
         last_onboarded_time: data.last_onboarded_time,

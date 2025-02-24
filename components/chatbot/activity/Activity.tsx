@@ -106,6 +106,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
             conv.messages.some((m: Message) => m.content?.trim())
           ) : [];
           setConversations(validConversations);
+          setSelectedConversation(validConversations.find(conv => conv._id === selectedConversation._id));
         }
       } catch (error) {
         console.error('Failed to fetch conversations:', error);
@@ -175,7 +176,40 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
   };
 
   const handleSendMessage = async (conversation: Conversation) => {
-    console.log(conversation)
+    setSendingMsg(true);
+    if (conversation?.platform == "whatsapp") {
+      try {
+        const response = await fetch('/api/chatbot/chat/sendviawhatsapp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: conversation.metadata.from,
+            to: conversation.metadata.to,
+            text: inputMsg,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+
+        // Check if the response contains an error message
+        const responseData = await response.json();
+        if (responseData.error) {
+          throw new Error(responseData.error);
+        }
+
+        toast.success('Message is sent successfully');
+
+        handleRefresh();
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        toast.error(error);
+      }
+    }
+    setSendingMsg(false);
   }
 
   const renderChatLogs = () => (
