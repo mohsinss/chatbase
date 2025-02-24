@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
+import { IconSend } from "@tabler/icons-react";
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -28,7 +29,7 @@ interface Conversation {
   updatedAt: Date;
   leadId?: Lead;
   platform?: string;
-  metadata?: {from?: string, to?: string};
+  metadata?: { from?: string, to?: string };
 }
 
 const SUB_TABS = [
@@ -41,9 +42,11 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
   const currentSubTab = pathname.split('/').pop();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sendingMsg, setSendingMsg] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
+  const [inputMsg, setInputMsg] = useState("");
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -51,8 +54,8 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
         const response = await fetch(`/api/chatbot/conversation?chatbotId=${chatbotId}&lead=0`);
         if (response.ok) {
           const data = await response.json();
-          const validConversations = Array.isArray(data) ? data.filter(conv => 
-            conv.messages.length > 0 && 
+          const validConversations = Array.isArray(data) ? data.filter(conv =>
+            conv.messages.length > 0 &&
             conv.messages.some((m: Message) => m.content?.trim())
           ) : [];
           setConversations(validConversations);
@@ -69,8 +72,8 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
         const response = await fetch(`/api/chatbot/conversation?chatbotId=${chatbotId}&lead=1`);
         if (response.ok) {
           const data = await response.json();
-          const validConversations = Array.isArray(data) ? data.filter(conv => 
-            conv.messages.length > 0 && 
+          const validConversations = Array.isArray(data) ? data.filter(conv =>
+            conv.messages.length > 0 &&
             conv.messages.some((m: Message) => m.content?.trim())
           ) : [];
           setConversations(validConversations);
@@ -98,8 +101,8 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
         const response = await fetch(`/api/chatbot/conversation?chatbotId=${chatbotId}`);
         if (response.ok) {
           const data = await response.json();
-          const validConversations = Array.isArray(data) ? data.filter(conv => 
-            conv.messages.length > 0 && 
+          const validConversations = Array.isArray(data) ? data.filter(conv =>
+            conv.messages.length > 0 &&
             conv.messages.some((m: Message) => m.content?.trim())
           ) : [];
           setConversations(validConversations);
@@ -117,7 +120,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
     const now = new Date();
     const messageDate = new Date(date);
     const diffDays = Math.floor((now.getTime() - messageDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
@@ -155,7 +158,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
 
       // Remove conversation from state
       setConversations(conversations.filter(c => c._id !== conversationToDelete._id));
-      
+
       // Clear selected conversation if it was deleted
       if (selectedConversation?._id === conversationToDelete._id) {
         setSelectedConversation(null);
@@ -171,13 +174,17 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
     }
   };
 
+  const handleSendMessage = async (conversation: Conversation) => {
+    console.log(conversation)
+  }
+
   const renderChatLogs = () => (
     <div className="flex flex-col h-full">
       {/* Top Header - Fixed */}
       <div className="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-10">
-        <h2 className="text-xl font-semibold">Leads</h2>
+        <h2 className="text-xl font-semibold">Chat Logs</h2>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={handleRefresh}
             className="btn btn-outline btn-sm gap-2"
             disabled={loading}
@@ -218,9 +225,8 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                   <div
                     key={conversation._id}
                     onClick={() => setSelectedConversation(conversation)}
-                    className={`p-4 hover:bg-gray-50 cursor-pointer h-16 ${
-                      selectedConversation?._id === conversation._id ? 'bg-gray-50' : ''
-                    }`}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer h-16 ${selectedConversation?._id === conversation._id ? 'bg-gray-50' : ''
+                      }`}
                   >
                     <div className="flex justify-between items-start">
                       <div className="space-y-1 flex-1 min-w-0">
@@ -233,7 +239,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                           <span>{conversation.messages.length} messages</span>
                         </div>
                       </div>
-                      <button 
+                      <button
                         className="p-1 hover:bg-gray-100 rounded ml-2"
                         onClick={(e) => handleDeleteClick(conversation, e)}
                       >
@@ -248,40 +254,59 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
         </div>
 
         {/* Conversation Details */}
-        <div className="flex-1 bg-gray-50">
+        <div className="flex-1 bg-gray-50 flex-col justify-between h-full">
           {selectedConversation ? (
-            <div className="flex flex-col">
-              <div className="p-4 border-b bg-white sticky top-0 z-10">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold capitalize">Source: {selectedConversation?.platform ? selectedConversation.platform : "Playground"}</h3>
-                    {selectedConversation?.platform == "whatsapp" && 
-                      <div>
-                        from {selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to}
-                      </div>}
-                    <div className="text-sm text-gray-500">
-                      {formatDate(selectedConversation.createdAt)}
+            <>
+              <div className="flex flex-col">
+                <div className="p-4 border-b bg-white sticky top-0 z-10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold capitalize">Source: {selectedConversation?.platform ? selectedConversation.platform : "Playground"}</h3>
+                      {selectedConversation?.platform == "whatsapp" &&
+                        <div>
+                          from {selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to}
+                        </div>}
+                      <div className="text-sm text-gray-500">
+                        {formatDate(selectedConversation.createdAt)}
+                      </div>
                     </div>
+                    <button className="p-1 hover:bg-gray-100 rounded">
+                      <IconTrash className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                    </button>
                   </div>
-                  <button className="p-1 hover:bg-gray-100 rounded">
-                    <IconTrash className="w-4 h-4 text-gray-400 hover:text-red-500" />
-                  </button>
+                </div>
+                <div className="p-4">
+                  {selectedConversation.messages.map((message, index) => (
+                    <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
+                      <div className={`rounded-lg p-4 inline-block max-w-[80%] ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'
+                        }`}>
+                        <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="p-4">
-                {selectedConversation.messages.map((message, index) => (
-                  <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                    <div className={`rounded-lg p-4 inline-block max-w-[80%] ${
-                      message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'
-                    }`}>
-                      <div className="html-content" dangerouslySetInnerHTML={{ __html:message.content }}/>
-                    </div>
-                  </div>
-                ))}
+              {/* Send chat */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={inputMsg}
+                  onChange={(e) => setInputMsg(e.target.value)}
+                  className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm`}
+                  disabled={sendingMsg}
+                />
+                <button
+                  type="submit"
+                  onClick={() => handleSendMessage(selectedConversation)}
+                  disabled={sendingMsg || !inputMsg.trim()}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                >
+                  <IconSend className="w-4 h-4" />
+                </button>
               </div>
-            </div>
+            </>
           ) : (
-            <div className="h-full flex items-center justify-center text-gray-500">
+            <div className="flex-1 h-96 flex items-center justify-center text-gray-500">
               Select a conversation to view details
             </div>
           )}
@@ -296,7 +321,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
       <div className="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-10">
         <h2 className="text-xl font-semibold">Leads</h2>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={handleRefresh}
             className="btn btn-outline btn-sm gap-2"
             disabled={loading}
@@ -337,9 +362,8 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                   <div
                     key={conversation._id}
                     onClick={() => setSelectedConversation(conversation)}
-                    className={`p-4 hover:bg-gray-50 cursor-pointer h-16 ${
-                      selectedConversation?._id === conversation._id ? 'bg-gray-50' : ''
-                    }`}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer h-16 ${selectedConversation?._id === conversation._id ? 'bg-gray-50' : ''
+                      }`}
                   >
                     <div className="flex justify-between items-start">
                       <div className="space-y-1 flex-1 min-w-0">
@@ -352,7 +376,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                           <span>{conversation.messages.length} messages</span>
                         </div>
                       </div>
-                      <button 
+                      <button
                         className="p-1 hover:bg-gray-100 rounded ml-2"
                         onClick={(e) => handleDeleteClick(conversation, e)}
                       >
@@ -385,10 +409,9 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
               <div className="p-4">
                 {selectedConversation.messages.map((message, index) => (
                   <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                    <div className={`rounded-lg p-4 inline-block max-w-[80%] ${
-                      message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'
-                    }`}>
-                      <div className="html-content" dangerouslySetInnerHTML={{ __html:message.content }}/>
+                    <div className={`rounded-lg p-4 inline-block max-w-[80%] ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'
+                      }`}>
+                      <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
                     </div>
                   </div>
                 ))}
@@ -430,7 +453,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="flex flex-col lg:flex-row min-h-screen">
+      <div className="flex flex-col lg:flex-row min-h-[calc(100dvh-104px)]">
         {/* Navigation - Top on mobile, Side on desktop */}
         <div className="lg:w-64 border-b lg:border-b-0 lg:border-r bg-white">
           <div className="p-4 lg:p-6">
@@ -441,8 +464,8 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                   key={tab.id}
                   href={`/dashboard/${teamId}/chatbot/${chatbotId}/activity/${tab.id}`}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors w-full
-                    ${currentSubTab === tab.id 
-                      ? "bg-primary/10 text-primary" 
+                    ${currentSubTab === tab.id
+                      ? "bg-primary/10 text-primary"
                       : "text-gray-600 hover:bg-gray-100"}`}
                 >
                   <span>{tab.icon}</span>
