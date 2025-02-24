@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconRefresh, IconFilter, IconDownload, IconTrash } from "@tabler/icons-react";
+import { IconRefresh, IconFilter, IconDownload, IconTrash, IconBrowserX, IconBrowserCheck, IconBrowserMaximize, IconBrowserMinus, IconBrowserOff, IconBrowserShare, IconBrowserPlus } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
+import { IconBrandWhatsapp, IconBrandInstagram, IconBrandFacebook, IconSitemap, IconBrowser } from "@tabler/icons-react";
 import { IconSend } from "@tabler/icons-react";
 
 interface Message {
@@ -41,6 +42,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
   const pathname = usePathname();
   const currentSubTab = pathname.split('/').pop();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [allConversations, setAllConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingMsg, setSendingMsg] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -58,7 +60,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
             conv.messages.length > 0 &&
             conv.messages.some((m: Message) => m.content?.trim())
           ) : [];
-          setConversations(validConversations);
+          setAllConversations(validConversations);
         }
       } catch (error) {
         console.error('Failed to fetch conversations:', error);
@@ -212,11 +214,32 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
     setSendingMsg(false);
   }
 
+  const handleConversationFilter = (platform: string) => {
+    if(platform === "all"){
+      setConversations(allConversations);
+      return;
+    }
+    console.log(allConversations)
+    let filteredConversations;
+    if(platform === ""){
+      filteredConversations = allConversations.filter(conv => !conv.platform || conv.platform === "" || conv.platform === "Playground");
+    } else {
+      filteredConversations = allConversations.filter(conv => conv.platform === platform);
+    }
+    setConversations(filteredConversations);
+  };
+
   const renderChatLogs = () => (
     <div className="flex flex-col h-full">
       {/* Top Header - Fixed */}
       <div className="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-10">
-        <h2 className="text-xl font-semibold">Chat Logs</h2>
+        <div className="flex gap-3 text-green-400">
+        <h2 className="text-xl font-semibold text-gray-800 cursor-pointer" onClick={() => handleConversationFilter("all")}>Chat Logs</h2>
+          <IconBrandWhatsapp className="cursor-pointer" onClick={() => handleConversationFilter("whatsapp")}/>
+          <IconBrandFacebook className="cursor-pointer" onClick={() => handleConversationFilter("facebook")}/>
+          <IconBrandInstagram className="cursor-pointer" onClick={() => handleConversationFilter("instagram")}/>
+          <IconBrowser className="cursor-pointer" onClick={() => handleConversationFilter("")}/>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={handleRefresh}
@@ -264,7 +287,9 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                   >
                     <div className="flex justify-between items-start">
                       <div className="space-y-1 flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
+                        <p className="flex items-center gap-2 font-medium text-gray-900 truncate">
+                          {conversation?.platform == "whatsapp" && <IconBrandWhatsapp className="text-green-400" />}
+                          {(!conversation.platform || conversation.platform === "" || conversation.platform === "Playground") && <IconBrowser className="text-green-400" />}
                           {truncateContent(firstUserMessage?.content || 'No message content')}
                         </p>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -295,11 +320,15 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                 <div className="p-4 border-b bg-white sticky top-0 z-10">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold capitalize">Source: {selectedConversation?.platform ? selectedConversation.platform : "Playground"}</h3>
+                      <h3 className="text-lg flex items-center gap-2 font-semibold capitalize">
+                        Source: {selectedConversation?.platform ? selectedConversation.platform : "Playground"}
+                        {selectedConversation?.platform == "whatsapp" && <IconBrandWhatsapp className="text-green-400" />}
+                      </h3>
                       {selectedConversation?.platform == "whatsapp" &&
                         <div>
                           from {selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to}
-                        </div>}
+                        </div>
+                      }
                       <div className="text-sm text-gray-500">
                         {formatDate(selectedConversation.createdAt)}
                       </div>
