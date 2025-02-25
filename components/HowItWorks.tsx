@@ -2,6 +2,12 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
+  
+interface IntersectionObserverInit {
+  root?: Element | Document | null;
+  rootMargin?: string;
+  threshold?: number | number[];
+}
 
 export default function HowItWorks() {
   const observerRefs = useRef<(HTMLDivElement | null)[]>([]);
