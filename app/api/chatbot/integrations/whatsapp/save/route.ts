@@ -11,9 +11,9 @@ function formatPhoneNumber(phoneNumber: string) {
   let formattedNumber = phoneNumber.replace(/\D/g, '');
 
   // Prepend with "1" if it's not already there
-  if (formattedNumber[0] !== '1') {
-    formattedNumber = '1' + formattedNumber;
-  }
+  // if (formattedNumber[0] !== '1') {
+  //   formattedNumber = '1' + formattedNumber;
+  // }
 
   return formattedNumber;
 }
