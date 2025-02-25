@@ -548,7 +548,24 @@ const ChatContainer = ({
                             if (line.startsWith('data: ')) {
                               const data = line.slice(5).trim();
 
-                              if (data === '[DONE]') continue;
+                              if (data === '[DONE]') {
+                                let confidenceScore1 = -1;
+                                setMessages(prev => {
+                                  const lastMessage = prev[prev.length - 1];
+                                  let lastMessage_content = lastMessage.content;
+
+                                  if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
+                                    const confidenceScore = lastMessage_content.split(":::")[1];
+                                    confidenceScore1 = Number(confidenceScore)
+                                    lastMessage_content = lastMessage_content.split(":::")[0];
+                                  }
+                                  return [
+                                    ...prev.slice(0, -1),
+                                    { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
+                                  ];
+                                });
+                                continue;
+                              }
 
                               try {
                                 const parsed = JSON.parse(data);
@@ -556,17 +573,9 @@ const ChatContainer = ({
                                   setMessages(prev => {
                                     const lastMessage = prev[prev.length - 1];
                                     let lastMessage_content = lastMessage.content + parsed.text;
-
-                                    let confidenceScore1 = -1;
-
-                                    if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
-                                      const confidenceScore = lastMessage_content.split(":::")[1];
-                                      confidenceScore1 = Number(confidenceScore)
-                                      lastMessage_content = lastMessage_content.split(":::")[0];
-                                    }
                                     return [
                                       ...prev.slice(0, -1),
-                                      { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
+                                      { ...lastMessage, content: lastMessage_content, confidenceScore: -1 }
                                     ];
                                   });
                                 }
