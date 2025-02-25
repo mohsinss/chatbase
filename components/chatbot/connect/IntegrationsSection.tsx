@@ -93,7 +93,7 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
           }
         } else {
           console.log(data)
-
+          setConnectingTitle('')
         }
       } catch (error) {
         console.log(error)
