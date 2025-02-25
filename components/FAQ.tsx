@@ -1,117 +1,85 @@
 "use client";
 
-import { useRef, useState } from "react";
-import type { JSX } from "react";
+import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 // <FAQ> component is a lsit of <Item> component
 // Just import the FAQ & add your FAQ content to the const faqList arrayy below.
 
-interface FAQItemProps {
-  question: string;
-  answer: JSX.Element;
-}
+export default function FAQ() {
+  const faqs = [
+    {
+      question: "How does ChatSa train on my data?",
+      answer: "ChatSa can train on your data in several ways. You can upload documents (PDF, DOCX, TXT), connect to your website for crawling, or directly input custom data. Our AI processes this information to create a knowledge base for your chatbot."
+    },
+    {
+      question: "Do I need coding knowledge to use ChatSa?",
+      answer: "No, ChatSa is designed to be user-friendly with no coding required. Our intuitive interface allows you to create, customize, and deploy chatbots through a simple drag-and-drop interface and guided setup process."
+    },
+    {
+      question: "How accurate are the chatbot responses?",
+      answer: "ChatSa uses advanced AI models to ensure high accuracy. The quality of responses depends on the training data provided. With good quality data, our chatbots typically achieve 90%+ accuracy for domain-specific questions."
+    },
+    {
+      question: "Can I customize the appearance of my chatbot?",
+      answer: "Yes, ChatSa offers extensive customization options. You can change colors, fonts, avatar images, chat bubble styles, and more to match your brand identity. The Pro and Enterprise plans offer even more advanced customization options."
+    },
+    {
+      question: "How do I add the chatbot to my website?",
+      answer: "After creating your chatbot, you'll receive a simple JavaScript code snippet. Just add this to your website's HTML, and the chatbot will appear. No additional setup is required, though we offer advanced integration options for developers."
+    },
+    {
+      question: "What languages does ChatSa support?",
+      answer: "ChatSa supports over 95 languages, allowing your chatbot to communicate with users worldwide. You can configure primary and secondary languages or let the chatbot automatically detect and respond in the user's language."
+    }
+  ];
 
-const faqList: FAQItemProps[] = [
-  {
-    question: "What do I get exactly?",
-    answer: <div className="space-y-2 leading-relaxed">Loreum Ipseum</div>,
-  },
-  {
-    question: "Can I get a refund?",
-    answer: (
-      <p>
-        Yes! You can request a refund within 7 days of your purchase. Reach out
-        by email.
-      </p>
-    ),
-  },
-  {
-    question: "I have another question",
-    answer: (
-      <div className="space-y-2 leading-relaxed">Cool, contact us by email</div>
-    ),
-  },
-];
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-const FaqItem = ({ item }: { item: FAQItemProps }) => {
-  const accordion = useRef(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const toggleFAQ = (index: number) => {
+    setOpenIndex(openIndex === index ? null : index);
+  };
 
   return (
-    <li>
-      <button
-        className="relative flex gap-2 items-center w-full py-5 text-base font-semibold text-left border-t md:text-lg border-base-content/10"
-        onClick={(e) => {
-          e.preventDefault();
-          setIsOpen(!isOpen);
-        }}
-        aria-expanded={isOpen}
-      >
-        <span
-          className={`flex-1 text-base-content ${isOpen ? "text-primary" : ""}`}
-        >
-          {item?.question}
-        </span>
-        <svg
-          className={`flex-shrink-0 w-4 h-4 ml-auto fill-current`}
-          viewBox="0 0 16 16"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <rect
-            y="7"
-            width="16"
-            height="2"
-            rx="1"
-            className={`transform origin-center transition duration-200 ease-out ${
-              isOpen && "rotate-180"
-            }`}
-          />
-          <rect
-            y="7"
-            width="16"
-            height="2"
-            rx="1"
-            className={`transform origin-center rotate-90 transition duration-200 ease-out ${
-              isOpen && "rotate-180 hidden"
-            }`}
-          />
-        </svg>
-      </button>
-
-      <div
-        ref={accordion}
-        className={`transition-all duration-300 ease-in-out opacity-80 overflow-hidden`}
-        style={
-          isOpen
-            ? { maxHeight: accordion?.current?.scrollHeight, opacity: 1 }
-            : { maxHeight: 0, opacity: 0 }
-        }
-      >
-        <div className="pb-5 leading-relaxed">{item?.answer}</div>
-      </div>
-    </li>
-  );
-};
-
-const FAQ = () => {
-  return (
-    <section className="bg-base-200" id="faq">
-      <div className="py-24 px-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-12">
-        <div className="flex flex-col text-left basis-1/2">
-          <p className="inline-block font-semibold text-primary mb-4">FAQ</p>
-          <p className="sm:text-4xl text-3xl font-extrabold text-base-content">
-            Frequently Asked Questions
+    <section id="faq" className="py-20 bg-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Frequently Asked Questions</span>
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Find answers to common questions about ChatSa.
           </p>
         </div>
-
-        <ul className="basis-1/2">
-          {faqList.map((item, i) => (
-            <FaqItem key={i} item={item} />
-          ))}
-        </ul>
+        
+        <div className="max-w-3xl mx-auto">
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <div 
+                key={index} 
+                className="border border-gray-200 rounded-lg overflow-hidden"
+              >
+                <button
+                  className="w-full flex justify-between items-center p-6 text-left focus:outline-none"
+                  onClick={() => toggleFAQ(index)}
+                >
+                  <span className="text-lg font-medium">{faq.question}</span>
+                  {openIndex === index ? (
+                    <ChevronUp className="h-5 w-5 text-indigo-600" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                {openIndex === index && (
+                  <div className="px-6 pb-6">
+                    <p className="text-gray-600">{faq.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
-};
-
-export default FAQ;
+}

@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import ButtonSignin from "./ButtonSignin";
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Announcement from "./Announcement";
+import ButtonSignin from "./ButtonSignin";
+
 const links = [
   {
     href: "/affiliates",
@@ -72,155 +74,61 @@ const Header = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0);
+      setIsScrolled(window.scrollY > 10);
     };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <header className={`fixed top-[8px] w-full z-40 transition-all duration-200 ${
-      isScrolled ? 'backdrop-blur-md bg-white/75 shadow-sm' : 'bg-white'
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-transparent"
     }`}>
-      {/* <Announcement /> */}
-      <nav className="max-w-7xl mx-auto flex items-center justify-between h-16 px-8">
-        {/* Logo */}
-        <Link href="/" className="text-xl font-bold flex items-center gap-2">
-          <Image 
-            src="/icon.png" 
-            alt="ChatSA Logo" 
-            width={32} 
-            height={32}
-          />
-          ChatSA
-        </Link>
-
-        {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-8">
-          {links.map((link) => (
-            link.hasDropdown ? (
-              <div key={link.href} className="relative">
-                <button
-                  className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
-                  onClick={() => setShowResources(!showResources)}
-                >
-                  {link.label}
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {showResources && (
-                  <div className="absolute top-full left-0 w-[480px] mt-2 bg-white rounded-lg shadow-lg border border-gray-100 p-6">
-                    <div className="grid grid-cols-1 gap-4">
-                      {resourcesDropdown.map((item) => (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          <div className="flex-shrink-0 text-gray-600">
-                            {item.icon}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">{item.title}</div>
-                            <div className="text-sm text-gray-500">{item.description}</div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                {link.label}
-              </Link>
-            )
-          ))}
-        </div>
-
-        {/* Dashboard Button */}
-        <Link 
-          href="/dashboard" 
-          className="hidden lg:flex items-center gap-2 text-gray-600 hover:text-gray-900"
-        >
-          Dashboard
-          <svg 
-            className="w-4 h-4" 
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M9 5l7 7-7 7" 
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 md:h-20">
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center">
+              <Image 
+                src="/logo.svg" 
+                alt="ChatSa Logo" 
+                width={32} 
+                height={32} 
+                className="mr-2"
+              />
+              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                ChatSa
+              </span>
+            </Link>
+          </div>
+          
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link href="#features" className="text-gray-600 hover:text-indigo-600 transition-colors">
+              Features
+            </Link>
+            <Link href="#how-it-works" className="text-gray-600 hover:text-indigo-600 transition-colors">
+              How it works
+            </Link>
+            <Link href="#pricing" className="text-gray-600 hover:text-indigo-600 transition-colors">
+              Pricing
+            </Link>
+            <Link href="#faq" className="text-gray-600 hover:text-indigo-600 transition-colors">
+              FAQ
+            </Link>
+          </nav>
+          
+          <div className="flex items-center space-x-4">
+            <ButtonSignin 
+              text="Sign in"
+              extraStyle="text-gray-700 hover:text-indigo-600 bg-transparent hover:bg-transparent"
             />
-          </svg>
-        </Link>
-
-        {/* Mobile menu button */}
-        <button
-          className="lg:hidden p-2"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d={isOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+            <ButtonSignin 
+              text="Get started"
+              extraStyle="bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-700 hover:to-violet-700"
             />
-          </svg>
-        </button>
-      </nav>
-
-      {/* Mobile menu */}
-      {isOpen && (
-        <div className="lg:hidden px-4 py-2 backdrop-blur-md bg-white/75 border-t border-gray-200">
-          {links.map((link) => 
-            link.hasDropdown ? (
-              <div key={link.href}>
-                {resourcesDropdown.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="flex items-center gap-2 py-2 text-gray-600 hover:text-gray-900"
-                  >
-                    <div className="w-5 h-5">{item.icon}</div>
-                    {item.title}
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="block py-2 text-gray-600 hover:text-gray-900"
-              >
-                {link.label}
-              </Link>
-            )
-          )}
-          <Link
-            href="/dashboard"
-            className="block py-2 text-gray-600 hover:text-gray-900"
-          >
-            Dashboard
-          </Link>
+          </div>
         </div>
-      )}
+      </div>
     </header>
   );
 };

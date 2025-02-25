@@ -1,20 +1,28 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import FeaturesGrid from "@/components/FeaturesGrid";
+import FeaturesSection from "@/components/FeaturesSection";
+import HowItWorks from "@/components/HowItWorks";
+import Testimonials from "@/components/Testimonials";
+import Pricing from "@/components/Pricing";
+import FAQ from "@/components/FAQ";
+import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
-import Announcement from "@/components/Announcement";
 import Script from 'next/script';
 
 export default function Home() {
   return (
-    <>
-      {/* <Announcement /> */}
+    <div className="bg-gradient-to-b from-slate-50 to-white">
       <Header />
       <Hero />
-      <FeaturesGrid />
+      <FeaturesSection />
+      <HowItWorks />
+      <Testimonials />
+      <Pricing />
+      <FAQ />
+      <CTA />
       <Footer />
       
-      {/* Chatt Bubble Scripts 1*/}
+      {/* ChatSa Bubble Scripts */}
       <Script
         id="chatbot-config"
         dangerouslySetInnerHTML={{
@@ -31,6 +39,6 @@ export default function Home() {
         src={`${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}//${process.env.NEXT_PUBLIC_DOMAIN}/embed.min.js`}
         defer
       />
-    </>
+    </div>
   );
 }
