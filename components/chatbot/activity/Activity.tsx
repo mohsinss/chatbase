@@ -38,7 +38,12 @@ const SUB_TABS = [
   { id: "leads", label: "Leads", icon: "👥" },
 ];
 
-const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; }) => {
+interface ChatbotData {
+  id: string;
+  name: string;
+}
+
+const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: string; chatbot: ChatbotData }) => {
   const pathname = usePathname();
   const currentSubTab = pathname.split('/').pop();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -216,13 +221,13 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
   }
 
   const handleConversationFilter = (platform: string) => {
-    if(platform === "all"){
+    if (platform === "all") {
       setConversations(allConversations);
       return;
     }
     console.log(allConversations)
     let filteredConversations;
-    if(platform === ""){
+    if (platform === "") {
       filteredConversations = allConversations.filter(conv => !conv.platform || conv.platform === "" || conv.platform === "Playground");
     } else {
       filteredConversations = allConversations.filter(conv => conv.platform === platform);
@@ -235,11 +240,11 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
       {/* Top Header - Fixed */}
       <div className="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-10">
         <div className="flex gap-3 text-green-400">
-        <h2 className="text-xl font-semibold text-gray-800 cursor-pointer" onClick={() => handleConversationFilter("all")}>Chat Logs</h2>
-          <IconBrandWhatsapp className="cursor-pointer" onClick={() => handleConversationFilter("whatsapp")}/>
-          <IconBrandFacebook className="cursor-pointer" onClick={() => handleConversationFilter("facebook")}/>
-          <IconBrandInstagram className="cursor-pointer" onClick={() => handleConversationFilter("instagram")}/>
-          <IconBrowser className="cursor-pointer" onClick={() => handleConversationFilter("")}/>
+          <h2 className="text-xl font-semibold text-gray-800 cursor-pointer" onClick={() => handleConversationFilter("all")}>Chat Logs</h2>
+          <IconBrandWhatsapp className="cursor-pointer" onClick={() => handleConversationFilter("whatsapp")} />
+          <IconBrandFacebook className="cursor-pointer" onClick={() => handleConversationFilter("facebook")} />
+          <IconBrandInstagram className="cursor-pointer" onClick={() => handleConversationFilter("instagram")} />
+          <IconBrowser className="cursor-pointer" onClick={() => handleConversationFilter("")} />
         </div>
         <div className="flex gap-2">
           <button
@@ -322,6 +327,7 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg flex items-center gap-2 font-semibold capitalize">
+                        {chatbot.name} - 
                         Source: {selectedConversation?.platform ? selectedConversation.platform : "Playground"}
                         {selectedConversation?.platform == "whatsapp" && <IconBrandWhatsapp className="text-green-400" />}
                       </h3>
@@ -352,24 +358,24 @@ const Activity = ({ teamId, chatbotId }: { teamId: string; chatbotId: string; })
               </div>
               {/* Send chat */}
               {
-                (selectedConversation?.platform == "whatsapp") 
+                (selectedConversation?.platform == "whatsapp")
                 &&
                 <div className="relative">
-                <input
-                  type="text"
-                  value={inputMsg}
-                  onChange={(e) => setInputMsg(e.target.value)}
-                  className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm`}
-                  disabled={sendingMsg}
-                />
-                <button
-                  type="submit"
-                  onClick={() => handleSendMessage(selectedConversation)}
-                  disabled={sendingMsg || !inputMsg.trim()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                >
-                  <IconSend className="w-4 h-4" />
-                </button>
+                  <input
+                    type="text"
+                    value={inputMsg}
+                    onChange={(e) => setInputMsg(e.target.value)}
+                    className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm`}
+                    disabled={sendingMsg}
+                  />
+                  <button
+                    type="submit"
+                    onClick={() => handleSendMessage(selectedConversation)}
+                    disabled={sendingMsg || !inputMsg.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  >
+                    <IconSend className="w-4 h-4" />
+                  </button>
                 </div>
               }
             </>
