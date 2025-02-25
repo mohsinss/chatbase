@@ -564,7 +564,6 @@ export async function POST(req: NextRequest) {
         ...modelParams,
         messages: formattedMessages,
         stream: true,
-        logprobs: true,
       });
 
       console.log(`Model processing took ${Date.now() - modelProcessingStart}ms`);
@@ -572,26 +571,13 @@ export async function POST(req: NextRequest) {
       const stream = new ReadableStream({
         async start(controller) {
           try {
-            let log_probs_len = 0;
-            let log_probs_sum = 0.0;
             for await (const chunk of response) {
               const text = chunk.choices[0]?.delta?.content || '';
-              log_probs_len++;
-              log_probs_sum += chunk.choices[0].logprobs?.content[0]?.logprob || 0.0;
 
               if (text) {
                 const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
                 controller.enqueue(encoder.encode(sseMessage));
               }
-            }
-
-            // Calculate average log probability
-            const averageLogProb = log_probs_sum / log_probs_len;
-            let confidenceScore;
-            if (averageLogProb === 0) {
-              confidenceScore = 100; // If average is zero, confidence is perfect (100%)
-            } else {
-              confidenceScore = (1 + averageLogProb) * 100; // Adjust as needed
             }
 
             // Send confidence score as part of the response

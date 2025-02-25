@@ -210,6 +210,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
         }
 
         toast.success('Message is sent successfully');
+        setInputMsg("");
 
         handleRefresh();
       } catch (error) {
@@ -364,6 +365,12 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                   <input
                     type="text"
                     value={inputMsg}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage(selectedConversation);
+                      }
+                    }}
                     onChange={(e) => setInputMsg(e.target.value)}
                     className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm`}
                     disabled={sendingMsg}
