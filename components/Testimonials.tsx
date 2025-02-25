@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { Star } from "lucide-react";
 
@@ -27,9 +29,9 @@ export default function Testimonials() {
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-gray-50" data-aos="fade-up">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <div className="text-center mb-16" data-aos="fade-up">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Trusted by <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Innovative Teams</span>
           </h2>
@@ -40,7 +42,12 @@ export default function Testimonials() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
-            <div key={index} className="bg-gray-50 rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300">
+            <div 
+              key={index} 
+              className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300"
+              data-aos="fade-up"
+              data-aos-delay={100 + (index * 100)}
+            >
               <div className="flex mb-4">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
@@ -64,28 +71,6 @@ export default function Testimonials() {
               </div>
             </div>
           ))}
-        </div>
-        
-        <div className="mt-16 text-center">
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-            {[
-              "/logos/logo1.svg",
-              "/logos/logo2.svg",
-              "/logos/logo3.svg",
-              "/logos/logo4.svg",
-              "/logos/logo5.svg",
-              "/logos/logo6.svg"
-            ].map((logo, index) => (
-              <Image
-                key={index}
-                src={logo}
-                alt="Company logo"
-                width={120}
-                height={40}
-                className="opacity-60 hover:opacity-100 transition-opacity duration-300"
-              />
-            ))}
-          </div>
         </div>
       </div>
     </section>

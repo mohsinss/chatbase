@@ -36,9 +36,9 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <section id="features" className="py-20 bg-white">
+    <section id="features" className="py-20 bg-white" data-aos="fade-up">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <div className="text-center mb-16" data-aos="fade-up">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Everything You Need to Build
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent"> Powerful AI Chatbots</span>
@@ -50,7 +50,12 @@ export default function FeaturesSection() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="bg-gray-50 rounded-xl p-8 transition-all duration-300 hover:shadow-lg hover:bg-gray-100">
+            <div 
+              key={index} 
+              className="bg-gray-50 rounded-xl p-8 transition-all duration-300 hover:shadow-lg hover:bg-gray-100"
+              data-aos="fade-up"
+              data-aos-delay={100 + (index * 50)}
+            >
               <div className="w-12 h-12 mb-6 bg-indigo-100 rounded-lg flex items-center justify-center">
                 <Image src={feature.icon} alt={feature.title} width={24} height={24} />
               </div>

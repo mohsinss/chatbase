@@ -1,9 +1,14 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import CompanyLogos from "@/components/CompanyLogos";
 import FeaturesSection from "@/components/FeaturesSection";
 import HowItWorks from "@/components/HowItWorks";
+import ValueProposition from "@/components/ValueProposition";
+import IndustryUseCases from "@/components/IndustryUseCases";
+import Dashboard from "@/components/Dashboard";
+import AIModels from "@/components/AIModels";
+import UseCases from "@/components/UseCases";
 import Testimonials from "@/components/Testimonials";
-import Pricing from "@/components/Pricing";
 import FAQ from "@/components/FAQ";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
@@ -14,10 +19,15 @@ export default function Home() {
     <div className="bg-gradient-to-b from-slate-50 to-white">
       <Header />
       <Hero />
+      <CompanyLogos />
       <FeaturesSection />
       <HowItWorks />
+      <ValueProposition />
+      <IndustryUseCases />
+      <Dashboard />
+      <AIModels />
+      <UseCases />
       <Testimonials />
-      <Pricing />
       <FAQ />
       <CTA />
       <Footer />
@@ -39,6 +49,8 @@ export default function Home() {
         src={`${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}//${process.env.NEXT_PUBLIC_DOMAIN}/embed.min.js`}
         defer
       />
+      
+      {/* Removed AOS Scripts */}
     </div>
   );
 }
