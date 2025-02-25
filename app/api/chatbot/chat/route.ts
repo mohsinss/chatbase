@@ -18,6 +18,11 @@ const deepseek = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
+const xai = new OpenAI({
+  baseURL: 'https://api.x.ai/v1',
+  apiKey: process.env.X_GROK_API_KEY,
+});
+
 // Helper function to process messages for deepseek-reasoner
 //@ts-ignore
 function processMessagesForReasoner(systemPrompt, relevant_chunk, messages, confidencePrompt) {
@@ -43,7 +48,7 @@ function processMessagesForReasoner(systemPrompt, relevant_chunk, messages, conf
     role: 'user',
     content: confidencePrompt
   };
-  
+
   if (lastMsg.role === 'user') {
     lastMsg.content += `\n${confidencePrompt}`;
   } else {
@@ -72,6 +77,10 @@ const MODEL_MAPPING: { [key: string]: string } = {
   // Deepseek models
   'deepseek-chat': 'deepseek-chat',
   'deepseek-reasoner': 'deepseek-reasoner',
+  // Grok models
+  'grok-2': 'grok-2',
+  'grok-2-latest': 'grok-2-latest',
+  'grok-beta': 'grok-beta',
 };
 
 // Add model type mapping with specific O1 model versions
@@ -287,14 +296,14 @@ export async function POST(req: NextRequest) {
       // For O1 models, prepend system message as a user message
       let formattedMessages;
       const confidencePrompt = "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'";
-      if(MODEL_MAPPING[internalModel] == 'deepseek-reasoner'){
+      if (MODEL_MAPPING[internalModel] == 'deepseek-reasoner') {
         formattedMessages = processMessagesForReasoner(
           systemPrompt,
           relevant_chunk,
           messages,
           confidencePrompt
         );
-      } else{
+      } else {
         formattedMessages = [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: relevant_chunk },
@@ -305,10 +314,10 @@ export async function POST(req: NextRequest) {
 
       // Configure model-specific parameters
       const modelParams = {
-          max_tokens: maxTokens,
-          temperature,
-          model: MODEL_MAPPING[internalModel] || 'deepseek-chat',
-        };
+        max_tokens: maxTokens,
+        temperature,
+        model: MODEL_MAPPING[internalModel] || 'deepseek-chat',
+      };
 
       const response = await deepseek.chat.completions.create({
         ...modelParams,
@@ -334,7 +343,7 @@ export async function POST(req: NextRequest) {
                 const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
                 controller.enqueue(encoder.encode(sseMessage));
               }
-              if (reasonal_text){
+              if (reasonal_text) {
                 const sseMessage = `reason: ${JSON.stringify({ reasonal_text })}\n\n`;
                 controller.enqueue(encoder.encode(sseMessage));
               }
@@ -348,6 +357,67 @@ export async function POST(req: NextRequest) {
             // } else {
             //   confidenceScore = (1 + averageLogProb) * 100; // Adjust as needed
             // }
+
+            // Send confidence score as part of the response
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            // controller.enqueue(encoder.encode('score:' + confidenceScore));
+            controller.close();
+          } catch (error) {
+            controller.error(error);
+          }
+        },
+      });
+
+      if (team) {
+        team.credits += 1;
+        await team.save();
+      }
+
+      return setCorsHeaders(new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      }));
+    } else if (internalModel.startsWith('grok-')) {
+      console.log('Using Grok Model:', MODEL_MAPPING[internalModel] || 'grok-2');
+
+      // For O1 models, prepend system message as a user message
+      const confidencePrompt = "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'";
+
+      const formattedMessages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: relevant_chunk },
+        ...messages,
+        { role: 'user', content: confidencePrompt }
+      ];
+
+      // Configure model-specific parameters
+      const modelParams = {
+        max_tokens: maxTokens,
+        temperature,
+        model: MODEL_MAPPING[internalModel] || 'grok-2',
+      };
+
+      const response = await xai.chat.completions.create({
+        ...modelParams,
+        messages: formattedMessages,
+        stream: true,
+      });
+
+      console.log(`Model processing took ${Date.now() - modelProcessingStart}ms`);
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of response) {
+              const text = chunk.choices[0]?.delta?.content || '';
+              if (text) {
+                const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
+                controller.enqueue(encoder.encode(sseMessage));
+              }
+            }
 
             // Send confidence score as part of the response
             controller.enqueue(encoder.encode('data: [DONE]\n\n'));

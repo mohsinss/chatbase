@@ -14,9 +14,14 @@ import CustomDomainsSettings from "./CustomDomainsSettings";
 interface SettingsProps {
   teamId: string;
   chatbotId: string;
+  team: TeamData;
 }
 
-export default function Settings({ teamId, chatbotId }: SettingsProps) {
+interface TeamData {
+  plan: string;
+}
+
+export default function Settings({ team, teamId, chatbotId }: SettingsProps) {
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
@@ -70,7 +75,7 @@ export default function Settings({ teamId, chatbotId }: SettingsProps) {
             <h2 className="text-2xl font-semibold mb-6">{tabs.find(tab => tab.id === currentTab)?.name}</h2>
             
             {currentTab === "general" && <GeneralSettings chatbotId={chatbotId} teamId={teamId} />}
-            {currentTab === "ai" && <AISettings chatbotId={chatbotId} />}
+            {currentTab === "ai" && <AISettings team={team} chatbotId={chatbotId} />}
             {currentTab === "chat-interface" && <ChatInterfaceSettings chatbotId={chatbotId} />}
             {currentTab === "security" && <SecuritySettings chatbotId={chatbotId} />}
             {currentTab === "leads" && <LeadsSettings chatbotId={chatbotId} />}

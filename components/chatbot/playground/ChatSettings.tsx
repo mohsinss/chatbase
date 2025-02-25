@@ -60,6 +60,11 @@ const AI_MODELS = {
   Deepseek: [
     { value: "deepseek-chat", label: "Deepseek Chat", default: true },
     { value: "deepseek-reasoner", label: "Deepseek Reasoner", default: false },
+  ],
+  Grok: [
+    { value: "grok-2", label: "Grok 2", default: true },
+    { value: "grok-2-latest", label: "Grok 2 latest", default: false },
+    { value: "grok-beta", label: "Grok Beta", default: false },
   ]
 };
 

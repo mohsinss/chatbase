@@ -16,6 +16,10 @@ interface PageProps {
   };
 }
 
+interface TeamData {
+  plan: string;
+}
+
 export default async function SettingsPage({ params }: PageProps) {
   const session = await getServerSession(authOptions);
   
@@ -31,12 +35,17 @@ export default async function SettingsPage({ params }: PageProps) {
     redirect("/dashboard");
   }
 
+  // Serialize the chatbot data with AI settings
+  const serializedTeam: TeamData = {
+    plan: team.plan
+  };
+
   return (
     <>
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen ">
-        <Settings teamId={params.teamId} chatbotId={params.chatbotId} />
+        <Settings team={serializedTeam} teamId={params.teamId} chatbotId={params.chatbotId} />
       </main>
     </>
   );
