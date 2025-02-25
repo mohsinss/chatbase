@@ -42,7 +42,7 @@ export default function AIModels() {
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Powered by Advanced AI Models</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Choose from the world's most sophisticated AI models to power your chatbot experience.
+            Choose from the world&apos;s most sophisticated AI models to power your chatbot experience.
           </p>
         </div>
 

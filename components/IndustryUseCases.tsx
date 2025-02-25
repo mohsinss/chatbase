@@ -56,7 +56,7 @@ export default function IndustryUseCases() {
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Industry Solutions</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            ChatSa adapts to your industry's unique needs with specialized AI chatbot solutions.
+            ChatSa adapts to your industry&apos;s unique needs with specialized AI chatbot solutions.
           </p>
         </div>
 

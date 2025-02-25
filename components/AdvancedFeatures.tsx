@@ -76,7 +76,7 @@ export default function AdvancedFeatures() {
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Advanced Capabilities</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Unlock the full potential of AI with ChatSa's cutting-edge features and integrations.
+            Unlock the full potential of AI with ChatSa&apos;s cutting-edge features and integrations.
           </p>
         </div>
 
