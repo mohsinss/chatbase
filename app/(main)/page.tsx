@@ -14,7 +14,7 @@ export default function Home() {
       <FeaturesGrid />
       <Footer />
       
-      {/* Chat Bubble Scripts 1*/}
+      {/* Chatt Bubble Scripts 1*/}
       <Script
         id="chatbot-config"
         dangerouslySetInnerHTML={{
