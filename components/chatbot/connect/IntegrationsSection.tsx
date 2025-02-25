@@ -91,6 +91,9 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
             toast.error(data.error);
             setConnectingTitle('');
           }
+        } else {
+          console.log(data)
+
         }
       } catch (error) {
         console.log(error)
@@ -127,6 +130,17 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
     if (platform === "Whatsapp") {
       window.FB.login(fbLoginCallback, {
         config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID, // configuration ID goes here
+        response_type: 'code', // must be set to 'code' for System User access token
+        override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
+        extras: {
+          setup: {},
+          featureType: '',
+          sessionInfoVersion: '2',
+        }
+      });
+    } else if (platform === "Messenger") {
+      window.FB.login(fbLoginCallback, {
+        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE, // configuration ID goes here
         response_type: 'code', // must be set to 'code' for System User access token
         override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
         extras: {
@@ -230,7 +244,7 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
         ))}
         {connectingTitle != "" && (
           // Show the spinner when loading
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <Spinner />
           </div>
         )}
