@@ -24,7 +24,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 	return (
 		<html
 			lang="en"
-			title='أنظمة الأعمال المتقدمة' 
 			data-theme={config.colors.theme}
 			className={font.className + ' h-dvh max-h-dvh'}
 		>
