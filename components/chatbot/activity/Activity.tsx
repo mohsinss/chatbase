@@ -239,7 +239,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
   const renderChatLogs = () => (
     <div className="flex flex-col h-full">
       {/* Top Header - Fixed */}
-      <div className="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-10">
+      <div className="p-4 border-b flex justify-between items-center bg-white  top-0 z-10">
         <div className="flex gap-3 text-green-400">
           <h2 className="text-xl font-semibold text-gray-800 cursor-pointer" onClick={() => handleConversationFilter("all")}>Chat Logs</h2>
           <IconBrandWhatsapp className="cursor-pointer" onClick={() => handleConversationFilter("whatsapp")} />
@@ -328,7 +328,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg flex items-center gap-2 font-semibold capitalize">
-                        {chatbot.name} - 
+                        {chatbot.name} -
                         Source: {selectedConversation?.platform ? selectedConversation.platform : "Playground"}
                         {selectedConversation?.platform == "whatsapp" && <IconBrandWhatsapp className="text-green-400" />}
                       </h3>
@@ -349,9 +349,11 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                 <div className="p-4">
                   {selectedConversation.messages.map((message, index) => (
                     <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                      <div className={`rounded-lg p-4 inline-block max-w-[80%] ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'
-                        }`}>
+                      <div className={`rounded-lg p-4 inline-block max-w-[80%] ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
                         <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
+                        <div className={`text-xs mt-1 ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
+                          {new Date(message.timestamp).toLocaleString()}
+                        </div>
                       </div>
                     </div>
                   ))}

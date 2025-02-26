@@ -18,7 +18,6 @@ function formatPhoneNumber(phoneNumber: string) {
   return formattedNumber;
 }
 
-
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
