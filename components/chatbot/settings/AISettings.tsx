@@ -51,17 +51,17 @@ interface TeamData {
 // Group models by provider with proper typing
 const AI_MODELS: AIModelProviders = {
   OpenAI: [
-    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo", default: true},
-    { value: "gpt-4o", label: "GPT-4o (Flagship)", default: false},
+    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo", default: false},
+    { value: "gpt-4o", label: "GPT-4o (Flagship)", default: true},
     { value: "gpt-4o-mini", label: "GPT-4o Mini", default: false},
     { value: "o1", label: "O1 (Advanced Reasoning)", default: false},
     { value: "o1-mini", label: "O1 Mini", default: false},
   ],
   Anthropic: [
-    { value: "claude-3-opus-20240229", label: "Claude 3 Opus", default: true},
+    { value: "claude-3-opus-20240229", label: "Claude 3 Opus", default: false},
     { value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet", default: false},
     { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku", default: false},
-    { value: "claude-3-7-sonnet-20250219", label: "Claude 3.7 Sonnet", default: false},
+    { value: "claude-3-7-sonnet-20250219", label: "Claude 3.7 Sonnet", default: true},
   ],
   Gemini: [
     { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro", default: true},

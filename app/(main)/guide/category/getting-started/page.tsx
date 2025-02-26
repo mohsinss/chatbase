@@ -81,6 +81,7 @@ const GettingStartedPage = () => {
                   <li>Claude 3 Haiku</li>
                   <li>Claude 3 Opus</li>
                   <li>Claude 3.5 Sonnet</li>
+                  <li>Claude 3.7 Sonnet</li>
                   <li>Gemini 1.5 Flash</li>
                   <li>Gemini 1.5 Pro</li>
                 </ul>

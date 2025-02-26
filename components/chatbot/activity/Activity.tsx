@@ -239,13 +239,41 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
   const renderChatLogs = () => (
     <div className="flex flex-col h-full">
       {/* Top Header - Fixed */}
-      <div className="p-4 border-b flex justify-between items-center bg-white  top-0 z-10">
-        <div className="flex gap-3 text-green-400">
-          <h2 className="text-xl font-semibold text-gray-800 cursor-pointer" onClick={() => handleConversationFilter("all")}>Chat Logs</h2>
-          <IconBrandWhatsapp className="cursor-pointer" onClick={() => handleConversationFilter("whatsapp")} />
-          <IconBrandFacebook className="cursor-pointer" onClick={() => handleConversationFilter("facebook")} />
-          <IconBrandInstagram className="cursor-pointer" onClick={() => handleConversationFilter("instagram")} />
-          <IconBrowser className="cursor-pointer" onClick={() => handleConversationFilter("")} />
+      <div className="p-4 border-b flex justify-between items-center bg-white top-0 z-10">
+        <div className="flex items-center">
+          <h2 className="text-xl font-semibold text-gray-800 cursor-pointer mr-4" onClick={() => handleConversationFilter("all")}>Chat Logs</h2>
+          <div className="flex gap-2 mx-auto">
+            <button 
+              onClick={() => handleConversationFilter("all")} 
+              className="p-1.5 border border-gray-200 rounded-md bg-gray-50 hover:bg-gray-100 hover:border-gray-400 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
+            >
+              <span className="font-medium text-gray-700">All</span>
+            </button>
+            <button 
+              onClick={() => handleConversationFilter("whatsapp")} 
+              className="p-1.5 border border-gray-200 rounded-md bg-green-50 hover:bg-green-100 hover:border-green-300 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
+            >
+              <IconBrandWhatsapp className="text-green-500 w-6 h-6" />
+            </button>
+            <button 
+              onClick={() => handleConversationFilter("facebook")} 
+              className="p-1.5 border border-gray-200 rounded-md bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
+            >
+              <IconBrandFacebook className="text-blue-600 w-6 h-6" />
+            </button>
+            <button 
+              onClick={() => handleConversationFilter("instagram")} 
+              className="p-1.5 border border-gray-200 rounded-md bg-pink-50 hover:bg-pink-100 hover:border-pink-300 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
+            >
+              <IconBrandInstagram className="text-pink-600 w-6 h-6" />
+            </button>
+            <button 
+              onClick={() => handleConversationFilter("")} 
+              className="p-1.5 border border-gray-200 rounded-md bg-gray-50 hover:bg-gray-100 hover:border-gray-400 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
+            >
+              <IconBrowser className="text-gray-700 w-6 h-6" />
+            </button>
+          </div>
         </div>
         <div className="flex gap-2">
           <button
@@ -295,8 +323,10 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                     <div className="flex justify-between items-start">
                       <div className="space-y-1 flex-1 min-w-0">
                         <p className="flex items-center gap-2 font-medium text-gray-900 truncate">
-                          {conversation?.platform == "whatsapp" && <IconBrandWhatsapp className="text-green-400" />}
-                          {(!conversation.platform || conversation.platform === "" || conversation.platform === "Playground") && <IconBrowser className="text-green-400" />}
+                          {conversation?.platform == "whatsapp" && <IconBrandWhatsapp className="text-green-500" />}
+                          {conversation?.platform == "facebook" && <IconBrandFacebook className="text-blue-600" />}
+                          {conversation?.platform == "instagram" && <IconBrandInstagram className="text-pink-600" />}
+                          {(!conversation.platform || conversation.platform === "" || conversation.platform === "Playground") && <IconBrowser className="text-gray-700" />}
                           {truncateContent(firstUserMessage?.content || 'No message content')}
                         </p>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
