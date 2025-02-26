@@ -53,6 +53,9 @@ export const getSEOTags = ({
       // ],
       locale: "en_US",
       type: "website",
+      fb: {
+        app_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID, // Add your Facebook App ID here
+      },
     },
 
     twitter: {
