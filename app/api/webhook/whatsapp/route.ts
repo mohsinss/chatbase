@@ -123,10 +123,6 @@ export async function POST(request: Request) {
             const text = data?.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
             const message_id = data?.entry[0]?.changes[0]?.value?.messages[0]?.id;
 
-            if (timestamp + 60 < currentTimestamp) {
-              return NextResponse.json({ status: 'Delievery denied coz long delay' }, { status: 200 });
-            }
-
             let messages = [{ role: 'user', content: text }];
 
             // Fetch the existing WhatsAppNumber model
@@ -136,6 +132,27 @@ export async function POST(request: Request) {
               return NextResponse.json({ status: "Whatsapp Number doesn't registered to the site." }, { status: 200 });
             }
             const chatbotId = whatsappNumber.chatbotId;
+
+            // Find existing conversation or create a new one
+            let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "whatsapp", "metadata.from": from, "metadata.to": whatsappNumber.display_phone_number });
+            if (conversation) {
+              // Update existing conversation
+              conversation.messages.push({ role: "user", content: text });
+            } else {
+              // Create new conversation
+              conversation = new ChatbotConversation({
+                chatbotId,
+                platform: "whatsapp",
+                metadata: { from, to: whatsappNumber.display_phone_number },
+                messages: [{ role: "user", content: text },]
+              });
+            }
+
+            await conversation.save();
+
+            if (timestamp + 60 < currentTimestamp) {
+              return NextResponse.json({ status: 'Delievery denied coz long delay' }, { status: 200 });
+            }
 
             // Measure time for fetching AI settings and dataset
             const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
@@ -440,23 +457,7 @@ export async function POST(request: Request) {
               headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
             });
 
-            // Find existing conversation or create a new one
-            let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "whatsapp", "metadata.from": from, "metadata.to": whatsappNumber.display_phone_number });
-            if (conversation) {
-              // Update existing conversation
-              conversation.messages.push({ role: "user", content: text });
-              conversation.messages.push({ role: "assistant", content: response_text });
-            } else {
-              // Create new conversation
-              conversation = new ChatbotConversation({
-                chatbotId,
-                platform: "whatsapp",
-                metadata: { from, to: whatsappNumber.display_phone_number },
-                messages: [{ role: "user", content: text },
-                { role: "assistant", content: response_text }
-                ]
-              });
-            }
+            conversation.messages.push({ role: "assistant", content: response_text });
 
             await conversation.save();
 
