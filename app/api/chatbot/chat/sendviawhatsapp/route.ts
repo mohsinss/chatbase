@@ -8,8 +8,6 @@ export async function POST(req: Request) {
     const { from, to, text } = await req.json();
     await connectMongo();
 
-    const phone_number_id = "543071982229282";
-
     // Fetch the existing WhatsAppNumber model
     const whatsappNumber = await WhatsAppNumber.findOne({ display_phone_number: to });
     if (!whatsappNumber) {
@@ -17,6 +15,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ status: "Whatsapp Number doesn't registered to the site." }, { status: 200 });
     }
     const chatbotId = whatsappNumber.chatbotId;
+    const phone_number_id = whatsappNumber.phoneNumberId;
 
     // send text msg to from number
     const response2 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {

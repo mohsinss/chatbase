@@ -215,7 +215,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
         handleRefresh();
       } catch (error) {
         console.error('Failed to send message:', error);
-        toast.error(error);
+        toast.error('Failed to send message:');
       }
     }
     setSendingMsg(false);
