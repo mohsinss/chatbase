@@ -44,7 +44,7 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center mb-4">
               <Image 
-                src="/logo.svg" 
+                src="/chatbase-icon.png" 
                 alt="ChatSa Logo" 
                 width={32} 
                 height={32} 

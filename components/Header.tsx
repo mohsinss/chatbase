@@ -90,7 +90,7 @@ const Header = () => {
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <Image 
-                src="/logo.svg" 
+                src="/chatbase-icon.png" 
                 alt="ChatSa Logo" 
                 width={32} 
                 height={32} 

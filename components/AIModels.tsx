@@ -3,33 +3,33 @@ import Image from "next/image";
 export default function AIModels() {
   const aiModels = [
     {
-      name: "OpenAI GPT-4",
+      name: "OpenAI",
       description: "Leverage OpenAI's most advanced model for human-like conversations and complex reasoning.",
-      logo: "/ai-models/openai.svg",
+      logo: "/ai-models/openai-logo.png",
       features: ["Advanced reasoning", "Complex problem solving", "Nuanced understanding", "Creative content generation"]
     },
     {
       name: "Anthropic Claude",
       description: "Utilize Anthropic's Claude for helpful, harmless, and honest AI interactions.",
-      logo: "/ai-models/anthropic.svg",
+      logo: "/ai-models/anthropic-logo.png",
       features: ["Constitutional AI approach", "Reduced hallucinations", "Longer context windows", "Thoughtful responses"]
     },
     {
       name: "Google Gemini",
       description: "Harness Google's multimodal AI for understanding text, images, and more.",
-      logo: "/ai-models/google.svg",
+      logo: "/ai-models/gemini-logo.png",
       features: ["Multimodal capabilities", "Strong reasoning", "Factual responses", "Multilingual excellence"]
     },
     {
       name: "DeepSeek",
       description: "Implement DeepSeek's specialized models for domain-specific applications.",
-      logo: "/ai-models/deepseek.svg",
+      logo: "/ai-models/deepseek-logo.png",
       features: ["Domain specialization", "Efficient processing", "Research-backed", "Continuous improvement"]
     },
     {
       name: "Grok-3",
       description: "Deploy xAI's Grok for witty, informative, and real-time responses.",
-      logo: "/ai-models/grok.svg",
+      logo: "/ai-models/xai-logo.png",
       features: ["Real-time information", "Witty interactions", "Broad knowledge base", "Engaging personality"]
     }
   ];
