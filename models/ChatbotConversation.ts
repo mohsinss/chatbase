@@ -30,6 +30,10 @@ const ChatbotConversationSchema = new mongoose.Schema(
         type: String,
         required: true
       },
+      from: {
+        type: String,
+        default: "Bot"
+      },
       timestamp: {
         type: Date,
         default: Date.now

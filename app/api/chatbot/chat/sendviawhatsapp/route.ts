@@ -1,4 +1,6 @@
 import connectMongo from "@/libs/mongoose";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/libs/next-auth";
 import ChatbotConversation from '@/models/ChatbotConversation';
 import { NextRequest, NextResponse } from 'next/server';
 import WhatsAppNumber from "@/models/WhatsAppNumber";
@@ -6,6 +8,12 @@ import axios from "axios";
 
 export async function POST(req: Request) {
     const { from, to, text } = await req.json();
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     await connectMongo();
 
     // Fetch the existing WhatsAppNumber model
@@ -32,7 +40,7 @@ export async function POST(req: Request) {
     let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "whatsapp", "metadata.from": from, "metadata.to": whatsappNumber.display_phone_number });
     if (conversation) {
         // Update existing conversation
-        conversation.messages.push({ role: "assistant", content: text });
+        conversation.messages.push({ role: "assistant", content: text, from: session.user.name });
     } else {
         return NextResponse.json({ error: "Can't find conversation." }, { status: 200 });
     }

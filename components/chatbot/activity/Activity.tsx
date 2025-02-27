@@ -14,6 +14,7 @@ interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
+  from?: string;
 }
 
 interface Lead {
@@ -383,6 +384,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                         <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
                         <div className={`text-xs mt-1 ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
                           {new Date(message.timestamp).toLocaleString()}
+                          {message.role === 'assistant' && ` by ${message?.from ?? 'Bot'}`}
                         </div>
                       </div>
                     </div>
