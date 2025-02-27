@@ -131,6 +131,11 @@ export async function POST(request: Request) {
               // Respond with a 200 OK status
               return NextResponse.json({ status: "Whatsapp Number doesn't registered to the site." }, { status: 200 });
             }
+
+            if (whatsappNumber?.disable_auto_reply == true) {
+              return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
+            }
+
             const chatbotId = whatsappNumber.chatbotId;
 
             // Find existing conversation or create a new one

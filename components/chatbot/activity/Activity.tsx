@@ -55,6 +55,40 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
   const [inputMsg, setInputMsg] = useState("");
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
+
+  useEffect(() => {
+    if( selectedConversation?.platform == "whatsapp"){
+      fetchAutoReplyStatus(selectedConversation.metadata.to);
+    }
+  }, [selectedConversation])
+
+  const toggleAutoReply = async () => {
+    const newStatus = !autoReplyEnabled;
+    try {
+      const response = await fetch('/api/chatbot/integrations/whatsapp/auto-reply-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: selectedConversation?.metadata.to,
+          disable_auto_reply: !newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update auto-reply status');
+      }
+
+      setAutoReplyEnabled(newStatus);
+      toast.success(`Auto-reply is now ${newStatus ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Error updating auto-reply status:', error);
+      toast.error(`Error: ${error.message}`);
+    }
+  };
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -102,6 +136,23 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
       fetchConversations();
     }
   }, [chatbotId, currentSubTab]);
+
+  const fetchAutoReplyStatus = async (to: string) => {
+    try {
+      const response = await fetch(`/api/chatbot/integrations/whatsapp/auto-reply-status?to=${to}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAutoReplyEnabled(!data?.disable_auto_reply);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to fetch auto-reply status:', errorData.error);
+        toast.error(`Error: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error fetching auto-reply status:', error);
+      toast.error(`Error fetching auto-reply status:`);
+    }
+  };
 
   const handleRefresh = () => {
     setLoading(true);
@@ -244,32 +295,32 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
         <div className="flex items-center">
           <h2 className="text-xl font-semibold text-gray-800 cursor-pointer mr-4" onClick={() => handleConversationFilter("all")}>Chat Logs</h2>
           <div className="flex gap-2 mx-auto">
-            <button 
-              onClick={() => handleConversationFilter("all")} 
+            <button
+              onClick={() => handleConversationFilter("all")}
               className="p-1.5 border border-gray-200 rounded-md bg-gray-50 hover:bg-gray-100 hover:border-gray-400 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
             >
               <span className="font-medium text-gray-700">All</span>
             </button>
-            <button 
-              onClick={() => handleConversationFilter("whatsapp")} 
+            <button
+              onClick={() => handleConversationFilter("whatsapp")}
               className="p-1.5 border border-gray-200 rounded-md bg-green-50 hover:bg-green-100 hover:border-green-300 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
             >
               <IconBrandWhatsapp className="text-green-500 w-6 h-6" />
             </button>
-            <button 
-              onClick={() => handleConversationFilter("facebook")} 
+            <button
+              onClick={() => handleConversationFilter("facebook")}
               className="p-1.5 border border-gray-200 rounded-md bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
             >
               <IconBrandFacebook className="text-blue-600 w-6 h-6" />
             </button>
-            <button 
-              onClick={() => handleConversationFilter("instagram")} 
+            <button
+              onClick={() => handleConversationFilter("instagram")}
               className="p-1.5 border border-gray-200 rounded-md bg-pink-50 hover:bg-pink-100 hover:border-pink-300 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
             >
               <IconBrandInstagram className="text-pink-600 w-6 h-6" />
             </button>
-            <button 
-              onClick={() => handleConversationFilter("")} 
+            <button
+              onClick={() => handleConversationFilter("")}
               className="p-1.5 border border-gray-200 rounded-md bg-gray-50 hover:bg-gray-100 hover:border-gray-400 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
             >
               <IconBrowser className="text-gray-700 w-6 h-6" />
@@ -372,9 +423,21 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                         {formatDate(selectedConversation.createdAt)}
                       </div>
                     </div>
-                    <button className="p-1 hover:bg-gray-100 rounded">
-                      <IconTrash className="w-4 h-4 text-gray-400 hover:text-red-500" />
-                    </button>
+                    <div className="flex gap-4">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={toggleAutoReply}
+                          className={`btn btn-sm gap-2 ${autoReplyEnabled ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'
+                            } hover:opacity-80 transition-opacity`}
+                        >
+                          {autoReplyEnabled ? 'Disable Auto-Reply' : 'Enable Auto-Reply'}
+                        </button>
+                      </div>
+                      <button className="p-1 hover:bg-gray-100 rounded">
+                        <IconTrash className="w-6 h-6 text-gray-400 hover:text-red-500" />
+                      </button>
+
+                    </div>
                   </div>
                 </div>
                 <div className="p-4">

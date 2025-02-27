@@ -23,6 +23,7 @@ const WhatsAppNumberSchema = new mongoose.Schema({
     quality_rating: { type: String, required: true },
     platform_type: { type: String, required: true },
     last_onboarded_time: { type: String, required: true },
+    disable_auto_reply: { type: Boolean, required: false, default: false },
 }, { timestamps: true });
 
 export default mongoose.models.WhatsAppNumber || mongoose.model<IWhatsAppNumber>('WhatsAppNumber', WhatsAppNumberSchema);
