@@ -58,7 +58,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
 
   useEffect(() => {
-    if( selectedConversation?.platform == "whatsapp"){
+    if (selectedConversation?.platform == "whatsapp") {
       fetchAutoReplyStatus(selectedConversation.metadata.to);
     }
   }, [selectedConversation])
