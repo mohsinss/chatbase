@@ -482,8 +482,12 @@ export async function POST(request: Request) {
 
           // send text msg to from number
           const response2 = await axios.post(`https://graph.facebook.com/v22.0/me/messages`, {
-            message: response_text,
-            recipient: sender,
+            message: {
+              text: response_text
+            },
+            recipient: {
+              id: sender
+            },
           }, {
             headers: { Authorization: `Bearer ${facebookPage.access_token}` }
           });
