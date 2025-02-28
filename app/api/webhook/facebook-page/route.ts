@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       if (data?.entry[0]?.messaging?.length > 0) {
         if (data?.entry[0]?.messaging[0].message?.text?.length > 0) {
           // Send data to the specified URL
-          const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
+          const response = await fetch('http://webhook.mrcoders.org/facebook-page.php', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -126,12 +126,12 @@ export async function POST(request: Request) {
           let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "messenger", "metadata.from": sender, "metadata.to": facebookPage.name });
           if (conversation) {
             // Update existing conversation
-            conversation.message.push({ role: "user", content: text });
+            conversation.messages.push({ role: "user", content: text });
           } else {
             // Create new conversation
             conversation = new ChatbotConversation({
               chatbotId,
-              platform: "whatsapp",
+              platform: "facebook",
               metadata: { from: sender, to: facebookPage.name },
               messages: [{ role: "user", content: text },]
             });
@@ -492,7 +492,7 @@ export async function POST(request: Request) {
             headers: { Authorization: `Bearer ${facebookPage.access_token}` }
           });
 
-          conversation.message.push({ role: "assistant", content: response_text });
+          conversation.messages.push({ role: "assistant", content: response_text });
 
           await conversation.save();
 
