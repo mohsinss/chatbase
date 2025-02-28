@@ -178,7 +178,7 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
       });
     } else if (platform === "Messenger") {
       window.FB.login(fbLoginCallbackForFB, {
-        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE_1, // configuration ID goes here
+        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE, // configuration ID goes here
         response_type: 'code', // must be set to 'code' for System User access token
         override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
         extras: {
