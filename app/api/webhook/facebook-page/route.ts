@@ -343,14 +343,10 @@ export async function POST(request: Request) {
           } else if (internalModel.startsWith('grok-')) {
             console.log('Using Grok Model:', MODEL_MAPPING[internalModel] || 'grok-2');
       
-            // For O1 models, prepend system message as a user message
-            const confidencePrompt = "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'";
-      
             const formattedMessages = [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: relevant_chunk },
               ...messages,
-              { role: 'user', content: confidencePrompt }
             ];
       
             // Configure model-specific parameters
