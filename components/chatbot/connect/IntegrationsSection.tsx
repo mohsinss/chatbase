@@ -55,7 +55,7 @@ const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = f
         className="flex-1 px-4 py-2 text-center rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50"
         disabled={isConnecting}
       >
-        {connected? "Manage" : isConnecting ? "Connecting..." : "Connect"}
+        {connected ? "Manage" : isConnecting ? "Connecting..." : "Connect"}
       </button>
       {showDeviceIcon && (
         <button className="p-2 rounded-lg border border-gray-200 hover:border-gray-300">
@@ -74,6 +74,7 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
     const messageEventListener = (event: MessageEvent) => {
       if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") return;
       try {
+        console.log(event.data)
         const data = JSON.parse(event.data);
         if (data.type === 'WA_EMBEDDED_SIGNUP') {
           console.log('WhatsApp Embedded Signup response:', data);
@@ -113,14 +114,49 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
       const code = response.authResponse.code;
       console.log(code)
     } else {
-      console.log(response)
-      setConnectingTitle('')
+      console.log(response);
+      setConnectingTitle('');
+    }
+  }
+
+  const fbLoginCallbackForFB = (response: any) => {
+    if (response.authResponse) {
+      const code = response.authResponse.code;
+      console.log(code)
+      fetch("/api/chatbot/integrations/facebook-page/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code,
+          chatbotId
+        }),
+      }).then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+        .then((data) => {
+          setConnectingTitle('');
+          console.log('Success:', data);
+          // Handle success case, e.g., update UI or notify user
+        })
+        .catch((error) => {
+          setConnectingTitle('');
+          console.error('Error:', error);
+          // Handle error case, e.g., show error message to user
+        });
+    } else {
+      console.log(response);
+      setConnectingTitle('');
     }
   }
 
   const handleConnect = async (platform: string) => {
     //@ts-ignore
-    if(chatbot?.integrations[platform.toLowerCase()]){
+    if (chatbot?.integrations[platform.toLowerCase()]) {
       router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/connect/integrations/manage/whatsapp`);
       return;
     }
@@ -139,7 +175,7 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
         }
       });
     } else if (platform === "Messenger") {
-      window.FB.login(fbLoginCallback, {
+      window.FB.login(fbLoginCallbackForFB, {
         config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE_1, // configuration ID goes here
         response_type: 'code', // must be set to 'code' for System User access token
         override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
