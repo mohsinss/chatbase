@@ -6,6 +6,7 @@ import EmbedSection from './EmbedSection';
 import ShareSection from './ShareSection';
 import IntegrationsSection from './IntegrationsSection';
 import WhatsappManagement from "./management/WhatsappManagement";
+import MessengerManagement from "./management/MessengerManagement";
 
 const CONNECT_TABS = [
   { id: "embed", label: "Embed", icon: <IconCode className="w-5 h-5" /> },
@@ -69,6 +70,7 @@ const Connect = ({
             {currentTab === 'share' && <ShareSection chatbotId={chatbotId} domain={domain} />}
             {currentTab === 'integrations' && <IntegrationsSection teamId={teamId} chatbot={chatbot} chatbotId={chatbotId} />}
             {currentTab === 'whatsapp' && <WhatsappManagement chatbotId={chatbotId} domain={domain} teamId={teamId} />}
+            {currentTab === 'messenger' && <MessengerManagement chatbotId={chatbotId} domain={domain} teamId={teamId} />}
           </div>
         </div>
       </div>

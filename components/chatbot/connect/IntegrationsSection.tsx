@@ -141,12 +141,10 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
         .then((data) => {
           setConnectingTitle('');
           console.log('Success:', data);
-          // Handle success case, e.g., update UI or notify user
         })
         .catch((error) => {
           setConnectingTitle('');
           console.error('Error:', error);
-          // Handle error case, e.g., show error message to user
         });
     } else {
       console.log(response);
@@ -157,7 +155,7 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
   const handleConnect = async (platform: string) => {
     //@ts-ignore
     if (chatbot?.integrations[platform.toLowerCase()]) {
-      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/connect/integrations/manage/whatsapp`);
+      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/connect/integrations/manage/${platform.toLowerCase()}`);
       return;
     }
 

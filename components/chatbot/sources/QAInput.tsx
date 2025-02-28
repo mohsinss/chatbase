@@ -8,6 +8,7 @@ interface QAPair {
   id: string;
   question: string;
   answer: string;
+  subQuestions?: QAPair[]; // Allow nested questions
 }
 
 interface QAInputProps {
@@ -16,45 +17,85 @@ interface QAInputProps {
 }
 
 const QAInput: React.FC<QAInputProps> = ({ qaPairs, setQaPairs }) => {
-  const addQAPair = () => {
-    const newPair = {
+  const [currentQAPairs, setCurrentQAPairs] = useState<QAPair[]>(qaPairs);
+
+  const addQAPair = (parentId?: string) => {
+    const newPair: QAPair = {
       id: Date.now().toString(),
       question: '',
-      answer: ''
+      answer: '',
+      subQuestions: [],
     };
-    setQaPairs([...qaPairs, newPair]);
-  };
 
-  const deleteQAPair = (id: string) => {
-    const newPairs = qaPairs.filter(pair => pair.id !== id);
-    setQaPairs(newPairs);
-  };
-
-  const deleteAll = () => {
-    setQaPairs([{ id: Date.now().toString(), question: '', answer: '' }]);
-    setQaPairs([]);
+    if (parentId) {
+      const updatedPairs = currentQAPairs.map(pair => 
+        pair.id === parentId 
+          ? { ...pair, subQuestions: [...(pair.subQuestions || []), newPair] }
+          : pair
+      );
+      setCurrentQAPairs(updatedPairs);
+    } else {
+      setCurrentQAPairs([...currentQAPairs, newPair]);
+    }
   };
 
   const updateQAPair = (id: string, field: 'question' | 'answer', value: string) => {
-    const newPairs = qaPairs.map(pair => 
-      pair.id === id ? { ...pair, [field]: value } : pair
-    );
-    setQaPairs(newPairs);
+    const updatePairs = (pairs: QAPair[]): QAPair[] => 
+      pairs.map(pair => 
+        pair.id === id 
+          ? { ...pair, [field]: value }
+          : { ...pair, subQuestions: updatePairs(pair.subQuestions || []) }
+      );
+
+    setCurrentQAPairs(updatePairs(currentQAPairs));
   };
+
+  const renderQAPairs = (pairs: QAPair[]) => (
+    <div className="space-y-6">
+      {pairs.map(pair => (
+        <div key={pair.id} className="p-6 bg-white rounded-lg border relative">
+          <button
+            onClick={() => addQAPair(pair.id)}
+            className="absolute right-4 top-4 text-gray-400 hover:text-blue-500"
+          >
+            Add Sub-Question
+          </button>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Question</label>
+              <Textarea
+                value={pair.question}
+                onChange={(e) => updateQAPair(pair.id, 'question', e.target.value)}
+                placeholder="Enter your question..."
+                className="min-h-[100px]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Answer</label>
+              <Textarea
+                value={pair.answer}
+                onChange={(e) => updateQAPair(pair.id, 'answer', e.target.value)}
+                placeholder="Enter your answer..."
+                className="min-h-[200px]"
+              />
+            </div>
+
+            {pair.subQuestions && renderQAPairs(pair.subQuestions)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="w-full min-h-[600px]">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-semibold">Q&A</h2>
         <div className="flex items-center gap-4">
-          <button
-            onClick={deleteAll}
-            className="text-red-500 hover:text-red-600 text-sm"
-          >
-            Delete all
-          </button>
           <Button
-            onClick={addQAPair}
+            onClick={() => addQAPair()}
             variant="ghost"
             size="icon"
             className="rounded-full h-10 w-10 bg-gray-100 hover:bg-gray-200"
@@ -64,43 +105,7 @@ const QAInput: React.FC<QAInputProps> = ({ qaPairs, setQaPairs }) => {
         </div>
       </div>
 
-      <div className="space-y-6">
-        {qaPairs.map((pair) => (
-          <div 
-            key={pair.id} 
-            className="p-6 bg-white rounded-lg border relative"
-          >
-            <button
-              onClick={() => deleteQAPair(pair.id)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-red-500"
-            >
-              <IconTrash className="h-5 w-5" />
-            </button>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Question</label>
-                <Textarea
-                  value={pair.question}
-                  onChange={(e) => updateQAPair(pair.id, 'question', e.target.value)}
-                  placeholder="Enter your question..."
-                  className="min-h-[100px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Answer</label>
-                <Textarea
-                  value={pair.answer}
-                  onChange={(e) => updateQAPair(pair.id, 'answer', e.target.value)}
-                  placeholder="Enter your answer..."
-                  className="min-h-[200px]"
-                />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      {renderQAPairs(currentQAPairs)}
     </div>
   );
 };
