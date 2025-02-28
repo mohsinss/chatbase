@@ -8,6 +8,7 @@ import Chatbot from '@/models/Chatbot';
 import Dataset from "@/models/Dataset";
 import Team from '@/models/Team';
 import config from '@/config';
+import { MODEL_MAPPING } from '@/types';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -57,32 +58,6 @@ function processMessagesForReasoner(systemPrompt, relevant_chunk, messages, conf
 
   return formattedMessages;
 }
-
-const MODEL_MAPPING: { [key: string]: string } = {
-  // OpenAI models
-  'gpt-4o': 'gpt-4o',
-  'gpt-4o-mini': 'gpt-4o-mini',
-  'o1': 'o1',
-  'o1-mini': 'o1-mini',
-  'gpt-3.5-turbo': 'gpt-3.5-turbo',
-  // Anthropic models (latest versions)
-  'claude-3-5-sonnet-20241022': 'claude-3-5-sonnet-20241022',
-  'claude-3-5-haiku-20241022': 'claude-3-5-haiku-20241022',
-  'claude-3-opus-20240229': 'claude-3-opus-20240229',
-  'claude-3-7-sonnet-20250219': 'claude-3-7-sonnet-20250219',
-  // Gemini models
-  'gemini-2.0-flash-exp': 'gemini-2.0-flash-exp',
-  'gemini-1.5-flash': 'gemini-1.5-flash',
-  'gemini-1.5-flash-8b': 'gemini-1.5-flash-8b',
-  'gemini-1.5-pro': 'gemini-1.5-pro',
-  // Deepseek models
-  'deepseek-chat': 'deepseek-chat',
-  'deepseek-reasoner': 'deepseek-reasoner',
-  // Grok models
-  'grok-2': 'grok-2',
-  'grok-2-latest': 'grok-2-latest',
-  'grok-beta': 'grok-beta',
-};
 
 // Add model type mapping with specific O1 model versions
 const O1_MODELS = ['o1', 'o1-mini'];

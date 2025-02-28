@@ -11,7 +11,7 @@ import Dataset from "@/models/Dataset";
 import Team from '@/models/Team';
 import config from '@/config';
 import ChatbotConversation from '@/models/ChatbotConversation';
-
+import { MODEL_MAPPING } from '@/types';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -42,27 +42,6 @@ function processMessagesForReasoner(systemPrompt, relevant_chunk, messages) {
 
   return formattedMessages;
 }
-
-const MODEL_MAPPING: { [key: string]: string } = {
-  // OpenAI models
-  'gpt-4o': 'gpt-4o',
-  'gpt-4o-mini': 'gpt-4o-mini',
-  'o1': 'o1',
-  'o1-mini': 'o1-mini',
-  'gpt-3.5-turbo': 'gpt-3.5-turbo',
-  // Anthropic models (latest versions)
-  'claude-3-5-sonnet-20241022': 'claude-3-5-sonnet-20241022',
-  'claude-3-5-haiku-20241022': 'claude-3-5-haiku-20241022',
-  'claude-3-opus-20240229': 'claude-3-opus-20240229',
-  // Gemini models
-  'gemini-2.0-flash-exp': 'gemini-2.0-flash-exp',
-  'gemini-1.5-flash': 'gemini-1.5-flash',
-  'gemini-1.5-flash-8b': 'gemini-1.5-flash-8b',
-  'gemini-1.5-pro': 'gemini-1.5-pro',
-  // Deepseek models
-  'deepseek-chat': 'deepseek-chat',
-  'deepseek-reasoner': 'deepseek-reasoner',
-};
 
 // Add model type mapping with specific O1 model versions
 const O1_MODELS = ['o1', 'o1-mini'];
@@ -132,9 +111,9 @@ export async function POST(request: Request) {
               return NextResponse.json({ status: "Whatsapp Number doesn't registered to the site." }, { status: 200 });
             }
 
-            if (whatsappNumber?.disable_auto_reply == true) {
-              return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
-            }
+            // if (whatsappNumber?.disable_auto_reply == true) {
+            //   return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
+            // }
 
             const chatbotId = whatsappNumber.chatbotId;
 
