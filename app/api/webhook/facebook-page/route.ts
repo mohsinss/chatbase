@@ -12,6 +12,7 @@ import { sendGemini } from '@/libs/gemini';
 import OpenAI from 'openai';
 import { MODEL_MAPPING } from '@/types';
 import axios from 'axios';
+import config from '@/config';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
