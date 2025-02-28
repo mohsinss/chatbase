@@ -49,7 +49,7 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
             }
 
             const data = await response.json();
-            if(data.length == 0){                
+            if (data.length == 0) {
                 router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/connect/integrations`);
                 router.refresh();
                 return;
@@ -66,39 +66,39 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
     }, []);
 
     const fbLoginCallbackForFB = (response: any) => {
-      if (response.authResponse) {
-        const code = response.authResponse.code;
+        if (response.authResponse) {
+            const code = response.authResponse.code;
 
-        fetch("/api/chatbot/integrations/facebook-page/save", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            code,
-            chatbotId
-          }),
-        }).then((response) => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-          .then((data) => {
-            setIsConnecting(false);  
-            router.refresh();
-            toast.success("Successfully connected to Messenger!");
-          })
-          .catch((error) => {
+            fetch("/api/chatbot/integrations/facebook-page/save", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    code,
+                    chatbotId
+                }),
+            }).then((response) => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+                .then((data) => {
+                    setIsConnecting(false);
+                    router.refresh();
+                    toast.success("Successfully connected to Messenger!");
+                })
+                .catch((error) => {
+                    setIsConnecting(false);
+                    console.error("Error saving FB page credentials:", error);
+                    toast.error("Failed to save FB page. Please check integration guide again.");
+                });
+        } else {
+            console.log(response);
+            toast.error("Sth went wrong.");
             setIsConnecting(false);
-            console.error("Error saving FB page credentials:", error);
-            toast.error("Failed to save FB page. Please check integration guide again.");
-          });
-      } else {
-        console.log(response);
-        toast.error("Sth went wrong.");
-        setIsConnecting(false);
-      }
+        }
     }
 
     const handleConnect = () => {
