@@ -342,27 +342,27 @@ export async function POST(request: Request) {
 
           } else if (internalModel.startsWith('grok-')) {
             console.log('Using Grok Model:', MODEL_MAPPING[internalModel] || 'grok-2');
-      
+
             const formattedMessages = [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: relevant_chunk },
               ...messages,
             ];
-      
+
             // Configure model-specific parameters
             const modelParams = {
               max_tokens: maxTokens,
               temperature,
               model: MODEL_MAPPING[internalModel] || 'grok-2',
             };
-      
+
             const response = await xai.chat.completions.create({
               ...modelParams,
               //@ts-ignore
               messages: formattedMessages,
               stream: true,
             });
-      
+
             stream = new ReadableStream({
               async start(controller) {
                 try {
@@ -372,7 +372,7 @@ export async function POST(request: Request) {
                       response_text += text;
                     }
                   }
-      
+
                   // Send confidence score as part of the response
                   controller.enqueue(encoder.encode('data: [DONE]\n\n'));
                   // controller.enqueue(encoder.encode('score:' + confidenceScore));
@@ -382,7 +382,7 @@ export async function POST(request: Request) {
                 }
               },
             });
-      
+
             if (team) {
               team.credits += 1;
               await team.save();
