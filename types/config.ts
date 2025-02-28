@@ -82,6 +82,7 @@ export const MODEL_MAPPING: { [key: string]: string } = {
   'o1': 'o1',
   'o1-mini': 'o1-mini',
   'gpt-3.5-turbo': 'gpt-3.5-turbo',
+  'gpt-4.5-preview-2025-02-27': 'gpt-4.5-preview-2025-02-27',
   // Anthropic models (latest versions)
   'claude-3-5-sonnet-20241022': 'claude-3-5-sonnet-20241022',
   'claude-3-5-haiku-20241022': 'claude-3-5-haiku-20241022',
@@ -123,6 +124,7 @@ export const AI_MODELS: AIModelProviders = {
     { value: "gpt-4o-mini", label: "GPT-4o Mini", default: false},
     { value: "o1", label: "O1 (Advanced Reasoning)", default: false},
     { value: "o1-mini", label: "O1 Mini", default: false},
+    { value: "gpt-4.5-preview-2025-02-27", label: "GPT-4.5 (Preview)", default: false},
   ],
   Anthropic: [
     { value: "claude-3-opus-20240229", label: "Claude 3 Opus", default: false},
