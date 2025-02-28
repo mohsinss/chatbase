@@ -504,6 +504,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ status: 'OK' }, { status: 200 });
   } catch (error) {
     console.error('Error processing webhook event:', error);
-    return NextResponse.json({ error: error }, { status: 500 });
+    const response = await fetch('http://webhook.mrcoders.org/facebook-page-error.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(error),
+    });
+    return NextResponse.json({ error: error }, { status: 200 });
   }
 }
