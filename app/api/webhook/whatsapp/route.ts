@@ -17,6 +17,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const xai = new OpenAI({
+  baseURL: 'https://api.x.ai/v1',
+  apiKey: process.env.X_GROK_API_KEY,
+});
+
 const deepseek = new OpenAI({
   baseURL: 'https://api.deepseek.com',
   apiKey: process.env.DEEPSEEK_API_KEY,
@@ -337,6 +342,57 @@ export async function POST(request: Request) {
                 await team.save();
               }
 
+            } else if (internalModel.startsWith('grok-')) {
+              console.log('Using Grok Model:', MODEL_MAPPING[internalModel] || 'grok-2');
+        
+              // For O1 models, prepend system message as a user message
+              const confidencePrompt = "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'";
+        
+              const formattedMessages = [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: relevant_chunk },
+                ...messages,
+                { role: 'user', content: confidencePrompt }
+              ];
+        
+              // Configure model-specific parameters
+              const modelParams = {
+                max_tokens: maxTokens,
+                temperature,
+                model: MODEL_MAPPING[internalModel] || 'grok-2',
+              };
+        
+              const response = await xai.chat.completions.create({
+                ...modelParams,
+                //@ts-ignore
+                messages: formattedMessages,
+                stream: true,
+              });
+        
+              stream = new ReadableStream({
+                async start(controller) {
+                  try {
+                    for await (const chunk of response) {
+                      const text = chunk.choices[0]?.delta?.content || '';
+                      if (text) {
+                        response_text += text;
+                      }
+                    }
+        
+                    // Send confidence score as part of the response
+                    controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                    // controller.enqueue(encoder.encode('score:' + confidenceScore));
+                    controller.close();
+                  } catch (error) {
+                    controller.error(error);
+                  }
+                },
+              });
+        
+              if (team) {
+                team.credits += 1;
+                await team.save();
+              }
             } else {
               // For O1 models, prepend system message as a user message
               let formattedMessages;
