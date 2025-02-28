@@ -100,3 +100,49 @@ export const MODEL_MAPPING: { [key: string]: string } = {
   'grok-2-latest': 'grok-2-latest',
   'grok-beta': 'grok-beta',
 };
+
+type ModelInfo = {
+  value: string;
+  label: string;
+  default: boolean;
+}
+
+type AIModelProviders = {
+  OpenAI: ModelInfo[];
+  Anthropic: ModelInfo[];
+  Gemini: ModelInfo[];
+  Deepseek: ModelInfo[];
+  Grok: ModelInfo[];
+}
+
+// Group models by provider with proper typing
+export const AI_MODELS: AIModelProviders = {
+  OpenAI: [
+    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo", default: false},
+    { value: "gpt-4o", label: "GPT-4o (Flagship)", default: true},
+    { value: "gpt-4o-mini", label: "GPT-4o Mini", default: false},
+    { value: "o1", label: "O1 (Advanced Reasoning)", default: false},
+    { value: "o1-mini", label: "O1 Mini", default: false},
+  ],
+  Anthropic: [
+    { value: "claude-3-opus-20240229", label: "Claude 3 Opus", default: false},
+    { value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet", default: false},
+    { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku", default: false},
+    { value: "claude-3-7-sonnet-20250219", label: "Claude 3.7 Sonnet", default: true},
+  ],
+  Gemini: [
+    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro", default: true},
+    { value: "gemini-2.0-flash-exp", label: "Gemini 2.0 Flash", default: false},
+    { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash", default: false},
+    { value: "gemini-1.5-flash-8b", label: "Gemini 1.5 Flash-8B", default: false},
+  ],
+  Deepseek: [
+    { value: "deepseek-chat", label: "Deepseek Chat", default: true},
+    { value: "deepseek-reasoner", label: "Deepseek Reasoner", default: false},
+  ],
+  Grok: [
+    { value: "grok-2", label: "Grok 2", default: true},
+    { value: "grok-2-latest", label: "Grok 2 latest", default: false},
+    { value: "grok-beta", label: "Grok Beta", default: false},
+  ]
+};
