@@ -94,8 +94,8 @@ export async function POST(request: Request) {
 
           await connectMongo();
 
-          const sender = data?.entry[0]?.messaging[0].sender;
-          const recipient = data?.entry[0]?.messaging[0].recipient;
+          const sender = data?.entry[0]?.messaging[0].sender.id;
+          const recipient = data?.entry[0]?.messaging[0].recipient.id;
           const timestamp = data?.entry[0]?.messaging[0].timestamp;
           const text = data?.entry[0]?.messaging[0].message.text;
           const mid = data?.entry[0]?.messaging[0].message.mid;
