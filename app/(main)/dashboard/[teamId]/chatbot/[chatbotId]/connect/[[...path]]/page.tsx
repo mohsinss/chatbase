@@ -12,13 +12,13 @@ interface ChatbotData {
   integrations: Object
 }
 
-export default async function ConnectPage({ 
-  params 
-}: { 
-  params: { teamId: string; chatbotId: string; path?: string[] } 
+export default async function ConnectPage({
+  params
+}: {
+  params: { teamId: string; chatbotId: string; path?: string[] }
 }) {
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user?.id) {
     redirect("/api/auth/signin");
   }
@@ -41,7 +41,7 @@ export default async function ConnectPage({
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <Connect chatbot={serializedChatbot} teamId={params.teamId} chatbotId={params.chatbotId} domain={process.env.LIVE_DOMAIN}/>
+        <Connect chatbot={serializedChatbot} teamId={params.teamId} chatbotId={params.chatbotId} domain={process.env.LIVE_DOMAIN} />
       </main>
     </>
   );
