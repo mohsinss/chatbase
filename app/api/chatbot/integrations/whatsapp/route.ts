@@ -29,7 +29,7 @@ export async function DELETE(req: Request) {
     if (!wabaId) {
       return new NextResponse("wabaId is missing.", { status: 400 });
     }
-    
+
     // UnSubscribe App to webhook
     const response1 = await axios.delete(`https://graph.facebook.com/v22.0/${wabaId}/subscribed_apps`, {
       headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }

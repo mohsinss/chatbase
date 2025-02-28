@@ -8,7 +8,7 @@ export async function GET(req: Request) {
 
     await connectMongo();
     const whatsAppNumber = await WhatsAppNumber.findOne({ display_phone_number: to });
-    
+
     if (!whatsAppNumber) {
         return NextResponse.json({ error: "WhatsApp number not found" }, { status: 404 });
     }

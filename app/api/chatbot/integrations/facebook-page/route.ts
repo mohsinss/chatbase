@@ -26,7 +26,7 @@ export async function DELETE(req: Request) {
     }
 
     await connectMongo();
-    const existingFBPage = await FacebookPage.findOne({chatbotId, pageId});
+    const existingFBPage = await FacebookPage.findOne({ chatbotId, pageId });
 
     // Check if chatbotId is provided
     if (!existingFBPage) {
@@ -34,7 +34,7 @@ export async function DELETE(req: Request) {
     }
 
     const page_access_token = existingFBPage.access_token;
-    
+
     // UnSubscribe Page to webhook
     const response1 = await axios.delete(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages&access_token=${page_access_token}`, {
       headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }

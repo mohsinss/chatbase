@@ -9,7 +9,7 @@ import axios from "axios";
 export async function POST(req: Request) {
     const { from, to, text } = await req.json();
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
