@@ -55,7 +55,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
             }
 
             const data = await response.json();
-            if(data.length == 0){                
+            if (data.length == 0) {
                 router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/connect/integrations`);
                 router.refresh();
                 return;
