@@ -36,11 +36,11 @@ export async function DELETE(req: Request) {
     const page_access_token = existingFBPage.access_token;
     
     // UnSubscribe Page to webhook
-    const response1 = await axios.delete(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages&access_token${page_access_token}`, {
+    const response1 = await axios.delete(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages&access_token=${page_access_token}`, {
       headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
     });
     if (!response1.data.success) {
-      return NextResponse.json({ success: false, message: response1.data.error?.message || 'App Subscription failed.' });
+      return NextResponse.json({ success: false, message: response1.data.error?.message || 'Page UnSubscription failed.' });
     }
 
     const result = await FacebookPage.deleteOne({ pageId });
@@ -67,7 +67,7 @@ export async function DELETE(req: Request) {
       return new NextResponse("Not Found", { status: 404 });
     }
   } catch (error) {
-    console.error("WhatsApp integration error:", error);
+    console.error("FB page deletion error:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

@@ -140,14 +140,18 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
       })
         .then((data) => {
           setConnectingTitle('');
-          console.log('Success:', data);
+
+          router.refresh();
+          toast.success("Successfully connected to Messenger!");
         })
         .catch((error) => {
           setConnectingTitle('');
-          console.error('Error:', error);
+          console.error("Error saving FB page credentials:", error);
+          toast.error("Failed to save FB page. Please check integration guide again.");
         });
     } else {
       console.log(response);
+      toast.error("Sth went wrong.");
       setConnectingTitle('');
     }
   }

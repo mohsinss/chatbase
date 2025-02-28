@@ -51,7 +51,6 @@ export async function POST(req: Request) {
 
         for (let i = 0; i < data.data.length; i++) {
             let page = data.data[i];
-            console.log(page)
             let pageId = page.id;
 
             // Subscribe Page to webhook

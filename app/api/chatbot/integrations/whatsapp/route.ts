@@ -71,7 +71,7 @@ export async function DELETE(req: Request) {
       return new NextResponse("Not Found", { status: 404 });
     }
   } catch (error) {
-    console.error("WhatsApp integration error:", error);
+    console.error("WhatsApp number deletion error:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

@@ -51,6 +51,7 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
             const data = await response.json();
             if(data.length == 0){                
                 router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/connect/integrations`);
+                router.refresh();
                 return;
             }
             setPages(data);
@@ -64,64 +65,41 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
         fetchPages();
     }, []);
 
-    const saveFBCredentials = async (code: any) => {
-        try {
-            const response = await fetch("/api/chatbot/integrations/facebook-page/save", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    chatbotId,
-                    code,
-                }),
-            });
+    const fbLoginCallbackForFB = (response: any) => {
+      if (response.authResponse) {
+        const code = response.authResponse.code;
 
-            if (!response.ok) {
-                throw new Error("Failed to save FB page credentials");
-            }
-
-            toast.success("Successfully connected to FB page!");
-        } catch (error) {
+        fetch("/api/chatbot/integrations/facebook-page/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            code,
+            chatbotId
+          }),
+        }).then((response) => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+          .then((data) => {
+            setIsConnecting(false);  
+            router.refresh();
+            toast.success("Successfully connected to Messenger!");
+          })
+          .catch((error) => {
+            setIsConnecting(false);
             console.error("Error saving FB page credentials:", error);
             toast.error("Failed to save FB page. Please check integration guide again.");
-        }
+          });
+      } else {
+        console.log(response);
+        toast.error("Sth went wrong.");
         setIsConnecting(false);
-        fetchPages();
-    };
-
-    const fbLoginCallbackForFB = (response: any) => {
-        if (response.authResponse) {
-          const code = response.authResponse.code;
-          console.log(code)
-          fetch("/api/chatbot/integrations/facebook-page/save", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              code,
-              chatbotId
-            }),
-          }).then((response) => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-            .then((data) => {
-              setIsConnecting(false);
-              console.log('Success:', data);
-            })
-            .catch((error) => {
-              setIsConnecting(false);
-              console.error('Error:', error);
-            });
-        } else {
-          console.log(response);
-          setIsConnecting(false);
-        }
       }
+    }
 
     const handleConnect = () => {
         setIsConnecting(true);
@@ -149,26 +127,25 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
         console.log('handleDelete', deletePage);
         setIsConnecting(true);
         try {
-            const response = await fetch("/api/chatbot/integrations/whatsapp", {
+            const response = await fetch("/api/chatbot/integrations/facebook-page", {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    phoneNumberId: deletePage?.phoneNumberId,
-                    wabaId: deletePage?.wabaId,
+                    pageId: deletePage?.pageId,
                     chatbotId,
                 }),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to delete WhatsApp Number");
+                throw new Error("Failed to delete FB Page");
             }
 
-            toast.success("Successfully delete WhatsApp Number!");
+            toast.success("Successfully delete FB Page!");
         } catch (error) {
-            console.error("Error deleting WhatsApp number:", error);
-            toast.error("Failed to delete WhatsApp Number.");
+            console.error("Error deleting FB Page:", error);
+            toast.error("Failed to delete FB Page.");
         }
 
         fetchPages();
