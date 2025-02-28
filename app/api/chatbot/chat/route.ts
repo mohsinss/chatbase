@@ -173,6 +173,7 @@ export async function POST(req: NextRequest) {
     // });
 
     const encoder = new TextEncoder();
+    const confidencePrompt = "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value at the very end of your response, formatted as ':::100' with no extra text following it.";
 
     // Measure time for model processing
     const modelProcessingStart = Date.now();
@@ -192,7 +193,7 @@ export async function POST(req: NextRequest) {
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: relevant_chunk },
                 ...messages,
-                { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value at the end of your response with 3 letters only like ':::100'" }
+                { role: 'user', content: confidencePrompt }
               ],
               'user-1',
               onContent,
@@ -237,7 +238,7 @@ export async function POST(req: NextRequest) {
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: relevant_chunk },
                 ...messages,
-                { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put this value at the end of your response with 3 letters only like ':::100'" }
+                { role: 'user', content: confidencePrompt }
               ],
               'user-1',
               onContent,
@@ -271,7 +272,6 @@ export async function POST(req: NextRequest) {
 
       // For O1 models, prepend system message as a user message
       let formattedMessages;
-      const confidencePrompt = "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'";
       if (MODEL_MAPPING[internalModel] == 'deepseek-reasoner') {
         formattedMessages = processMessagesForReasoner(
           systemPrompt,
