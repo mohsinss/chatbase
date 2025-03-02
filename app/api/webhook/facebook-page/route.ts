@@ -427,18 +427,13 @@ export async function POST(request: Request) {
               //@ts-ignore
               messages: formattedMessages,
               stream: true,
-              logprobs: true,
             });
 
             stream = new ReadableStream({
               async start(controller) {
                 try {
-                  let log_probs_len = 0;
-                  let log_probs_sum = 0.0;
                   for await (const chunk of response) {
                     const text = chunk.choices[0]?.delta?.content || '';
-                    log_probs_len++;
-                    log_probs_sum += chunk.choices[0].logprobs?.content[0]?.logprob || 0.0;
 
                     if (text) {
                       response_text += text;
