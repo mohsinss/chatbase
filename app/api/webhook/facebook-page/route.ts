@@ -80,18 +80,20 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     // Parse the incoming request body
+    
     const data = await request.json();
+    // Send data to the specified URL
+    const response = await fetch('http://webhook.mrcoders.org/facebook-page.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
     if (data?.entry?.length > 0) {
       if (data?.entry[0]?.messaging?.length > 0) {
         if (data?.entry[0]?.messaging[0].message?.text?.length > 0) {
-          // Send data to the specified URL
-          const response = await fetch('http://webhook.mrcoders.org/facebook-page.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-          });
 
           // Check if the request was successful
           if (!response.ok) {
