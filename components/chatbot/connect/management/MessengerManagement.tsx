@@ -185,13 +185,8 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                 <>
                     <div className="rounded-md border-1 border-[1px] border-gray-200 mb-4">
                         <div className="p-4">
-                            <h2 className="text-xl font-extrabold text-gray-900">Connected Pages</h2>
-                            <p className="text-gray-500 pt-4">
-                                After creating a business profile on Meta if recommended to verify you business
-                                &nbsp;<a href='https://www.facebook.com/business/help/1095661473946872?id=180505742745347' className="text-gray-950 underline font-medium" target="_blank">Learn more</a>.
-                                You can also learn more about the status of you integration by visiting
-                                &nbsp;<a href="https://business.facebook.com/wa/manage/home" className="text-gray-950 underline font-medium" target="_blank">WhatsApp Manager</a>.
-                            </p>
+                            <h2 className="text-xl font-extrabold text-gray-900">Connected Facebook Pages</h2>
+
                         </div>
                         <table className="min-w-full divide-y divide-gray-200 mt-4">
                             <thead className="bg-gray-50">
@@ -281,9 +276,9 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                     <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Delete WhatsApp Number</DialogTitle>
+                                <DialogTitle>Delete Facebook page</DialogTitle>
                                 <DialogDescription>
-                                    Are you sure you want to delete this WhatsApp Number?.
+                                    Are you sure you want to delete this facebook page?.
                                 </DialogDescription>
                             </DialogHeader>
                             <DialogFooter>
