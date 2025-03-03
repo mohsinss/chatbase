@@ -58,7 +58,9 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
 
   useEffect(() => {
-    if (selectedConversation?.platform == "whatsapp") {
+    if (selectedConversation?.platform == "whatsapp"
+      || selectedConversation?.platform == "facebook"
+    ) {
       fetchAutoReplyStatus(selectedConversation.metadata.to);
     }
   }, [selectedConversation])
@@ -83,7 +85,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
       }
 
       setAutoReplyEnabled(!newStatus);
-      toast.success(`Auto-reply is now ${newStatus ? 'enabled' : 'disabled'}`);
+      toast.success(`Auto-reply is now ${!newStatus ? 'enabled' : 'disabled'}`);
     } catch (error) {
       console.error('Error updating auto-reply status:', error);
       toast.error(`Error: ${error.message}`);
@@ -165,6 +167,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
             conv.messages.length > 0 &&
             conv.messages.some((m: Message) => m.content?.trim())
           ) : [];
+          console.log(validConversations)
           setConversations(validConversations);
           setSelectedConversation(validConversations.find(conv => conv._id === selectedConversation._id));
         }
@@ -240,6 +243,39 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
     if (conversation?.platform == "whatsapp") {
       try {
         const response = await fetch('/api/chatbot/chat/sendviawhatsapp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: conversation.metadata.from,
+            to: conversation.metadata.to,
+            text: inputMsg,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+
+        // Check if the response contains an error message
+        const responseData = await response.json();
+        if (responseData.error) {
+          throw new Error(responseData.error);
+        }
+
+        toast.success('Message is sent successfully');
+        setInputMsg("");
+
+        handleRefresh();
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        toast.error('Failed to send message:');
+      }
+    } else 
+    if (conversation?.platform == "facebook") {
+      try {
+        const response = await fetch('/api/chatbot/chat/sendviafacebook', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -456,7 +492,9 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
               </div>
               {/* Send chat */}
               {
-                (selectedConversation?.platform == "whatsapp")
+                (selectedConversation?.platform == "whatsapp"
+                  || selectedConversation?.platform == "facebook"
+                )
                 &&
                 <div className="relative">
                   <input
