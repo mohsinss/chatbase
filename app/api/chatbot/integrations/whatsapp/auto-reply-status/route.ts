@@ -1,38 +1,39 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/libs/mongoose";
 import WhatsAppNumber from "@/models/WhatsAppNumber";
+import ChatbotConversation from "@/models/ChatbotConversation";
 
 export async function GET(req: Request) {
     const url = new URL(req.url);
-    const to = url.searchParams.get("to");
+    const _id = url.searchParams.get("_id");
 
     await connectMongo();
-    const whatsAppNumber = await WhatsAppNumber.findOne({ display_phone_number: to });
+    const chatConversation = await ChatbotConversation.findById(_id);
 
-    if (!whatsAppNumber) {
-        return NextResponse.json({ error: "WhatsApp number not found" }, { status: 404 });
+    if (!chatConversation) {
+        return NextResponse.json({ error: "chatConversation is not found" }, { status: 404 });
     }
 
-    return NextResponse.json(whatsAppNumber);
+    return NextResponse.json(chatConversation);
 }
 
 export async function POST(req: Request) {
-    const { to, disable_auto_reply } = await req.json();
+    const { _id, disable_auto_reply } = await req.json();
 
     if (typeof disable_auto_reply !== 'boolean') {
         return NextResponse.json({ error: "Invalid value for disable_auto_reply" }, { status: 400 });
     }
 
     await connectMongo();
-    const whatsAppNumber = await WhatsAppNumber.findOneAndUpdate(
-        { display_phone_number: to },
+    const chatConversation = await ChatbotConversation.findOneAndUpdate(
+        { _id },
         { disable_auto_reply },
-        { new: true }
+        { new: false }
     );
 
-    if (!whatsAppNumber) {
-        return NextResponse.json({ error: "WhatsApp number not found" }, { status: 404 });
+    if (!chatConversation) {
+        return NextResponse.json({ error: "chatConversation is not found" }, { status: 404 });
     }
 
-    return NextResponse.json(whatsAppNumber);
+    return NextResponse.json(chatConversation);
 }

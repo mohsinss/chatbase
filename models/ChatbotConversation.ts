@@ -39,6 +39,11 @@ const ChatbotConversationSchema = new mongoose.Schema(
         default: Date.now
       }
     }],
+    disable_auto_reply: { 
+      type: Boolean, 
+      required: false, 
+      default: false 
+    },
   },
   {
     timestamps: true,

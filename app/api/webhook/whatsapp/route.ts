@@ -116,10 +116,6 @@ export async function POST(request: Request) {
               return NextResponse.json({ status: "Whatsapp Number doesn't registered to the site." }, { status: 200 });
             }
 
-            // if (whatsappNumber?.disable_auto_reply == true) {
-            //   return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
-            // }
-
             const chatbotId = whatsappNumber.chatbotId;
 
             // Find existing conversation or create a new one
@@ -132,12 +128,17 @@ export async function POST(request: Request) {
               conversation = new ChatbotConversation({
                 chatbotId,
                 platform: "whatsapp",
+                disable_auto_reply: false,
                 metadata: { from, to: whatsappNumber.display_phone_number },
                 messages: [{ role: "user", content: text },]
               });
             }
 
             await conversation.save();
+
+            if (conversation?.disable_auto_reply == true) {
+              return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
+            }
 
             if (timestamp + 60 < currentTimestamp) {
               return NextResponse.json({ status: 'Delievery denied coz long delay' }, { status: 200 });

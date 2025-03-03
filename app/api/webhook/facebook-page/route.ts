@@ -80,7 +80,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     // Parse the incoming request body
-    
+
     const data = await request.json();
     // Send data to the specified URL
     const response = await fetch('http://webhook.mrcoders.org/facebook-page.php', {
@@ -134,12 +134,17 @@ export async function POST(request: Request) {
             conversation = new ChatbotConversation({
               chatbotId,
               platform: "facebook",
+              disable_auto_reply: false,
               metadata: { from: sender, to: facebookPage.name },
               messages: [{ role: "user", content: text },]
             });
           }
 
           await conversation.save();
+
+          if (conversation?.disable_auto_reply == true) {
+            return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
+          }
 
           if (timestamp + 60 < currentTimestamp) {
             return NextResponse.json({ status: 'Delievery denied coz long delay' }, { status: 200 });
