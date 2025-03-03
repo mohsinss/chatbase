@@ -86,7 +86,7 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
             })
                 .then((data) => {
                     setIsConnecting(false);
-                    router.refresh();
+                    fetchPages();
                     toast.success("Successfully connected to Messenger!");
                 })
                 .catch((error) => {
