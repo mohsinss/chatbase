@@ -66,7 +66,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
   const toggleAutoReply = async () => {
     const newStatus = autoReplyEnabled;
     try {
-      const response = await fetch('/api/chatbot/integrations/whatsapp/auto-reply-status', {
+      const response = await fetch('/api/chatbot/integrations/auto-reply-status', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
 
   const fetchAutoReplyStatus = async (to: string) => {
     try {
-      const response = await fetch(`/api/chatbot/integrations/whatsapp/auto-reply-status?_id=${selectedConversation._id}`);
+      const response = await fetch(`/api/chatbot/integrations/auto-reply-status?_id=${selectedConversation._id}`);
       if (response.ok) {
         const data = await response.json();
         setAutoReplyEnabled(!data?.disable_auto_reply);
