@@ -483,15 +483,16 @@ export async function POST(request: Request) {
           // });
 
           // send text msg to from number
-          const response2 = await axios.post(`https://graph.facebook.com/v22.0/me/messages`, {
+          const response2 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
             message: {
               text: response_text
             },
             recipient: {
               id: sender
             },
+            messaging_type: "RESPONSE",
           }, {
-            headers: { Authorization: `Bearer ${facebookPage.access_token}` }
+            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
           });
 
           conversation.messages.push({ role: "assistant", content: response_text });
