@@ -125,7 +125,7 @@ export async function POST(request: Request) {
           const chatbotId = facebookPage.chatbotId;
 
           // Find existing conversation or create a new one
-          let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "messenger", "metadata.from": sender, "metadata.to": facebookPage.name });
+          let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "facebook", "metadata.from": sender, "metadata.to": facebookPage.name });
           if (conversation) {
             // Update existing conversation
             conversation.messages.push({ role: "user", content: text });
