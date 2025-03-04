@@ -33,15 +33,15 @@ export async function POST(request: Request) {
       body: JSON.stringify(data),
     });
 
+    // Check if the request was successful
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     if (data?.entry?.length > 0) {
       // this is for messenger
       if (data?.entry[0]?.messaging?.length > 0) {
         if (data?.entry[0]?.messaging[0].message?.text?.length > 0) {
-
-          // Check if the request was successful
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
 
           await connectMongo();
 
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
         const { id, message, created_time, comment_count } = response.data;
 
         if (page_id == from) {
-          console.log("page_id : ", page_id)
+          return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
         }
 
         const chatbotId = facebookPage.chatbotId;
