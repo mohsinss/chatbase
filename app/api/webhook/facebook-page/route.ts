@@ -140,6 +140,10 @@ export async function POST(request: Request) {
           return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
         }
 
+        if (parent_id != post_id) {
+          return NextResponse.json({ status: "Skip for reply comments." }, { status: 200 });
+        }
+
         await connectMongo();
 
         const facebookPage = await FacebookPage.findOne({ pageId: page_id });
