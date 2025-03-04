@@ -3,8 +3,7 @@ import WhatsAppNumber from '@/models/WhatsAppNumber';
 import connectMongo from "@/libs/mongoose";
 import { NextRequest, NextResponse } from 'next/server';
 import ChatbotConversation from '@/models/ChatbotConversation';
-import { getAIResponse } from '@/libs/utils';
-
+import { getAIResponse } from '@/libs/utils-ai';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

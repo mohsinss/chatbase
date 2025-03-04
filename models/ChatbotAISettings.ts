@@ -58,8 +58,8 @@ const ChatbotAISettingsSchema = new mongoose.Schema(
   }
 );
 
-if (mongoose.models.ChatbotAISettings) {
-  delete mongoose.models.ChatbotAISettings;
-}
 
-export default mongoose.model("ChatbotAISettings", ChatbotAISettingsSchema); 
+const ChatbotAISettingsModel = mongoose.models.ChatbotAISettings 
+  || mongoose.model("ChatbotAISettings", ChatbotAISettingsSchema);
+
+export default ChatbotAISettingsModel;

@@ -4,7 +4,7 @@ import connectMongo from '@/libs/mongoose';
 import ChatbotConversation from '@/models/ChatbotConversation';
 import FacebookPage from '@/models/FacebookPage';
 import axios from 'axios';
-import { getAIResponse } from '@/libs/utils';
+import { getAIResponse } from '@/libs/utils-ai';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
