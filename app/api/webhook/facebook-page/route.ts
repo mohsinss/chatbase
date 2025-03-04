@@ -133,7 +133,7 @@ export async function POST(request: Request) {
         await connectMongo();
         const facebookPage = await FacebookPage.findOne({ pageId: page_id });
 
-        const response = await axios.get(`https://graph.facebook.com/v22.0/${comment_id}fields=id,message,from,created_time,comment_count?access_token=${facebookPage.access_token}`,
+        const response = await axios.get(`https://graph.facebook.com/v22.0/${comment_id}?fields=id,message,from,created_time,comment_count?access_token=${facebookPage.access_token}`,
           {
             headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
           });
