@@ -130,13 +130,18 @@ export async function POST(request: Request) {
         const post_id = data?.entry[0]?.changes[0]?.value.post_id;
         const comment_id = data?.entry[0]?.changes[0]?.value.comment_id;
         const parent_id = data?.entry[0]?.changes[0]?.value.parent_id;
+        const item = data?.entry[0]?.changes[0]?.value.item;
+
+        if (item !== "comment") {
+          return NextResponse.json({ status: `Skip for item ${item}.` }, { status: 200 });
+        }
 
         if (page_id == from) {
           return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
         }
 
         await connectMongo();
-        
+
         const facebookPage = await FacebookPage.findOne({ pageId: page_id });
 
         const response = await axios.get(`https://graph.facebook.com/v22.0/${comment_id}?fields=id,message,from,created_time,comment_count&access_token=${facebookPage.access_token}`,
