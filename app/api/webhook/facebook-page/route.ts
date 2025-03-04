@@ -142,7 +142,7 @@ export async function POST(request: Request) {
         const { id, message, created_time, comment_count } = response.data;
 
         if (page_id == from) {
-
+          console.log("page_id : ", page_id)
         }
 
         const chatbotId = facebookPage.chatbotId;
