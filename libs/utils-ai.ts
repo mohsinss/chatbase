@@ -382,4 +382,6 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
       break;
     }
   }
+
+  return response_text;
 }
