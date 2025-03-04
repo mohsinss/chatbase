@@ -130,7 +130,13 @@ export async function POST(request: Request) {
         const post_id = data?.entry[0]?.changes[0]?.value.post_id;
         const comment_id = data?.entry[0]?.changes[0]?.value.comment_id;
         const parent_id = data?.entry[0]?.changes[0]?.value.parent_id;
+
+        if (page_id == from) {
+          return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
+        }
+
         await connectMongo();
+        
         const facebookPage = await FacebookPage.findOne({ pageId: page_id });
 
         const response = await axios.get(`https://graph.facebook.com/v22.0/${comment_id}?fields=id,message,from,created_time,comment_count&access_token=${facebookPage.access_token}`,
@@ -140,10 +146,6 @@ export async function POST(request: Request) {
 
         // Extract data from response
         const { id, message, created_time, comment_count } = response.data;
-
-        if (page_id == from) {
-          return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
-        }
 
         const chatbotId = facebookPage.chatbotId;
 
