@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const facebookPage = await FacebookPage.findOne({ pageId: to });
     if (!facebookPage) {
         // Respond with a 200 OK status
-        return NextResponse.json({ status: "facebookPage doesn't registered to the site." }, { status: 200 });
+        return NextResponse.json({ error: "facebookPage doesn't registered to the site." }, { status: 200 });
     }
     const chatbotId = facebookPage.chatbotId;
     const pageId = facebookPage.pageId;

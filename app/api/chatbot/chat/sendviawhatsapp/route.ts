@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const whatsappNumber = await WhatsAppNumber.findOne({ display_phone_number: to });
     if (!whatsappNumber) {
         // Respond with a 200 OK status
-        return NextResponse.json({ status: "Whatsapp Number doesn't registered to the site." }, { status: 200 });
+        return NextResponse.json({ error: "Whatsapp Number doesn't registered to the site." }, { status: 200 });
     }
     const chatbotId = whatsappNumber.chatbotId;
     const phone_number_id = whatsappNumber.phoneNumberId;

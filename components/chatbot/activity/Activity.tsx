@@ -246,9 +246,10 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
 
   const handleSendMessage = async (conversation: Conversation) => {
     setSendingMsg(true);
-    if (conversation?.platform == "whatsapp") {
-      try {
-        const response = await fetch('/api/chatbot/chat/sendviawhatsapp', {
+    try {
+      let response, responseData;
+      if (conversation?.platform == "whatsapp") {
+        response = await fetch('/api/chatbot/chat/sendviawhatsapp', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -259,28 +260,8 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
             text: inputMsg,
           }),
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to send message');
-        }
-
-        // Check if the response contains an error message
-        const responseData = await response.json();
-        if (responseData.error) {
-          throw new Error(responseData.error);
-        }
-
-        toast.success('Message is sent successfully');
-        setInputMsg("");
-
-        handleRefresh();
-      } catch (error) {
-        console.error('Failed to send message:', error);
-        toast.error('Failed to send message:');
-      }
-    } else if (conversation?.platform == "facebook") {
-      try {
-        const response = await fetch('/api/chatbot/chat/sendviafacebook', {
+      } else if (conversation?.platform == "facebook") {
+        response = await fetch('/api/chatbot/chat/sendviafacebook', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -291,28 +272,8 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
             text: inputMsg,
           }),
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to send message');
-        }
-
-        // Check if the response contains an error message
-        const responseData = await response.json();
-        if (responseData.error) {
-          throw new Error(responseData.error);
-        }
-
-        toast.success('Message is sent successfully');
-        setInputMsg("");
-
-        handleRefresh();
-      } catch (error) {
-        console.error('Failed to send message:', error);
-        toast.error('Failed to send message:');
-      }
-    } else if (conversation?.platform == "facebook-comment") {
-      try {
-        const response = await fetch('/api/chatbot/chat/sendviafacebookcomment', {
+      } else if (conversation?.platform == "facebook-comment") {
+        response = await fetch('/api/chatbot/chat/sendviafacebookcomment', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -325,25 +286,25 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
             text: inputMsg,
           }),
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to send message');
-        }
-
-        // Check if the response contains an error message
-        const responseData = await response.json();
-        if (responseData.error) {
-          throw new Error(responseData.error);
-        }
-
-        toast.success('Message is sent successfully');
-        setInputMsg("");
-
-        handleRefresh();
-      } catch (error) {
-        console.error('Failed to send message:', error);
-        toast.error('Failed to send message:');
       }
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      // Check if the response contains an error message
+      responseData = await response.json();
+      if (responseData.error) {
+        throw new Error(responseData.error);
+      }
+
+      toast.success('Message is sent successfully');
+      setInputMsg("");
+
+      handleRefresh();
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast.error(error.message);
     }
     setSendingMsg(false);
   }
