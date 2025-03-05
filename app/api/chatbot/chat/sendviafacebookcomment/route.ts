@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     await connectMongo();
 
     // Fetch the existing WhatsAppNumber model
-    const facebookPage = await FacebookPage.findOne({ pageId: to });
+    const facebookPage = await FacebookPage.findOne({ pageId: page_id });
     if (!facebookPage) {
         // Respond with a 200 OK status
         return NextResponse.json({ error: "facebookPage doesn't registered to the site." }, { status: 200 });
