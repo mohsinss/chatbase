@@ -61,10 +61,6 @@ export async function POST(request: Request) {
             return NextResponse.json({ status: "FB page doesn't registered to the site." }, { status: 200 });
           }
 
-          // if (facebookPage?.disable_auto_reply == true) {
-          //   return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
-          // }
-
           const chatbotId = facebookPage.chatbotId;
 
           // Find existing conversation or create a new one
@@ -95,16 +91,7 @@ export async function POST(request: Request) {
 
           const response_text = await getAIResponse(chatbotId, messages, text);
 
-          // mark message as read
-          // const response1 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-          //   messaging_product: "whatsapp",
-          //   status: "read",
-          //   message_id
-          // }, {
-          //   headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-          // });
-
-          // send text msg to from number
+          // send text msg to page
           const response2 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
             message: {
               text: response_text
