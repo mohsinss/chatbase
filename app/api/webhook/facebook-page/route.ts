@@ -168,6 +168,10 @@ export async function POST(request: Request) {
 
         await conversation.save();
 
+        if (conversation?.disable_auto_reply == true) {
+          return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
+        }
+
         let messages = [{ role: 'user', content: message }];
 
         const response_text = await getAIResponse(chatbotId, messages, message);
@@ -178,6 +182,7 @@ export async function POST(request: Request) {
           headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
 
+        conversation.metadata.comment_id = comment_id;
         conversation.messages.push({ role: "assistant", content: response_text });
 
         await conversation.save();
