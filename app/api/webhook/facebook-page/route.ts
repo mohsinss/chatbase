@@ -155,6 +155,7 @@ export async function POST(request: Request) {
         if (conversation) {
           // Update existing conversation
           conversation.messages.push({ role: "user", content: message });
+          conversation.metadata.comment_id = comment_id;
         } else {
           // Create new conversation
           conversation = new ChatbotConversation({
@@ -182,7 +183,6 @@ export async function POST(request: Request) {
           headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
 
-        conversation.metadata.comment_id = comment_id;
         conversation.messages.push({ role: "assistant", content: response_text });
 
         await conversation.save();
