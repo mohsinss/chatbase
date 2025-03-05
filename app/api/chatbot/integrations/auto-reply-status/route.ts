@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const chatConversation = await ChatbotConversation.findOneAndUpdate(
         { _id },
         { disable_auto_reply },
-        { new: false }
+        { new: true }
     );
 
     if (!chatConversation) {
