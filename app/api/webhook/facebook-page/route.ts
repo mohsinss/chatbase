@@ -89,6 +89,16 @@ export async function POST(request: Request) {
             return NextResponse.json({ status: 'Delievery denied coz long delay' }, { status: 200 });
           }
 
+          // send typing action
+          const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+            recipient: {
+              id: sender
+            },
+            sender_action: "typing_on"
+          }, {
+            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+          });
+
           const response_text = await getAIResponse(chatbotId, messages, text);
 
           // send text msg to page
@@ -177,6 +187,7 @@ export async function POST(request: Request) {
 
         const response_text = await getAIResponse(chatbotId, messages, message);
 
+        // send msg
         const response2 = await axios.post(`https://graph.facebook.com/v22.0/${comment_id}/comments?access_token=${facebookPage.access_token}`, {
           message: `@[${from}] ${response_text}`
         }, {
