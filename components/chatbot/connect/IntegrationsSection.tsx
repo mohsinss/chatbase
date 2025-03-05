@@ -119,6 +119,16 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
     }
   }
 
+  const instagramLoginCallback = (response: any) => {
+    if (response.authResponse) {
+      const code = response.authResponse.code;
+      console.log(code)
+    } else {
+      console.log(response);
+      setConnectingTitle('');
+    }
+  }
+
   const fbLoginCallbackForFB = (response: any) => {
     if (response.authResponse) {
       const code = response.authResponse.code;
@@ -179,6 +189,17 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
     } else if (platform === "Messenger") {
       window.FB.login(fbLoginCallbackForFB, {
         config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE, // configuration ID goes here
+        response_type: 'code', // must be set to 'code' for System User access token
+        override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
+        extras: {
+          setup: {},
+          featureType: '',
+          sessionInfoVersion: '2',
+        }
+      });
+    } else if (platform === "Instagram") {
+      window.FB.login(instagramLoginCallback, {
+        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_INSTAGRAM, // configuration ID goes here
         response_type: 'code', // must be set to 'code' for System User access token
         override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
         extras: {
