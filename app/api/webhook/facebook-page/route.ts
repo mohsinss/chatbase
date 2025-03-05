@@ -174,7 +174,7 @@ export async function POST(request: Request) {
             chatbotId,
             platform: "facebook-comment",
             disable_auto_reply: false,
-            metadata: { from: from, to: post_id, parent_id, from_name },
+            metadata: { from: from, to: post_id, parent_id, from_name, page_id, comment_id },
             messages: [{ role: "user", content: message },]
           });
         }

@@ -7,7 +7,7 @@ import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-hot-toast";
-import { IconBrandWhatsapp, IconBrandInstagram, IconBrandFacebook, IconSitemap, IconBrowser } from "@tabler/icons-react";
+import { IconBrandWhatsapp, IconBrandInstagram, IconMessage, IconBrandFacebook, IconSitemap, IconBrowser } from "@tabler/icons-react";
 import { IconSend } from "@tabler/icons-react";
 
 interface Message {
@@ -31,7 +31,13 @@ interface Conversation {
   updatedAt: Date;
   leadId?: Lead;
   platform?: string;
-  metadata?: { from?: string, to?: string };
+  metadata?: {
+    from?: string,
+    to?: string,
+    from_name?: string
+    page_id?: string
+    comment_id?: string
+  };
 }
 
 const SUB_TABS = [
@@ -272,8 +278,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
         console.error('Failed to send message:', error);
         toast.error('Failed to send message:');
       }
-    } else 
-    if (conversation?.platform == "facebook") {
+    } else if (conversation?.platform == "facebook") {
       try {
         const response = await fetch('/api/chatbot/chat/sendviafacebook', {
           method: 'POST',
@@ -283,6 +288,40 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
           body: JSON.stringify({
             from: conversation.metadata.from,
             to: conversation.metadata.to,
+            text: inputMsg,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+
+        // Check if the response contains an error message
+        const responseData = await response.json();
+        if (responseData.error) {
+          throw new Error(responseData.error);
+        }
+
+        toast.success('Message is sent successfully');
+        setInputMsg("");
+
+        handleRefresh();
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        toast.error('Failed to send message:');
+      }
+    } else if (conversation?.platform == "facebook-comment") {
+      try {
+        const response = await fetch('/api/chatbot/chat/sendviafacebookcomment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: conversation.metadata.from,
+            to: conversation.metadata.to,
+            page_id: conversation.metadata.page_id,
+            comment_id: conversation.metadata.comment_id,
             text: inputMsg,
           }),
         });
@@ -350,10 +389,22 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
               <IconBrandFacebook className="text-blue-600 w-6 h-6" />
             </button>
             <button
+              onClick={() => handleConversationFilter("facebook-comment")}
+              className="p-1.5 border border-gray-200 rounded-md bg-blue-50 hover:bg-blue-100 hover:border-blue-300 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
+            >
+              <IconMessage className="text-blue-600 w-6 h-6" />
+            </button>
+            <button
               onClick={() => handleConversationFilter("instagram")}
               className="p-1.5 border border-gray-200 rounded-md bg-pink-50 hover:bg-pink-100 hover:border-pink-300 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
             >
               <IconBrandInstagram className="text-pink-600 w-6 h-6" />
+            </button>
+            <button
+              onClick={() => handleConversationFilter("instagram-comment")}
+              className="p-1.5 border border-gray-200 rounded-md bg-pink-50 hover:bg-pink-100 hover:border-pink-300 transition-colors flex items-center justify-center w-16 sm:w-20 h-9"
+            >
+              <IconMessage className="text-pink-600 w-6 h-6" />
             </button>
             <button
               onClick={() => handleConversationFilter("")}
@@ -413,6 +464,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                         <p className="flex items-center gap-2 font-medium text-gray-900 truncate">
                           {conversation?.platform == "whatsapp" && <IconBrandWhatsapp className="text-green-500" />}
                           {conversation?.platform == "facebook" && <IconBrandFacebook className="text-blue-600" />}
+                          {conversation?.platform == "facebook-comment" && <IconMessage className="text-blue-600" />}
                           {conversation?.platform == "instagram" && <IconBrandInstagram className="text-pink-600" />}
                           {(!conversation.platform || conversation.platform === "" || conversation.platform === "Playground") && <IconBrowser className="text-gray-700" />}
                           {truncateContent(firstUserMessage?.content || 'No message content')}
@@ -447,12 +499,24 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                     <div>
                       <h3 className="text-lg flex items-center gap-2 font-semibold capitalize">
                         {chatbot.name} -
-                        Source: {selectedConversation?.platform ? selectedConversation.platform : "Playground"}
+                        Source:
                         {selectedConversation?.platform == "whatsapp" && <IconBrandWhatsapp className="text-green-400" />}
+                        {selectedConversation?.platform == "facebook" && <IconBrandFacebook className="text-blue-600" />}
+                        {selectedConversation?.platform == "facebook-comment" && <IconMessage className="text-blue-600" />}
                       </h3>
                       {selectedConversation?.platform == "whatsapp" &&
                         <div>
                           from {selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to}
+                        </div>
+                      }
+                      {selectedConversation?.platform == "facebook" &&
+                        <div>
+                          from {selectedConversation?.metadata?.from_name ?? selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to}
+                        </div>
+                      }
+                      {selectedConversation?.platform == "facebook-comment" &&
+                        <div>
+                          from {selectedConversation?.metadata?.from_name ?? selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to}
                         </div>
                       }
                       <div className="text-sm text-gray-500">
@@ -494,6 +558,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
               {
                 (selectedConversation?.platform == "whatsapp"
                   || selectedConversation?.platform == "facebook"
+                  || selectedConversation?.platform == "facebook-comment"
                 )
                 &&
                 <div className="relative">
