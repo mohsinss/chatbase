@@ -173,7 +173,8 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
             conv.messages.length > 0 &&
             conv.messages.some((m: Message) => m.content?.trim())
           ) : [];
-          console.log(validConversations)
+          console.log(validConversations);
+          setAllConversations(validConversations);
           setConversations(validConversations);
           setSelectedConversation(validConversations.find(conv => conv._id === selectedConversation._id));
         }
