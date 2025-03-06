@@ -94,7 +94,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("Error saving FB page credentials:");
+        console.error(error.message || "Error saving Instagram credentials:");
         return new NextResponse("Internal Server Error", { status: 500 });
     }
 } 
