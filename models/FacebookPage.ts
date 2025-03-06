@@ -6,6 +6,7 @@ interface IFacebookPage extends Document {
     pageId: string;
     name: string;
     access_token: Date;
+    settings: Object;
 }
 
 const FacebookPageSchema = new mongoose.Schema({
@@ -13,6 +14,10 @@ const FacebookPageSchema = new mongoose.Schema({
     pageId: { type: String, required: true },
     name: { type: String, required: true },
     access_token: { type: String, required: true },
+    settings: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
 }, { timestamps: true });
 
 export default mongoose.models.FacebookPage || mongoose.model<IFacebookPage>('FacebookPage', FacebookPageSchema);

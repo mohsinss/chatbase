@@ -32,7 +32,82 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
     const [pages, setPages] = useState([]);
     const [deletePage, setDeletePage] = useState(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+    const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+    const [isFetchingSettings, setIsFetchingSettings] = useState(false);
+    const [settingsData, setSettingsData] = useState<{ prompt?: string; delay?: number; prompt1?: string; delay1?: number } | null>(null);
+    const [isSavingSettings, setIsSavingSettings] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        if (selectedPageId)
+            fetchSettings(selectedPageId);
+    }, [selectedPageId]);
+
+    useEffect(() => {
+        if (!isSettingsDialogOpen) {
+            setSelectedPageId(null);
+        }
+    }, [isSettingsDialogOpen]);
+
+    const handleSettingsMenu = (id: string) => {
+        setIsSettingsDialogOpen(true);
+        setSelectedPageId(id);
+    };
+
+    const fetchSettings = async (id: string) => {
+        setIsFetchingSettings(true);
+        try {
+            const response = await fetch(`/api/chatbot/integrations/facebook-page/settings?_id=${id}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch settings");
+            }
+
+            const data = await response.json();
+            setSettingsData(data);
+        } catch (error) {
+            console.error("Error fetching settings:", error);
+            toast.error("Failed to fetch settings.");
+        }
+        setIsFetchingSettings(false);
+    };
+
+    const saveSettings = async () => {
+        setIsSavingSettings(true);
+        try {
+            const response = await fetch(`/api/chatbot/integrations/facebook-page/settings?_id=${selectedPageId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    prompt: settingsData?.prompt,
+                    delay: settingsData?.delay,
+                    prompt1: settingsData?.prompt1,
+                    delay1: settingsData?.delay1,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to save settings");
+            }
+
+            toast.success("Settings saved successfully!");
+            setIsSettingsDialogOpen(false);
+        } catch (error) {
+            console.error(error.message);
+            toast.error(error.message);
+        }
+        setIsSavingSettings(false);
+    };
 
     const fetchPages = async () => {
         setIsFetchingPage(true)
@@ -235,6 +310,16 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                                                             <Menu.Item>
                                                                 {({ active }) => (
                                                                     <div
+                                                                        className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
+                                                                        onClick={() => handleSettingsMenu(page._id)}
+                                                                    >
+                                                                        Advanced Settings
+                                                                    </div>
+                                                                )}
+                                                            </Menu.Item>
+                                                            <Menu.Item>
+                                                                {({ active }) => (
+                                                                    <div
                                                                         className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                                                             } flex px-4 py-2 text-sm cursor-pointer`}
                                                                         onClick={handleConnect}
@@ -294,6 +379,82 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                                     disabled={isConnecting}
                                 >
                                     {isConnecting ? "Deleting" : "Delete"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle className="text-xl">Messenger Integration Settings</DialogTitle>
+                                <DialogDescription>
+                                    Manage your Messenger integration settings here.
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            {isFetchingSettings ? (
+                                <div className="flex justify-center items-center">
+                                    <Spinner />
+                                </div>
+                            ) : settingsData ? (
+                                <div className="flex flex-col gap-4">
+                                    <div className='text-lg capitalize font-semibold'>
+                                        for pages
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Prompt</label>
+                                        <textarea
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={settingsData.prompt}
+                                            onChange={(e) => setSettingsData({ ...settingsData, prompt: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Delay (seconds)</label>
+                                        <input
+                                            type="number"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={settingsData.delay}
+                                            onChange={(e) => setSettingsData({ ...settingsData, delay: Number(e.target.value) })}
+                                        />
+                                    </div>
+
+                                    <div className='text-lg capitalize font-semibold'>
+                                        for comments
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Prompt</label>
+                                        <textarea
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={settingsData.prompt1}
+                                            onChange={(e) => setSettingsData({ ...settingsData, prompt1: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Delay (seconds)</label>
+                                        <input
+                                            type="number"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={settingsData.delay1}
+                                            onChange={(e) => setSettingsData({ ...settingsData, delay1: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-gray-500">No settings available.</div>
+                            )}
+
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsSettingsDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={saveSettings} disabled={isSavingSettings}>
+                                    {isSavingSettings ? "Saving..." : "Save"}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>

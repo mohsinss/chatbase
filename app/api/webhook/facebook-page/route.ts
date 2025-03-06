@@ -5,6 +5,7 @@ import ChatbotConversation from '@/models/ChatbotConversation';
 import FacebookPage from '@/models/FacebookPage';
 import axios from 'axios';
 import { getAIResponse } from '@/libs/utils-ai';
+import { sleep } from '@/libs/utils';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -62,6 +63,12 @@ export async function POST(request: Request) {
           }
 
           const chatbotId = facebookPage.chatbotId;
+          const updatedPrompt = facebookPage?.settings?.prompt;
+          const delay = facebookPage?.settings?.delay;
+
+          if (delay && delay > 0) {
+            await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
+          }
 
           // Find existing conversation or create a new one
           let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "facebook", "metadata.from": sender, "metadata.to": facebookPage.name });
@@ -99,7 +106,7 @@ export async function POST(request: Request) {
             headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
           });
 
-          const response_text = await getAIResponse(chatbotId, messages, text);
+          const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
 
           // send text msg to page
           const response2 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
@@ -154,6 +161,12 @@ export async function POST(request: Request) {
         const { id, message, created_time, comment_count } = response.data;
 
         const chatbotId = facebookPage.chatbotId;
+        const updatedPrompt = facebookPage?.settings?.prompt;
+        const delay = facebookPage?.settings?.delay;
+
+        if (delay && delay > 0) {
+          await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
+        }
 
         // Find existing conversation or create a new one
         let conversation = await ChatbotConversation.findOne({
@@ -185,7 +198,7 @@ export async function POST(request: Request) {
 
         let messages = [{ role: 'user', content: message }];
 
-        const response_text = await getAIResponse(chatbotId, messages, message);
+        const response_text = await getAIResponse(chatbotId, messages, message, updatedPrompt);
 
         // send msg
         const response2 = await axios.post(`https://graph.facebook.com/v22.0/${comment_id}/comments?access_token=${facebookPage.access_token}`, {

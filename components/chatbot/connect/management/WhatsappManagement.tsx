@@ -500,7 +500,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                     <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>WhatsApp Integration Settings</DialogTitle>
+                                <DialogTitle className="text-xl">WhatsApp Integration Settings</DialogTitle>
                                 <DialogDescription>
                                     Manage your WhatsApp integration settings here.
                                 </DialogDescription>

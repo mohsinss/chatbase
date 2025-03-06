@@ -83,5 +83,4 @@ export async function GET(req: Request) {
   await connectMongo();
   const WhatsAppNumbers = await WhatsAppNumber.find({ chatbotId });
   return NextResponse.json(WhatsAppNumbers);
-
 }
