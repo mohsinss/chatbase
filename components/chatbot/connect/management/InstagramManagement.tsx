@@ -2,12 +2,8 @@
 
 import { useState, useEffect, Fragment } from "react";
 import { Switch, Menu, Transition } from "@headlessui/react";
-import { IconInfoCircle, IconCopy } from "@tabler/icons-react";
-import Image from "next/image";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { QRCodeCanvas } from 'qrcode.react';
-import { IndentDecrease } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -17,7 +13,6 @@ import {
     DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import Spinner from "@/components/Spinner";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
@@ -32,7 +27,80 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
     const [pages, setPages] = useState([]);
     const [deletePage, setDeletePage] = useState(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+    const [isFetchingSettings, setIsFetchingSettings] = useState(false);
+    const [settingsData, setSettingsData] = useState<{ prompt: string; delay: number } | null>(null);
+    const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+    const [isSavingSettings, setIsSavingSettings] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        if (selectedPageId) {
+            fetchSettings(selectedPageId);
+        }
+    }, [selectedPageId]);
+
+    useEffect(() => {
+        if (!isSettingsDialogOpen) {
+            setSelectedPageId(null);
+        }
+    }, [isSettingsDialogOpen]);
+
+    const fetchSettings = async (pageId: string) => {
+        setIsFetchingSettings(true);
+        try {
+            const response = await fetch(`/api/chatbot/integrations/instagram-page/settings?pageId=${pageId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch settings");
+            }
+
+            const data = await response.json();
+            setSettingsData(data);
+        } catch (error) {
+            console.error("Error fetching settings:", error);
+            toast.error("Failed to fetch settings.");
+        }
+        setIsFetchingSettings(false);
+    };
+
+    const saveSettings = async () => {
+        setIsSavingSettings(true);
+        try {
+            const response = await fetch(`/api/chatbot/integrations/instagram-page/settings?pageId=${selectedPageId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    prompt: settingsData?.prompt,
+                    delay: settingsData?.delay,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to save settings");
+            }
+
+            toast.success("Settings saved successfully!");
+            setIsSettingsDialogOpen(false);
+        } catch (error) {
+            console.error(error.message);
+            toast.error(error.message);
+        }
+        setIsSavingSettings(false);
+    };
+    const handleSettingsMenu = (pageId: string) => {
+        setIsSettingsDialogOpen(true);
+        setSelectedPageId(pageId);
+    };
 
     const fetchPages = async () => {
         setIsFetchingPage(true)
@@ -235,6 +303,16 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                                                             <Menu.Item>
                                                                 {({ active }) => (
                                                                     <div
+                                                                        className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
+                                                                        onClick={() => handleSettingsMenu(page.pageId)}
+                                                                    >
+                                                                        Advanced Settings
+                                                                    </div>
+                                                                )}
+                                                            </Menu.Item>
+                                                            <Menu.Item>
+                                                                {({ active }) => (
+                                                                    <div
                                                                         className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                                                             } flex px-4 py-2 text-sm cursor-pointer`}
                                                                         onClick={handleConnect}
@@ -294,6 +372,55 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                                     disabled={isConnecting}
                                 >
                                     {isConnecting ? "Deleting" : "Delete"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle className="text-xl">Instagram Integration Settings</DialogTitle>
+                                <DialogDescription>
+                                    Manage your Instagram integration settings here.
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            {isFetchingSettings ? (
+                                <div className="flex justify-center items-center">
+                                    <Spinner />
+                                </div>
+                            ) : settingsData ? (
+                                <div className="flex flex-col gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Prompt</label>
+                                        <textarea
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={settingsData.prompt}
+                                            onChange={(e) => setSettingsData({ ...settingsData, prompt: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Delay (seconds)</label>
+                                        <input
+                                            type="number"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={settingsData.delay}
+                                            onChange={(e) => setSettingsData({ ...settingsData, delay: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-gray-500">No settings available.</div>
+                            )}
+
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsSettingsDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={saveSettings} disabled={isSavingSettings}>
+                                    {isSavingSettings ? "Saving..." : "Save"}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>

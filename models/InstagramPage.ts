@@ -6,6 +6,7 @@ interface IInstagramPage extends Document {
     pageId: string;
     name: string;
     access_token: Date;
+    settings: Object;
 }
 
 const InstagramPageSchema = new mongoose.Schema({
@@ -13,6 +14,11 @@ const InstagramPageSchema = new mongoose.Schema({
     pageId: { type: String, required: true },
     name: { type: String, required: true },
     access_token: { type: String, required: true },
+    instagram_business_account: { type: String, required: true },
+    settings: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
 }, { timestamps: true });
 
 export default mongoose.models.InstagramPage || mongoose.model<IInstagramPage>('InstagramPage', InstagramPageSchema);

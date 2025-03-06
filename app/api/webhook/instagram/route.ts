@@ -1,5 +1,11 @@
 // src/app/api/webhook/route.ts
 import { NextResponse } from 'next/server';
+import connectMongo from '@/libs/mongoose';
+import ChatbotConversation from '@/models/ChatbotConversation';
+import InstagramPage from '@/models/InstagramPage';
+import axios from 'axios';
+import { getAIResponse } from '@/libs/utils-ai';
+import { sleep } from '@/libs/utils';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

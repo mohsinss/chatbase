@@ -198,7 +198,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
     return messageDate.toLocaleDateString();
   };
 
-  const truncateContent = (content: string, maxLength: number = 50) => {
+  const truncateContent = (content: string, maxLength: number = 25) => {
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + '...';
   };
