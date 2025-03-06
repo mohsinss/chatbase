@@ -11,6 +11,7 @@ interface IWhatsAppNumber extends Document {
     quality_rating: string;
     platform_type: string;
     last_onboarded_time: string;
+    settings: Object;
 }
 
 const WhatsAppNumberSchema = new mongoose.Schema({
@@ -24,6 +25,10 @@ const WhatsAppNumberSchema = new mongoose.Schema({
     platform_type: { type: String, required: true },
     last_onboarded_time: { type: String, required: true },
     disable_auto_reply: { type: Boolean, required: false, default: false },
+    settings: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
 }, { timestamps: true });
 
 export default mongoose.models.WhatsAppNumber || mongoose.model<IWhatsAppNumber>('WhatsAppNumber', WhatsAppNumberSchema);

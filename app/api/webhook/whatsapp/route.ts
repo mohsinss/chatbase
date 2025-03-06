@@ -4,6 +4,7 @@ import connectMongo from "@/libs/mongoose";
 import { NextRequest, NextResponse } from 'next/server';
 import ChatbotConversation from '@/models/ChatbotConversation';
 import { getAIResponse } from '@/libs/utils-ai';
+import { sleep } from '@/libs/utils';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -59,6 +60,12 @@ export async function POST(request: Request) {
             }
 
             const chatbotId = whatsappNumber.chatbotId;
+            const updatedPrompt = whatsappNumber.settings?.prompt;
+            const delay = whatsappNumber.settings?.delay;
+
+            if (delay && delay > 0) {
+              await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
+            }
 
             // Find existing conversation or create a new one
             let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "whatsapp", "metadata.from": from, "metadata.to": whatsappNumber.display_phone_number });
@@ -86,7 +93,7 @@ export async function POST(request: Request) {
               return NextResponse.json({ status: 'Delievery denied coz long delay' }, { status: 200 });
             }
 
-            const response_text = await getAIResponse(chatbotId, messages, text);
+            const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
 
             // mark message as read
             const response1 = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
