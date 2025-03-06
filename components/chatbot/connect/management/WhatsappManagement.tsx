@@ -32,9 +32,83 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
     const [phoneNumbers, setPhoneNumbers] = useState([]);
     const [phoneNumber, setPhoneNumber] = useState('');
     const [deletePhone, setDeletePhone] = useState(null);
+    const [selectedNumberId, setSelectedNumberId] = useState(null);
     const [integrationUrl, setIntegrationUrl] = useState('');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+    const [isFetchingSettings, setIsFetchingSettings] = useState(false);
+    const [settingsData, setSettingsData] = useState<{ prompt: string; delay: number } | null>(null);
+    const [isSavingSettings, setIsSavingSettings] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        if (selectedNumberId)
+            fetchSettings(selectedNumberId);
+    }, [selectedNumberId]);
+
+    useEffect(() => {
+        if (isSettingsDialogOpen == false) {
+            setSelectedNumberId(null);
+        }
+    }, [isSettingsDialogOpen]);
+
+    const handleSettingsMenu = (id: string) => {
+        setIsSettingsDialogOpen(true);
+        setSelectedNumberId(id);
+    };
+
+    const saveSettings = async () => {
+        setIsSavingSettings(true);
+        try {
+            const response = await fetch(`/api/chatbot/integrations/whatsapp/settings?_id=${selectedNumberId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    prompt: settingsData?.prompt,
+                    delay: settingsData?.delay,
+                }),
+            });
+
+            const data = await response.json();
+            console.log(data)
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to save settings");
+            }
+
+            toast.success("Settings saved successfully!");
+            setIsSettingsDialogOpen(false);
+        } catch (error) {
+            console.error(error.message);
+            toast.error(error.message);
+        }
+        setIsSavingSettings(false);
+    };
+
+    const fetchSettings = async (id: string) => {
+        setIsFetchingSettings(true);
+        try {
+            const response = await fetch(`/api/chatbot/integrations/whatsapp/settings?_id=${id}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch settings");
+            }
+
+            const data = await response.json();
+            setSettingsData(data);
+        } catch (error) {
+            console.error("Error fetching settings:", error);
+            toast.error("Failed to fetch settings.");
+        }
+        setIsFetchingSettings(false);
+    };
 
     const handleNumberChange = (phoneNumber: string) => () => {
         setPhoneNumber(phoneNumber)
@@ -165,6 +239,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
     }
 
     const handleDeleteMenu = (phone: any) => () => {
+        console.log(phone)
         setDeletePhone(phone);
         setIsDeleteDialogOpen(true);
     }
@@ -293,6 +368,16 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                                             <Menu.Item>
                                                                 {({ active }) => (
                                                                     <div
+                                                                        className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
+                                                                        onClick={() => handleSettingsMenu(phone._id)}
+                                                                    >
+                                                                        Advanced Settings
+                                                                    </div>
+                                                                )}
+                                                            </Menu.Item>
+                                                            <Menu.Item>
+                                                                {({ active }) => (
+                                                                    <div
                                                                         className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
                                                                             } flex px-4 py-2 text-sm cursor-pointer`}
                                                                         onClick={handleConnect}
@@ -407,6 +492,55 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                     disabled={isConnecting}
                                 >
                                     {isConnecting ? "Deleting" : "Delete"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>WhatsApp Integration Settings</DialogTitle>
+                                <DialogDescription>
+                                    Manage your WhatsApp integration settings here.
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            {isFetchingSettings ? (
+                                <div className="flex justify-center items-center">
+                                    <Spinner />
+                                </div>
+                            ) : settingsData ? (
+                                <div className="flex flex-col gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Prompt</label>
+                                        <textarea
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={settingsData.prompt}
+                                            onChange={(e) => setSettingsData({ ...settingsData, prompt: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Delay (seconds)</label>
+                                        <input
+                                            type="number"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={settingsData.delay}
+                                            onChange={(e) => setSettingsData({ ...settingsData, delay: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-gray-500">No settings available.</div>
+                            )}
+
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsSettingsDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={saveSettings} disabled={isSavingSettings}>
+                                    {isSavingSettings ? "Saving..." : "Save"}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
