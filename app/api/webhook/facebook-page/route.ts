@@ -161,8 +161,8 @@ export async function POST(request: Request) {
         const { id, message, created_time, comment_count } = response.data;
 
         const chatbotId = facebookPage.chatbotId;
-        const updatedPrompt = facebookPage?.settings?.prompt;
-        const delay = facebookPage?.settings?.delay;
+        const updatedPrompt = facebookPage?.settings?.prompt1;
+        const delay = facebookPage?.settings?.delay1;
 
         if (delay && delay > 0) {
           await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
