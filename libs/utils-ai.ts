@@ -59,7 +59,7 @@ const O1_CONFIG = {
   }
 };
 
-export const getAIResponse = async (chatbotId: string, messages: any, text: string) => {
+export const getAIResponse = async (chatbotId: string, messages: any, text: string, updatedPrompt?: string) => {
   // Measure time for fetching AI settings and dataset
   const dataset = await Dataset.findOne({ chatbotId });
   const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
@@ -109,7 +109,13 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
   const temperature = aiSettings?.temperature ?? 0.7;
   const maxTokens = aiSettings?.maxTokens ?? 500;
   const language = aiSettings?.language || 'en';
-  const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
+  let systemPrompt;
+  
+  if(updatedPrompt){
+    systemPrompt = `${updatedPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
+  } else {
+    systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
+  }
 
   const encoder = new TextEncoder();
   let response_text = '';
