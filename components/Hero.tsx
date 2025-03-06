@@ -1,60 +1,64 @@
+"use client";
+
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import Image from "next/image";
+import { ArrowRight, Bot, Sparkles, Zap } from "lucide-react";
 import ButtonSignin from "./ButtonSignin";
 
-export default function Hero() {
+const Hero = () => {
   return (
-    <section className="pt-32 pb-20 md:pt-40 md:pb-28">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row items-center">
-          <div className="lg:w-1/2 lg:pr-12 mb-10 lg:mb-0">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-                Build AI Chatbots
-              </span>
-              <br />
-              <span className="text-gray-900">
-                Trained on Your Data
-              </span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-lg">
-              Create custom AI chatbots without coding. Train on your website, documents, or custom data in minutes.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <ButtonSignin 
-                text="Get started for free"
-                extraStyle="bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-700 hover:to-violet-700 h-12 px-8 text-lg"
-              />
-              <Link href="#demo">
-                <Button variant="outline" className="h-12 px-8 text-lg">
-                  See demo
-                </Button>
-              </Link>
-            </div>
-            <div className="mt-8 flex items-center text-sm text-gray-500">
-              <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              No credit card required
-            </div>
+    <section className="pt-32 pb-24 px-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-radial from-blue-50 to-transparent opacity-70"></div>
+      
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="text-center mb-12">
+          <div className="inline-block bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-sm font-medium mb-6 animate-fade-up">
+            <Sparkles className="inline-block w-4 h-4 mr-2" />
+            The easiest way to create AI chatbots
           </div>
-          <div className="lg:w-1/2 relative">
-            <div className="relative rounded-xl overflow-hidden shadow-2xl border border-gray-200">
-              <Image
-                src="/dashboard-preview.png"
-                alt="ChatSa Dashboard"
-                width={800}
-                height={500}
-                className="w-full h-auto"
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/10 to-violet-600/10"></div>
+          
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 animate-fade-up stagger-1">
+            Create AI Chatbots for <br className="hidden md:block" />
+            <span className="text-gradient">Your Website in Minutes</span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-10 animate-fade-up stagger-2">
+            Build custom AI chatbots trained on your data without coding. Connect to your website in 2 minutes.
+          </p>
+          
+          <div className="flex flex-col items-center justify-center gap-4 animate-fade-up stagger-3 w-full max-w-md mx-auto">
+            <ButtonSignin 
+              text="Get Started Free"
+              extraStyle="bg-blue-600 hover:bg-blue-700 text-white px-6 py-6 hover-lift w-full"
+            />
+            <Button variant="outline" size="lg" className="hover-lift w-full">
+              <Bot className="mr-2 h-4 w-4" />
+              Try Demo Bot
+            </Button>
+          </div>
+        </div>
+        
+        <div className="mt-16 animate-blur-in">
+          <div className="relative">
+            <div className="neo-shadow rounded-2xl p-1 bg-gradient-to-r from-blue-50 to-white">
+              <div className="overflow-hidden rounded-xl shadow-sm">
+                <img 
+                  src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=1470&q=80" 
+                  alt="ChatSa interface preview" 
+                  className="w-full h-auto rounded-xl hover-shadow transform transition-all animate-pulse-scale"
+                />
+              </div>
             </div>
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-indigo-100 rounded-full z-0"></div>
-            <div className="absolute -top-6 -right-6 w-32 h-32 bg-violet-100 rounded-full z-0"></div>
+            
+            <div className="absolute -top-6 -right-6 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 border border-gray-100 flex items-center animate-float">
+              <Zap className="text-yellow-500 h-5 w-5 mr-2" />
+              <span className="text-sm font-medium">Powered by Claude 3.7, GPT4.5</span>
+            </div>
           </div>
         </div>
       </div>
     </section>
   );
-}
+};
+
+export default Hero;

@@ -22,7 +22,7 @@ export default function Home() {
       <CompanyLogos />
       <FeaturesSection />
       <HowItWorks />
-      <ValueProposition />
+      {/* <ValueProposition /> */}
       <IndustryUseCases />
       <Dashboard />
       <AIModels />
@@ -31,6 +31,7 @@ export default function Home() {
       <FAQ />
       <CTA />
       <Footer />
+   
       
       {/* ChatSa Bubble Scripts */}
       <Script
