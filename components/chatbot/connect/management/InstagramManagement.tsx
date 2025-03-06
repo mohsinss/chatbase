@@ -21,7 +21,7 @@ import { Card } from "@/components/ui/card"
 import Spinner from "@/components/Spinner";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
-const MessengerManagement = ({ chatbotId, domain, teamId }:
+const InstagramManagement = ({ chatbotId, domain, teamId }:
     {
         chatbotId: string,
         domain: string,
@@ -37,7 +37,7 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
     const fetchPages = async () => {
         setIsFetchingPage(true)
         try {
-            const response = await fetch(`/api/chatbot/integrations/facebook-page?chatbotId=${chatbotId}`, {
+            const response = await fetch(`/api/chatbot/integrations/instagram-page?chatbotId=${chatbotId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -56,7 +56,7 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
             }
             setPages(data);
         } catch (error) {
-            console.error("Error fetching FB pages:", error);
+            console.error("Error fetching Instagram pages:", error);
         }
         setIsFetchingPage(false)
     };
@@ -65,11 +65,11 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
         fetchPages();
     }, []);
 
-    const fbLoginCallbackForFB = (response: any) => {
+    const InstagramLoginCallbackForFB = (response: any) => {
         if (response.authResponse) {
             const code = response.authResponse.code;
 
-            fetch("/api/chatbot/integrations/facebook-page/save", {
+            fetch("/api/chatbot/integrations/instagram-page/save", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -87,12 +87,12 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                 .then((data) => {
                     setIsConnecting(false);
                     fetchPages();
-                    toast.success("Successfully connected to Messenger!");
+                    toast.success("Successfully connected to Instagram!");
                 })
                 .catch((error) => {
                     setIsConnecting(false);
-                    console.error("Error saving FB page credentials:", error);
-                    toast.error("Failed to save FB page. Please check integration guide again.");
+                    console.error("Error saving Instagram page credentials:", error);
+                    toast.error("Failed to save Instagram page. Please check integration guide again.");
                 });
         } else {
             console.log(response);
@@ -104,8 +104,8 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
     const handleConnect = () => {
         setIsConnecting(true);
 
-        window.FB.login(fbLoginCallbackForFB, {
-            config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE, // configuration ID goes here
+        window.FB.login(InstagramLoginCallbackForFB, {
+            config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_INSTAGRAM, // configuration ID goes here
             response_type: 'code', // must be set to 'code' for System User access token
             override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
             extras: {
@@ -127,7 +127,7 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
         console.log('handleDelete', deletePage);
         setIsConnecting(true);
         try {
-            const response = await fetch("/api/chatbot/integrations/facebook-page", {
+            const response = await fetch("/api/chatbot/integrations/instagram-page", {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -139,13 +139,13 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
             });
 
             if (!response.ok) {
-                throw new Error("Failed to delete FB Page");
+                throw new Error("Failed to delete Instagram Page");
             }
 
-            toast.success("Successfully delete FB Page!");
+            toast.success("Successfully delete Instagram Page!");
         } catch (error) {
-            console.error("Error deleting FB Page:", error);
-            toast.error("Failed to delete FB Page.");
+            console.error("Error deleting Instagram Page:", error);
+            toast.error("Failed to delete Instagram Page.");
         }
 
         fetchPages();
@@ -176,7 +176,7 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                     />
                 </svg>
                 <div className="text-gray-900 font-bold">
-                    Messenger
+                    Instagram
                 </div>
             </div>
             {isFetchingPage ?
@@ -185,7 +185,7 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                 <>
                     <div className="rounded-md border-1 border-[1px] border-gray-200 mb-4">
                         <div className="p-4">
-                            <h2 className="text-xl font-extrabold text-gray-900">Connected Facebook Pages</h2>
+                            <h2 className="text-xl font-extrabold text-gray-900">Connected Instagram Pages</h2>
 
                         </div>
                         <table className="min-w-full divide-y divide-gray-200 mt-4">
@@ -276,9 +276,9 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                     <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Delete Facebook page</DialogTitle>
+                                <DialogTitle>Delete Instagram page</DialogTitle>
                                 <DialogDescription>
-                                    Are you sure you want to delete this facebook page?.
+                                    Are you sure you want to delete this instagram page?.
                                 </DialogDescription>
                             </DialogHeader>
                             <DialogFooter>
@@ -311,4 +311,4 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
     )
 }
 
-export default MessengerManagement
+export default InstagramManagement

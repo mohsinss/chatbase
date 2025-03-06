@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
 import Chatbot from "@/models/Chatbot";
-import FacebookPage from "@/models/FacebookPage";
 import axios from "axios";
+import InstagramPage from "@/models/InstagramPage";
 
 export async function DELETE(req: Request) {
   try {
@@ -26,14 +26,14 @@ export async function DELETE(req: Request) {
     }
 
     await connectMongo();
-    const existingFBPage = await FacebookPage.findOne({ chatbotId, pageId });
+    const existingInstagramPage = await InstagramPage.findOne({ chatbotId, pageId });
 
     // Check if chatbotId is provided
-    if (!existingFBPage) {
-      return new NextResponse("FB Page is not exist.", { status: 400 });
+    if (!existingInstagramPage) {
+      return new NextResponse("instagram Page is not exist.", { status: 400 });
     }
 
-    const page_access_token = existingFBPage.access_token;
+    const page_access_token = existingInstagramPage.access_token;
 
     // UnSubscribe Page to webhook
     const response1 = await axios.delete(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages&access_token=${page_access_token}`, {
@@ -43,18 +43,18 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ success: false, message: response1.data.error?.message || 'Page UnSubscription failed.' });
     }
 
-    const result = await FacebookPage.deleteOne({ pageId });
+    const result = await InstagramPage.deleteOne({ pageId });
 
     if (result.deletedCount > 0) {
       // Check if there are any more numbers for this chatbotId
-      const remainingNumbers = await FacebookPage.find({ chatbotId });
+      const remainingNumbers = await InstagramPage.find({ chatbotId });
       if (remainingNumbers.length === 0) {
         // Find the Chatbot with chatbotId and update integrations.whatsapp to false
         const chatbot = await Chatbot.findOneAndUpdate(
           { chatbotId }, // find a document with chatbotId
           {
             // update the integrations field
-            $set: { "integrations.messenger": false }
+            $set: { "integrations.instagram": false }
           },
           {
             new: true, // return the new Chatbot instead of the old one
@@ -77,7 +77,7 @@ export async function GET(req: Request) {
   const chatbotId = url.searchParams.get("chatbotId");
 
   await connectMongo();
-  const facebookPages = await FacebookPage.find({ chatbotId });
+  const facebookPages = await InstagramPage.find({ chatbotId });
   return NextResponse.json(facebookPages);
 
 }
