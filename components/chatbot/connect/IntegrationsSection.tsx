@@ -123,8 +123,35 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
     if (response.authResponse) {
       const code = response.authResponse.code;
       console.log(code)
+      fetch("/api/chatbot/integrations/instagram-page/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code,
+          chatbotId
+        }),
+      }).then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+        .then((data) => {
+          setConnectingTitle('');
+
+          router.refresh();
+          toast.success("Successfully connected to Instagram!");
+        })
+        .catch((error) => {
+          setConnectingTitle('');
+          console.error("Error saving Instagram credentials:", error);
+          toast.error(error?.message || "Failed to save Instagram. Please check integration guide again.");
+        });
     } else {
       console.log(response);
+      toast.error("Sth went wrong.");
       setConnectingTitle('');
     }
   }

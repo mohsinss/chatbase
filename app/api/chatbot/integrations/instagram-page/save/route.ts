@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
-import FacebookPage from "@/models/FacebookPage";
 import Chatbot from "@/models/Chatbot";
 import axios from "axios";
 import InstagramPage from "@/models/InstagramPage";
@@ -44,7 +43,7 @@ export async function POST(req: Request) {
         await connectMongo();
 
         // Retrive Pages from user_access_token and subscribe/save.
-        const response1 = await axios.get(`https://graph.facebook.com/v22.0/me/accounts?fields=name,access_token,tasks&access_token=${user_access_token}`, {
+        const response1 = await axios.get(`https://graph.facebook.com/v22.0/me/accounts?fields=name,access_token,tasks,instagram_business_account&access_token=${user_access_token}`, {
             headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
         const data = response1.data;
@@ -53,6 +52,7 @@ export async function POST(req: Request) {
         for (let i = 0; i < data.data.length; i++) {
             let page = data.data[i];
             let pageId = page.id;
+            let instagram_business_account = page.instagram_business_account.id;
 
             // Subscribe Page to webhook
             const response2 = await axios.post(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages,mention,feed&access_token=${page.access_token}`, {}, {
