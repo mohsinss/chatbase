@@ -400,7 +400,7 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                             ) : settingsData ? (
                                 <div className="flex flex-col gap-4">
                                     <div className='text-lg capitalize font-semibold'>
-                                        for pages
+                                        for messengers
                                     </div>
 
                                     <div>
