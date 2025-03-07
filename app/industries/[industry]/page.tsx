@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check } from 'lucide-react';
@@ -11,7 +10,7 @@ const industryData = {
     icon: "/icons/healthcare.svg",
     image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1100&q=80",
     benefits: ["Patient pre-screening", "Appointment scheduling", "Medical information", "Insurance inquiries"],
-    detailedDescription: "Healthcare providers face increasing demands with limited resources. ChatSa's AI chatbots help healthcare organizations provide better patient experiences while reducing staff workload. From answering common medical questions to scheduling appointments and handling insurance inquiries, our chatbots are available 24/7 to support your patients.",
+    detailedDescription: "Healthcare providers face increasing demands with limited resources. ChatSa&apos;s AI chatbots help healthcare organizations provide better patient experiences while reducing staff workload. From answering common medical questions to scheduling appointments and handling insurance inquiries, our chatbots are available 24/7 to support your patients.",
     useCases: [
       {
         title: "Patient Pre-screening",
@@ -50,7 +49,7 @@ const industryData = {
       },
       {
         title: "Legal FAQ Assistance",
-        description: "Answer common legal questions instantly using your firm's knowledge base and expertise.",
+        description: "Answer common legal questions instantly using your firm&apos;s knowledge base and expertise.",
         image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=800&q=80"
       },
       {
@@ -71,7 +70,7 @@ const industryData = {
     icon: "/icons/ecommerce.svg",
     image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1100&q=80",
     benefits: ["Product recommendations", "Order tracking", "Return processing", "Inventory inquiries"],
-    detailedDescription: "E-commerce businesses can enhance customer experience and increase sales with ChatSa's AI chatbots. From personalized product recommendations to handling order inquiries and processing returns, our chatbots help you provide 24/7 customer service while reducing support costs.",
+    detailedDescription: "E-commerce businesses can enhance customer experience and increase sales with ChatSa&apos;s AI chatbots. From personalized product recommendations to handling order inquiries and processing returns, our chatbots help you provide 24/7 customer service while reducing support costs.",
     useCases: [
       {
         title: "Personalized Shopping",
@@ -101,7 +100,7 @@ const industryData = {
     icon: "/icons/education.svg",
     image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1100&q=80",
     benefits: ["Course information", "Assignment guidance", "Enrollment support", "Administrative assistance"],
-    detailedDescription: "Educational institutions can improve student support and streamline administrative processes with ChatSa's AI chatbots. From providing course information to offering assignment guidance and handling enrollment inquiries, our chatbots help you support students 24/7.",
+    detailedDescription: "Educational institutions can improve student support and streamline administrative processes with ChatSa&apos;s AI chatbots. From providing course information to offering assignment guidance and handling enrollment inquiries, our chatbots help you support students 24/7.",
     useCases: [
       {
         title: "Academic Support",
@@ -131,7 +130,7 @@ const industryData = {
     icon: "/icons/realestate.svg",
     image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1100&q=80",
     benefits: ["Property matching", "Viewing scheduling", "Neighborhood insights", "Mortgage calculations"],
-    detailedDescription: "Real estate professionals can enhance client engagement and streamline property transactions with ChatSa's AI chatbots. From qualifying leads to scheduling viewings and answering property questions, our chatbots help you provide responsive service to potential buyers and sellers.",
+    detailedDescription: "Real estate professionals can enhance client engagement and streamline property transactions with ChatSa&apos;s AI chatbots. From qualifying leads to scheduling viewings and answering property questions, our chatbots help you provide responsive service to potential buyers and sellers.",
     useCases: [
       {
         title: "Property Matching",
@@ -161,7 +160,7 @@ const industryData = {
     icon: "/icons/finance.svg",
     image: "https://images.unsplash.com/photo-1565514020179-026b92b2d70b?auto=format&fit=crop&w=1100&q=80",
     benefits: ["Account management", "Product explanations", "Financial guidance", "Fraud detection"],
-    detailedDescription: "Financial institutions can improve customer service and operational efficiency with ChatSa's AI chatbots. From handling account inquiries to explaining financial products and providing basic financial advice, our chatbots help you deliver personalized service at scale.",
+    detailedDescription: "Financial institutions can improve customer service and operational efficiency with ChatSa&apos;s AI chatbots. From handling account inquiries to explaining financial products and providing basic financial advice, our chatbots help you deliver personalized service at scale.",
     useCases: [
       {
         title: "Account Management",
@@ -212,7 +211,7 @@ export default function IndustryPage({ params }: { params: { industry: string } 
     return (
       <div className="container mx-auto px-4 py-20 text-center">
         <h1 className="text-3xl font-bold mb-4">Industry not found</h1>
-        <p className="mb-8">The industry you're looking for doesn't exist or has been moved.</p>
+        <p className="mb-8">The industry you&apos;re looking for doesn&apos;t exist or has been moved.</p>
         <Link href="/#industry-use-cases">
           <Button>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -351,7 +350,7 @@ export default function IndustryPage({ params }: { params: { industry: string } 
                 <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z" />
               </svg>
               <p className="text-xl md:text-2xl font-medium text-gray-800 mb-6">
-                "{data.testimonial.quote}"
+                &quot;{data.testimonial.quote}&quot;
               </p>
               <div>
                 <p className="font-bold text-indigo-600">{data.testimonial.author}</p>

@@ -243,7 +243,7 @@ const useCasesData = {
 
 // Generate metadata for the page
 export async function generateMetadata({ params }: { params: { useCase: string } }): Promise<Metadata> {
-  const useCase = useCasesData[params.useCase];
+  const useCase = useCasesData[params.useCase as keyof typeof useCasesData];
   
   if (!useCase) {
     return {
@@ -259,7 +259,7 @@ export async function generateMetadata({ params }: { params: { useCase: string }
 }
 
 export default function UseCasePage({ params }: { params: { useCase: string } }) {
-  const useCase = useCasesData[params.useCase];
+  const useCase = useCasesData[params.useCase as keyof typeof useCasesData];
   
   if (!useCase) {
     return (

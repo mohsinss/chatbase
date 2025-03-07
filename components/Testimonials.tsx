@@ -1,8 +1,8 @@
 "use client";
 
 import React from 'react';
-import Image from "next/image";
 import { Star } from "lucide-react";
+import Image from "next/image";
 
 const testimonials = [
   {
@@ -41,27 +41,29 @@ const TestimonialsSection = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
             <div 
               key={index} 
-              className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 hover-lift hover-shadow"
+              className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300"
             >
               <div className="flex mb-4">
                 {[...Array(testimonial.stars)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                  <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
               
               <blockquote className="text-lg text-gray-700 mb-6">
-                "{testimonial.quote}"
+                &ldquo;{testimonial.quote}&rdquo;
               </blockquote>
               
               <div className="flex items-center">
-                <img 
+                <Image 
                   src={testimonial.avatar} 
                   alt={testimonial.author}
-                  className="h-12 w-12 rounded-full mr-4 object-cover"
+                  width={48}
+                  height={48}
+                  className="rounded-full mr-4 object-cover"
                 />
                 <div>
                   <p className="font-medium">{testimonial.author}</p>
