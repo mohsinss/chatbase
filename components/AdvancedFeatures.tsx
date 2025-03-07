@@ -30,7 +30,7 @@ export default function AdvancedFeatures() {
     {
       name: "Grok-3",
       description: "Deploy xAI's Grok for witty, informative, and real-time responses.",
-      logo: "/ai-models/grok.svg",
+      logo: "/https://images.macrumors.com/t/baCk06ZoDoU1ObSh7-TSPhjnn6k=/1600x0/article-new/2025/02/grok-ai-logo.jpg",
       features: ["Real-time information", "Witty interactions", "Broad knowledge base", "Engaging personality"]
     }
   ];

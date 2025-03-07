@@ -15,22 +15,22 @@ export default function Dashboard() {
     {
       title: "Intuitive Interface",
       description: "Navigate easily with our user-friendly dashboard designed for both beginners and power users.",
-      image: "/dashboard/interface.png"
+      image: "https://images.unsplash.com/photo-1596638787647-904d822d751e?auto=format&fit=crop&w=1100&q=80"
     },
     {
       title: "Comprehensive Analytics",
       description: "Track performance metrics, user engagement, and conversation quality with detailed analytics.",
-      image: "/dashboard/analytics.png"
+      image: "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?auto=format&fit=crop&w=1100&q=80"
     },
     {
       title: "Training Management",
       description: "Upload, manage, and refine your training data to continuously improve your chatbot's responses.",
-      image: "/dashboard/training.png"
+      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1100&q=80"
     },
     {
       title: "Conversation Logs",
       description: "Review past conversations to identify improvement opportunities and monitor chatbot performance.",
-      image: "/dashboard/logs.png"
+      image: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=1100&q=80"
     }
   ];
 
@@ -85,11 +85,9 @@ export default function Dashboard() {
                   </div>
                   <div className="lg:w-1/2" data-aos="fade-left">
                     <div className="relative rounded-xl overflow-hidden shadow-xl border border-gray-200">
-                      <Image
+                      <img
                         src={feature.image}
                         alt={feature.title}
-                        width={800}
-                        height={500}
                         className="w-full h-auto"
                       />
                       <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/5 to-violet-600/5"></div>

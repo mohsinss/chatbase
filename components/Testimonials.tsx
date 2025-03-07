@@ -1,41 +1,42 @@
 "use client";
 
+import React from 'react';
 import Image from "next/image";
 import { Star } from "lucide-react";
 
-export default function Testimonials() {
-  const testimonials = [
-    {
-      quote: "ChatSa has transformed our customer support. Our response time has decreased by 70% while maintaining high customer satisfaction.",
-      author: "Sarah Johnson",
-      role: "Customer Success Manager",
-      company: "TechFlow Inc.",
-      avatar: "/testimonials/avatar1.jpg"
-    },
-    {
-      quote: "Setting up our knowledge base chatbot took less than an hour. The AI accuracy is impressive, and the analytics help us improve continuously.",
-      author: "Michael Chen",
-      role: "Head of Product",
-      company: "Innovate Solutions",
-      avatar: "/testimonials/avatar2.jpg"
-    },
-    {
-      quote: "We've tried several chatbot platforms, but ChatSa stands out with its ease of use and powerful customization options.",
-      author: "Emma Rodriguez",
-      role: "Digital Marketing Director",
-      company: "Growth Ventures",
-      avatar: "/testimonials/avatar3.jpg"
-    }
-  ];
+const testimonials = [
+  {
+    quote: "ChatSa completely transformed our customer service. We've seen a 35% reduction in support tickets while improving customer satisfaction scores.",
+    author: "Sarah Johnson",
+    position: "CTO at TechBloom",
+    avatar: "https://randomuser.me/api/portraits/women/32.jpg",
+    stars: 5,
+  },
+  {
+    quote: "Setting up our AI chatbot took less than 10 minutes. Now it handles 80% of customer inquiries automatically, saving us countless hours.",
+    author: "Michael Chen",
+    position: "Founder, GrowthMind",
+    avatar: "https://randomuser.me/api/portraits/men/41.jpg",
+    stars: 5,
+  },
+  {
+    quote: "The ability to train the chatbot on our specific data makes it incredibly accurate. Our users love getting instant answers to their questions.",
+    author: "Elena Rodriguez",
+    position: "Marketing Director, Novus",
+    avatar: "https://randomuser.me/api/portraits/women/63.jpg",
+    stars: 5,
+  },
+];
 
+const TestimonialsSection = () => {
   return (
-    <section className="py-20 bg-gray-50" data-aos="fade-up">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16" data-aos="fade-up">
+    <section className="py-24 px-4 bg-gradient-to-b from-gray-50 to-white">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Trusted by <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Innovative Teams</span>
+            Trusted by <span className="text-indigo-600">Innovative Teams</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             See what our customers have to say about their experience with ChatSa.
           </p>
         </div>
@@ -44,35 +45,52 @@ export default function Testimonials() {
           {testimonials.map((testimonial, index) => (
             <div 
               key={index} 
-              className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300"
-              data-aos="fade-up"
-              data-aos-delay={100 + (index * 100)}
+              className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 hover-lift hover-shadow"
             >
               <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                {[...Array(testimonial.stars)].map((_, i) => (
+                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
                 ))}
               </div>
-              <p className="text-gray-700 mb-6 italic">&quot;{testimonial.quote}&quot;</p>
+              
+              <blockquote className="text-lg text-gray-700 mb-6">
+                "{testimonial.quote}"
+              </blockquote>
+              
               <div className="flex items-center">
-                <div className="mr-4">
-                  <Image
-                    src={testimonial.avatar}
-                    alt={testimonial.author}
-                    width={48}
-                    height={48}
-                    className="rounded-full"
-                  />
-                </div>
+                <img 
+                  src={testimonial.avatar} 
+                  alt={testimonial.author}
+                  className="h-12 w-12 rounded-full mr-4 object-cover"
+                />
                 <div>
-                  <p className="font-semibold">{testimonial.author}</p>
-                  <p className="text-sm text-gray-600">{testimonial.role}, {testimonial.company}</p>
+                  <p className="font-medium">{testimonial.author}</p>
+                  <p className="text-sm text-gray-500">{testimonial.position}</p>
                 </div>
               </div>
             </div>
           ))}
         </div>
+        
+        <div className="mt-20 text-center">
+          <div className="p-8 bg-blue-50 rounded-2xl">
+            <h3 className="text-2xl font-bold mb-4">Join 10,000+ businesses using ChatSa</h3>
+            <p className="text-gray-600 mb-6">
+              From startups to enterprise companies, ChatSa helps businesses of all sizes enhance their customer experience.
+            </p>
+            <div className="flex flex-wrap justify-center gap-8 opacity-80">
+              {/* Company logos would go here */}
+              <div className="text-xl font-bold text-gray-400">COMPANY</div>
+              <div className="text-xl font-bold text-gray-400">BRAND</div>
+              <div className="text-xl font-bold text-gray-400">STARTUP</div>
+              <div className="text-xl font-bold text-gray-400">ENTERPRISE</div>
+              <div className="text-xl font-bold text-gray-400">TECH CO</div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
-} 
+};
+
+export default TestimonialsSection; 

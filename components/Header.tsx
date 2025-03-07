@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Announcement from "./Announcement";
 import ButtonSignin from "./ButtonSignin";
-import { MessageSquare, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 const links = [
   {
@@ -89,7 +89,13 @@ const Header = () => {
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center">
-          <MessageSquare className="h-8 w-8 text-blue-600 mr-2" />
+          <Image 
+            src="/chatbase-icon.png" 
+            alt="ChatSa Logo" 
+            width={40} 
+            height={40} 
+            className="mr-2" 
+          />
           <span className="text-xl font-bold">ChatSa</span>
         </div>
         
