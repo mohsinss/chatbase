@@ -59,14 +59,6 @@ export async function POST(request: Request) {
           // Fetch the existing InstagramPage model
           const instagramPage = await InstagramPage.findOne({ pageId: recipient });
           if (!instagramPage) {
-            // Send data to the specified URL
-            const response = await fetch('http://webhook.mrcoders.org/instagram.php', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ status: "FB page doesn't registered to the site." }),
-            });
             console.log("FB page doesn't registered to the site.");
             // Respond with a 200 OK status
             return NextResponse.json({ status: "FB page doesn't registered to the site." }, { status: 200 });
@@ -99,27 +91,11 @@ export async function POST(request: Request) {
           await conversation.save();
 
           if (conversation?.disable_auto_reply == true) {
-            // Send data to the specified URL
-            const response = await fetch('http://webhook.mrcoders.org/instagram.php', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ status: "Auto reponse is disabled." }),
-            });
             console.log("Auto reponse is disabled.");
             return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
           }
 
           if (timestamp + 60 < currentTimestamp) {
-            // Send data to the specified URL
-            const response = await fetch('http://webhook.mrcoders.org/instagram.php', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ status: "Delievery denied coz long delay." }),
-            });
             console.log('Delievery denied coz long delay.');
             return NextResponse.json({ status: 'Delievery denied coz long delay.' }, { status: 200 });
           }
