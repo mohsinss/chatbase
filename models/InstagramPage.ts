@@ -14,8 +14,8 @@ const InstagramPageSchema = new mongoose.Schema({
     pageId: { type: String, required: true },
     name: { type: String, required: true },
     access_token: { type: String, required: true },
-    instagram_business_account: { type: String, required: true },
-    instagram_business_account_name: { type: String, required: true },
+    instagram_business_account: { type: String, required: false },
+    instagram_business_account_name: { type: String, required: false },
     settings: {
       type: mongoose.Schema.Types.Mixed,
       default: {}

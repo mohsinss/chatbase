@@ -36,35 +36,31 @@ export async function POST(req: Request) {
         for (let i = 0; i < data.data.length; i++) {
             let page = data.data[i];
             let pageId = page.id;
-            let instagram_business_account = page.instagram_business_account.id;
+            // let instagram_business_account = page.instagram_business_account.id;
 
-            // filter FB pages which connected to instagram
-            if (instagram_business_account) {
-                // Subscribe Page to webhook
-                const response2 = await axios.post(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages,mention,feed&access_token=${page.access_token}`, {}, {
-                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                });
-                if (!response2.data.success) {
-                    return NextResponse.json({ success: false, message: response2.data.error?.message || 'Page Subscription failed.' });
-                }
-
-                // Find FacebookPage with pageId and update it
-                const instagramPage = await InstagramPage.findOneAndUpdate(
-                    { pageId }, // find a document with phoneNumberId
-                    {
-                        // update these fields
-                        chatbotId,
-                        name: page.name,
-                        access_token: page.access_token,
-                        instagram_business_account,
-                    },
-                    {
-                        new: true, // return the new FacebookPage instead of the old one
-                        upsert: true, // make this update into an upsert
-                    }
-                );
-
+            // Subscribe Page to webhook
+            const response2 = await axios.post(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages,mention,feed&access_token=${page.access_token}`, {}, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+            });
+            if (!response2.data.success) {
+                return NextResponse.json({ success: false, message: response2.data.error?.message || 'Page Subscription failed.' });
             }
+
+            // Find FacebookPage with pageId and update it
+            const instagramPage = await InstagramPage.findOneAndUpdate(
+                { pageId }, // find a document with phoneNumberId
+                {
+                    // update these fields
+                    chatbotId,
+                    name: page.name,
+                    access_token: page.access_token,
+                },
+                {
+                    new: true, // return the new FacebookPage instead of the old one
+                    upsert: true, // make this update into an upsert
+                }
+            );
+
         }
 
         if (data.data.length > 0) {
