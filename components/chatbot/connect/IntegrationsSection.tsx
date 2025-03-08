@@ -121,7 +121,7 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
 
   const instagramLoginCallback = (response: any) => {
     if (response.authResponse) {
-      const code = response.authResponse.code;
+      const accessToken = response.authResponse.accessToken;
       console.log(response.authResponse)
       fetch("/api/chatbot/integrations/instagram-page/save", {
         method: "POST",
@@ -129,7 +129,7 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          code,
+          user_access_token: accessToken,
           chatbotId
         }),
       }).then((response) => {
