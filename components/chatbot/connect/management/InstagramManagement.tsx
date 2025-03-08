@@ -175,7 +175,7 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
 
         window.FB.login(InstagramLoginCallbackForFB, {
             config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_INSTAGRAM, // configuration ID goes here
-            response_type: 'code', // must be set to 'code' for System User access token
+            response_type: 'token,signed_request,graph_domain', // must be set to 'code' for System User access token
             override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
             extras: {
                 setup: {},
