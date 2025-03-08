@@ -50,9 +50,22 @@ const Hero = () => {
               </div>
             </div>
             
-            <div className="absolute -top-6 -right-6 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 border border-gray-100 flex items-center animate-float">
+            <div className="absolute -top-6 -right-6 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 border border-gray-100 flex items-center">
               <Zap className="text-yellow-500 h-5 w-5 mr-2" />
-              <span className="text-sm font-medium">Powered by Claude 3.7, GPT4.5</span>
+              <div className="overflow-hidden w-[180px]">
+                <div className="animate-marquee inline-flex whitespace-nowrap">
+                  <span className="text-sm font-medium">Powered by Claude 3.7</span>
+                  <span className="text-sm font-medium mx-4">•</span>
+                  <span className="text-sm font-medium"> GPT4.5   </span>
+                  <span className="text-sm font-medium mx-4">•</span>
+                  <span className="text-sm font-medium">  DeepSeek </span>
+
+                  <span className="text-sm font-medium mx-4">•</span>
+                  <span className="text-sm font-medium"> Grok3 </span>
+
+                  <span className="text-sm font-medium mx-4">•</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

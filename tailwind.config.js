@@ -17,7 +17,8 @@ module.exports = {
   			appearFromRight: 'appearFromRight 300ms ease-in-out',
   			wiggle: 'wiggle 1.5s ease-in-out infinite',
   			popup: 'popup 0.25s ease-in-out',
-  			shimmer: 'shimmer 3s ease-out infinite alternate'
+  			shimmer: 'shimmer 3s ease-out infinite alternate',
+  			'marquee': 'marquee 10s linear infinite',
   		},
   		keyframes: {
   			opacity: {
@@ -79,7 +80,11 @@ module.exports = {
   				'100%': {
   					backgroundPosition: '0% 50%'
   				}
-  			}
+  			},
+  			marquee: {
+  				'0%': { transform: 'translateX(0%)' },
+  				'100%': { transform: 'translateX(-50%)' },
+  			},
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
