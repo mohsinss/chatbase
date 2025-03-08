@@ -135,7 +135,8 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
 
     const InstagramLoginCallbackForFB = (response: any) => {
         if (response.authResponse) {
-            const code = response.authResponse.code;
+            const accessToken = response.authResponse.accessToken;
+            console.log(response.authResponse)
 
             fetch("/api/chatbot/integrations/instagram-page/save", {
                 method: "POST",
@@ -143,7 +144,7 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    code,
+                    user_access_token: accessToken,
                     chatbotId
                 }),
             }).then((response) => {
