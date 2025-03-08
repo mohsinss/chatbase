@@ -67,6 +67,7 @@ export async function POST(request: Request) {
               },
               body: JSON.stringify({ status: "FB page doesn't registered to the site." }),
             });
+            console.log("FB page doesn't registered to the site.");
             // Respond with a 200 OK status
             return NextResponse.json({ status: "FB page doesn't registered to the site." }, { status: 200 });
           }
@@ -106,6 +107,7 @@ export async function POST(request: Request) {
               },
               body: JSON.stringify({ status: "Auto reponse is disabled." }),
             });
+            console.log("Auto reponse is disabled.");
             return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
           }
 
@@ -118,6 +120,7 @@ export async function POST(request: Request) {
               },
               body: JSON.stringify({ status: "Delievery denied coz long delay." }),
             });
+            console.log('Delievery denied coz long delay.');
             return NextResponse.json({ status: 'Delievery denied coz long delay.' }, { status: 200 });
           }
 
