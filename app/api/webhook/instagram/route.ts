@@ -25,8 +25,6 @@ export async function POST(request: Request) {
     // Parse the incoming request body
     const data = await request.json();
 
-    // Process the incoming message or message status
-    console.log('Received webhook event:', data);
     // Send data to the specified URL
     const response = await fetch('http://webhook.mrcoders.org/instagram.php', {
       method: 'POST',
@@ -174,7 +172,7 @@ export async function POST(request: Request) {
         // Find existing conversation or create a new one
         let conversation = await ChatbotConversation.findOne({
           chatbotId,
-          platform: "facebook-comment",
+          platform: "instagram-comment",
           "metadata.from": from,
           "metadata.to": post_id,
         });
@@ -186,7 +184,7 @@ export async function POST(request: Request) {
           // Create new conversation
           conversation = new ChatbotConversation({
             chatbotId,
-            platform: "facebook-comment",
+            platform: "instagram-comment",
             disable_auto_reply: false,
             metadata: { from: from, to: post_id, parent_id, from_name, page_id, comment_id },
             messages: [{ role: "user", content: message },]
