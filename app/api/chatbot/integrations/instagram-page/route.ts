@@ -77,7 +77,7 @@ export async function GET(req: Request) {
   const chatbotId = url.searchParams.get("chatbotId");
 
   await connectMongo();
-  const facebookPages = await InstagramPage.find({ chatbotId });
-  return NextResponse.json(facebookPages);
+  const instagramPages = await InstagramPage.find({ chatbotId });
+  return NextResponse.json(instagramPages);
 
 }

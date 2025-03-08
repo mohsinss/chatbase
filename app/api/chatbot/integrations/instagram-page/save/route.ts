@@ -13,32 +13,16 @@ export async function POST(req: Request) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const { code, chatbotId } = await req.json();
+        const { user_access_token, chatbotId } = await req.json();
 
         // Check if chatbotId is provided
         if (!chatbotId) {
             return new NextResponse("chatbotId is missing.", { status: 400 });
         }
 
-        if (!code) {
-            return NextResponse.json({ error: "Code is required" }, { status: 400 });
+        if (!user_access_token) {
+            return NextResponse.json({ error: "user_access_token is required" }, { status: 400 });
         }
-
-        // Step 1: Exchange the code for a business token
-        const response = await axios.get('https://graph.facebook.com/v21.0/oauth/access_token', {
-            params: {
-                client_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
-                client_secret: process.env.FACEBOOK_APP_SECRET,
-                code: code
-            }
-        });
-
-        if (response.data.error) {
-            console.error(response.data.error);
-            return NextResponse.json({ error: response.data.error.message }, { status: 500 });
-        }
-
-        const user_access_token = response.data.access_token;
 
         await connectMongo();
 
