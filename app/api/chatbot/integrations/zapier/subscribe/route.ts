@@ -4,6 +4,13 @@ import Lead from '@/models/Lead';
 import connectMongo from '@/libs/mongoose';
 import Chatbot from '@/models/Chatbot';
 
+// Define an interface matching your Chatbot schema
+interface ChatbotType {
+    chatbotId: string;
+    zapierKey: string;
+    // add other fields if needed
+  }
+
 // Helper function to validate API key
 async function  validateApiKey(request: NextRequest) {
     const apiKeyFromHeader = request.headers.get('X-API-KEY');
@@ -12,13 +19,13 @@ async function  validateApiKey(request: NextRequest) {
 
     if (!apiKey) return false;
 
-    const chatbot = await Chatbot.findOne({ zapierKey: apiKey }).lean();
+    const chatbot = await Chatbot.findOne({ zapierKey: apiKey }).lean<ChatbotType>();
 
     if (!chatbot) {
       return false;
     }
   
-    return true;
+    return chatbot.chatbotId;
 }
 
 // POST handler for subscribing (Zapier integration)
@@ -36,13 +43,15 @@ export async function GET(request: NextRequest) {
 
 // POST handler for subscribing (Zapier integration)
 export async function POST(request: NextRequest) {
-    if (!(await validateApiKey(request))) {
+    const chatbotId = await validateApiKey(request);
+    if (!chatbotId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { hookUrl, chatbotId, eventType, createdBy } = await request.json();
+    const { hookUrl, eventType, createdBy } = await request.json();
 
     if (!hookUrl || !chatbotId || !eventType || !createdBy) {
+        console.log('Missing required fields');
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
