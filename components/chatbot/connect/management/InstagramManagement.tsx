@@ -49,7 +49,7 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
     const fetchSettings = async (pageId: string) => {
         setIsFetchingSettings(true);
         try {
-            const response = await fetch(`/api/chatbot/integrations/instagram-page/settings?pageId=${pageId}`, {
+            const response = await fetch(`/api/chatbot/integrations/instagram-page/settings?_id=${pageId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
