@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     const data = await request.json();
 
     // Send data to the specified URL
-    const response = await fetch('http://webhook.mrcoders.org/instagram.php', {
+    const response = await fetch('http://webhook.mrcoders.org/instagram-messenger.php', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -225,7 +225,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ status: 'OK' }, { status: 200 });
   } catch (error) {
     console.error('Error processing webhook event:', error);
-    const response = await fetch('http://webhook.mrcoders.org/instagram-page-error.php', {
+    const response = await fetch('http://webhook.mrcoders.org/instagram-messenger-error.php', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
