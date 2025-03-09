@@ -18,6 +18,8 @@ async function validateApiKey(request: NextRequest) {
     const apiKey = apiKeyFromHeader || apiKeyFromQuery;
 
     if (!apiKey) return false;
+    
+    await connectMongo();
 
     const chatbot = await Chatbot.findOne({ zapierKey: apiKey }).lean<ChatbotType>();
 
@@ -72,7 +74,6 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await connectMongo();
     const { hookUrl } = await request.json();
 
     if (!hookUrl) {
