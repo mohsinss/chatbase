@@ -9,10 +9,10 @@ interface ChatbotType {
     chatbotId: string;
     zapierKey: string;
     // add other fields if needed
-  }
+}
 
 // Helper function to validate API key
-async function  validateApiKey(request: NextRequest) {
+async function validateApiKey(request: NextRequest) {
     const apiKeyFromHeader = request.headers.get('X-API-KEY');
     const apiKeyFromQuery = request.nextUrl.searchParams.get('api_key');
     const apiKey = apiKeyFromHeader || apiKeyFromQuery;
@@ -22,9 +22,9 @@ async function  validateApiKey(request: NextRequest) {
     const chatbot = await Chatbot.findOne({ zapierKey: apiKey }).lean<ChatbotType>();
 
     if (!chatbot) {
-      return false;
+        return false;
     }
-  
+
     return chatbot.chatbotId;
 }
 
