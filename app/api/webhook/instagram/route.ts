@@ -65,6 +65,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ status: "Instagram account doesn't registered to the site." }, { status: 200 });
           }
 
+          if (instagram_account_id == sender) {
+            return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
+          }
+
           const chatbotId = instagramPage.chatbotId;
           const updatedPrompt = instagramPage?.settings?.prompt;
           const delay = instagramPage?.settings?.delay;

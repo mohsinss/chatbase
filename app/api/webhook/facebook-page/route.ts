@@ -46,6 +46,7 @@ export async function POST(request: Request) {
 
           await connectMongo();
 
+          const page_id = data?.entry[0].id;
           const sender = data?.entry[0]?.messaging[0].sender.id;
           const recipient = data?.entry[0]?.messaging[0].recipient.id;
           const timestamp = data?.entry[0]?.messaging[0].timestamp;
@@ -60,6 +61,10 @@ export async function POST(request: Request) {
           if (!facebookPage) {
             // Respond with a 200 OK status
             return NextResponse.json({ status: "FB page doesn't registered to the site." }, { status: 200 });
+          }
+
+          if (page_id == sender) {
+            return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
           }
 
           const chatbotId = facebookPage.chatbotId;
