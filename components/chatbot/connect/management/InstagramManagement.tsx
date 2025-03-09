@@ -72,7 +72,7 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
     const saveSettings = async () => {
         setIsSavingSettings(true);
         try {
-            const response = await fetch(`/api/chatbot/integrations/instagram-page/settings?pageId=${selectedPageId}`, {
+            const response = await fetch(`/api/chatbot/integrations/instagram-page/settings?_id=${selectedPageId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -97,9 +97,9 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
         }
         setIsSavingSettings(false);
     };
-    const handleSettingsMenu = (pageId: string) => {
+    const handleSettingsMenu = (id: string) => {
         setIsSettingsDialogOpen(true);
-        setSelectedPageId(pageId);
+        setSelectedPageId(id);
     };
 
     const fetchPages = async () => {
@@ -305,7 +305,7 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                                                                 {({ active }) => (
                                                                     <div
                                                                         className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
-                                                                        onClick={() => handleSettingsMenu(page.pageId)}
+                                                                        onClick={() => handleSettingsMenu(page._id)}
                                                                     >
                                                                         Advanced Settings
                                                                     </div>
