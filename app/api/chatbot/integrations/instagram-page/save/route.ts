@@ -26,8 +26,25 @@ export async function POST(req: Request) {
 
         await connectMongo();
 
-        // Retrive Pages from user_access_token and subscribe/save.
-        const response1 = await axios.get(`https://graph.facebook.com/v22.0/me/accounts?fields=name,access_token,tasks,instagram_business_account&access_token=${user_access_token}`, {
+        // Step 1: Exchange the code for a business token
+        const response = await axios.get('https://graph.facebook.com/v21.0/oauth/access_token', {
+            params: {
+                client_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+                client_secret: process.env.FACEBOOK_APP_SECRET,
+                fb_exchange_token: user_access_token,
+                grant_type: 'fb_exchange_token',
+            }
+        });
+
+        if (response.data.error) {
+            console.error(response.data.error);
+            return NextResponse.json({ error: response.data.error.message }, { status: 500 });
+        }
+
+        const long_user_access_token = response.data.access_token;
+
+        // Retrive Pages from long_user_access_token and subscribe/save.
+        const response1 = await axios.get(`https://graph.facebook.com/v22.0/me/accounts?fields=name,access_token,tasks,instagram_business_account&access_token=${long_user_access_token}`, {
             headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
         const data = response1.data;
