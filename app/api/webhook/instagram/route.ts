@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
           await connectMongo();
 
-          const page_id = data?.entry[0].id;
+          const instagram_account_id = data?.entry[0].id;
           const sender = data?.entry[0]?.messaging[0].sender.id;
           const recipient = data?.entry[0]?.messaging[0].recipient.id;
           const timestamp = data?.entry[0]?.messaging[0].timestamp;
@@ -58,11 +58,11 @@ export async function POST(request: Request) {
           let messages = [{ role: 'user', content: text }];
 
           // Fetch the existing InstagramPage model
-          const instagramPage = await InstagramPage.findOne({ pageId: page_id });
+          const instagramPage = await InstagramPage.findOne({ instagram_business_account: instagram_account_id });
           if (!instagramPage) {
-            console.log("FB page doesn't registered to the site.");
+            console.log("Instagram account doesn't registered to the site.");
             // Respond with a 200 OK status
-            return NextResponse.json({ status: "FB page doesn't registered to the site." }, { status: 200 });
+            return NextResponse.json({ status: "Instagram account doesn't registered to the site." }, { status: 200 });
           }
 
           const chatbotId = instagramPage.chatbotId;
@@ -102,14 +102,14 @@ export async function POST(request: Request) {
           }
 
           // send typing action
-          const response1 = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
-            recipient: {
-              id: sender
-            },
-            sender_action: "typing_on"
-          }, {
-            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-          });
+          // const response1 = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+          //   recipient: {
+          //     id: sender
+          //   },
+          //   sender_action: "typing_on"
+          // }, {
+          //   headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+          // });
 
           const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
 
