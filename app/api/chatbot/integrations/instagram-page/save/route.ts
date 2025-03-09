@@ -48,36 +48,45 @@ export async function POST(req: Request) {
             headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
         const data = response1.data;
-        console.log(data.data)
 
         for (let i = 0; i < data.data.length; i++) {
             let page = data.data[i];
             let pageId = page.id;
-            // let instagram_business_account = page.instagram_business_account.id;
+            let instagram_business_account = page.instagram_business_account.id;
 
-            // Subscribe Page to webhook
-            const response2 = await axios.post(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages,mention,feed&access_token=${page.access_token}`, {}, {
-                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-            });
-            if (!response2.data.success) {
-                return NextResponse.json({ success: false, message: response2.data.error?.message || 'Page Subscription failed.' });
-            }
+            if (instagram_business_account) {
+                // Retrive instagram user.
+                const response3 = await axios.get(`https://graph.facebook.com/v22.0/${instagram_business_account}?fields=username&access_token=${long_user_access_token}`, {
+                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
+                const igUserData = response3.data;
+                console.log(igUserData)
 
-            // Find FacebookPage with pageId and update it
-            const instagramPage = await InstagramPage.findOneAndUpdate(
-                { pageId }, // find a document with phoneNumberId
-                {
-                    // update these fields
-                    chatbotId,
-                    name: page.name,
-                    access_token: page.access_token,
-                },
-                {
-                    new: true, // return the new FacebookPage instead of the old one
-                    upsert: true, // make this update into an upsert
+                // Subscribe Page to webhook
+                const response2 = await axios.post(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages,mention,feed&access_token=${page.access_token}`, {}, {
+                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
+                if (!response2.data.success) {
+                    return NextResponse.json({ success: false, message: response2.data.error?.message || 'Page Subscription failed.' });
                 }
-            );
 
+                // Find FacebookPage with pageId and update it
+                const instagramPage = await InstagramPage.findOneAndUpdate(
+                    { pageId }, // find a document with phoneNumberId
+                    {
+                        // update these fields
+                        chatbotId,
+                        name: page.name,
+                        access_token: page.access_token,
+                        instagram_business_account,
+                        instagram_business_account_name: igUserData.username
+                    },
+                    {
+                        new: true, // return the new FacebookPage instead of the old one
+                        upsert: true, // make this update into an upsert
+                    }
+                );
+            }
         }
 
         if (data.data.length > 0) {

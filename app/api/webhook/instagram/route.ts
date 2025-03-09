@@ -47,6 +47,7 @@ export async function POST(request: Request) {
 
           await connectMongo();
 
+          const page_id = data?.entry[0].id;
           const sender = data?.entry[0]?.messaging[0].sender.id;
           const recipient = data?.entry[0]?.messaging[0].recipient.id;
           const timestamp = data?.entry[0]?.messaging[0].timestamp;
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
           let messages = [{ role: 'user', content: text }];
 
           // Fetch the existing InstagramPage model
-          const instagramPage = await InstagramPage.findOne({ pageId: recipient });
+          const instagramPage = await InstagramPage.findOne({ pageId: page_id });
           if (!instagramPage) {
             console.log("FB page doesn't registered to the site.");
             // Respond with a 200 OK status
