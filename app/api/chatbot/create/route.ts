@@ -16,12 +16,14 @@ export async function POST(req: Request) {
 
     const { teamId, sources, name } = await req.json();
     const chatbotId = nanoid();
+    const zapierKey = nanoid();
 
     await connectMongo();
     
     const chatbot = await Chatbot.create({
       chatbotId,
       teamId,
+      zapierKey,
       name: name || `Chatbot ${new Date().toLocaleString()}`,
       sources,
       createdBy: session.user.id

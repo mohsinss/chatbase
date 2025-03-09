@@ -46,3 +46,4 @@ public/sitemap-0.xml
 
 credentials
 package-lock.json
+app/api/test/route.ts
