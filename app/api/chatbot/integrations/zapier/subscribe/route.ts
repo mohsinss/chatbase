@@ -51,17 +51,17 @@ export async function POST(request: NextRequest) {
     }
 
     const reqData = await request.json();
-    const { hookUrl, eventType, createdBy } = reqData;
+    const { hookUrl } = reqData;
 
     console.log(reqData);
 
-    if (!hookUrl || !chatbotId || !eventType || !createdBy) {
+    if (!hookUrl || !chatbotId ) {
         console.log('Missing required fields');
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     try {
-        const newHook = await ZapierHookUrl.create({ hookUrl, chatbotId, eventType, createdBy });
+        const newHook = await ZapierHookUrl.create({ hookUrl, chatbotId });
         return NextResponse.json({ message: 'Zapier hook subscribed successfully', data: newHook }, { status: 201 });
     } catch (error: any) {
         if (error.code === 11000) {

@@ -13,14 +13,6 @@ const ZapierHookUrlSchema = new mongoose.Schema(
       required: true,
       ref: "Chatbot",
     },
-    eventType: {
-      type: String,
-      required: true,
-    },
-    createdBy: {
-      type: String,
-      required: true,
-    },
   },
   {
     timestamps: true,

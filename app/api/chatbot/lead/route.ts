@@ -3,6 +3,7 @@ import sgMail from '@sendgrid/mail';
 import client from "@sendgrid/client";
 import User from "@/models/User";
 import Lead from "@/models/Lead";
+import ZapierHookUrl from "@/models/ZapierHookUrl";
 import ChatbotConversation from "@/models/ChatbotConversation";
 import connectMongo from "@/libs/mongoose";
 
@@ -77,6 +78,20 @@ export async function POST(req: Request) {
       { new: false } // return the updated document
     );
 
+    // Trigger Zapier hooks for this chatbotId
+    const zapierHooks = await ZapierHookUrl.find({ chatbotId });
+
+    for (const hook of zapierHooks) {
+      await axios.post(hook.hookUrl, {
+        email,
+        name,
+        phone,
+        chatbotId,
+        customAnswers,
+        leadId: lead._id
+      });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.log(error)
@@ -88,7 +103,7 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const chatbotId = url.searchParams.get("chatbotId"); // Extract datasetId from query parameters
-    
+
     await connectMongo();
     const leads = await Lead.find({ chatbotId });
     return NextResponse.json(leads);
