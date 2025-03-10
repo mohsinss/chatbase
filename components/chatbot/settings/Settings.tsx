@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useParams, usePathname } from "next/navigation";
-import { IconSettings, IconSparkles, IconMessages, IconShield, IconUsers, IconBell, IconWebhook, IconWorld } from "@tabler/icons-react";
+import { IconSettings, IconSparkles, IconMessages, IconShield, IconZeppelin, IconUsers, IconBell, IconWebhook, IconWorld } from "@tabler/icons-react";
 import GeneralSettings from "./GeneralSettings";
 import AISettings from "./AISettings";
 import ChatInterfaceSettings from "./ChatInterfaceSettings";
@@ -10,6 +10,8 @@ import LeadsSettings from "./LeadsSettings";
 import NotificationsSettings from "./NotificationsSettings";
 import WebhooksSettings from "./WebhooksSettings";
 import CustomDomainsSettings from "./CustomDomainsSettings";
+import ZapierSettings from "./ZpierSettings";
+import toast from "react-hot-toast";
 
 interface SettingsProps {
   teamId: string;
@@ -38,6 +40,7 @@ export default function Settings({ team, teamId, chatbotId }: SettingsProps) {
     { id: "notifications", name: "Notifications", icon: <IconBell className="w-5 h-5" /> },
     { id: "webhooks", name: "Webhooks", icon: <IconWebhook className="w-5 h-5" /> },
     { id: "custom-domains", name: "Custom Domains", icon: <IconWorld className="w-5 h-5" /> },
+    { id: "zapier", name: "Zapier", icon: <IconZeppelin className="w-5 h-5" /> },
   ];
 
   const handleTabClick = (tabId: string) => {
@@ -82,6 +85,7 @@ export default function Settings({ team, teamId, chatbotId }: SettingsProps) {
             {currentTab === "notifications" && <NotificationsSettings chatbotId={chatbotId} />}
             {currentTab === "webhooks" && <WebhooksSettings chatbotId={chatbotId} />}
             {currentTab === "custom-domains" && <CustomDomainsSettings chatbotId={chatbotId} />}
+            {currentTab === "zapier" && <ZapierSettings chatbotId={chatbotId} />}
           </div>
         </div>
       </div>
