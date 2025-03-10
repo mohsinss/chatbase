@@ -18,7 +18,7 @@ async function validateApiKey(request: NextRequest) {
     const apiKey = apiKeyFromHeader || apiKeyFromQuery;
 
     if (!apiKey) return false;
-    
+
     await connectMongo();
 
     const chatbot = await Chatbot.findOne({ zapierKey: apiKey }).lean<ChatbotType>();
@@ -50,7 +50,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { hookUrl, eventType, createdBy } = await request.json();
+    const reqData = await request.json();
+    const { hookUrl, eventType, createdBy } = reqData;
+
+    console.log(reqData);
 
     if (!hookUrl || !chatbotId || !eventType || !createdBy) {
         console.log('Missing required fields');
