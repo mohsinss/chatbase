@@ -385,7 +385,8 @@ const ChatContainer = ({
                       ) : (
                         <p className="p-1">{message.content}</p>
                       )}
-                      {message.role === 'assistant' && message.confidenceScore != -1 && <div>
+                      {message.role === 'assistant' && message.confidenceScore != -1 && 
+                      <div className="mt-2">
                         <span style={{ backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px' }}>{message.confidenceScore}</span>
                       </div>}
                     </div>

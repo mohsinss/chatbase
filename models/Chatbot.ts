@@ -18,7 +18,7 @@ const ChatbotSchema = new mongoose.Schema(
     },
     zapierKey: {
       type: String,
-      required: true,
+      required: false,
     },
     createdBy: {
       type: String,
