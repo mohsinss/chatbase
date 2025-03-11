@@ -126,6 +126,8 @@ export async function POST(req: NextRequest) {
       ));
     }
 
+    const questionFlow = dataset?.questionFlow;
+
     const options = {
       method: 'POST',
       headers: {
@@ -157,8 +159,38 @@ export async function POST(req: NextRequest) {
     const maxTokens = aiSettings?.maxTokens ?? 500;
     const language = aiSettings?.language || 'en';
     // const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in italian language only.`;
-    const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. please provide me the result with html format that can be embeded in <div> tag.`;
-    console.log("language", language)
+    let systemPrompt;
+    if (questionFlow) {
+      systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. please provide me the result with html format that can be embeded in <div> tag.
+      Follow these rules for the conversation flow:
+      1. Start the conversation only when the user's message matches the trigger condition
+      2. Follow the predefined question flow structure exactly as shown below
+      3. When presenting options, format them as clickable buttons using HTML with data attributes:
+         <div class="flex flex-col gap-2">
+           <button 
+             class="w-full text-left px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
+             data-action="select-option"
+             data-value="option1"
+             onclick="handleOptionSelect('Option 1')"
+           >Option 1</button>
+           <button 
+             class="w-full text-left px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
+             data-action="select-option"
+             data-value="option2"
+             onclick="handleOptionSelect('Option 2')"
+           >Option 2</button>
+         </div>
+      4. Wait for user selection before proceeding to the next step
+      5. Keep responses concise and focused on the current step in the flow
+
+      Question Flow Structure:
+
+      ${JSON.stringify(questionFlow)}
+      `;
+    } else {
+      systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. please provide me the result with html format that can be embeded in <div> tag.`;
+    }
+    console.log("systemPrompt", systemPrompt)
 
     // Add detailed logging
     // console.log('Chat Request Details:', {

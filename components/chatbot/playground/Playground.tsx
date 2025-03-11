@@ -731,10 +731,27 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
     createNewConversation();
   };
 
+  // Add this to your window object for global access
+  useEffect(() => {
+    (window as any).handleOptionSelect = (value: string) => {
+      // Send the selection to your chat API
+      handleSendMessage(value);
+    };
+
+    // Cleanup
+    return () => {
+      delete (window as any).handleOptionSelect;
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    handleSendMessage(input);
+  };
+
+  const handleSendMessage = async (input: string) => {
     const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
@@ -786,7 +803,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
 
           const chunk = decoder.decode(result.value);
           const lines = chunk.split('\n');
-          console.log(lines)
+          // console.log(lines)
 
           for (const line of lines) {
             if (line.startsWith('data: ')) {
@@ -856,7 +873,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  } 
 
   const handleContent = (text: string, confidenceScore: number) => {
     console.log(`Received text: ${text} with confidence score: ${confidenceScore}`);
