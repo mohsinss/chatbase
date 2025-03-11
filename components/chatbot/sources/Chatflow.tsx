@@ -98,7 +98,7 @@ const templateFlow = {
       position: { x: 250, y: 150 },
       data: {
         // title: "Greetings",
-        message: "Hi there! My name is Specter. Welcome to ACME Corp!",
+        message: "Hi there! My name is Chatsa. Welcome to Chatsa!",
         color: "bg-cyan-500",
         iconColor: "text-cyan-500",
         // icon: <MessageSquare size={16} />,
