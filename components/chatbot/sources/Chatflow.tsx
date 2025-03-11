@@ -144,8 +144,6 @@ interface ChatbotFlowProps {
 }
 
 export default function ChatbotFlow({ qFlow, setQFlow }: ChatbotFlowProps) {
-
-  console.log(qFlow)
   //@ts-ignore
   const [nodes, setNodes, onNodesChange] = useNodesState(qFlow?.nodes ?? []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(qFlow?.edges ?? []);
