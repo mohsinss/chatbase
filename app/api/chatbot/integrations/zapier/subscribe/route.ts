@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     console.log(reqData);
 
-    if (!hookUrl || !chatbotId ) {
+    if (!hookUrl || !chatbotId) {
         console.log('Missing required fields');
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }

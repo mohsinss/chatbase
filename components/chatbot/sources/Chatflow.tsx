@@ -85,7 +85,7 @@ const nodeTypes: NodeTypes = {
 }
 
 const templateFlow = {
-  nodes : [
+  nodes: [
     {
       id: "1",
       type: "trigger",
@@ -130,7 +130,7 @@ const templateFlow = {
       data: { label: "Contact Sales" },
     },
   ],
-  edges : [
+  edges: [
     { id: "e1-2", source: "1", target: "2", markerEnd: { type: MarkerType.Arrow }, style: { stroke: "#9ca3af" } },
     { id: "e2-3", source: "2", target: "3", markerEnd: { type: MarkerType.Arrow }, style: { stroke: "#9ca3af" } },
     { id: "e3-4", source: "3", target: "4", markerEnd: { type: MarkerType.Arrow }, style: { stroke: "#9ca3af" } },

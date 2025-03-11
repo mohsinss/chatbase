@@ -9,7 +9,7 @@ import DatasetModel from "@/models/Dataset";
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const zapierKey = nanoid();
 
     await connectMongo();
-    
+
     const chatbot = await Chatbot.create({
       chatbotId,
       teamId,
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       sources,
       createdBy: session.user.id
     });
-    
+
     // If no existing dataset, create a new one
     const response = await fetch("https://api.trieve.ai/api/dataset", {
       method: "POST",
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       console.error("Dataset creation failed:", data);
       throw new Error(data.message || "Failed to create dataset");
@@ -63,12 +63,12 @@ export async function POST(req: Request) {
       qaPairs: [],
       links: [],
     });
-    
+
     await newDataset.save();
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       chatbotId: chatbot.chatbotId,
-      name: chatbot.name 
+      name: chatbot.name
     });
 
   } catch (error: any) {

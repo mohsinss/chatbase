@@ -224,7 +224,7 @@ export async function POST(req: Request) {
     if (!clear_dataset_response.ok) {
       throw new Error(`Failed to clear dataset: ${clear_dataset_response.statusText}`);
     }
-    
+
     const add_text_response = await fetch("https://api.trieve.ai/api/file", {
       method: "POST",
       headers: {
@@ -303,7 +303,7 @@ export async function POST(req: Request) {
       if (file.status === "Completed") {
         let text = '';
 
-        if(file.trieveTaskId){
+        if (file.trieveTaskId) {
           const resp = await fetch(
             `https://pdf2md.trieve.ai/api/task/${file.trieveTaskId}?limit=1000`,
             {
@@ -312,11 +312,11 @@ export async function POST(req: Request) {
               },
             }
           );
-  
+
           if (!resp.ok) throw new Error("Failed to fetch pages");
-  
+
           const data = await resp.json();
-  
+
           if (data.pages) {
             //@ts-ignore
             data.pages.forEach(page => {
@@ -334,15 +334,15 @@ export async function POST(req: Request) {
           }
           text = await response.text();
         }
-        
+
         const base64PDFText = Buffer.from(text, 'utf-8').toString('base64')
           .replace(/\+/g, '-')
           .replace(/\//g, '_')
           .replace(/=+$/, '');
 
         const metadata = {
-            uniqueTag: `${file.name}-${Date.now()}` // Append timestamp to ensure uniqueness
-          };
+          uniqueTag: `${file.name}-${Date.now()}` // Append timestamp to ensure uniqueness
+        };
 
         const add_pdf_response = await fetch("https://api.trieve.ai/api/file", {
           method: "POST",
@@ -359,9 +359,9 @@ export async function POST(req: Request) {
             }
           )
         });
-    
+
         responseData = await add_pdf_response.json();
-    
+
         if (!add_pdf_response.ok) {
           throw new Error(`Failed to update text for qa: ${add_pdf_response.statusText} - ${JSON.stringify(responseData)}`);
         }
@@ -380,7 +380,7 @@ export async function POST(req: Request) {
     if (!existingChatbot) {
       return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
     }
-    
+
     const files = existingDataset?.files || [];
     // @ts-ignore
 

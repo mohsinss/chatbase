@@ -50,7 +50,7 @@ export default function Settings({ team, teamId, chatbotId }: SettingsProps) {
   return (
     <div className="min-h-screen bg-[#fafafa] p-4">
       <h1 className="text-2xl font-bold mb-6">Settings</h1>
-      
+
       <div className="flex gap-6">
         {/* Sidebar */}
         <div className="w-54">
@@ -60,8 +60,8 @@ export default function Settings({ team, teamId, chatbotId }: SettingsProps) {
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
                 className={`flex items-center gap-2 w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                  ${currentTab === tab.id 
-                    ? "bg-primary/10 text-primary" 
+                  ${currentTab === tab.id
+                    ? "bg-primary/10 text-primary"
                     : "text-gray-600 hover:bg-gray-100"
                   }`}
               >
@@ -76,7 +76,7 @@ export default function Settings({ team, teamId, chatbotId }: SettingsProps) {
         <div className="flex-1 max-w-[90]">
           <div className="bg-white rounded-xl border p-6">
             <h2 className="text-2xl font-semibold mb-6">{tabs.find(tab => tab.id === currentTab)?.name}</h2>
-            
+
             {currentTab === "general" && <GeneralSettings chatbotId={chatbotId} teamId={teamId} />}
             {currentTab === "ai" && <AISettings team={team} chatbotId={chatbotId} />}
             {currentTab === "chat-interface" && <ChatInterfaceSettings chatbotId={chatbotId} />}
