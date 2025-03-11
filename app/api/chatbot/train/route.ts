@@ -117,7 +117,7 @@ async function clearVectorStore(vectorStoreId) {
 
 export async function POST(req: Request) {
   try {
-    const { chatbotId, text, qaPairs, links } = await req.json();
+    const { chatbotId, text, qaPairs, links, questionFlow } = await req.json();
 
     if (!chatbotId) {
       return NextResponse.json({ error: "chatbotId is required" }, { status: 400 });
@@ -197,7 +197,7 @@ export async function POST(req: Request) {
     // Perform update with error catching
     const updatedDataset = await DatasetModel.findOneAndUpdate(
       { chatbotId: chatbotId },
-      { $set: { text, qaPairs, links } },
+      { $set: { text, qaPairs, links, questionFlow } },
       {
         new: true,
         runValidators: true,

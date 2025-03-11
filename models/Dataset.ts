@@ -35,6 +35,7 @@ interface IDataset {
   files?: IFile[];
   createdAt: Date;
   updatedAt: Date;
+  questionFlow?: {};
 }
 
 const datasetSchema = new mongoose.Schema<IDataset>({
@@ -87,6 +88,10 @@ const datasetSchema = new mongoose.Schema<IDataset>({
             trained: { type: Boolean, required: true, default: false },
         }],
         default: []
+    },
+    questionFlow: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
     },
     createdAt: {
         type: Date,

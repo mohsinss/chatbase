@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { IconFile, IconAlignLeft, IconGlobe, IconMessageQuestion, IconBrandNotion } from "@tabler/icons-react";
+import { IconFile, IconAlignLeft, IconGlobe, IconAdjustmentsSpark, IconMessageQuestion, IconBrandNotion } from "@tabler/icons-react";
 import { FileUpload } from "./FileUpload";
 import SourceStats from './SourceStats';
 import TextInput from './TextInput';
@@ -11,6 +11,7 @@ import QAInput from './QAInput';
 import NotionInput from './NotionInput';
 import toast, { Toaster } from 'react-hot-toast';
 import config from "@/config";
+import ChatbotFlow from "./Chatflow";
 
 interface IFile {
   trieveId: string;
@@ -29,6 +30,7 @@ const SOURCE_TABS = [
   { id: "text", label: "Text", icon: <IconAlignLeft className="w-5 h-5" /> },
   { id: "website", label: "Website", icon: <IconGlobe className="w-5 h-5" /> },
   { id: "qa", label: "Q&A", icon: <IconMessageQuestion className="w-5 h-5" /> },
+  { id: "qf", label: "QFlow", icon: <IconAdjustmentsSpark className="w-5 h-5" /> },
   { id: "notion", label: "Notion", icon: <IconBrandNotion className="w-5 h-5" /> },
 ];
 
@@ -56,6 +58,7 @@ const Sources = ({
   const [text, setText] = useState<string>('');
   const [qaPairs, setQaPairs] = useState<{ id: string; question: string; answer: string }[]>([]);
   const [links, setLinks] = useState<{ id: string; link: string, chars: number }[]>([]);
+  const [qFlow, setQFlow] = useState(null);
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
 
@@ -81,6 +84,9 @@ const Sources = ({
           setFileChars(data.files.reduce((size, file) => {
             return size + file.charCount;
           }, 0))
+        }
+        if (data.questionFlow) {
+          setQFlow(data.questionFlow)
         }
       } catch (error) {
         console.error("Error fetching dataset:", error);
@@ -113,6 +119,7 @@ const Sources = ({
           text,
           qaPairs,
           links,
+          questionFlow: qFlow
         }),
       });
 
@@ -151,6 +158,8 @@ const Sources = ({
         return <WebsiteInput links={links} setLinks={setLinks} />;
       case "qa":
         return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs} />;
+      case "qf":
+        return <ChatbotFlow qFlow={qFlow} setQFlow={setQFlow}/>;
       case "notion":
         return <NotionInput
           onConnect={() => {

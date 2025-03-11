@@ -79,6 +79,7 @@
     "react-syntax-highlighter": "^15.5.0",
     "react-tailwindcss-datepicker": "^1.7.2",
     "react-tooltip": "^5.26.3",
+    "reactflow": "^11.11.4",
     "recharts": "^2.15.0",
     "resend": "^4.0.1",
     "socket.io": "^4.8.1",
