@@ -36,6 +36,7 @@ interface IDataset {
   createdAt: Date;
   updatedAt: Date;
   questionFlow?: {};
+  questionFlowEnable?: boolean;
 }
 
 const datasetSchema = new mongoose.Schema<IDataset>({
@@ -92,6 +93,10 @@ const datasetSchema = new mongoose.Schema<IDataset>({
     questionFlow: {
       type: mongoose.Schema.Types.Mixed,
       default: {}
+    },
+    questionFlowEnable: {
+      type: Boolean,
+      default: false,
     },
     createdAt: {
         type: Date,

@@ -141,9 +141,10 @@ const templateFlow = {
 interface ChatbotFlowProps {
   qFlow: any;
   setQFlow: React.Dispatch<React.SetStateAction<any>>;
+  chatbotId: string;
 }
 
-export default function ChatbotFlow({ qFlow, setQFlow }: ChatbotFlowProps) {
+export default function ChatbotFlow({ qFlow, setQFlow, chatbotId }: ChatbotFlowProps) {
   //@ts-ignore
   const [nodes, setNodes, onNodesChange] = useNodesState(qFlow?.nodes ?? []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(qFlow?.edges ?? []);
@@ -153,6 +154,7 @@ export default function ChatbotFlow({ qFlow, setQFlow }: ChatbotFlowProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const hasTriggerNode = nodes.some(node => node.type === 'trigger');
+  const [enabled, setEnabled] = useState(true);
 
   const loadTemplate = () => {
     //@ts-ignore
@@ -173,6 +175,28 @@ export default function ChatbotFlow({ qFlow, setQFlow }: ChatbotFlowProps) {
     },
     [setEdges],
   )
+  const toggleFlowEnabled = async () => {
+    try {
+      const response = await fetch('/api/chatbot/train/enable-question-flow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled: !enabled, chatbotId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update flow status');
+      }
+
+      setEnabled(!enabled);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update flow status');
+      console.error('Error updating flow status:', error);
+    }
+  };
 
   const handleSave = () => {
     const triggerNodes = nodes.filter(node => node.type === 'trigger');
@@ -186,9 +210,6 @@ export default function ChatbotFlow({ qFlow, setQFlow }: ChatbotFlowProps) {
       toast.error('A trigger node is required');
       return;
     }
-
-    console.log(nodes)
-    console.log(edges)
   }
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: any) => {
@@ -275,6 +296,21 @@ export default function ChatbotFlow({ qFlow, setQFlow }: ChatbotFlowProps) {
         <Controls />
         <MiniMap />
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+
+        <Panel position="top-right" className="bg-white p-4 rounded-md shadow-md">
+          <div className="flex items-center gap-2">
+            <span className={`text-sm ${enabled ? 'text-green-600' : 'text-red-600'}`}>
+              {enabled ? 'Enabled' : 'Disabled'}
+            </span>
+            <Button
+              onClick={toggleFlowEnabled}
+              variant={enabled ? 'destructive' : 'default'}
+              size="sm"
+            >
+              {enabled ? 'Turn Off' : 'Turn On'}
+            </Button>
+          </div>
+        </Panel>
 
         <Panel position="top-left" className="bg-white p-4 rounded-md shadow-md">
           <div className="flex flex-col space-y-2">

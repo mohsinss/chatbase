@@ -127,6 +127,7 @@ export async function POST(req: NextRequest) {
     }
 
     const questionFlow = dataset?.questionFlow;
+    const questionFlowEnable = dataset?.questionFlowEnable;
 
     const options = {
       method: 'POST',
@@ -160,7 +161,7 @@ export async function POST(req: NextRequest) {
     const language = aiSettings?.language || 'en';
     // const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in italian language only.`;
     let systemPrompt;
-    if (questionFlow) {
+    if (questionFlowEnable && questionFlow) {
       systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. please provide me the result with html format that can be embeded in <div> tag.
       Follow these rules for the conversation flow:
       1. Start the conversation only when the user's message matches the trigger condition
