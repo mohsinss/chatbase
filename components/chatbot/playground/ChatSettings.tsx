@@ -2,8 +2,8 @@ import { IconRefresh } from "@tabler/icons-react";
 import { useAISettings } from '@/contexts/AISettingsContext';
 import React, { useState, useEffect } from 'react';
 import { SUPPORTED_LANGUAGES } from '../settings/AISettings';
-import config from "@/config";
 import { AI_MODELS } from "@/types";
+import toast from "react-hot-toast";
 
 interface ChatSettingsProps {
   isVisible: boolean;
@@ -11,27 +11,6 @@ interface ChatSettingsProps {
   chatbotId: string;
   team?: any;
 }
-
-type NotificationType = {
-  message: string;
-  type: 'success' | 'error';
-};
-
-const CustomNotification = ({ message, type, onClose }: NotificationType & { onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg ${
-    type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-  }`}>
-    <div className="flex justify-between items-center">
-      <p>{message}</p>
-      <button 
-        onClick={onClose}
-        className="ml-4 text-gray-500 hover:text-gray-700"
-      >
-        ×
-      </button>
-    </div>
-  </div>
-);
 
 const InfoTooltip = ({ content }: { content: string }) => (
   <div className="absolute right-0 top-7 w-64 p-3 bg-white border text-sm text-gray-600 rounded-md shadow-lg z-50">
@@ -53,7 +32,6 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
   const [isSaving, setIsSaving] = useState(false);
   const [localSettings, setLocalSettings] = useState(globalSettings);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
-  const [notification, setNotification] = useState<NotificationType | null>(null);
   const [tooltips, setTooltips] = useState({
     model: false,
     temperature: false,
@@ -86,20 +64,16 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to save');
-      
+      const data = await response.json()
+
+      if (!response.ok) throw new Error(data?.details || 'Failed to save');
+
       // Update global settings immediately
       updateGlobalSettings(localSettings);
-      
-      setNotification({
-        message: "Settings saved successfully",
-        type: "success"
-      });
+
+      toast.success("Settings saved successfully");
     } catch (error) {
-      setNotification({
-        message: "Failed to save settings",
-        type: "error"
-      });
+      toast.error(error instanceof Error ? error.message : 'Failed to update flow status');
     } finally {
       setIsSaving(false);
     }
@@ -107,14 +81,6 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
 
   return (
     <div className="bg-white border-r h-[calc(100vh-80px)] relative w-[400px]">
-      {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
-      )}
-
       {/* Toggle button */}
       {isVisible && (
         <button onClick={onToggle} className="absolute -right-12 top-4 h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white">
@@ -125,7 +91,7 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
       <div className="h-full overflow-y-auto">
         <div className="p-4 border-b">
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={handleSave}
               disabled={isSaving}
               className="flex-1 bg-gray-800 text-white rounded-lg py-2.5 text-center disabled:opacity-50"
@@ -150,7 +116,7 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
             <div className="flex items-center justify-between">
               <span className="text-gray-700 font-medium">Response Language</span>
               <div className="relative">
-                <button 
+                <button
                   className="text-gray-400 text-lg"
                   onMouseEnter={() => setTooltips(prev => ({ ...prev, language: true }))}
                   onMouseLeave={() => setTooltips(prev => ({ ...prev, language: false }))}
@@ -177,7 +143,7 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
             <div className="flex items-center justify-between">
               <span className="text-gray-700 font-medium">Model Provider</span>
               <div className="relative">
-                <button 
+                <button
                   className="text-gray-400 text-lg"
                   onMouseEnter={() => setTooltips(prev => ({ ...prev, model: true }))}
                   onMouseLeave={() => setTooltips(prev => ({ ...prev, model: false }))}
@@ -208,7 +174,7 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
             <div className="flex items-center justify-between">
               <span className="text-gray-700 font-medium">Model</span>
               <div className="relative">
-                <button 
+                <button
                   className="text-gray-400 text-lg"
                   onMouseEnter={() => setTooltips(prev => ({ ...prev, model: true }))}
                   onMouseLeave={() => setTooltips(prev => ({ ...prev, model: false }))}
@@ -237,7 +203,7 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
               <div className="flex items-center gap-2">
                 <span className="text-gray-700">{localSettings.temperature}</span>
                 <div className="relative">
-                  <button 
+                  <button
                     className="text-gray-400 text-lg"
                     onMouseEnter={() => setTooltips(prev => ({ ...prev, temperature: true }))}
                     onMouseLeave={() => setTooltips(prev => ({ ...prev, temperature: false }))}
@@ -250,9 +216,9 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
             </div>
             <div className="relative w-full h-1.5">
               <div className="absolute w-full h-full bg-gray-200 rounded-full"></div>
-              <div 
+              <div
                 className="absolute h-full bg-blue-500 rounded-full"
-                style={{ 
+                style={{
                   width: `${(localSettings.temperature / 2) * 100}%`,
                 }}
               ></div>
@@ -262,15 +228,15 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
                 max="2"
                 step="0.1"
                 value={localSettings.temperature}
-                onChange={(e) => setLocalSettings(prev => ({ 
-                  ...prev, 
-                  temperature: parseFloat(e.target.value) 
+                onChange={(e) => setLocalSettings(prev => ({
+                  ...prev,
+                  temperature: parseFloat(e.target.value)
                 }))}
                 className="absolute w-full h-full opacity-0 cursor-pointer"
               />
-              <div 
+              <div
                 className="absolute w-3 h-3 bg-blue-500 rounded-full top-1/2 -translate-y-1/2"
-                style={{ 
+                style={{
                   left: `${(localSettings.temperature / 2) * 100}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
@@ -288,7 +254,7 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
               <div className="flex items-center gap-2">
                 <span className="text-gray-700">{localSettings.maxTokens}</span>
                 <div className="relative">
-                  <button 
+                  <button
                     className="text-gray-400 text-lg"
                     onMouseEnter={() => setTooltips(prev => ({ ...prev, maxTokens: true }))}
                     onMouseLeave={() => setTooltips(prev => ({ ...prev, maxTokens: false }))}
@@ -301,9 +267,9 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
             </div>
             <div className="relative w-full h-1.5">
               <div className="absolute w-full h-full bg-gray-200 rounded-full"></div>
-              <div 
+              <div
                 className="absolute h-full bg-blue-500 rounded-full"
-                style={{ 
+                style={{
                   width: `${((localSettings.maxTokens - 100) / 3900) * 100}%`,
                 }}
               ></div>
@@ -313,15 +279,15 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
                 max="4000"
                 step="100"
                 value={localSettings.maxTokens}
-                onChange={(e) => setLocalSettings(prev => ({ 
-                  ...prev, 
-                  maxTokens: parseInt(e.target.value) 
+                onChange={(e) => setLocalSettings(prev => ({
+                  ...prev,
+                  maxTokens: parseInt(e.target.value)
                 }))}
                 className="absolute w-full h-full opacity-0 cursor-pointer"
               />
-              <div 
+              <div
                 className="absolute w-3 h-3 bg-blue-500 rounded-full top-1/2 -translate-y-1/2"
-                style={{ 
+                style={{
                   left: `${((localSettings.maxTokens - 100) / 3900) * 100}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
@@ -365,9 +331,9 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
             <h3 className="text-gray-700 font-medium">Suggested Messages</h3>
             <textarea
               value={localSettings.suggestedMessages}
-              onChange={(e) => setLocalSettings(prev => ({ 
-                ...prev, 
-                suggestedMessages: e.target.value 
+              onChange={(e) => setLocalSettings(prev => ({
+                ...prev,
+                suggestedMessages: e.target.value
               }))}
               placeholder="Enter each message in a new line"
               className="w-full p-4 border rounded-lg text-sm text-gray-700 min-h-[100px]"

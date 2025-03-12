@@ -6,7 +6,7 @@ import { ChatSettings } from './ChatSettings';
 import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings';
 import { useChatbotLeadSetting, ChatbotLeadSettings } from "@/hooks/useChatbotLeadSetting";
 import { useAISettings } from '@/hooks/useAISettings';
-import { AISettingsProvider } from '@/contexts/AISettingsContext';
+import { AISettingsProvider, useAISettings as useAISettingsProvider } from "@/contexts/AISettingsContext";
 import toast from "react-hot-toast";
 
 interface Message {
@@ -117,7 +117,7 @@ const ChatContainer = ({
   const [loadingSources, setLoadingSources] = useState(false);
   const [sources, setSources] = useState([]);
   const [showLead, setShowLead] = useState(true);
-
+  const { settings: globalSettings, updateSettings: updateGlobalSettings } = useAISettingsProvider();
   const isMobile = /iPhone|iPad|iPod|Android/i.test(window.navigator.userAgent);
 
   const fetchDataset = async () => {
@@ -219,6 +219,14 @@ const ChatContainer = ({
     window.addEventListener('message', handleSettingsUpdate);
     return () => window.removeEventListener('message', handleSettingsUpdate);
   }, [setConfig]);
+
+  useEffect(() => {
+    // Update the config with new settings
+    setConfig((prev: ChatConfig) => ({
+      ...prev,
+      suggestedMessages: globalSettings?.suggestedMessages,
+    }));
+  }, [globalSettings])
 
   const handleLeadFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
