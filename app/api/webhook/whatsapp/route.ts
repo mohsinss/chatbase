@@ -27,18 +27,21 @@ export async function POST(request: Request) {
       if (data?.entry[0]?.changes?.length > 0) {
         if (data?.entry[0]?.changes[0].value?.messages?.length > 0) {
           if (data?.entry[0]?.changes[0]?.value?.messages[0]?.type == "text") {
-            // Send data to the specified URL
-            const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(data),
-            });
 
-            // Check if the request was successful
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+            if (process.env.ENABLE_WEBHOOK_LOGGING) {
+              // Send data to the specified URL
+              const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+              });
+
+              // Check if the request was successful
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
             }
 
             await connectMongo();
