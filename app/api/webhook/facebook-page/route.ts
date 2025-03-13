@@ -25,18 +25,22 @@ export async function POST(request: Request) {
     // Parse the incoming request body
 
     const data = await request.json();
-    // Send data to the specified URL
-    const response = await fetch('http://webhook.mrcoders.org/facebook-page.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
 
-    // Check if the request was successful
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if(process.env.ENABLE_WEBHOOK_LOGGING)
+    {
+      // Send data to the specified URL
+      const response = await fetch('http://webhook.mrcoders.org/facebook-page.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+  
+      // Check if the request was successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
     }
 
     if (data?.entry?.length > 0) {
@@ -222,13 +226,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ status: 'OK' }, { status: 200 });
   } catch (error) {
     console.error('Error processing webhook event:', error);
-    const response = await fetch('http://webhook.mrcoders.org/facebook-page-error.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(error),
-    });
+
+    if(process.env.ENABLE_WEBHOOK_LOGGING)
+    {
+      const response = await fetch('http://webhook.mrcoders.org/facebook-page-error.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(error),
+      });
+    }
     return NextResponse.json({ error: error }, { status: 200 });
   }
 }
