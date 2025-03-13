@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     const data = await request.json();
 
-    if(process.env.ENABLE_WEBHOOK_LOGGING)
+    if(Number(process.env.ENABLE_WEBHOOK_LOGGING))
     {
       // Send data to the specified URL
       const response = await fetch('http://webhook.mrcoders.org/facebook-page.php', {
