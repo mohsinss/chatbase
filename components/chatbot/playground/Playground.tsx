@@ -393,10 +393,10 @@ const ChatContainer = ({
                       ) : (
                         <p className="p-1">{message.content}</p>
                       )}
-                      {message.role === 'assistant' && message.confidenceScore != -1 && 
-                      <div className="mt-2">
-                        <span style={{ backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px' }}>{message.confidenceScore}</span>
-                      </div>}
+                      {message.role === 'assistant' && message.confidenceScore != -1 &&
+                        <div className="mt-2">
+                          <span style={{ backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px' }}>{message.confidenceScore}</span>
+                        </div>}
                     </div>
                   </div>
                 ))}
@@ -882,7 +882,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
     } finally {
       setIsLoading(false);
     }
-  } 
+  }
 
   const handleContent = (text: string, confidenceScore: number) => {
     console.log(`Received text: ${text} with confidence score: ${confidenceScore}`);
@@ -891,28 +891,30 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
 
   if (embed) {
     return (
-      <div className="relative" style={{ height: '100dvh' }}>
-        <ChatContainer
-          isSettingsOpen={isSettingsOpen}
-          setIsSettingsOpen={setIsSettingsOpen}
-          messages={messages}
-          setMessages={setMessages}
-          config={config}
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          input={input}
-          setInput={setInput}
-          handleSubmit={handleSubmit}
-          handleRefresh={handleRefresh}
-          messagesEndRef={messagesEndRef}
-          chatbotId={chatbot.id}
-          aiSettings={aiSettings}
-          embed={embed}
-          setConfig={setConfig}
-          leadSetting={leadSetting}
-          conversationId={conversationId}
-        />
-      </div>
+      <AISettingsProvider chatbotId={chatbot.id}>
+        <div className="relative" style={{ height: '100dvh' }}>
+          <ChatContainer
+            isSettingsOpen={isSettingsOpen}
+            setIsSettingsOpen={setIsSettingsOpen}
+            messages={messages}
+            setMessages={setMessages}
+            config={config}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            input={input}
+            setInput={setInput}
+            handleSubmit={handleSubmit}
+            handleRefresh={handleRefresh}
+            messagesEndRef={messagesEndRef}
+            chatbotId={chatbot.id}
+            aiSettings={aiSettings}
+            embed={embed}
+            setConfig={setConfig}
+            leadSetting={leadSetting}
+            conversationId={conversationId}
+          />
+        </div>
+      </AISettingsProvider>
     )
   }
   return (
