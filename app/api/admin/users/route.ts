@@ -7,11 +7,11 @@ import Team from "@/models/Team";
 import Chatbot from "@/models/Chatbot";
 import ChatbotConversation from "@/models/ChatbotConversation";
 
-const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || ['admin@example.com']; // Same as auth route
-
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
+
+    const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || ['admin@example.com']; // Same as auth route
     
     if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
