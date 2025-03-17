@@ -237,7 +237,10 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
       });
     } else if (platform === "Zapier") {
       window.open("https://zapier.com/apps/chatsa/integrations", "_blank");
+      setConnectingTitle('');
     } else {
+      setConnectingTitle('');
+
     }
   };
 
