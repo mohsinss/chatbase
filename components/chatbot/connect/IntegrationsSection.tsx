@@ -235,15 +235,9 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
           sessionInfoVersion: '2',
         }
       });
+    } else if (platform === "Zapier") {
+      window.open("https://zapier.com/apps/chatsa/integrations", "_blank");
     } else {
-      const clientId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
-      const redirectUri = encodeURIComponent('https://chatsa.co/api/auth/instagram/callback');
-      const scope = encodeURIComponent('instagram_basic,instagram_manage_messages,pages_show_list,pages_messaging');
-      const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
-  
-      window.location.href = authUrl;
-      console.log(`Connecting to ${platform}...`);
-      setConnectingTitle("");
     }
   };
 
