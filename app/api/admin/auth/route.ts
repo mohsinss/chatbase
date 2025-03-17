@@ -7,7 +7,7 @@ const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || ['admin@example.com
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
       return NextResponse.json({ isAdmin: false }, { status: 403 });
     }

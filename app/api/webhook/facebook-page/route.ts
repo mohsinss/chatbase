@@ -26,8 +26,7 @@ export async function POST(request: Request) {
 
     const data = await request.json();
 
-    if(Number(process.env.ENABLE_WEBHOOK_LOGGING))
-    {
+    if (Number(process.env.ENABLE_WEBHOOK_LOGGING)) {
       // Send data to the specified URL
       const response = await fetch('http://webhook.mrcoders.org/facebook-page.php', {
         method: 'POST',
@@ -36,7 +35,7 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify(data),
       });
-  
+
       // Check if the request was successful
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -227,8 +226,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error processing webhook event:', error);
 
-    if(process.env.ENABLE_WEBHOOK_LOGGING)
-    {
+    if (process.env.ENABLE_WEBHOOK_LOGGING) {
       const response = await fetch('http://webhook.mrcoders.org/facebook-page-error.php', {
         method: 'POST',
         headers: {

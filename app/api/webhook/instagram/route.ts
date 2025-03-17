@@ -226,7 +226,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ status: 'OK' }, { status: 200 });
   } catch (error) {
     console.error('Error processing webhook event:', error);
-    
+
     if (process.env.ENABLE_WEBHOOK_LOGGING) {
       const response = await fetch('http://webhook.mrcoders.org/instagram-messenger-error.php', {
         method: 'POST',
