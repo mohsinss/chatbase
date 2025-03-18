@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
       1. Start this question flow conversation only when the user's message matches the trigger condition.
       2. Follow the predefined question flow structure exactly as shown below.
       3. Clearly display the content of each message node to the user, if current node has multiple options, you can render only options.
-      4. When presenting options, format them as clickable buttons using HTML with data attributes immediately after the rendering node's content:
+      4. When presenting options, render all options and format them as clickable buttons using HTML with data attributes immediately after the rendering node's content
          <div class="mt-2">
            <button 
              class="w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn"
@@ -179,14 +179,15 @@ export async function POST(req: NextRequest) {
            >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
            Option 1</button>
+           ...
            <button 
              class="w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn"
              data-action="select-option"
-             data-value="option2"
-             onclick="handleOptionSelect('Option 2')"
+             data-value="optionN"
+             onclick="handleOptionSelect('Option N')"
            >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
-            Option 2</button>
+           Option N</button>
          </div>
       5. Wait explicitly for user selection before proceeding to the next step.
       6. If a node has no further options or next steps, clearly indicate the end of the conversation flow and do not loop back or repeat previous nodes.
