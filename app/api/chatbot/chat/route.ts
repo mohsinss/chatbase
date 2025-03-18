@@ -165,6 +165,7 @@ export async function POST(req: NextRequest) {
       systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.
       Follow these rules strictly for the conversation flow:
       At first, you should know which node are you on based on chat history, which node should you use for redering content and then follow steps.
+      If you are on the last node, don't notify that is the end of questionflow, based on such text, answer as you want.
       1. Start this question flow conversation only when the user's message matches the trigger condition.
       2. Follow the predefined question flow structure exactly as shown below.
       3. Clearly display the content of each message node to the user, if current node has multiple options, you can render only options.
