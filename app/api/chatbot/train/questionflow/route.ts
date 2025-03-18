@@ -12,18 +12,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { enabled, chatbotId } = await req.json();
+    const { chatbotId, questionFlow } = await req.json();
+
+    await connectMongo();
+
+    if (!questionFlow) {
+      return NextResponse.json({ error: "questionFlow is required" }, { status: 404 });
+    }
 
     if (!chatbotId) {
       return NextResponse.json({ error: "chatbotId is required" }, { status: 404 });
     }
 
-    await connectMongo();
-
     // Find the dataset associated with the user and update the questionFlow enabled status
     const updatedDataset = await DatasetModel.findOneAndUpdate(
       { chatbotId },
-      { $set: { questionFlowEnable: enabled } },
+      { $set: { questionFlow } },
       {
         new: true,
         runValidators: true,
@@ -37,7 +41,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      enabled: enabled
+      questionFlow
     });
 
   } catch (error: any) {

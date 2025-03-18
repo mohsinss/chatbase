@@ -166,8 +166,9 @@ export async function POST(req: NextRequest) {
       Follow these rules for the conversation flow:
       1. Start the conversation only when the user's message matches the trigger condition
       2. Follow the predefined question flow structure exactly as shown below
-      3. When presenting options, format them as clickable buttons using HTML with data attributes:
+      3. When presenting options, format them as clickable buttons using HTML with data attributes after before message node's content:
          <div class="flex flex-col gap-2">
+          <div>{previous node's message content}</div>
            <button 
              class="w-full text-left px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
              data-action="select-option"

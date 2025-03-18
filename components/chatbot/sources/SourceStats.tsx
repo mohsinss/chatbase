@@ -15,30 +15,33 @@ interface SourceStatsProps {
   isTraining: boolean;
 }
 
-const SourceStats = ({ 
-  fileCount, 
-  fileChars, 
-  textInputChars, 
+const SourceStats = ({
+  fileCount,
+  fileChars,
+  textInputChars,
   qaInputCount,
   qaInputChars,
   linkInputCount,
   linkInputChars,
-  charLimit, 
+  charLimit,
   onRetrain,
   isTraining,
   setTotalChars,
 }: SourceStatsProps) => {
-  const totalChars = fileChars + textInputChars + linkInputChars + qaInputChars;
-  setTotalChars(totalChars);
+  let totalChars = 0;
+  useEffect(() => {
+    totalChars = fileChars + textInputChars + linkInputChars + qaInputChars
+    setTotalChars(totalChars);
+  }, [fileChars, textInputChars, linkInputChars, qaInputChars, setTotalChars]);
   // console.log('charLimit', charLimit)
 
   return (
     <div className="w-[300px] bg-white rounded-lg p-6 border shadow-sm">
       <h2 className="text-xl font-semibold mb-6">Sources</h2>
-      
+
       <div className="space-y-3 mb-6">
         {fileCount > 0 && <p className="text-gray-700">
-          {fileCount} File{fileCount == 1?'':'s'} ({fileChars} chars)
+          {fileCount} File{fileCount == 1 ? '' : 's'} ({fileChars} chars)
         </p>}
         {textInputChars > 0 && <p className="text-gray-700">
           {textInputChars} text input chars
@@ -55,12 +58,12 @@ const SourceStats = ({
         <p className="font-medium">Total detected characters</p>
         <p className="text-center">
           <span className="text-lg font-semibold">{totalChars.toLocaleString()}</span>
-          <span className="text-gray-500">/ {charLimit == 0 ? "Unlimited" : (charLimit/1_000_000).toFixed(1)+'M limit' }</span>
+          <span className="text-gray-500">/ {charLimit == 0 ? "Unlimited" : (charLimit / 1_000_000).toFixed(1) + 'M limit'}</span>
         </p>
       </div>
 
-      <Button 
-        className="w-full mt-6 bg-black text-white hover:bg-gray-800" 
+      <Button
+        className="w-full mt-6 bg-black text-white hover:bg-gray-800"
         onClick={onRetrain}
         disabled={isTraining}
       >
