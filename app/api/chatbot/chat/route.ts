@@ -162,35 +162,41 @@ export async function POST(req: NextRequest) {
     // const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in italian language only.`;
     let systemPrompt;
     if (questionFlowEnable && questionFlow) {
-      systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. please provide me the result with html format that can be embeded in <div> tag.
-      Follow these rules for the conversation flow:
-      1. Start the conversation only when the user's message matches the trigger condition
-      2. Follow the predefined question flow structure exactly as shown below
-      3. When presenting options, format them as clickable buttons using HTML with data attributes after before message node's content:
-         <div class="flex flex-col gap-2">
-          <div>{previous node's message content}</div>
+      systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.
+      Follow these rules strictly for the conversation flow:
+      At first, you should know which node are you on based on chat history, which node should you use for redering content and then follow steps.
+      1. Start this question flow conversation only when the user's message matches the trigger condition.
+      2. Follow the predefined question flow structure exactly as shown below.
+      3. Clearly display the content of each message node to the user, if current node has multiple options, you can render only options.
+      4. When presenting options, format them as clickable buttons using HTML with data attributes immediately after the rendering node's content:
+         <div class="mt-2">
            <button 
-             class="w-full text-left px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
+             class="w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn"
              data-action="select-option"
              data-value="option1"
              onclick="handleOptionSelect('Option 1')"
-           >Option 1</button>
+           >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+           Option 1</button>
            <button 
-             class="w-full text-left px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
+             class="w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn"
              data-action="select-option"
              data-value="option2"
              onclick="handleOptionSelect('Option 2')"
-           >Option 2</button>
+           >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+            Option 2</button>
          </div>
-      4. Wait for user selection before proceeding to the next step
-      5. Keep responses concise and focused on the current step in the flow
-
+      5. Wait explicitly for user selection before proceeding to the next step.
+      6. If a node has no further options or next steps, clearly indicate the end of the conversation flow and do not loop back or repeat previous nodes.
+      7. Keep responses concise and strictly focused on the current step in the flow.
+    
       Question Flow Structure:
-
+    
       ${JSON.stringify(questionFlow)}
       `;
     } else {
-      systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. please provide me the result with html format that can be embeded in <div> tag.`;
+      systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;
     }
     console.log("systemPrompt", systemPrompt)
 

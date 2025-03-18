@@ -127,7 +127,15 @@ progress::-webkit-progress-value {
   text-decoration: underline;
 }
 
-
+.embed-btn {
+  width: calc(100% + 24px);
+  margin-left: -12px;
+  border-top: 1px solid gray;
+  border-bottom: 1px solid gray;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
 
 @layer base {
   * {

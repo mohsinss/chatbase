@@ -377,7 +377,7 @@ const ChatContainer = ({
                   <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
                     <div className={`p-3 inline-block max-w-[80%] ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
                       } ${message.role === 'assistant'
-                        ? 'prose prose-sm max-w-none bg-white'
+                        ? 'prose prose-sm max-w-none bg-gray-50'
                         : 'text-white'
                       }`}
                       style={{
