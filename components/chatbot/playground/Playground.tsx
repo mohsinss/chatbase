@@ -658,6 +658,16 @@ const ChatContainer = ({
   );
 };
 
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  const debouncedFunc = (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+  debouncedFunc.cancel = () => clearTimeout(timeout);
+  return debouncedFunc;
+};
+
 const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   if (team) {
     team = JSON.parse(team)
@@ -665,6 +675,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
   const [conversationId, setConversationId] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -674,6 +685,15 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const [confidenceScore, setConfidenceScore] = useState(0);
   const { leadSetting } = useChatbotLeadSetting(chatbot.id);
 
+  const debouncedSave = React.useCallback(
+    debounce((msgs: Message[]) => {
+      if (msgs.length > 0 && conversationId) {
+        saveConversation();
+      }
+    }, 1000),
+    [conversationId]
+  );
+
   // Create new conversation on mount
   useEffect(() => {
     createNewConversation();
@@ -681,10 +701,9 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
 
   // Save conversation when messages change
   useEffect(() => {
-    if (messages.length > 0 && conversationId) {
-      saveConversation();
-    }
-  }, [messages]);
+    debouncedSave(messages);
+    return () => debouncedSave.cancel?.();
+  }, [messages, debouncedSave]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
