@@ -95,6 +95,18 @@ export async function POST(req: NextRequest) {
 
     await connectMongo();
 
+    if (conversationId) {
+      return setCorsHeaders(new Response(
+        JSON.stringify({
+          error: 'conversationId is missing.',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      ));
+    }
+
     // Measure time for fetching AI settings and dataset
     const fetchStart = Date.now();
     const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
@@ -165,39 +177,96 @@ export async function POST(req: NextRequest) {
     // const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in italian language only.`;
     let systemPrompt;
     if (questionFlowEnable && questionFlow) {
-      systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.
-      Follow these rules strictly for the conversation flow:
-      At first, you should know which node are you on based on chat history, which node should you use for redering content and then follow steps.
-      If you are on the last node, don't notify that is the end of questionflow, based on such text, answer as you want.
-      1. Start this question flow conversation only when the user's message matches the trigger condition.
-      2. Follow the predefined question flow structure exactly as shown below.
-      3. Clearly display the content of each message node to the user, if current node has multiple options, you can render only options.
-      4. When presenting options, render all options and format them as clickable buttons using HTML with data attributes immediately after the rendering node's content
-         <div class="mt-2">
-           <button 
-             class="w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn"
-             data-action="select-option"
-             data-value="option1"
-             onclick="handleOptionSelect('Option 1')"
-           >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
-           Option 1</button>
-           ...
-           <button 
-             class="w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn"
-             data-action="select-option"
-             data-value="optionN"
-             onclick="handleOptionSelect('Option N')"
-           >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
-           Option N</button>
-         </div>
-      5. Wait explicitly for user selection before proceeding to the next step.
-      6. If a node has no further options or next steps, clearly indicate the end of the conversation flow and do not loop back or repeat previous nodes.
-      7. Keep responses concise and strictly focused on the current step in the flow.
-    
-      Question Flow Structure:
-    
+      systemPrompt = `
+      ${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} 
+      You must respond in ${language} language only. All responses must be in **HTML format**, suitable for embedding inside a <div> tag.
+      
+      ---
+      
+      ### Node Types:
+      1. **Trigger Node**: Starts the question flow if the user’s message matches its trigger condition.
+      2. **Message Node**: Displays content to the user, then moves to the next node automatically.
+      3. **Option Node**: Displays multiple clickable options. Wait for the user to select an option before proceeding.
+      
+      ---
+      
+      ### Node Flow Rules:
+      
+      1. **Triggering the Flow**:
+         - Begin the question flow **only if the user’s input matches** the trigger condition.
+      
+      2. **Navigating Nodes**:
+         - From chat history, determine the **current node**.
+         - If on a **message node**:
+           - Display the message content.
+           - Move automatically to the **next node**.
+           - If the next node is another **message node**, repeat.
+           - Stop at the first **option node** and render all its options.
+         - If on an **option node**:
+           - Display **all options from that node** using the format below.
+           - Wait for **user selection** before proceeding.
+      
+      3. **Rendering Options**:
+         - **Render all options** from the **current option node only** (no partial rendering).
+         - Use this exact HTML format for options:
+      
+      \`\`\`html
+      <div class="mt-2">
+        <button 
+          class="w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn"
+          data-action="select-option"
+          data-value="option1"
+          onclick="handleOptionSelect('Option 1')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          Option 1
+        </button>
+        <button 
+          class="w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn"
+          data-action="select-option"
+          data-value="option2"
+          onclick="handleOptionSelect('Option 2')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          Option 2
+        </button>
+        <button 
+          class="w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn"
+          data-action="select-option"
+          data-value="option3"
+          onclick="handleOptionSelect('Option 3')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          Option 3
+        </button>
+        ...
+        <button 
+          class="w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn"
+          data-action="select-option"
+          data-value="optionN"
+          onclick="handleOptionSelect('Option N')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          Option N
+        </button>
+      </div>
+      \`\`\`
+      
+      4. **User Interaction**:
+         - Do not proceed beyond an option node until the **user selects an option**.
+         - After selection, go to the **next message node**, display it, and repeat the flow.
+      
+      5. **End of Flow**:
+         - If there are **no further nodes**, end naturally.
+         - **Do not state** it is the last node. Just provide a concluding response if needed.
+      
+      6. **Focus**:
+         - Only respond with content for the **current node and its valid next node(s)**.
+         - Keep responses **concise and accurate**.
+      
+      ---
+      
+      ### Question Flow Structure:
       ${JSON.stringify(questionFlow)}
       `;
     } else {
@@ -539,14 +608,6 @@ export async function POST(req: NextRequest) {
             'Connection': 'keep-alive',
           },
         }));
-      }
-
-      let currentThreadId = conversation?.threadId;
-      
-      // Create new thread if none exists
-      if (!currentThreadId) {
-        const thread = await openai.beta.threads.create();
-        currentThreadId = thread.id;
       }
 
       console.log('Using OpenAI Model:', MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo');

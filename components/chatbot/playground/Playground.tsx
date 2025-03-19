@@ -509,7 +509,7 @@ const ChatContainer = ({
                         || (leadSetting?.enable == "after"
                           && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
                         toast.error('Please submit the form. 🙂');
-                        setIsLoading(true);
+                        setIsLoading(false);
                         return;
                       }
                       const response = await fetch('/api/chatbot/chat', {
@@ -574,6 +574,8 @@ const ChatContainer = ({
                                     { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
                                   ];
                                 });
+
+                                setIsLoading(false);
                                 continue;
                               }
 
@@ -599,8 +601,6 @@ const ChatContainer = ({
                     } catch (error) {
                       console.error('Chat error:', error);
                       toast.error(error.message)
-                    } finally {
-                      setIsLoading(false);
                     }
                   }}
                 >
@@ -827,7 +827,6 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
         let done = false;
         while (!done) {
           const result = await reader.read();
-          setIsLoading(false);
           done = result.done;
           if (done) break;
 
@@ -839,7 +838,10 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
             if (line.startsWith('data: ')) {
               const data = line.slice(5).trim();
 
-              if (data === '[DONE]') continue;
+              if (data === '[DONE]') {
+                setIsLoading(false);
+                continue;
+              };
 
               try {
                 const parsed = JSON.parse(data);
@@ -899,8 +901,6 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
     } catch (error) {
       console.error('Chat error:', error);
       toast.error(error.message)
-      setIsLoading(false);
-    } finally {
       setIsLoading(false);
     }
   }
