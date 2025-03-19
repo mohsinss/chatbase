@@ -4,7 +4,6 @@ import { authOptions } from "@/libs/next-auth";
 import ChatbotConversation from '@/models/ChatbotConversation';
 import { NextRequest, NextResponse } from 'next/server';
 import FacebookPage from "@/models/FacebookPage";
-import InstagramPage from "@/models/InstagramPage";
 import axios from "axios";
 
 export async function POST(req: Request) {
@@ -18,16 +17,16 @@ export async function POST(req: Request) {
     await connectMongo();
 
     // Fetch the existing WhatsAppNumber model
-    const instagramPage = await InstagramPage.findOne({ name: to });
-    if (!instagramPage) {
+    const facebookPage = await FacebookPage.findOne({ name: to });
+    if (!facebookPage) {
         // Respond with a 200 OK status
-        return NextResponse.json({ error: "instagramPage doesn't registered to the site." }, { status: 200 });
+        return NextResponse.json({ error: "facebookPage doesn't registered to the site." }, { status: 200 });
     }
-    const chatbotId = instagramPage.chatbotId;
-    const pageId = instagramPage.pageId;
+    const chatbotId = facebookPage.chatbotId;
+    const pageId = facebookPage.pageId;
 
     // send text msg to page
-    const response2 = await axios.post(`https://graph.facebook.com/v22.0/${pageId}/messages?access_token=${instagramPage.access_token}`, {
+    const response2 = await axios.post(`https://graph.facebook.com/v22.0/${pageId}/messages?access_token=${facebookPage.access_token}`, {
         messaging_type: "RESPONSE",
         message: {
             text: text
@@ -40,7 +39,7 @@ export async function POST(req: Request) {
     });
 
     // Find existing conversation or create a new one
-    let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "instagram", "metadata.from": from, "metadata.to": to });
+    let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "facebook", "metadata.from": from, "metadata.to": to });
     if (conversation) {
         // Update existing conversation
         conversation.messages.push({ role: "assistant", content: text, from: session.user.name });

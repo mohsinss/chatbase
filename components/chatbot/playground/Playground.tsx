@@ -786,7 +786,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
     return () => {
       delete (window as any).handleOptionSelect;
     };
-  }, []);
+  }, [conversationId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
