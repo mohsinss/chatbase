@@ -579,20 +579,16 @@ const ChatContainer = ({
                                 continue;
                               }
 
-                              try {
-                                const parsed = JSON.parse(data);
-                                if (parsed.text) {
-                                  setMessages(prev => {
-                                    const lastMessage = prev[prev.length - 1];
-                                    let lastMessage_content = lastMessage.content + parsed.text;
-                                    return [
-                                      ...prev.slice(0, -1),
-                                      { ...lastMessage, content: lastMessage_content, confidenceScore: -1 }
-                                    ];
-                                  });
-                                }
-                              } catch (e) {
-                                console.log('Skipping unparseable chunk');
+                              const parsed = JSON.parse(data);
+                              if (parsed.text) {
+                                setMessages(prev => {
+                                  const lastMessage = prev[prev.length - 1];
+                                  let lastMessage_content = lastMessage.content + parsed.text;
+                                  return [
+                                    ...prev.slice(0, -1),
+                                    { ...lastMessage, content: lastMessage_content, confidenceScore: -1 }
+                                  ];
+                                });
                               }
                             }
                           }
@@ -600,6 +596,7 @@ const ChatContainer = ({
                       }
                     } catch (error) {
                       console.error('Chat error:', error);
+                      setIsLoading(false);
                       toast.error(error.message)
                     }
                   }}
@@ -842,30 +839,25 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
                 setIsLoading(false);
                 continue;
               };
+              const parsed = JSON.parse(data);
+              if (parsed.text) {
+                setMessages(prev => {
+                  const lastMessage = prev[prev.length - 1];
+                  let lastMessage_content = lastMessage.content + parsed.text;
 
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.text) {
-                  setMessages(prev => {
-                    const lastMessage = prev[prev.length - 1];
-                    let lastMessage_content = lastMessage.content + parsed.text;
+                  let confidenceScore1 = -1;
 
-                    let confidenceScore1 = -1;
-
-                    if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
-                      const confidenceScore = lastMessage_content.split(":::")[1];
-                      confidenceScore1 = Number(confidenceScore)
-                      console.log(confidenceScore1)
-                      lastMessage_content = lastMessage_content.split(":::")[0];
-                    }
-                    return [
-                      ...prev.slice(0, -1),
-                      { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
-                    ];
-                  });
-                }
-              } catch (e) {
-                console.log('Skipping unparseable chunk');
+                  if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
+                    const confidenceScore = lastMessage_content.split(":::")[1];
+                    confidenceScore1 = Number(confidenceScore)
+                    console.log(confidenceScore1)
+                    lastMessage_content = lastMessage_content.split(":::")[0];
+                  }
+                  return [
+                    ...prev.slice(0, -1),
+                    { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
+                  ];
+                });
               }
             }
             else if (line.startsWith('reason: ')) {
