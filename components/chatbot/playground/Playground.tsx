@@ -519,6 +519,7 @@ const ChatContainer = ({
                     setMessages(prev => [...prev, userMessage]);
                     setInput('');
 
+                    if (!conversationId) return;
                     // Start the chat process
                     setIsLoading(true);
                     try {
@@ -795,7 +796,9 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   };
 
   const handleSendMessage = async (input: string) => {
+    if (!conversationId) return;
     const userMessage: Message = { role: 'user', content: input };
+    
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
@@ -1014,6 +1017,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
               messagesEndRef={messagesEndRef}
               chatbotId={chatbot.id}
               aiSettings={aiSettings}
+              conversationId={conversationId}
               embed={embed}
             />
           </div>
