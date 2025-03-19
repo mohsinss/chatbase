@@ -63,6 +63,7 @@ export async function POST(req: Request) {
       topP: body.topP,
       frequencyPenalty: body.frequencyPenalty,
       presencePenalty: body.presencePenalty,
+      chunkCount: body?.chunkCount,
     };
 
     // Create a new document or update existing one
