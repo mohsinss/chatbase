@@ -273,6 +273,18 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
             text: inputMsg,
           }),
         });
+      } else if (conversation?.platform == "instagram") {
+        response = await fetch('/api/chatbot/chat/sendviainstagram', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: conversation.metadata.from,
+            to: conversation.metadata.to,
+            text: inputMsg,
+          }),
+        });
       } else if (conversation?.platform == "facebook-comment") {
         response = await fetch('/api/chatbot/chat/sendviafacebookcomment', {
           method: 'POST',
@@ -520,6 +532,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
               {
                 (selectedConversation?.platform == "whatsapp"
                   || selectedConversation?.platform == "facebook"
+                  || selectedConversation?.platform == "instagram"
                   || selectedConversation?.platform == "facebook-comment"
                 )
                 &&
