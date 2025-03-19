@@ -137,6 +137,10 @@ const ChatContainer = ({
     setLoadingSources(true);
     const datasetId = await fetchDataset();
     console.log(datasetId)
+
+    // Find the last user message
+    const lastUserMessage = [...messages].reverse().find(msg => msg.role === 'user');
+
     const options = {
       method: 'POST',
       headers: {
@@ -144,14 +148,26 @@ const ChatContainer = ({
         Authorization: `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
         'Content-Type': 'application/json'
       },
-      body: '{}'
+      body: JSON.stringify({
+        query: lastUserMessage?.content || " ",
+        search_type: 'semantic',
+        page_size: aiSettings?.chunkCount || 4,
+      })
     };
 
-    fetch('https://api.trieve.ai/api/chunks/scroll', options)
+    const chunk_response = await fetch('https://api.trieve.ai/api/chunk/search', options)
       .then(response => response.json())
-      .then(response => setSources(response.chunks))
+      .then(response => {
+        setSources(response.chunks);
+      })
       .catch(err => console.error(err))
       .finally(() => setLoadingSources(false));
+
+    // fetch('https://api.trieve.ai/api/chunks/scroll', options)
+    //   .then(response => response.json())
+    //   .then(response => setSources(response.chunks))
+    //   .catch(err => console.error(err))
+    //   .finally(() => setLoadingSources(false));
   }
 
   // Modal Component
@@ -160,15 +176,15 @@ const ChatContainer = ({
     if (!isOpen) return null; // Don't render if not open
 
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="z-[11] fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
         <div className="bg-white p-4 pt-8 rounded shadow-lg relative min-w-[400px] max-w-[800px] w-[80%] h-[80%] overflow-x-hidden overflow-y-scroll">
           <button onClick={onClose} className="absolute top-2 right-2">
             ✖️
           </button>
           <h1 className="font-bold text-2xl">Sources</h1>
           {sources.map((chunk, index) => {
-            if (chunk.metadata.filetype == "pdf") return null;
-            return <div key={'chunk-' + index} className="border-b-[1px] pt-2">{chunk.chunk_html}</div>
+            // if (chunk.metadata.filetype == "pdf") return null;
+            return <div key={'chunk-' + chunk.chunk.id} className="border-b-[1px] pt-2">{chunk.chunk.chunk_html}</div>
           })}
           <button
             onClick={onClose} // Open modal on button click
@@ -650,8 +666,8 @@ const ChatContainer = ({
         >
           {loadingSources ? 'Loading Sources...' : "Show Sources"}
         </button>
-        {!embed && <Modal isOpen={isModalOpen && !loadingSources} onClose={() => setIsModalOpen(false)} />}
       </div>
+      {!embed && <Modal isOpen={isModalOpen && !loadingSources} onClose={() => setIsModalOpen(false)} />}
     </div>
   );
 };
@@ -975,6 +991,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
                 onToggle={() => setIsSettingsOpen(false)}
                 chatbotId={chatbot.id}
                 team={team}
+                fetchSettings={fetchSettings}
               />
             </div>
 
