@@ -522,7 +522,8 @@ const ChatContainer = ({
                           model: aiSettings?.model,
                           temperature: aiSettings?.temperature,
                           maxTokens: aiSettings?.maxTokens,
-                          systemPrompt: aiSettings?.systemPrompt
+                          systemPrompt: aiSettings?.systemPrompt,
+                          conversationId,
                         }),
                       });
 
@@ -659,7 +660,7 @@ const ChatContainer = ({
 };
 
 const debounce = (func: Function, wait: number) => {
-  let timeout: NodeJS.Timeout;
+  let timeout: any;
   const debouncedFunc = (...args: any[]) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
@@ -799,7 +800,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
           model: aiSettings?.model,
           temperature: aiSettings?.temperature,
           maxTokens: aiSettings?.maxTokens,
-          systemPrompt: aiSettings?.systemPrompt
+          systemPrompt: aiSettings?.systemPrompt,
+          conversationId,
         }),
       });
 

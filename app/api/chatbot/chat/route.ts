@@ -7,6 +7,7 @@ import ChatbotAISettings from "@/models/ChatbotAISettings";
 import Chatbot from '@/models/Chatbot';
 import Dataset from "@/models/Dataset";
 import Team from '@/models/Team';
+import ChatbotConversation from '@/models/ChatbotConversation';
 import config from '@/config';
 import { MODEL_MAPPING } from '@/types';
 
@@ -90,15 +91,17 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, chatbotId } = await req.json();
+    const { messages, chatbotId, conversationId } = await req.json();
 
     await connectMongo();
 
     // Measure time for fetching AI settings and dataset
     const fetchStart = Date.now();
     const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
-    const chatbot = await Chatbot.findOne({ chatbotId })
+    const chatbot = await Chatbot.findOne({ chatbotId });
     const dataset = await Dataset.findOne({ chatbotId });
+    const conversation = await ChatbotConversation.findById(conversationId);
+
     console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
 
     const team = await Team.findOne({ teamId: chatbot.teamId });
@@ -402,8 +405,6 @@ export async function POST(req: NextRequest) {
       console.log('Using Grok Model:', MODEL_MAPPING[internalModel] || 'grok-2');
 
       // For O1 models, prepend system message as a user message
-      const confidencePrompt = "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'";
-
       const formattedMessages = [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: relevant_chunk },
@@ -540,6 +541,14 @@ export async function POST(req: NextRequest) {
         }));
       }
 
+      let currentThreadId = conversation?.threadId;
+      
+      // Create new thread if none exists
+      if (!currentThreadId) {
+        const thread = await openai.beta.threads.create();
+        currentThreadId = thread.id;
+      }
+
       console.log('Using OpenAI Model:', MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo');
 
       // For O1 models, prepend system message as a user message
@@ -549,14 +558,14 @@ export async function POST(req: NextRequest) {
           { role: 'user', content: systemPrompt },
           { role: 'user', content: relevant_chunk },
           ...messages,
-          { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'" }
+          { role: 'user', content: confidencePrompt }
         ];
       } else {
         formattedMessages = [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: relevant_chunk },
           ...messages,
-          { role: 'user', content: "For your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value just after ':::' at the end of your response with 3 letters only like ':::100'" }
+          { role: 'user', content: confidencePrompt }
         ];
       }
 
