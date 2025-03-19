@@ -532,6 +532,86 @@ export async function POST(req: NextRequest) {
         },
       }));
     } else {
+      // If dataset has an assistant ID, use the Assistant API
+      if (dataset?.openaiAssistantId) {
+        console.log('Using OpenAI Assistant:', dataset.openaiAssistantId);
+
+        const thread = await openai.beta.threads.create();
+
+        // Add the user's message to the thread
+        await openai.beta.threads.messages.create(thread.id, {
+          role: "user",
+          content: messages[messages.length - 1].content,
+        });
+
+        // Run the assistant
+        const run = await openai.beta.threads.runs.create(thread.id, {
+          assistant_id: dataset.openaiAssistantId,
+        });
+
+        // Create a stream to send the response
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          async start(controller) {
+            try {
+              const MAX_POLLING_ATTEMPTS = 60; // 30 seconds with 500ms intervals
+              let attempts = 0;
+              let isCompleted = false;
+
+              while (!isCompleted) {
+                if (attempts >= MAX_POLLING_ATTEMPTS) {
+                  throw new Error('Assistant run timed out');
+                }
+
+                const runStatus = await openai.beta.threads.runs.retrieve(
+                  thread.id,
+                  run.id
+                );
+
+                if (runStatus.status === 'completed') {
+                  // Get messages after the run is completed
+                  const messages = await openai.beta.threads.messages.list(
+                    thread.id
+                  );
+
+                  // Get the assistant's response
+                  const assistantMessage = messages.data
+                    .filter(msg => msg.role === 'assistant')
+                    .pop();
+
+                  if (assistantMessage?.content[0]?.type === 'text') {
+                    const text = assistantMessage.content[0].text.value;
+                    const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
+                    controller.enqueue(encoder.encode(sseMessage));
+                  }
+
+                  isCompleted = true;
+                } else if (runStatus.status === 'failed') {
+                  throw new Error('Assistant run failed');
+                }
+
+                // Wait before polling again
+                attempts++;
+                await new Promise(resolve => setTimeout(resolve, 500));
+              }
+
+              controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+              controller.close();
+            } catch (error) {
+              controller.error(error);
+            }
+          },
+        });
+
+        return setCorsHeaders(new Response(stream, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          },
+        }));
+      }
+
       let assistantId = conversation?.metadata?.openaiAssistantId;
       let threadId = conversation?.metadata?.openaiThreadId;
 
