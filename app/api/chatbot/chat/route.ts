@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
 
     await connectMongo();
 
-    if (conversationId) {
+    if (!conversationId) {
       return setCorsHeaders(new Response(
         JSON.stringify({
           error: 'conversationId is missing.',
