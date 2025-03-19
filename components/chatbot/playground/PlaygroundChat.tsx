@@ -575,6 +575,7 @@ const Playground = ({ chatbot }: PlaygroundProps) => {
                 isVisible={isSettingsOpen} 
                 onToggle={() => setIsSettingsOpen(false)}
                 chatbotId={chatbot.id}
+                fetchSettings={fetchSettings}
               />
             </div>
 

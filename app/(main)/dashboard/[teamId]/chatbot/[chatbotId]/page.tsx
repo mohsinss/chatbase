@@ -61,4 +61,4 @@ export default async function ChatbotPage({
       </main>
     </>
   );
-} 
+}

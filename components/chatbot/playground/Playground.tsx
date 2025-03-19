@@ -8,6 +8,7 @@ import { useChatbotLeadSetting, ChatbotLeadSettings } from "@/hooks/useChatbotLe
 import { useAISettings } from '@/hooks/useAISettings';
 import { AISettingsProvider, useAISettings as useAISettingsProvider } from "@/contexts/AISettingsContext";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -853,8 +854,9 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
 
               if (data === '[DONE]') {
                 setIsLoading(false);
-                continue;
-              };
+                continue
+              }
+              
               const parsed = JSON.parse(data);
               if (parsed.text) {
                 setMessages(prev => {
@@ -969,7 +971,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-4 py-1.5 border rounded-lg text-sm">Compare</button>
+            <Link href={window.location + '/compare'} className="px-4 py-1.5 border rounded-lg text-sm">Compare</Link>
             <button className="w-8 h-8 flex items-center justify-center border rounded-lg">
               <span className="w-4 h-4">💡</span>
             </button>
