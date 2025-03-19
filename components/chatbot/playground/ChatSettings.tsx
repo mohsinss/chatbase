@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 interface ChatSettingsProps {
   isVisible: boolean;
   onToggle: () => void;
+  fetchSettings: () => void;
   chatbotId: string;
   team?: any;
 }
@@ -27,7 +28,13 @@ const getSelectedProvider = (model: string): keyof typeof AI_MODELS => {
   return 'OpenAI';
 };
 
-export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSettingsProps) => {
+export const ChatSettings = ({ 
+  isVisible, 
+  onToggle, 
+  chatbotId, 
+  team, 
+  fetchSettings 
+}: ChatSettingsProps) => {
   const { settings: globalSettings, updateSettings: updateGlobalSettings } = useAISettings();
   const [isSaving, setIsSaving] = useState(false);
   const [localSettings, setLocalSettings] = useState(globalSettings);
@@ -70,6 +77,7 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
 
       // Update global settings immediately
       updateGlobalSettings(localSettings);
+      fetchSettings()
 
       toast.success("Settings saved successfully");
     } catch (error) {
@@ -299,6 +307,50 @@ export const ChatSettings = ({ isVisible, onToggle, chatbotId, team }: ChatSetti
             </div>
             <p className="text-xs text-gray-500">
               Maximum number of tokens to generate in the response
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700 font-medium">Chunk Count</span>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-700">{localSettings.chunkCount || 1}</span>
+              </div>
+            </div>
+            <div className="relative w-full h-1.5">
+              <div className="absolute w-full h-full bg-gray-200 rounded-full"></div>
+              <div
+                className="absolute h-full bg-blue-500 rounded-full"
+                style={{
+                  width: `${((localSettings.chunkCount || 1) - 1) / 9 * 100}%`,
+                }}
+              ></div>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="1"
+                value={localSettings.chunkCount || 1}
+                onChange={(e) => setLocalSettings(prev => ({
+                  ...prev,
+                  chunkCount: parseInt(e.target.value)
+                }))}
+                className="absolute w-full h-full opacity-0 cursor-pointer"
+              />
+              <div
+                className="absolute w-3 h-3 bg-blue-500 rounded-full top-1/2 -translate-y-1/2"
+                style={{
+                  left: `${((localSettings.chunkCount || 1) - 1) / 9 * 100}%`,
+                  transform: 'translate(-50%, -50%)'
+                }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>1</span>
+              <span>10</span>
+            </div>
+            <p className="text-xs text-gray-500">
+              Number of chunks to split the context into
             </p>
           </div>
 

@@ -21,6 +21,11 @@ const ChatbotAISettingsSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    chunkCount: {
+      type: Number,
+      default: 4,
+      required: false,
+    },
     knowledgeCutoff: {
       type: String,
       default: "",

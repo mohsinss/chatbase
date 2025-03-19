@@ -38,12 +38,11 @@ interface TeamData {
 type Provider = keyof typeof AI_MODELS;
 
 const CustomNotification = ({ message, type, onClose }: NotificationType & { onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg ${
-    type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-  }`}>
+  <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+    }`}>
     <div className="flex justify-between items-center">
       <p>{message}</p>
-      <button 
+      <button
         onClick={onClose}
         className="ml-4 text-gray-500 hover:text-gray-700"
       >
@@ -55,6 +54,7 @@ const CustomNotification = ({ message, type, onClose }: NotificationType & { onC
 
 const AISettings = ({ chatbotId, team }: AISettingsProps) => {
   const [temperature, setTemperature] = useState(0.7)
+  const [chunkCount, setChunkCount] = useState<number>(5)
   const [model, setModel] = useState("gpt-3.5-turbo")
   const [systemPrompt, setSystemPrompt] = useState("")
   const [knowledgeCutoff, setKnowledgeCutoff] = useState("")
@@ -73,11 +73,12 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
     try {
       const response = await fetch(`/api/chatbot/ai-settings?chatbotId=${chatbotId}`);
       const data = await response.json();
-      
+
       if (data) {
         console.log("Fetched settings:", data);
         setModel(data.model ?? "gpt-3.5-turbo");
         setTemperature(data.temperature ?? 0.7);
+        setChunkCount(data.chunkCount ?? 4);
         setSystemPrompt(data.systemPrompt ?? "");
         setKnowledgeCutoff(data.knowledgeCutoff ?? "");
         setMaxTokens(data.maxTokens ?? 500);
@@ -106,6 +107,7 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
         maxTokens,
         contextWindow,
         language,
+        chunkCount,
         topP: 1,
         frequencyPenalty: 0,
         presencePenalty: 0
@@ -161,7 +163,7 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
           onClose={() => setNotification(null)}
         />
       )}
-      
+
       <div className="w-full max-w-3xl mx-auto space-y-8">
         <Card className="p-6 space-y-6">
           <div className="space-y-4">
@@ -214,7 +216,7 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
                 className="flex h-10 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 {AI_MODELS[getSelectedProvider()].map(model => (
-                  <option key={model.value} value={model.value}  disabled={!model.default && team.plan == "Free"}>
+                  <option key={model.value} value={model.value} disabled={!model.default && team.plan == "Free"}>
                     {model.label}
                   </option>
                 ))}
@@ -236,8 +238,27 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
                 className="w-full max-w-xl"
               />
               <p className="text-sm text-gray-500">
-                Controls randomness: Lowering results in more focused and deterministic responses, 
+                Controls randomness: Lowering results in more focused and deterministic responses,
                 while increasing leads to more creative and varied outputs
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Chunk Count ({chunkCount})
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="1"
+                value={chunkCount}
+                onChange={(e) => setChunkCount(parseInt(e.target.value))}
+                className="w-full max-w-xl"
+              />
+              <p className="text-sm text-gray-500">
+                Controls how many relevant chunks of information are included in the context. 
+                Higher values provide more context but may increase response time and token usage
               </p>
             </div>
 
@@ -278,7 +299,7 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
 
         <Card className="p-6 space-y-6">
           <h3 className="text-xl font-semibold">Advanced Settings</h3>
-          
+
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -318,10 +339,10 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
             </label>
             <p className="text-lg">
               {new Date(lastTrained).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
             </p>
           </div>
         </Card>
