@@ -31,10 +31,10 @@ const Hero = () => {
               text="Get Started Free"
               extraStyle="bg-blue-600 hover:bg-blue-700 text-white px-6 py-6 hover-lift w-full"
             />
-            <Button variant="outline" size="lg" className="hover-lift w-full">
+            {/* <Button variant="outline" size="lg" className="hover-lift w-full">
               <Bot className="mr-2 h-4 w-4" />
               Try Demo Bot
-            </Button>
+            </Button> */}
           </div>
         </div>
         
