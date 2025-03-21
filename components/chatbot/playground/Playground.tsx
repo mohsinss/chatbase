@@ -702,8 +702,12 @@ const ChatContainer = ({
                 />
                 <button
                   type="submit"
-                  disabled={isLoading || !input.trim()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  disabled={isLoading || !input.trim() || !!currentNodeId}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full disabled:opacity-50"
+                  style={{ 
+                    backgroundColor: !isLoading && input.trim() && !currentNodeId ? config.userMessageColor : 'transparent',
+                    color: !isLoading && input.trim() && !currentNodeId ? 'white' : 'gray' 
+                  }}
                 >
                   <IconSend className="w-4 h-4" />
                 </button>

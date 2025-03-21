@@ -139,7 +139,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         chatIconUrl: chatIcon,
         chatBackgroundUrl: config.chatBackgroundUrl,
         chatBackgroundOpacity: config.chatBackgroundOpacity ?? 0.1,
-        chatWidth: config.chatWidth
+        chatWidth: config.chatWidth,
       };
 
       console.log('Before save - Full config:', configToSave);
@@ -923,8 +923,12 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                     config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
                   }`}
                 />
-                <Button size="icon" className={config.roundedChatCorners ? 'rounded-lg' : ''}>
-                  <Send className="h-4 w-4" />
+                <Button 
+                  size="icon" 
+                  className={config.roundedChatCorners ? 'rounded-lg' : ''}
+                  style={{ backgroundColor: config.userMessageColor }}
+                >
+                  <Send className="h-4 w-4 text-white" />
                 </Button>
               </div>
 
