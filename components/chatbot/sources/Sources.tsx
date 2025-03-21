@@ -12,6 +12,7 @@ import NotionInput from './NotionInput';
 import toast, { Toaster } from 'react-hot-toast';
 import config from "@/config";
 import ChatbotFlow from "./Chatflow";
+import ChatflowV1 from "./ChatflowV1";
 
 interface IFile {
   trieveId: string;
@@ -159,7 +160,8 @@ const Sources = ({
       case "qa":
         return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs} />;
       case "qf":
-        return <ChatbotFlow qFlow={qFlow} setQFlow={setQFlow} chatbotId={chatbotId}/>;
+        // return <ChatbotFlow qFlow={qFlow} setQFlow={setQFlow} chatbotId={chatbotId}/>;
+        return <ChatflowV1 qFlow={qFlow} setQFlow={setQFlow} chatbotId={chatbotId}/>;
       case "notion":
         return <NotionInput
           onConnect={() => {

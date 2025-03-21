@@ -47,6 +47,7 @@ interface ChatContainerProps {
   config: any;
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  setCurrentNodeId: React.Dispatch<React.SetStateAction<Number>>;
   input: string;
   chatbotId: string;
   setInput: (input: string) => void;
@@ -99,6 +100,7 @@ const ChatContainer = ({
   setConfig,
   leadSetting,
   conversationId,
+  setCurrentNodeId,
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
     if (confidenceScore === -1) {
@@ -556,57 +558,108 @@ const ChatContainer = ({
                         }
                         throw new Error('Stream failed.');
                       }
-                      const assistantMessage: Message = { role: 'assistant', content: '', reasonal_content: '' };
-                      setMessages(prev => [...prev, assistantMessage]);
 
-                      const reader = response.body?.getReader();
-                      const decoder = new TextDecoder();
+                      const contentType = response.headers.get('Content-Type');
 
-                      if (reader) {
-                        let done = false;
-                        while (!done) {
-                          const result = await reader.read();
-                          done = result.done;
-                          if (done) break;
+                      if (contentType?.includes('application/json')) {
+                        // Non-streaming response
+                        const data = await response.json();
 
-                          const chunk = decoder.decode(result.value);
-                          const lines = chunk.split('\n');
+                        if (data.message) {
+                          const assistantMessage: Message = { role: 'assistant', content: data.message, confidenceScore: 100 };
+                          setMessages(prev => [...prev, assistantMessage]);
+                        }
 
-                          for (const line of lines) {
-                            if (line.startsWith('data: ')) {
-                              const data = line.slice(5).trim();
+                        if (data.options && data.options.length > 0) {
+                          const optionsHtml = `
+                            <div>
+                              <p>${data.question}</p>
+                              <div class="mt-2">
+                              ${data.options.map((option: string, index: number) => `
+                                <button class="chat-option-btn w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn" data-index="${index}">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+                                  ${option}
+                                </button>
+                              `).join('')}
+                              </div>
+                            </div>
+                          `;
+                          const optionsMessage: Message = { role: 'assistant', content: optionsHtml, confidenceScore: 100 };
+                          setMessages(prev => [...prev, optionsMessage]);
+                          setCurrentNodeId(data.nextNodeId);
+                        } else {
+                          setCurrentNodeId(null);
+                        }
+                        setIsLoading(false);
+                      } else {
+                        const assistantMessage: Message = { role: 'assistant', content: '', reasonal_content: '' };
+                        setMessages(prev => [...prev, assistantMessage]);
 
-                              if (data === '[DONE]') {
-                                let confidenceScore1 = -1;
-                                setMessages(prev => {
-                                  const lastMessage = prev[prev.length - 1];
-                                  let lastMessage_content = lastMessage.content;
+                        const reader = response.body?.getReader();
+                        const decoder = new TextDecoder();
 
-                                  if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
-                                    const confidenceScore = lastMessage_content.split(":::")[1];
-                                    confidenceScore1 = Number(confidenceScore)
-                                    lastMessage_content = lastMessage_content.split(":::")[0];
-                                  }
-                                  return [
-                                    ...prev.slice(0, -1),
-                                    { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
-                                  ];
-                                });
+                        if (reader) {
+                          let done = false;
+                          while (!done) {
+                            const result = await reader.read();
+                            done = result.done;
+                            if (done) break;
 
-                                setIsLoading(false);
-                                continue;
+                            const chunk = decoder.decode(result.value);
+                            const lines = chunk.split('\n');
+                            // console.log(lines)
+
+                            for (const line of lines) {
+                              if (line.startsWith('data: ')) {
+                                const data = line.slice(5).trim();
+
+                                if (data === '[DONE]') {
+                                  setIsLoading(false);
+                                  continue
+                                }
+
+                                const parsed = JSON.parse(data);
+                                if (parsed.text) {
+                                  setMessages(prev => {
+                                    const lastMessage = prev[prev.length - 1];
+                                    let lastMessage_content = lastMessage.content + parsed.text;
+
+                                    let confidenceScore1 = -1;
+
+                                    if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
+                                      const confidenceScore = lastMessage_content.split(":::")[1];
+                                      confidenceScore1 = Number(confidenceScore)
+                                      console.log(confidenceScore1)
+                                      lastMessage_content = lastMessage_content.split(":::")[0];
+                                    }
+                                    return [
+                                      ...prev.slice(0, -1),
+                                      { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
+                                    ];
+                                  });
+                                }
                               }
+                              else if (line.startsWith('reason: ')) {
+                                const data = line.slice(7).trim();
+                                console.log(data)
 
-                              const parsed = JSON.parse(data);
-                              if (parsed.text) {
-                                setMessages(prev => {
-                                  const lastMessage = prev[prev.length - 1];
-                                  let lastMessage_content = lastMessage.content + parsed.text;
-                                  return [
-                                    ...prev.slice(0, -1),
-                                    { ...lastMessage, content: lastMessage_content, confidenceScore: -1 }
-                                  ];
-                                });
+                                try {
+                                  const parsed = JSON.parse(data);
+                                  if (parsed.reasonal_text) {
+
+                                    setMessages(prev => {
+                                      const lastMessage = prev[prev.length - 1];
+                                      let lastMessage_reasonal_content = lastMessage?.reasonal_content + parsed.reasonal_text;
+                                      return [
+                                        ...prev.slice(0, -1),
+                                        { ...lastMessage, reasonal_content: lastMessage_reasonal_content }
+                                      ];
+                                    });
+                                  }
+
+                                } catch (e) {
+                                  console.log(e)
+                                }
                               }
                             }
                           }
@@ -700,6 +753,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const { settings: aiSettings, fetchSettings } = useAISettings(chatbot.id);
   const [confidenceScore, setConfidenceScore] = useState(0);
   const { leadSetting } = useChatbotLeadSetting(chatbot.id);
+  const [currentNodeId, setCurrentNodeId] = useState(null);
 
   const debouncedSave = React.useCallback(
     debounce((msgs: Message[]) => {
@@ -776,17 +830,170 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   };
 
   // Add this to your window object for global access
+  // useEffect(() => {
+  //   (window as any).handleOptionSelect = (value: string) => {
+  //     // Send the selection to your chat API
+  //     handleSendMessage(value);
+  //   };
+
+  //   // Cleanup
+  //   return () => {
+  //     delete (window as any).handleOptionSelect;
+  //   };
+  // }, [conversationId]);
+
+  // Handle option clicks
   useEffect(() => {
-    (window as any).handleOptionSelect = (value: string) => {
-      // Send the selection to your chat API
-      handleSendMessage(value);
+    const handleOptionClick = async (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('chat-option-btn')) {
+        const option = target.textContent || '';
+        const index = target.getAttribute('data-index');
+
+        const userMessage: Message = { role: 'user', content: option };
+        setMessages(prev => [...prev, userMessage]);
+        setIsLoading(true);
+
+        try {
+          const response = await fetch('/api/chatbot/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              selectedOption: option,
+              optionIndex: Number(index),
+              currentNodeId,
+              chatbotId: chatbot.id,
+              conversationId,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch response.');
+          }
+
+          const contentType = response.headers.get('Content-Type');
+
+          if (contentType?.includes('application/json')) {
+            // Non-streaming response
+            const data = await response.json();
+
+            if (data.message) {
+              const assistantMessage: Message = { role: 'assistant', content: data.message, confidenceScore: 100 };
+              setMessages(prev => [...prev, assistantMessage]);
+            }
+
+            if (data.options && data.options.length > 0) {
+              const optionsHtml = `
+                <div>
+                  <p>${data.question}</p>
+                  <div class="mt-2">
+                  ${data.options.map((option: string, index: number) => `
+                    <button class="chat-option-btn w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn" data-index="${index}">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+                      ${option}
+                    </button>
+                  `).join('')}
+                  </div>
+                </div>
+              `;
+              const optionsMessage: Message = { role: 'assistant', content: optionsHtml, confidenceScore: 100 };
+              setMessages(prev => [...prev, optionsMessage]);
+              setCurrentNodeId(data.nextNodeId);
+            } else {
+              setCurrentNodeId(null);
+            }
+          } else {
+            const assistantMessage: Message = { role: 'assistant', content: '', reasonal_content: '' };
+            setMessages(prev => [...prev, assistantMessage]);
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+
+            if (reader) {
+              let done = false;
+              while (!done) {
+                const result = await reader.read();
+                done = result.done;
+                if (done) break;
+
+                const chunk = decoder.decode(result.value);
+                const lines = chunk.split('\n');
+                // console.log(lines)
+
+                for (const line of lines) {
+                  if (line.startsWith('data: ')) {
+                    const data = line.slice(5).trim();
+
+                    if (data === '[DONE]') {
+                      setIsLoading(false);
+                      continue
+                    }
+
+                    const parsed = JSON.parse(data);
+                    if (parsed.text) {
+                      setMessages(prev => {
+                        const lastMessage = prev[prev.length - 1];
+                        let lastMessage_content = lastMessage.content + parsed.text;
+
+                        let confidenceScore1 = -1;
+
+                        if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
+                          const confidenceScore = lastMessage_content.split(":::")[1];
+                          confidenceScore1 = Number(confidenceScore)
+                          console.log(confidenceScore1)
+                          lastMessage_content = lastMessage_content.split(":::")[0];
+                        }
+                        return [
+                          ...prev.slice(0, -1),
+                          { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
+                        ];
+                      });
+                    }
+                  }
+                  else if (line.startsWith('reason: ')) {
+                    const data = line.slice(7).trim();
+                    console.log(data)
+
+                    try {
+                      const parsed = JSON.parse(data);
+                      if (parsed.reasonal_text) {
+
+                        setMessages(prev => {
+                          const lastMessage = prev[prev.length - 1];
+                          let lastMessage_reasonal_content = lastMessage?.reasonal_content + parsed.reasonal_text;
+                          return [
+                            ...prev.slice(0, -1),
+                            { ...lastMessage, reasonal_content: lastMessage_reasonal_content }
+                          ];
+                        });
+                      }
+
+                    } catch (e) {
+                      console.log(e)
+                    }
+                  }
+                  else if (line.startsWith('score: ')) {
+                    const score = line.slice(6).trim();
+                    setConfidenceScore(Number(score))
+                    console.log(score)
+                  }
+                }
+              }
+            }
+          }
+
+        } catch (error) {
+          console.error('Option click error:', error);
+          toast.error(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      }
     };
 
-    // Cleanup
-    return () => {
-      delete (window as any).handleOptionSelect;
-    };
-  }, [conversationId]);
+    document.addEventListener('click', handleOptionClick);
+    return () => document.removeEventListener('click', handleOptionClick);
+  }, [currentNodeId, chatbot, conversationId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -798,7 +1005,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const handleSendMessage = async (input: string) => {
     if (!conversationId) return;
     const userMessage: Message = { role: 'user', content: input };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
@@ -834,79 +1041,112 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
         throw new Error('Stream failed.');
       }
 
-      const assistantMessage: Message = { role: 'assistant', content: '', reasonal_content: '' };
-      setMessages(prev => [...prev, assistantMessage]);
+      const contentType = response.headers.get('Content-Type');
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
+      if (contentType?.includes('application/json')) {
+        // Non-streaming response
+        const data = await response.json();
 
-      if (reader) {
-        let done = false;
-        while (!done) {
-          const result = await reader.read();
-          done = result.done;
-          if (done) break;
+        if (data.message) {
+          const assistantMessage: Message = { role: 'assistant', content: data.message, confidenceScore: 100 };
+          setMessages(prev => [...prev, assistantMessage]);
+        }
 
-          const chunk = decoder.decode(result.value);
-          const lines = chunk.split('\n');
-          // console.log(lines)
+        if (data.options && data.options.length > 0) {
+          const optionsHtml = `
+            <div>
+              <p>${data.question}</p>
+              <div class="mt-2">
+              ${data.options.map((option: string, index: number) => `
+                <button class="chat-option-btn w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn" data-index="${index}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+                  ${option}
+                </button>
+              `).join('')}
+              </div>
+            </div>
+          `;
+          const optionsMessage: Message = { role: 'assistant', content: optionsHtml, confidenceScore: 100 };
+          setMessages(prev => [...prev, optionsMessage]);
+          setCurrentNodeId(data.nextNodeId);
+        } else {
+          setCurrentNodeId(null);
+        }
+      } else {
+        const assistantMessage: Message = { role: 'assistant', content: '', reasonal_content: '' };
+        setMessages(prev => [...prev, assistantMessage]);
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(5).trim();
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
 
-              if (data === '[DONE]') {
-                setIsLoading(false);
-                continue
-              }
-              
-              const parsed = JSON.parse(data);
-              if (parsed.text) {
-                setMessages(prev => {
-                  const lastMessage = prev[prev.length - 1];
-                  let lastMessage_content = lastMessage.content + parsed.text;
+        if (reader) {
+          let done = false;
+          while (!done) {
+            const result = await reader.read();
+            done = result.done;
+            if (done) break;
 
-                  let confidenceScore1 = -1;
+            const chunk = decoder.decode(result.value);
+            const lines = chunk.split('\n');
+            // console.log(lines)
 
-                  if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
-                    const confidenceScore = lastMessage_content.split(":::")[1];
-                    confidenceScore1 = Number(confidenceScore)
-                    console.log(confidenceScore1)
-                    lastMessage_content = lastMessage_content.split(":::")[0];
-                  }
-                  return [
-                    ...prev.slice(0, -1),
-                    { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
-                  ];
-                });
-              }
-            }
-            else if (line.startsWith('reason: ')) {
-              const data = line.slice(7).trim();
-              console.log(data)
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(5).trim();
 
-              try {
+                if (data === '[DONE]') {
+                  setIsLoading(false);
+                  continue
+                }
+
                 const parsed = JSON.parse(data);
-                if (parsed.reasonal_text) {
-
+                if (parsed.text) {
                   setMessages(prev => {
                     const lastMessage = prev[prev.length - 1];
-                    let lastMessage_reasonal_content = lastMessage?.reasonal_content + parsed.reasonal_text;
+                    let lastMessage_content = lastMessage.content + parsed.text;
+
+                    let confidenceScore1 = -1;
+
+                    if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
+                      const confidenceScore = lastMessage_content.split(":::")[1];
+                      confidenceScore1 = Number(confidenceScore)
+                      console.log(confidenceScore1)
+                      lastMessage_content = lastMessage_content.split(":::")[0];
+                    }
                     return [
                       ...prev.slice(0, -1),
-                      { ...lastMessage, reasonal_content: lastMessage_reasonal_content }
+                      { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
                     ];
                   });
                 }
-
-              } catch (e) {
-                console.log(e)
               }
-            }
-            else if (line.startsWith('score: ')) {
-              const score = line.slice(6).trim();
-              setConfidenceScore(Number(score))
-              console.log(score)
+              else if (line.startsWith('reason: ')) {
+                const data = line.slice(7).trim();
+                console.log(data)
+
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.reasonal_text) {
+
+                    setMessages(prev => {
+                      const lastMessage = prev[prev.length - 1];
+                      let lastMessage_reasonal_content = lastMessage?.reasonal_content + parsed.reasonal_text;
+                      return [
+                        ...prev.slice(0, -1),
+                        { ...lastMessage, reasonal_content: lastMessage_reasonal_content }
+                      ];
+                    });
+                  }
+
+                } catch (e) {
+                  console.log(e)
+                }
+              }
+              else if (line.startsWith('score: ')) {
+                const score = line.slice(6).trim();
+                setConfidenceScore(Number(score))
+                console.log(score)
+              }
             }
           }
         }
@@ -928,6 +1168,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
       <AISettingsProvider chatbotId={chatbot.id}>
         <div className="relative" style={{ height: '100dvh' }}>
           <ChatContainer
+            setCurrentNodeId={setCurrentNodeId}
             isSettingsOpen={isSettingsOpen}
             setIsSettingsOpen={setIsSettingsOpen}
             messages={messages}
@@ -1002,6 +1243,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
 
             {/* Chat Container */}
             <ChatContainer
+              setCurrentNodeId={setCurrentNodeId}
               isSettingsOpen={isSettingsOpen}
               setIsSettingsOpen={setIsSettingsOpen}
               messages={messages}
