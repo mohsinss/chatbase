@@ -790,7 +790,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                     type="range"
                     min="0"
                     max="1"
-                    step="0.1"
+                    step="0.01"
                     value={config.chatBackgroundOpacity}
                     onChange={(e) => handleConfigChange('chatBackgroundOpacity', parseFloat(e.target.value))}
                     className="flex-1"
