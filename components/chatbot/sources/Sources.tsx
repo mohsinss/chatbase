@@ -164,8 +164,7 @@ const Sources = ({
       case "qa":
         return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs} />;
       case "qf":
-        // return <ChatbotFlow qFlow={qFlow} setQFlow={setQFlow} chatbotId={chatbotId}/>;
-        return <ChatflowV1 qFlow={qFlow} setQFlow={setQFlow} chatbotId={chatbotId}/>;
+        return <ChatflowV1 qFlow={qFlow} setQFlow={setQFlow} qFlowEnabled={qFlowEnabled} chatbotId={chatbotId}/>;
       case "notion":
         return <NotionInput
           onConnect={() => {
