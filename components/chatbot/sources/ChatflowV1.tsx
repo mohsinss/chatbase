@@ -36,6 +36,7 @@ interface ChatbotFlowProps {
   qFlow: any;
   setQFlow: React.Dispatch<React.SetStateAction<any>>;
   chatbotId: string;
+  qFlowEnabled: boolean;
 }
 // Initialize with a simple flow
 const initialNodes: Node[] = [
@@ -172,12 +173,13 @@ export default function ChatflowV1({
   qFlow,
   setQFlow,
   chatbotId,
+  qFlowEnabled,
 }: ChatbotFlowProps) {
   const [nodes, setNodes, onNodesChange2] = useNodesState(qFlow?.nodes ?? []);
   const [edges, setEdges, onEdgesChange2] = useEdgesState(qFlow?.edges ?? []);
   const [isSaving, setIsSaving] = useState(false);
   const [isEnabling, setIsEnabling] = useState(false);
-  const [enabled, setEnabled] = useState(true);
+  const [enabled, setEnabled] = useState(qFlowEnabled);
 
   const loadTemplate = () => {
     //@ts-ignore
@@ -197,6 +199,10 @@ export default function ChatflowV1({
       setEdges(qFlow.edges);
     }
   }, [qFlow]);
+
+  useEffect(() => {
+    setEnabled(qFlowEnabled);
+  }, [qFlowEnabled])
 
   const handleNodesChange = useCallback(
     (changes: any) => {

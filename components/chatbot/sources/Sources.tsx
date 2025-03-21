@@ -60,6 +60,7 @@ const Sources = ({
   const [qaPairs, setQaPairs] = useState<{ id: string; question: string; answer: string }[]>([]);
   const [links, setLinks] = useState<{ id: string; link: string, chars: number }[]>([]);
   const [qFlow, setQFlow] = useState(null);
+  const [qFlowEnabled, setQFlowEnabled] = useState(false);
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
 
@@ -88,6 +89,9 @@ const Sources = ({
         }
         if (data.questionFlow) {
           setQFlow(data.questionFlow)
+        }
+        if (data.questionFlowEnable) {
+          setQFlowEnabled(data.questionFlowEnable)
         }
       } catch (error) {
         console.error("Error fetching dataset:", error);
