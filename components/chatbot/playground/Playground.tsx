@@ -704,9 +704,9 @@ const ChatContainer = ({
                   type="submit"
                   disabled={isLoading || !input.trim() || !!currentNodeId}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full disabled:opacity-50"
-                  style={{ 
+                  style={{
                     backgroundColor: !isLoading && input.trim() && !currentNodeId ? config.userMessageColor : 'transparent',
-                    color: !isLoading && input.trim() && !currentNodeId ? 'white' : 'gray' 
+                    color: !isLoading && input.trim() && !currentNodeId ? 'white' : 'gray'
                   }}
                 >
                   <IconSend className="w-4 h-4" />
@@ -760,6 +760,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const [confidenceScore, setConfidenceScore] = useState(0);
   const { leadSetting } = useChatbotLeadSetting(chatbot.id);
   const [currentNodeId, setCurrentNodeId] = useState(null);
+  const [qFlow, setQFlow] = useState(null);
+  const [qFlowEnabled, setQFlowEnabled] = useState(false);
 
   const debouncedSave = React.useCallback(
     debounce((msgs: Message[]) => {
@@ -835,18 +837,36 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
     createNewConversation();
   };
 
-  // Add this to your window object for global access
-  // useEffect(() => {
-  //   (window as any).handleOptionSelect = (value: string) => {
-  //     // Send the selection to your chat API
-  //     handleSendMessage(value);
-  //   };
+  useEffect(() => {
+    const fetchDataset = async () => {
+      try {
+        const response = await fetch(`/api/chatbot/sources/dataset?chatbotId=${chatbot.id}`);
+        const data = await response.json();
 
-  //   // Cleanup
-  //   return () => {
-  //     delete (window as any).handleOptionSelect;
-  //   };
-  // }, [conversationId]);
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch dataset');
+        }
+        if (data.questionFlow) {
+          setQFlow(data.questionFlow)
+        }
+        if (data.questionFlowEnable) {
+          setQFlowEnabled(data.questionFlowEnable)
+        }
+      } catch (error) {
+        console.error("Error fetching dataset:", error);
+        toast.error("Failed to load dataset" + error.message);
+      }
+    };
+
+    fetchDataset();
+  }, [chatbot]);
+
+  useEffect(() => {
+    if (qFlowEnabled && conversationId) {
+      //init QF automatically
+      handleSendMessage('')
+    }
+  }, [qFlowEnabled, conversationId])
 
   // Handle option clicks
   useEffect(() => {
@@ -1011,10 +1031,15 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
 
   const handleSendMessage = async (input: string) => {
     if (!conversationId) return;
+
+    const triggetQF = input == "";
     const userMessage: Message = { role: 'user', content: input };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    if (!triggetQF) {
+      setMessages(prev => [...prev, userMessage]);
+      setInput('');
+    }
+
     setIsLoading(true);
 
     try {
@@ -1025,7 +1050,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
+          messages: triggetQF ? messages : [...messages, userMessage],
           chatbotId: chatbot.id,
           language: aiSettings?.language,
           model: aiSettings?.model,
@@ -1079,6 +1104,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
         } else {
           setCurrentNodeId(null);
         }
+        
+        setIsLoading(false);
       } else {
         const assistantMessage: Message = { role: 'assistant', content: '', reasonal_content: '' };
         setMessages(prev => [...prev, assistantMessage]);
