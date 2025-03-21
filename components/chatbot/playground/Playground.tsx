@@ -59,6 +59,7 @@ interface ChatContainerProps {
   setConfig: React.Dispatch<React.SetStateAction<any>>;
   leadSetting?: ChatbotLeadSettings;
   conversationId?: string;
+  currentNodeId?: Number;
 }
 
 interface ChatConfig {
@@ -101,6 +102,7 @@ const ChatContainer = ({
   leadSetting,
   conversationId,
   setCurrentNodeId,
+  currentNodeId,
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
     if (confidenceScore === -1) {
@@ -510,7 +512,7 @@ const ChatContainer = ({
           <div className="flex flex-col justify-between pt-2">
             {/* Suggested Messages - Horizontal scrollable */}
             <div className="px-3 overflow-x-auto whitespace-nowrap flex gap-2 mb-4 pb-2">
-              {config.suggestedMessages?.split('\n').filter((msg: string) => msg.trim()).map((message: string, index: number) => (
+              {!currentNodeId && config.suggestedMessages?.split('\n').filter((msg: string) => msg.trim()).map((message: string, index: number) => (
                 <button
                   key={index}
                   className="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-gray-200 transition-colors flex-none"
@@ -696,7 +698,7 @@ const ChatContainer = ({
                   placeholder={config.messagePlaceholder}
                   className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
                     } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}
-                  disabled={isLoading}
+                  disabled={isLoading || !!currentNodeId}
                 />
                 <button
                   type="submit"
@@ -864,6 +866,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
               currentNodeId,
               chatbotId: chatbot.id,
               conversationId,
+              messages: [...messages, userMessage],
             }),
           });
 
@@ -1169,6 +1172,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
         <div className="relative" style={{ height: '100dvh' }}>
           <ChatContainer
             setCurrentNodeId={setCurrentNodeId}
+            currentNodeId={currentNodeId}
             isSettingsOpen={isSettingsOpen}
             setIsSettingsOpen={setIsSettingsOpen}
             messages={messages}
@@ -1246,6 +1250,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
               setCurrentNodeId={setCurrentNodeId}
               isSettingsOpen={isSettingsOpen}
               setIsSettingsOpen={setIsSettingsOpen}
+              currentNodeId={currentNodeId}
               messages={messages}
               setMessages={setMessages}
               config={config}

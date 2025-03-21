@@ -40,131 +40,131 @@ interface ChatbotFlowProps {
 // Initialize with a simple flow
 const initialNodes: Node[] = [
   {
+    "id": "1",
+    "type": "node",
+    "position": {
+      "x": 145.7474048442907,
+      "y": -179.85813148788935
+    },
+    "data": {
+      "label": "Welcome",
+      "message": "Hello! How can I help you today?",
+      "question": "What would you like to do?",
+      "options": [
+        "Get Support",
+        "Learn More",
+        "Provide Feedback"
+      ],
       "id": "1",
-      "type": "node",
       "position": {
-          "x": 145.7474048442907,
-          "y": -179.85813148788935
-      },
-      "data": {
-          "label": "Welcome",
-          "message": "Hello! How can I help you today?",
-          "question": "What would you like to do?",
-          "options": [
-              "Get Support",
-              "Learn More",
-              "Provide Feedback"
-          ],
-          "id": "1",
-          "position": {
-              "x": 145.7474048442907,
-              "y": -179.85813148788935
-          }
-      },
-      "width": 256,
-      "height": 394,
-      "selected": false,
-      "positionAbsolute": {
-          "x": 145.7474048442907,
-          "y": -179.85813148788935
-      },
-      "dragging": false
+        "x": 145.7474048442907,
+        "y": -179.85813148788935
+      }
+    },
+    "width": 256,
+    "height": 394,
+    "selected": false,
+    "positionAbsolute": {
+      "x": 145.7474048442907,
+      "y": -179.85813148788935
+    },
+    "dragging": false
   },
   {
+    "id": "2",
+    "type": "node",
+    "position": {
+      "x": -167.3497444177745,
+      "y": 262.02049386656955
+    },
+    "data": {
+      "label": "Support",
+      "message": "Our support team is available 24/7. What issue are you experiencing?",
       "id": "2",
-      "type": "node",
       "position": {
-          "x": -167.3497444177745,
-          "y": 262.02049386656955
-      },
-      "data": {
-          "label": "Support",
-          "message": "Our support team is available 24/7. What issue are you experiencing?",
-          "id": "2",
-          "position": {
-              "x": -167.3497444177745,
-              "y": 262.02049386656955
-          }
-      },
-      "width": 256,
-      "height": 242,
-      "selected": true,
-      "positionAbsolute": {
-          "x": -167.3497444177745,
-          "y": 262.02049386656955
-      },
-      "dragging": false
+        "x": -167.3497444177745,
+        "y": 262.02049386656955
+      }
+    },
+    "width": 256,
+    "height": 242,
+    "selected": true,
+    "positionAbsolute": {
+      "x": -167.3497444177745,
+      "y": 262.02049386656955
+    },
+    "dragging": false
   },
   {
+    "id": "3",
+    "type": "node",
+    "position": {
+      "x": 140.54183508867038,
+      "y": 252.38292898741372
+    },
+    "data": {
+      "label": "Learn More",
+      "message": "We offer a variety of products and services. What would you like to learn more about?",
       "id": "3",
-      "type": "node",
       "position": {
-          "x": 140.54183508867038,
-          "y": 252.38292898741372
-      },
-      "data": {
-          "label": "Learn More",
-          "message": "We offer a variety of products and services. What would you like to learn more about?",
-          "id": "3",
-          "position": {
-              "x": 140.54183508867038,
-              "y": 252.38292898741372
-          }
-      },
-      "width": 256,
-      "height": 242,
-      "selected": false,
-      "positionAbsolute": {
-          "x": 140.54183508867038,
-          "y": 252.38292898741372
-      },
-      "dragging": false
+        "x": 140.54183508867038,
+        "y": 252.38292898741372
+      }
+    },
+    "width": 256,
+    "height": 242,
+    "selected": false,
+    "positionAbsolute": {
+      "x": 140.54183508867038,
+      "y": 252.38292898741372
+    },
+    "dragging": false
   },
   {
+    "id": "4",
+    "type": "node",
+    "position": {
+      "x": 438.91429498190985,
+      "y": 256.15109507737907
+    },
+    "data": {
+      "label": "Feedback",
+      "message": "We appreciate your feedback! What would you like to share with us?",
       "id": "4",
-      "type": "node",
       "position": {
-          "x": 438.91429498190985,
-          "y": 256.15109507737907
-      },
-      "data": {
-          "label": "Feedback",
-          "message": "We appreciate your feedback! What would you like to share with us?",
-          "id": "4",
-          "position": {
-              "x": 438.91429498190985,
-              "y": 256.15109507737907
-          }
-      },
-      "width": 256,
-      "height": 242,
-      "selected": false,
-      "positionAbsolute": {
-          "x": 438.91429498190985,
-          "y": 256.15109507737907
-      },
-      "dragging": false
+        "x": 438.91429498190985,
+        "y": 256.15109507737907
+      }
+    },
+    "width": 256,
+    "height": 242,
+    "selected": false,
+    "positionAbsolute": {
+      "x": 438.91429498190985,
+      "y": 256.15109507737907
+    },
+    "dragging": false
   }
 ]
 
 const initialEdges: Edge[] = [
   {
-      "id": "e1-2",
-      "source": "1",
-      "target": "2",
-      "sourceHandle": "0"
+    "id": "e1-2",
+    "source": "1",
+    "target": "2",
+    "sourceHandle": "0"
   },
   {
-      "id": "e1-3",
-      "source": "1",
-      "target": "3",
-      "sourceHandle": "1"
+    "id": "e1-3",
+    "source": "1",
+    "target": "3",
+    "sourceHandle": "1"
   },
   {
-      "id": "e1-4",
-      "source": "1",
-      "target": "4",
-      "sourceHandle": "2"
+    "id": "e1-4",
+    "source": "1",
+    "target": "4",
+    "sourceHandle": "2"
   }
 ]
 
@@ -243,7 +243,7 @@ export default function ChatflowV1({
         },
         body: JSON.stringify({
           chatbotId,
-          questionFlow: qFlow,
+          questionFlow: { nodes, edges },
         }),
       });
 
