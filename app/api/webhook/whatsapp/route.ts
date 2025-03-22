@@ -4,6 +4,7 @@ import connectMongo from "@/libs/mongoose";
 import { NextRequest, NextResponse } from 'next/server';
 import ChatbotConversation from '@/models/ChatbotConversation';
 import { getAIResponse } from '@/libs/utils-ai';
+import Dataset from '@/models/Dataset';
 import { sleep } from '@/libs/utils';
 
 export async function GET(request: Request) {
@@ -22,28 +23,28 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     // Parse the incoming request body
-    const data = await request.json();
+    const data = await request.json();    
+
+    if (process.env.ENABLE_WEBHOOK_LOGGING_WHATSAPP) {
+      // Send data to the specified URL
+      const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+  
+      // Check if the request was successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    }
+
     if (data?.entry?.length > 0) {
       if (data?.entry[0]?.changes?.length > 0) {
         if (data?.entry[0]?.changes[0].value?.messages?.length > 0) {
           if (data?.entry[0]?.changes[0]?.value?.messages[0]?.type == "text") {
-
-            if (process.env.ENABLE_WEBHOOK_LOGGING) {
-              // Send data to the specified URL
-              const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-              });
-
-              // Check if the request was successful
-              if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-              }
-            }
-
             await connectMongo();
 
             const from = data?.entry[0]?.changes[0]?.value?.messages[0]?.from;
@@ -87,6 +88,15 @@ export async function POST(request: Request) {
             }
 
             await conversation.save();
+
+            const dataset = await Dataset.findOne({ chatbotId });
+            const { questionFlow, questionFlowEnable } = dataset;
+        
+            let nextNode = null;
+        
+            if (questionFlowEnable && questionFlow) {
+              const { nodes, edges } = questionFlow;
+            }
 
             if (conversation?.disable_auto_reply == true) {
               return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
