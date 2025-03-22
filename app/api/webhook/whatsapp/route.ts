@@ -122,47 +122,45 @@ export async function POST(request: Request) {
               headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
             });
 
-            if (questionFlowEnable && questionFlow) {
+            if (questionFlowEnable && questionFlow && triggerQF) {
               const { nodes, edges } = questionFlow;
 
-              if (triggerQF) {
-                //@ts-ignore
-                const childNodeIds = new Set(edges.map(edge => edge.target));
-                //@ts-ignore
-                const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
-                const nodeMessage = topParentNode.data.message || '';
-                const nodeOptions = topParentNode.data.options || [];
-                if (nodeOptions.length > 0) {
-                  // Construct interactive button message payload
-                  const buttonsPayload = {
-                    messaging_product: "whatsapp",
-                    recipient_type: "individual",
-                    to: from,
-                    type: "interactive",
-                    interactive: {
-                      type: "button",
-                      body: {
-                        text: nodeMessage
-                      },
-                      action: {
-                        buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
-                          type: "reply",
-                          reply: {
-                            id: `${topParentNode.id}-option-${index}`,
-                            title: option
-                          }
-                        }))
-                      }
+              //@ts-ignore
+              const childNodeIds = new Set(edges.map(edge => edge.target));
+              //@ts-ignore
+              const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
+              const nodeMessage = topParentNode.data.message || '';
+              const nodeOptions = topParentNode.data.options || [];
+              if (nodeOptions.length > 0) {
+                // Construct interactive button message payload
+                const buttonsPayload = {
+                  messaging_product: "whatsapp",
+                  recipient_type: "individual",
+                  to: from,
+                  type: "interactive",
+                  interactive: {
+                    type: "button",
+                    body: {
+                      text: nodeMessage
+                    },
+                    action: {
+                      buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
+                        type: "reply",
+                        reply: {
+                          id: `${topParentNode.id}-option-${index}`,
+                          title: option
+                        }
+                      }))
                     }
-                  };
+                  }
+                };
 
-                  // Send interactive button message
-                  const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, buttonsPayload, {
-                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                  });
+                // Send interactive button message
+                const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, buttonsPayload, {
+                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
 
-                  conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
-                }
+                conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
               }
             }
             else {
