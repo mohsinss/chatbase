@@ -244,7 +244,7 @@ export async function POST(request: Request) {
                 const { nodes, edges } = (questionFlow && questionFlow.nodes && questionFlow.edges) ? questionFlow : sampleFlow;
 
                 //@ts-ignore
-                const nextEdge = edges.find(edge => edge.source === node_id && edge.sourceHandle === optionIndex?.toString());
+                const nextEdge = edges.find(edge => edge.source === node_id && edge.sourceHandle === option_index);
                 //@ts-ignore
                 const nextNode = nodes.find(node => node.id === nextEdge?.target);
                 const nodeMessage = nextNode.data.message || '';
