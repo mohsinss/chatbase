@@ -247,8 +247,8 @@ interface ChatbotFlowProps {
 
 export default function ChatbotFlow({ qFlow, setQFlow, chatbotId }: ChatbotFlowProps) {
   //@ts-ignore
-  const [nodes, setNodes, onNodesChange] = useNodesState(qFlow?.nodes ?? []);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(qFlow?.edges ?? []);
+  const [nodes, setNodes, onNodesChange] = useNodesState(qFlow?.nodes ?? sampleFlow?.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(qFlow?.edges ?? sampleFlow?.edges);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [editingNode, setEditingNode] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
