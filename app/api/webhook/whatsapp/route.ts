@@ -228,7 +228,7 @@ export async function POST(request: Request) {
               } else {
                 return NextResponse.json({ status: "Can't find conversation for this buttong reply, sth went wrong." }, { status: 200 });
               }
-              
+
               const { questionFlow, questionFlowEnable } = dataset;
 
               // mark message as read
@@ -244,13 +244,13 @@ export async function POST(request: Request) {
                 const { nodes, edges } = (questionFlow && questionFlow.nodes && questionFlow.edges) ? questionFlow : sampleFlow;
 
                 //@ts-ignore
-                const nextNode = nodes.find(node => node.id == node_id)
+                const nextEdge = edges.find(edge => edge.source === node_id && edge.sourceHandle === optionIndex?.toString());
                 //@ts-ignore
-                const nextEdge = edges.find(edge => edge.source === node_id && edge.sourceHandle === option_index);
+                const nextNode = nodes.find(node => node.id === nextEdge?.target);
                 const nodeMessage = nextNode.data.message || '';
                 const nodeQuestion = nextNode.data.question || '';
                 const nodeOptions = nextNode.data.options || [];
-                
+
                 if (nodeOptions.length > 0) {
                   // Construct interactive button message payload
                   const buttonsPayload = {
