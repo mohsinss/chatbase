@@ -131,6 +131,7 @@ export async function POST(request: Request) {
               const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
               const nodeMessage = topParentNode.data.message || '';
               const nodeOptions = topParentNode.data.options || [];
+              const nodeQuestion = topParentNode.data.question || '';
               const nodeImage = topParentNode.data.image || '';
 
               if (nodeOptions.length > 0) {
@@ -143,7 +144,7 @@ export async function POST(request: Request) {
                   interactive: {
                     type: "button",
                     body: {
-                      text: nodeMessage
+                      text: nodeQuestion
                     },
                     action: {
                       buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
@@ -330,7 +331,7 @@ export async function POST(request: Request) {
                   }
 
                   // Send interactive button message
-                  const response_question = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, 
+                  const response_question = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
                     buttonsPayload, {
                     headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                   });
