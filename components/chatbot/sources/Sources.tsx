@@ -51,8 +51,8 @@ const Sources = ({
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'files';
   const [fileCount, setFileCount] = useState<number>(0);
-  const [totalChars, setTotalChars] = useState<number>(0);
   const [fileSize, setFileSize] = useState<number>(0);
+  const [totalChars, setTotalChars] = useState<number>(0);
   const [fileChars, setFileChars] = useState<number>(0);
   const [isTraining, setIsTraining] = useState(false);
   const [dataset, setDataset] = useState<any>(null);
@@ -220,6 +220,7 @@ const Sources = ({
         {/* Right Stats Panel */}
         <div className="w-[300px] shrink-0">
           <SourceStats
+            totalChars={totalChars}
             fileCount={fileCount}
             fileChars={fileChars}
             textInputChars={text ? text.length : 0}

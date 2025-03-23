@@ -7,6 +7,7 @@ interface SourceStatsProps {
   textInputChars: number;
   charLimit: number;
   qaInputCount: number;
+  totalChars: number;
   qaInputChars: number;
   linkInputCount: number;
   linkInputChars: number;
@@ -27,11 +28,10 @@ const SourceStats = ({
   onRetrain,
   isTraining,
   setTotalChars,
+  totalChars,
 }: SourceStatsProps) => {
-  let totalChars = 0;
   useEffect(() => {
-    totalChars = fileChars + textInputChars + linkInputChars + qaInputChars
-    setTotalChars(totalChars);
+    setTotalChars(fileChars + textInputChars + linkInputChars + qaInputChars);
   }, [fileChars, textInputChars, linkInputChars, qaInputChars, setTotalChars]);
   // console.log('charLimit', charLimit)
 
