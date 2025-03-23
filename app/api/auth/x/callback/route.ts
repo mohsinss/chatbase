@@ -1,6 +1,8 @@
 // app/api/chatbot/integrations/x/callback/route.ts (Next.js 14 App Router)
 import { NextRequest, NextResponse } from 'next/server';
 import { TwitterApi } from 'twitter-api-v2';
+import X from '@/models/X';
+import Chatbot from '@/models/Chatbot';
 
 export async function GET(req: NextRequest) {
   const oauth_token = req.nextUrl.searchParams.get('oauth_token');
@@ -22,10 +24,23 @@ export async function GET(req: NextRequest) {
 
   const { accessToken, accessSecret } = await client.login(oauth_verifier);
 
-  console.log('x.callback')
-  console.log(accessToken, accessSecret)
-  // Save these credentials securely in your database associated with chatbotId
-  // ...
+  await X.create({
+    chatbotId,
+    accessToken,
+    accessSecret,
+  });
+
+  // Find the Chatbot with chatbotId and update it
+  const chatbot = await Chatbot.findOneAndUpdate(
+    { chatbotId }, // find a document with chatbotId
+    {
+      // update the integrations field
+      $set: { "integrations.x": true }
+    },
+    {
+      new: true, // return the new Chatbot instead of the old one
+    }
+  );
 
   // Return a simple HTML page that closes the popup window automatically
   return new NextResponse(`

@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   });
 
   const { url, oauth_token, oauth_token_secret } = await client.generateAuthLink(
-    `${process.env.NEXT_PUBLIC_DOMAIN}/api/auth/x/callback?chatbotId=${chatbotId}`
+    `${process.env.NEXTAUTH_URL}/api/auth/x/callback?chatbotId=${chatbotId}`
   );
 
   // Store oauth_token_secret temporarily (e.g., in cookies or database)
