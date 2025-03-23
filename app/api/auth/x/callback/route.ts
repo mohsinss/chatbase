@@ -22,27 +22,32 @@ export async function GET(req: NextRequest) {
     accessSecret: oauth_token_secret,
   });
 
-  const { accessToken, accessSecret } = await client.login(oauth_verifier);
+  // Complete login and get access tokens
+  const { accessToken, accessSecret, client: loggedInClient } = await client.login(oauth_verifier);
 
+  // Fetch user information
+  const userData = await loggedInClient.currentUser();
+
+  // Save user data along with tokens
   await X.create({
     chatbotId,
     accessToken,
     accessSecret,
+    userId: userData.id_str,
+    username: userData.screen_name,
+    name: userData.name,
+    profileImageUrl: userData.profile_image_url_https,
+    // Add any other details you want from userData here
   });
 
-  // Find the Chatbot with chatbotId and update it
-  const chatbot = await Chatbot.findOneAndUpdate(
-    { chatbotId }, // find a document with chatbotId
-    {
-      // update the integrations field
-      $set: { "integrations.x": true }
-    },
-    {
-      new: true, // return the new Chatbot instead of the old one
-    }
+  // Update Chatbot's integration flag
+  await Chatbot.findOneAndUpdate(
+    { chatbotId },
+    { $set: { "integrations.x": true } },
+    { new: true }
   );
 
-  // Return a simple HTML page that closes the popup window automatically
+  // Close popup window
   return new NextResponse(`
     <html>
       <body>
