@@ -104,6 +104,9 @@ const Header = () => {
           <a href="#features" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
             Features
           </a>
+          <Link href="/guide" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
+            Guide
+          </Link>
           <a href="#pricing" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
             Pricing
           </a>
@@ -146,6 +149,13 @@ const Header = () => {
             >
               Features
             </a>
+            <Link 
+              href="/guide" 
+              className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Guide
+            </Link>
             <a 
               href="#pricing" 
               className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"

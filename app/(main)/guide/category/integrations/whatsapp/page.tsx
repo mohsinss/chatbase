@@ -150,10 +150,12 @@ export default function WhatsappIntegrationPage() {
               <ol className="space-y-8">
                 <li>
                   <p>Navigate to the Chatbot you would like to integrate with WhatsApp.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/1.png"
+                      alt="Navigate to the Chatbot you would like to integrate with WhatsApp"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
@@ -163,91 +165,111 @@ export default function WhatsappIntegrationPage() {
 
                 <li>
                   <p>Click Connect on the WhatsApp integration card.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/2.png"
+                      alt="Click Connect on the WhatsApp integration card"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
                 <li>
                   <p>Log in with your personal Facebook Account.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/3.png"
+                      alt="Log in with your personal Facebook Account"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
                 <li>
                   <p>Click Get started</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/4.png"
+                      alt="Click Get started"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
                 <li>
                   <p>Choose or create a business profile.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/5.png"
+                      alt="Choose or create a business profile"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
                 <li>
                   <p>Create a WhatsApp business profile or select an existing one.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/6.png"
+                      alt="Create a WhatsApp business profile or select an existing one"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
                 <li>
                   <p>Fill in the information for the Business profile.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/7.png"
+                      alt="Fill in the information for the Business profile"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
                 <li>
                   <p>Add a phone number, it is recommended to have only one associate number in this profile.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/8.png"
+                      alt="Add a phone number"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
                 <li>
                   <p>Click Continue.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/10.png"
+                      alt="Click Continue"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
                 <li>
                   <p>Wait a few seconds for information verification.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/11.png"
+                      alt="Wait for information verification"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
                 <li>
                   <p>Click on Finish.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/12.png"
+                      alt="Click on Finish"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
               </ol>
@@ -256,19 +278,23 @@ export default function WhatsappIntegrationPage() {
               <ol className="space-y-8">
                 <li>
                   <p>You can modify your WhatsApp bot styling or delete your phone number by clicking the &quot;I&quot; icon next to WhatsApp or by navigating to the manage WhatsApp page.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/13.png"
+                      alt="Modify WhatsApp bot styling"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
 
                 <li>
                   <p>Navigate to Profile and update your WhatsApp settings then click the Save button.</p>
-                  <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      [Image Placeholder]
-                    </div>
+                  <div className="bg-gray-100 rounded-lg p-4 my-4 relative max-w-2xl mx-auto">
+                    <img
+                      src="/integrations/whatsapp/15.png"
+                      alt="Update WhatsApp settings"
+                      className="rounded-lg w-full"
+                    />
                   </div>
                 </li>
               </ol>
