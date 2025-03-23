@@ -3,13 +3,12 @@ const nextConfig = {
   reactStrictMode: false,
   images: {
     domains: [
-      // NextJS <Image> component needs to whitelist domains for src={}
       "lh3.googleusercontent.com",
       "pbs.twimg.com",
       "images.unsplash.com",
       "logos-world.net",
-      'randomuser.me',
-      'upload.wikimedia.org'
+      "randomuser.me",
+      "upload.wikimedia.org"
     ],
   },
   async headers() {
@@ -29,12 +28,7 @@ const nextConfig = {
     outputFileTracingIncludes: {
       '/api/**/*': ['./node_modules/**/*.wasm', './node_modules/**/*.proto']
     }
-  },
-  api: {
-    bodyParser: {
-      sizeLimit: '20mb', // Increase the limit (e.g., to 10 MB)
-    },
-  },
+  }
 };
 
 export default nextConfig;
