@@ -205,6 +205,24 @@ export default function AdminDashboard() {
     router.push(`/dashboard/admin/conversations/${chatbotId}`);
   };
 
+  const handleChatbotPreview = async (teamId: string, chatbotId: string) => {
+    try {
+      // First, ensure admin has access to this chatbot
+      const response = await fetch(`/api/admin/access?teamId=${teamId}&chatbotId=${chatbotId}`);
+      
+      if (!response.ok) {
+        alert('Unable to access this chatbot. Please check permissions.');
+        return;
+      }
+      
+      // Then navigate to the chatbot playground
+      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}`);
+    } catch (error) {
+      console.error('Error accessing chatbot:', error);
+      alert('Failed to access chatbot');
+    }
+  };
+
   const handlePlanChange = async (teamId: string, newPlan: string) => {
     setUpdatingPlan(teamId);
     try {
@@ -341,27 +359,38 @@ export default function AdminDashboard() {
                               key={chatbot.chatbotId}
                               className="p-2 hover:bg-gray-50 group flex justify-between items-center"
                             >
-                              <div 
-                                className="flex-grow cursor-pointer"
-                                onClick={() => router.push(`/dashboard/admin/conversations/${chatbot.chatbotId}`)}
-                              >
+                              <div className="flex-grow">
                                 <span>{chatbot.name}</span>
                                 <span className="ml-4 text-gray-500">
                                   {chatbot.conversationCount} Conversations
                                 </span>
                               </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteChatbot(chatbot.chatbotId);
-                                }}
-                                className={`opacity-0 group-hover:opacity-100 ml-4 px-3 py-1 text-sm text-red-500 bg-white border-2 border-red-500 rounded hover:bg-red-50 transition-all ${
-                                  deletingChatbot === chatbot.chatbotId ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
-                                disabled={deletingChatbot === chatbot.chatbotId}
-                              >
-                                {deletingChatbot === chatbot.chatbotId ? 'Deleting...' : 'Delete'}
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleChatbotSelect(user._id, team.teamId, chatbot.chatbotId)}
+                                  className="px-3 py-1 text-sm text-blue-500 bg-white border-2 border-blue-500 rounded hover:bg-blue-50 transition-all"
+                                >
+                                  View History
+                                </button>
+                                <button
+                                  onClick={() => handleChatbotPreview(team.teamId, chatbot.chatbotId)}
+                                  className="px-3 py-1 text-sm text-green-500 bg-white border-2 border-green-500 rounded hover:bg-green-50 transition-all"
+                                >
+                                  Preview Chatbot
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteChatbot(chatbot.chatbotId);
+                                  }}
+                                  className={`opacity-0 group-hover:opacity-100 px-3 py-1 text-sm text-red-500 bg-white border-2 border-red-500 rounded hover:bg-red-50 transition-all ${
+                                    deletingChatbot === chatbot.chatbotId ? 'opacity-50 cursor-not-allowed' : ''
+                                  }`}
+                                  disabled={deletingChatbot === chatbot.chatbotId}
+                                >
+                                  {deletingChatbot === chatbot.chatbotId ? 'Deleting...' : 'Delete'}
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>

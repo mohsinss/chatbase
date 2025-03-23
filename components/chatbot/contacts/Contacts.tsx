@@ -61,6 +61,15 @@ export default function Contacts({ chatbotId }: ContactsProps) {
             {leads.length > 0 && <div className="">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold mb-2">Lead Results</h2>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" className="text-sm">
+                            Connect to Google Sheets
+                        </Button>
+                        {/* Link to Google Sheet (will be populated when connected) */}
+                        <a href="#" className="text-blue-500 hover:underline text-sm" target="_blank" rel="noopener noreferrer">
+                            View Sheet
+                        </a>
+                    </div>
                 </div>
                 <table className="table-auto w-full">
                     <thead>
