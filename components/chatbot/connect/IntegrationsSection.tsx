@@ -34,14 +34,23 @@ interface MetaBusinessResponse {
 
 const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = false, isConnecting, connected }: IntegrationCardProps) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-    <div className="w-12 h-12">
-      <Image
-        src={icon}
-        alt={title}
-        width={48}
-        height={48}
-        className="object-contain"
-      />
+    <div className={`w-12 h-12 rounded-full overflow-hidden ${connected ? '' : 'bg-gray-500'}`}>
+      {icon.endsWith('.svg') ? (
+        <img
+          src={icon}
+          alt={title}
+          className={`object-contain w-full h-full ${connected ? '' : 'bg-gray-500'}`}
+          // style={{ filter: connected ? 'invert(41%) sepia(99%) saturate(749%) hue-rotate(87deg) brightness(95%) contrast(89%)' : 'none' }}
+        />
+      ) : (
+        <Image
+          src={icon}
+          alt={title}
+          width={48}
+          height={48}
+          className="object-contain"
+        />
+      )}
     </div>
 
     <div>
