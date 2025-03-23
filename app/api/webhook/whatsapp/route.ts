@@ -182,6 +182,7 @@ export async function POST(request: Request) {
                   }, {
                     headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                   });
+                  await sleep(2000)
                 }
 
                 // Send interactive button message
@@ -328,6 +329,7 @@ export async function POST(request: Request) {
                     }, {
                       headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                     });
+                    await sleep(2000)
                   }
 
                   // Send interactive button message
