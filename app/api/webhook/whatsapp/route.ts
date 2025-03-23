@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     // Parse the incoming request body
     const data = await request.json();
 
-    if (process.env.ENABLE_WEBHOOK_LOGGING_WHATSAPP) {
+    if (process.env.ENABLE_WEBHOOK_LOGGING_WHATSAPP == "1") {
       // Send data to the specified URL
       const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
         method: 'POST',
@@ -131,6 +131,8 @@ export async function POST(request: Request) {
               const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
               const nodeMessage = topParentNode.data.message || '';
               const nodeOptions = topParentNode.data.options || [];
+              const nodeImage = topParentNode.data.image || '';
+
               if (nodeOptions.length > 0) {
                 // Construct interactive button message payload
                 const buttonsPayload = {
@@ -155,8 +157,35 @@ export async function POST(request: Request) {
                   }
                 };
 
+                // send text msg to from number
+                const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
+                  messaging_product: "whatsapp",
+                  to: from,
+                  text: {
+                    body: nodeMessage
+                  }
+                }, {
+                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
+
+                if (nodeImage) {
+                  // send text msg to from number
+                  const response_image = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
+                    messaging_product: "whatsapp",
+                    recipient_type: "individual",
+                    type: "image",
+                    to: from,
+                    iamge: {
+                      link: nodeImage
+                    }
+                  }, {
+                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                  });
+                }
+
                 // Send interactive button message
-                const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, buttonsPayload, {
+                const response_question = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
+                  buttonsPayload, {
                   headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                 });
 
@@ -248,6 +277,7 @@ export async function POST(request: Request) {
                 const nodeMessage = nextNode.data.message || '';
                 const nodeQuestion = nextNode.data.question || '';
                 const nodeOptions = nextNode.data.options || [];
+                const nodeImage = nextNode.data.image || '';
 
                 if (nodeOptions.length > 0) {
                   // Construct interactive button message payload
@@ -284,8 +314,24 @@ export async function POST(request: Request) {
                     headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                   });
 
+                  if (nodeImage) {
+                    // send text msg to from number
+                    const response_image = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
+                      messaging_product: "whatsapp",
+                      recipient_type: "individual",
+                      type: "image",
+                      to: from,
+                      iamge: {
+                        link: nodeImage
+                      }
+                    }, {
+                      headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                    });
+                  }
+
                   // Send interactive button message
-                  const response_question = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, buttonsPayload, {
+                  const response_question = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, 
+                    buttonsPayload, {
                     headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                   });
 
