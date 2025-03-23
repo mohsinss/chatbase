@@ -89,6 +89,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "trieve-ts-sdk": "^0.0.49",
+    "twitter-api-v2": "^1.21.0",
     "ulid": "^2.3.0",
     "wa-sticker-formatter": "^1.6.0",
     "zod": "^3.22.4"

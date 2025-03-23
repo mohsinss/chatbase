@@ -118,6 +118,22 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
     };
   }, []);
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.success && event.data.platform === 'x') {
+        setConnectingTitle('');
+        router.refresh();
+        toast.success("Successfully connected to X!");
+      }
+    };
+  
+    window.addEventListener('message', handleMessage);
+  
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [router]);
+
   const fbLoginCallback = (response: any) => {
     if (response.authResponse) {
       const code = response.authResponse.code;
@@ -244,12 +260,33 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
           sessionInfoVersion: '2',
         }
       });
+    } else if (platform === "x") {
+      const width = 600;
+      const height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
+  
+      const popup = window.open(
+        `/api/auth/x?chatbotId=${chatbotId}`,
+        "X OAuth",
+        `width=${width},height=${height},top=${top},left=${left}`
+      );
+  
+      // Listen for messages from the popup window
+      const popupTick = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(popupTick);
+          setConnectingTitle('');
+          router.refresh();
+        }
+      }, 500);
+
+      setConnectingTitle('');
     } else if (platform === "Zapier") {
       window.open("https://zapier.com/apps/chatsa/integrations", "_blank");
       setConnectingTitle('');
     } else {
       setConnectingTitle('');
-
     }
   };
 
@@ -318,6 +355,13 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
       description: "Connect your chatbot to a instagram page and let it respond to messages from your customers.",
       icon: "/integrations/instagram.svg",
       onClick: () => handleConnect("Instagram"),
+      showDeviceIcon: true
+    },
+    {
+      title: "X",
+      description: "Connect your chatbot to a x page and let it respond to messages from your customers.",
+      icon: "/integrations/x.svg",
+      onClick: () => handleConnect("x"),
       showDeviceIcon: true
     },
     {
