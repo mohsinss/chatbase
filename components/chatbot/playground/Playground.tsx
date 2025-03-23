@@ -118,6 +118,17 @@ const ChatContainer = ({
     return `rgb(${red}, ${green}, ${blue})`; // Return the RGB color
   };
 
+  const getTextColor = (confidenceScore: number) => {
+    const bgColor = getBackgroundColor(confidenceScore);
+    const rgb = bgColor.match(/\d+/g)?.map(Number) || [255, 255, 255];
+
+    // Calculate luminance
+    const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]);
+
+    // Return black for bright backgrounds, white for dark backgrounds
+    return luminance > 186 ? '#000000' : '#FFFFFF';
+  };
+
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const [loadingSources, setLoadingSources] = useState(false);
   const [sources, setSources] = useState([]);
@@ -398,9 +409,9 @@ const ChatContainer = ({
                   <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
                     <div className={`p-3 inline-block max-w-[80%] ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
                       } ${message.role === 'assistant'
-                        ? 'prose prose-sm max-w-none bg-gray-50'
+                        ? (config.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-50 text-black') + ' prose prose-sm max-w-none bg-gray-50'
                         : 'text-white'
-                      }`}
+                      } `}
                       style={{
                         backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
                         transition: 'background-color 0.3s ease'
@@ -416,7 +427,11 @@ const ChatContainer = ({
                       )}
                       {message.role === 'assistant' && message.confidenceScore != -1 &&
                         <div className="mt-2">
-                          <span style={{ backgroundColor: getBackgroundColor(message.confidenceScore), padding: '2px 4px', borderRadius: '4px' }}>{message.confidenceScore}</span>
+                          <span style={{
+                            backgroundColor: getBackgroundColor(message.confidenceScore),
+                            color: getTextColor(message.confidenceScore),
+                            padding: '2px 4px', borderRadius: '4px'
+                          }}>{message.confidenceScore}</span>
                         </div>}
                     </div>
                   </div>
@@ -515,7 +530,7 @@ const ChatContainer = ({
               {!currentNodeId && config.suggestedMessages?.split('\n').filter((msg: string) => msg.trim()).map((message: string, index: number) => (
                 <button
                   key={index}
-                  className="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-gray-200 transition-colors flex-none"
+                  className={`px-4 py-2  rounded-full text-sm hover:bg-gray-200 transition-colors flex-none ${config.theme == "dark" ? "bg-black text-white" : "bg-gray-100" }`}
                   onClick={async (e) => {
                     e.preventDefault();
                     // Create the message directly
@@ -1104,7 +1119,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
         } else {
           setCurrentNodeId(null);
         }
-        
+
         setIsLoading(false);
       } else {
         const assistantMessage: Message = { role: 'assistant', content: '', reasonal_content: '' };
