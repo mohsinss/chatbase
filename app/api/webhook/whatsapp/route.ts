@@ -175,7 +175,7 @@ export async function POST(request: Request) {
                     recipient_type: "individual",
                     type: "image",
                     to: from,
-                    iamge: {
+                    image: {
                       link: nodeImage
                     }
                   }, {
@@ -321,7 +321,7 @@ export async function POST(request: Request) {
                       recipient_type: "individual",
                       type: "image",
                       to: from,
-                      iamge: {
+                      image: {
                         link: nodeImage
                       }
                     }, {
