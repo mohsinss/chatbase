@@ -152,98 +152,130 @@ export const AI_MODELS: AIModelProviders = {
 export const sampleFlow = {
   nodes: [
     {
-      id: "1",
-      type: "trigger",
-      data: {
-        label: "Start Conversation",
-        question: "Hello! I'm your assistant bot. How can I help you today?",
-        options: ["I need help with my order", "I have a technical issue", "I want to provide feedback"],
+      "id": "1",
+      "type": "node",
+      "position": {
+        "x": 145.7474048442907,
+        "y": -179.85813148788935
       },
+      "data": {
+        "label": "Welcome",
+        "message": "Hello! How can I help you today?",
+        "question": "What would you like to do?",
+        "options": [
+          "Get Support",
+          "Learn More",
+          "Provide Feedback"
+        ],
+        "id": "1",
+        "position": {
+          "x": 145.7474048442907,
+          "y": -179.85813148788935
+        }
+      },
+      "width": 256,
+      "height": 394,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 145.7474048442907,
+        "y": -179.85813148788935
+      },
+      "dragging": false
     },
     {
-      id: "2",
-      type: "option",
-      data: {
-        label: "Order Help",
-        condition: "User needs help with order",
-        question: "What kind of order issue are you experiencing?",
-        options: ["Missing item", "Delayed delivery", "Wrong item received"],
+      "id": "2",
+      "type": "node",
+      "position": {
+        "x": -167.3497444177745,
+        "y": 262.02049386656955
       },
+      "data": {
+        "label": "Support",
+        "message": "Our support team is available 24/7. What issue are you experiencing?",
+        "id": "2",
+        "position": {
+          "x": -167.3497444177745,
+          "y": 262.02049386656955
+        }
+      },
+      "width": 256,
+      "height": 242,
+      "selected": true,
+      "positionAbsolute": {
+        "x": -167.3497444177745,
+        "y": 262.02049386656955
+      },
+      "dragging": false
     },
     {
-      id: "3",
-      type: "option",
-      data: {
-        label: "Technical Issue",
-        condition: "User has technical issue",
-        question: "What device are you using?",
-        options: ["Smartphone", "Computer", "Tablet"],
+      "id": "3",
+      "type": "node",
+      "position": {
+        "x": 140.54183508867038,
+        "y": 252.38292898741372
       },
+      "data": {
+        "label": "Learn More",
+        "message": "We offer a variety of products and services. What would you like to learn more about?",
+        "id": "3",
+        "position": {
+          "x": 140.54183508867038,
+          "y": 252.38292898741372
+        }
+      },
+      "width": 256,
+      "height": 242,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 140.54183508867038,
+        "y": 252.38292898741372
+      },
+      "dragging": false
     },
     {
-      id: "4",
-      type: "option",
-      data: {
-        label: "Feedback",
-        condition: "User wants to provide feedback",
-        question: "What type of feedback would you like to provide?",
-        options: ["Product feedback", "Service feedback", "Website feedback"],
+      "id": "4",
+      "type": "node",
+      "position": {
+        "x": 438.91429498190985,
+        "y": 256.15109507737907
       },
-    },
-    {
-      id: "5",
-      type: "message",
-      data: {
-        label: "Missing Item Response",
-        content:
-          "I'm sorry to hear about your missing item. I'll help you resolve this issue. Could you please provide your order number?",
-        nextQuestion: "While I look into this, can you confirm the item that's missing from your order?",
-        options: ["Yes, it's [item name]", "Actually, multiple items are missing", "I don't remember what's missing"],
+      "data": {
+        "label": "Feedback",
+        "message": "We appreciate your feedback! What would you like to share with us?",
+        "id": "4",
+        "position": {
+          "x": 438.91429498190985,
+          "y": 256.15109507737907
+        }
       },
-    },
-    {
-      id: "6",
-      type: "message",
-      data: {
-        label: "Delayed Delivery Response",
-        content:
-          "I understand your delivery is delayed. Let me check the status for you. Could you share your tracking number?",
-        nextQuestion: "Has the tracking information been updated recently?",
-        options: ["Yes, but it's not moving", "No, there are no updates", "I can't access the tracking"],
+      "width": 256,
+      "height": 242,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 438.91429498190985,
+        "y": 256.15109507737907
       },
-    },
-    {
-      id: "7",
-      type: "message",
-      data: {
-        label: "Wrong Item Response",
-        content:
-          "I apologize that you received the wrong item. We'll make this right. Could you tell me what item you received versus what you ordered?",
-        nextQuestion: "Would you prefer a refund or a replacement for the correct item?",
-        options: ["I want a refund", "I want the correct item", "I want both a refund and the correct item"],
-      },
-    },
-    {
-      id: "8",
-      type: "message",
-      data: {
-        label: "Final Response",
-        content:
-          "Thank you for providing all the details. I've created a support ticket for your issue. A customer service representative will contact you within 24 hours. Your ticket number is #12345.",
-        nextQuestion: "Is there anything else I can help you with today?",
-        options: ["No, that's all", "Yes, I have another question"],
-      },
-    },
+      "dragging": false
+    }
   ],
   edges: [
-    { id: "e1-2", source: "1", target: "2", sourceHandle: "a", targetHandle: "b", label: "Order Help" },
-    { id: "e1-3", source: "1", target: "3", sourceHandle: "a", targetHandle: "b", label: "Technical Issue" },
-    { id: "e1-4", source: "1", target: "4", sourceHandle: "a", targetHandle: "b", label: "Feedback" },
-    { id: "e2-5", source: "2", target: "5", sourceHandle: "a", targetHandle: "b", label: "Missing Item" },
-    { id: "e2-6", source: "2", target: "6", sourceHandle: "a", targetHandle: "b", label: "Delayed Delivery" },
-    { id: "e2-7", source: "2", target: "7", sourceHandle: "a", targetHandle: "b", label: "Wrong Item" },
-    { id: "e5-8", source: "5", target: "8", sourceHandle: "a", targetHandle: "b" },
-    { id: "e6-8", source: "6", target: "8", sourceHandle: "a", targetHandle: "b" },
-    { id: "e7-8", source: "7", target: "8", sourceHandle: "a", targetHandle: "b" },
+    {
+      "id": "e1-2",
+      "source": "1",
+      "target": "2",
+      "sourceHandle": "0"
+    },
+    {
+      "id": "e1-3",
+      "source": "1",
+      "target": "3",
+      "sourceHandle": "1"
+    },
+    {
+      "id": "e1-4",
+      "source": "1",
+      "target": "4",
+      "sourceHandle": "2"
+    }
   ],
 }

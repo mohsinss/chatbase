@@ -173,6 +173,7 @@ export async function POST(req: NextRequest) {
           message: nextNode.data.message || '',
           question: nextNode.data.question || '',
           options: nextNode.data.options || [],
+          image: nextNode.data.image || '',
           nextNodeId: nextNode.id,
         };
 

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Handle, Position, type NodeProps } from "reactflow"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,7 @@ interface NodeData {
   message?: string
   question?: string
   options?: string[]
+  image?: string
   id?: string
   position?: { x: number; y: number }
   onNodesChange?: (callback: (nodes: any[]) => any[]) => void
@@ -27,6 +28,40 @@ export default function FlowNode({ data, isConnectable }: NodeProps<NodeData>) {
   const [message, setMessage] = useState(data.message || "")
   const [question, setQuestion] = useState(data.question || "")
   const [options, setOptions] = useState<string[]>(data.options || [])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const imageUrl = event.target?.result as string
+        data.image = imageUrl
+
+        if (data.onNodesChange) {
+          data.onNodesChange((nodes) =>
+            nodes.map((node) => {
+              if (node.id === data.id) {
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    image: imageUrl,
+                  },
+                }
+              }
+              return node
+            }),
+          )
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click()
+  }
 
   useEffect(() => {
     setOptions(data.options || []);
@@ -436,7 +471,7 @@ export default function FlowNode({ data, isConnectable }: NodeProps<NodeData>) {
 
   return (
     <Card className="w-64 border-gray-300 bg-white">
-            <CardHeader className="p-3 pb-0">
+      <CardHeader className="p-3 pb-0">
         <div className="flex justify-between items-center">
           <CardTitle className="text-sm font-medium text-gray-800">Node</CardTitle>
           <Button
@@ -448,7 +483,7 @@ export default function FlowNode({ data, isConnectable }: NodeProps<NodeData>) {
                 data.onNodesChange((nodes) => nodes.filter(node => node.id !== data.id));
               }
               if (data.onEdgesChange) {
-                data.onEdgesChange((edges) => edges.filter(edge => 
+                data.onEdgesChange((edges) => edges.filter(edge =>
                   edge.source !== data.id && edge.target !== data.id
                 ));
               }
@@ -472,6 +507,23 @@ export default function FlowNode({ data, isConnectable }: NodeProps<NodeData>) {
               Message
             </Label>
             <Textarea id="message" value={message} onChange={handleMessageChange} className="text-sm min-h-[60px]" />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs">Image</Label>
+            {data.image && (
+              <img src={data.image} alt="Attached" className="rounded-md max-h-32 object-cover" />
+            )}
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={triggerFileInput}>
+              {data.image ? "Change Image" : "Attach Image"}
+            </Button>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              className="hidden"
+            />
           </div>
 
           <div className="space-y-2">

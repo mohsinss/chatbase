@@ -530,7 +530,7 @@ const ChatContainer = ({
               {!currentNodeId && config.suggestedMessages?.split('\n').filter((msg: string) => msg.trim()).map((message: string, index: number) => (
                 <button
                   key={index}
-                  className={`px-4 py-2  rounded-full text-sm hover:bg-gray-200 transition-colors flex-none ${config.theme == "dark" ? "bg-black text-white" : "bg-gray-100" }`}
+                  className={`px-4 py-2  rounded-full text-sm hover:bg-gray-200 transition-colors flex-none ${config.theme == "dark" ? "bg-black text-white" : "bg-gray-100"}`}
                   onClick={async (e) => {
                     e.preventDefault();
                     // Create the message directly
@@ -583,8 +583,18 @@ const ChatContainer = ({
                         const data = await response.json();
 
                         if (data.message) {
-                          const assistantMessage: Message = { role: 'assistant', content: data.message, confidenceScore: 100 };
-                          setMessages(prev => [...prev, assistantMessage]);
+                          let content = '';
+                          if (data.image) {
+                            const imageHtml = `<img src="${data.image}" alt="Chat Image" class="rounded-md max-w-full my-2" />`;
+                            const combinedMessage = `${data.message || ''}${imageHtml}`;
+
+                            const assistantMessage: Message = { role: 'assistant', content: combinedMessage, confidenceScore: 100 };
+                            setMessages(prev => [...prev, assistantMessage]);
+                          } else {
+                            content = data.message
+                            const assistantMessage: Message = { role: 'assistant', content, confidenceScore: 100 };
+                            setMessages(prev => [...prev, assistantMessage]);
+                          }
                         }
 
                         if (data.options && data.options.length > 0) {
@@ -918,10 +928,20 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
           if (contentType?.includes('application/json')) {
             // Non-streaming response
             const data = await response.json();
-
+            
             if (data.message) {
-              const assistantMessage: Message = { role: 'assistant', content: data.message, confidenceScore: 100 };
-              setMessages(prev => [...prev, assistantMessage]);
+              let content = '';
+              if (data.image) {
+                const imageHtml = `<img src="${data.image}" alt="Chat Image" class="rounded-md max-w-full my-2" />`;
+                const combinedMessage = `${data.message || ''}${imageHtml}`;
+
+                const assistantMessage: Message = { role: 'assistant', content: combinedMessage, confidenceScore: 100 };
+                setMessages(prev => [...prev, assistantMessage]);
+              } else {
+                content = data.message
+                const assistantMessage: Message = { role: 'assistant', content, confidenceScore: 100 };
+                setMessages(prev => [...prev, assistantMessage]);
+              }
             }
 
             if (data.options && data.options.length > 0) {
@@ -1093,10 +1113,20 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
       if (contentType?.includes('application/json')) {
         // Non-streaming response
         const data = await response.json();
-
+            
         if (data.message) {
-          const assistantMessage: Message = { role: 'assistant', content: data.message, confidenceScore: 100 };
-          setMessages(prev => [...prev, assistantMessage]);
+          let content = '';
+          if (data.image) {
+            const imageHtml = `<img src="${data.image}" alt="Chat Image" class="rounded-md max-w-full my-2" />`;
+            const combinedMessage = `${data.message || ''}${imageHtml}`;
+
+            const assistantMessage: Message = { role: 'assistant', content: combinedMessage, confidenceScore: 100 };
+            setMessages(prev => [...prev, assistantMessage]);
+          } else {
+            content = data.message
+            const assistantMessage: Message = { role: 'assistant', content, confidenceScore: 100 };
+            setMessages(prev => [...prev, assistantMessage]);
+          }
         }
 
         if (data.options && data.options.length > 0) {

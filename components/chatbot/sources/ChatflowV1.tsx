@@ -21,6 +21,15 @@ import { Plus } from "lucide-react"
 import FlowNode from "./nodes/node"
 import toast from "react-hot-toast"
 import { sampleFlow } from '@/types';
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
+const s3Client = new S3Client({
+  region: process.env.NEXT_PUBLIC_AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY!,
+  },
+});
 
 interface FlowEditorProps {
   nodes: Node[]
@@ -118,6 +127,37 @@ export default function ChatflowV1({
   const handleSave = async () => {
     setIsSaving(true)
     try {
+      const updatedNodes = await Promise.all(nodes.map(async (node) => {
+        if (node.data.image && node.data.image.startsWith('data:image')) {
+          const base64Data = node.data.image.split(',')[1];
+          const mimeType = node.data.image.match(/data:(image\/.*?);base64/)?.[1] || 'image/jpeg';
+          const extension = mimeType.split('/')[1];
+          const buffer = Buffer.from(base64Data, 'base64');
+          const newFileName = `node-image-${Date.now()}.${extension}`;
+          const key = `node-images/${chatbotId}/${newFileName}`;
+  
+          await s3Client.send(
+            new PutObjectCommand({
+              Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME!,
+              Key: key,
+              Body: buffer,
+              ContentType: mimeType,
+            })
+          );
+  
+          const fileUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${key}`;
+  
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              image: fileUrl,
+            },
+          };
+        }
+        return node;
+      }));
+
       const response = await fetch('/api/chatbot/train/questionflow', {
         method: 'POST',
         headers: {
@@ -125,7 +165,10 @@ export default function ChatflowV1({
         },
         body: JSON.stringify({
           chatbotId,
-          questionFlow: { nodes, edges },
+          questionFlow: { 
+            nodes: updatedNodes, 
+            edges 
+          },
         }),
       });
 
@@ -134,6 +177,7 @@ export default function ChatflowV1({
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update flow status');
       }
+      toast.success("Question Flow is saved.")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to update flow status');
       console.error('Error updating flow status:', error);
