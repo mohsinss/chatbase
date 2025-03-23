@@ -46,6 +46,7 @@ async function uploadFile(fileBuffer, fileName) {
 //@ts-ignore
 async function createVectorStore(chatbotId) {
   try {
+    //@ts-ignore
     const response = await openai.beta.vectorStores.create({
       name: "Knowledge Base For " + chatbotId
     });
@@ -86,6 +87,7 @@ async function createAssistantWithFiles(vectorStoreId) {
 async function addFileToVectorStore(vectorStoreId, fileBuffer, fileName) {
   try {
     const file_id = await uploadFile(fileBuffer, fileName);
+    //@ts-ignore
     const myVectorStoreFile = await openai.beta.vectorStores.files.create(
       vectorStoreId,
       {
@@ -104,10 +106,12 @@ async function addFileToVectorStore(vectorStoreId, fileBuffer, fileName) {
 //@ts-ignore
 async function clearVectorStore(vectorStoreId) {
   // Get list of all files in the vector store
+  //@ts-ignore
   const vectorStoreFiles = await openai.beta.vectorStores.files.list(vectorStoreId);
 
   // Delete each file
   for (const file of vectorStoreFiles.data) {
+    //@ts-ignore
     await openai.beta.vectorStores.files.del(vectorStoreId, file.id);
     console.log(`Deleted file ${file.id} from vector store`);
   }
