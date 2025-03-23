@@ -79,6 +79,14 @@ export async function POST(request: Request) {
             let triggerQF = false;
 
             if (conversation) {
+              const lastMessageContent = conversation.messages[conversation.messages.length - 1].content;
+              try {
+                JSON.parse(lastMessageContent);
+                triggerQF = true; // Set triggerQF to true if parsing succeeds (content is JSON)
+              } catch (e) {
+                // Content is not JSON, do nothing
+              }
+
               // Update existing conversation
               conversation.messages.push({ role: "user", content: text });
               const lastMessageTimestamp = conversation.updatedAt.getTime() / 1000;
