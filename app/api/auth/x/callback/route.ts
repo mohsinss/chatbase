@@ -29,16 +29,20 @@ export async function GET(req: NextRequest) {
   const userData = await loggedInClient.currentUser();
 
   // Save user data along with tokens
-  await X.create({
-    chatbotId,
-    accessToken,
-    accessSecret,
-    userId: userData.id_str,
-    username: userData.screen_name,
-    name: userData.name,
-    profileImageUrl: userData.profile_image_url_https,
-    // Add any other details you want from userData here
-  });
+  await X.findOneAndUpdate(
+    { chatbotId },
+    {
+      chatbotId,
+      accessToken,
+      accessSecret,
+      userId: userData.id_str,
+      username: userData.screen_name,
+      name: userData.name,
+      profileImageUrl: userData.profile_image_url_https,
+      // Add any other details you want from userData here
+    },
+    { new: true }
+  );
 
   // Update Chatbot's integration flag
   await Chatbot.findOneAndUpdate(
