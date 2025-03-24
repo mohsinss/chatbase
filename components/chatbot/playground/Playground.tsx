@@ -316,7 +316,7 @@ const ChatContainer = ({
     <div className={`${embed ? '' : 'pt-4 px-4'} min-h-[calc(100dvh-80px)] flex-1 flex justify-center h-full`}>
       <div
         className={`${embed ? 'w-full h-full' : ''} relative`}
-        style={{ width: `${config.chatWidth}px` }}
+        style={{ width: `${embed ? 'w-full' : (config.chatWidth + 'px')}` }}
       >
         {!embed && !isSettingsOpen && (
           <button
@@ -791,7 +791,6 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const debouncedSave = React.useCallback(
     debounce((msgs: Message[]) => {
       if (msgs.length > 0 && conversationId) {
-        console.log(msgs)
         saveConversation(msgs);
       }
     }, 1000),
@@ -929,7 +928,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
           if (contentType?.includes('application/json')) {
             // Non-streaming response
             const data = await response.json();
-            
+
             if (data.message) {
               let content = '';
               if (data.image) {
@@ -1114,7 +1113,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
       if (contentType?.includes('application/json')) {
         // Non-streaming response
         const data = await response.json();
-            
+
         if (data.message) {
           let content = '';
           if (data.image) {
