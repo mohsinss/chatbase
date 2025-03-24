@@ -525,7 +525,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                     }
 
                     return (
-                      <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
+                      <div key={index} className={`max-w-[80%] mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
                         <div className={`rounded-lg p-4 inline-block max-w-[80%] ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
                           {parsedContent?.type === 'image' && parsedContent.image ? (
                             <img src={parsedContent.image} alt="Chat Image" className="max-w-full h-auto rounded" />
