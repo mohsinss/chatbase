@@ -791,7 +791,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const debouncedSave = React.useCallback(
     debounce((msgs: Message[]) => {
       if (msgs.length > 0 && conversationId) {
-        saveConversation();
+        console.log(msgs)
+        saveConversation(msgs);
       }
     }, 1000),
     [conversationId]
@@ -840,7 +841,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
     }
   };
 
-  const saveConversation = async () => {
+  const saveConversation = async (messages: Message[]) => {
     if (!conversationId) return;
 
     try {
