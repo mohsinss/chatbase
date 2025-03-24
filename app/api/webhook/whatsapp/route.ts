@@ -193,7 +193,8 @@ export async function POST(request: Request) {
                   });
                   await sleep(2000)
                   conversation.messages.push({
-                    role: "assistant", content: JSON.stringify({
+                    role: "assistant", 
+                    content: JSON.stringify({
                       type: "image",
                       image: nodeImage
                     })
@@ -307,7 +308,7 @@ export async function POST(request: Request) {
                 }, {
                   headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                 });
-                conversation.messages.push({ role: "assistant", nodeMessage });
+                conversation.messages.push({ role: "assistant", content: nodeMessage });
 
                 if (nodeImage) {
                   // send text msg to from number
@@ -324,7 +325,8 @@ export async function POST(request: Request) {
                   });
                   await sleep(2000)
                   conversation.messages.push({
-                    role: "assistant", content: JSON.stringify({
+                    role: "assistant", 
+                    content: JSON.stringify({
                       type: "image",
                       image: nodeImage
                     })
@@ -363,7 +365,7 @@ export async function POST(request: Request) {
 
                   conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
                 }
-                
+
                 await conversation.save();
               }
             }
