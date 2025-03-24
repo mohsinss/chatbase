@@ -377,7 +377,18 @@ export async function POST(request: Request) {
     // Respond with a 200 OK status
     return NextResponse.json({ status: 'OK' }, { status: 200 });
   } catch (error) {
-    console.error('Error processing webhook event:', error);
-    return NextResponse.json({ error: error }, { status: 500 });
+    try{
+      // Send data to the specified URL
+      const response = await fetch('http://webhook.mrcoders.org/whatsapp-error.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(error),
+      });
+    } catch (error) {
+      console.log('error while saving errors.')
+    }
+    return NextResponse.json({ error: error }, { status: 200 });
   }
 }
