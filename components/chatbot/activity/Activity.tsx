@@ -515,17 +515,49 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                   </div>
                 </div>
                 <div className="p-4">
-                  {selectedConversation.messages.map((message, index) => (
-                    <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                      <div className={`rounded-lg p-4 inline-block max-w-[80%] ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
-                        <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
-                        <div className={`text-xs mt-1 ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
-                          {new Date(message.timestamp).toLocaleString()}
-                          {message.role === 'assistant' && ` by ${message?.from ?? 'Bot'}`}
+
+                  {selectedConversation.messages.map((message, index) => {
+                    let parsedContent;
+                    try {
+                      parsedContent = JSON.parse(message.content);
+                    } catch (e) {
+                      parsedContent = null;
+                    }
+
+                    return (
+                      <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
+                        <div className={`rounded-lg p-4 inline-block max-w-[80%] ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
+                          {parsedContent?.type === 'image' && parsedContent.image ? (
+                            <img src={parsedContent.image} alt="Chat Image" className="max-w-full h-auto rounded" />
+                          ) : parsedContent?.type === 'interactive' && parsedContent.interactive?.type === 'button' ? (
+                            <div>
+                              <p className="mb-2">{parsedContent.interactive.body.text}</p>
+                              <div className="flex flex-col gap-2">
+                                {parsedContent.interactive.action.buttons.map((button: any) => (
+                                  <button
+                                    key={button.reply.id}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                    onClick={() => {
+                                      // Handle button click here
+                                      console.log(`Button clicked: ${button.reply.title}`);
+                                    }}
+                                  >
+                                    {button.reply.title}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
+                          )}
+                          <div className={`text-xs mt-1 ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
+                            {new Date(message.timestamp).toLocaleString()}
+                            {message.role === 'assistant' && ` by ${message?.from ?? 'Bot'}`}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               {/* Send chat */}
