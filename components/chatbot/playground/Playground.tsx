@@ -9,6 +9,7 @@ import { useAISettings } from '@/hooks/useAISettings';
 import { AISettingsProvider, useAISettings as useAISettingsProvider } from "@/contexts/AISettingsContext";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import { useSearchParams } from 'next/navigation';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -400,7 +401,7 @@ const ChatContainer = ({
               {/* Keep existing chat messages but wrap them in a relative div */}
               <div className="relative z-10">
                 {messages.length === 0 && (
-                  <div className={` p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                  <div className={`max-w-[80%] p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
                     } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
                     {config.initialMessage}
                   </div>
@@ -409,7 +410,7 @@ const ChatContainer = ({
                   <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
                     <div className={`p-3 inline-block max-w-[80%] ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
                       } ${message.role === 'assistant'
-                        ? (config.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-50 text-black') + ' prose prose-sm max-w-none bg-gray-50'
+                        ? (config.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-50 text-black') + ' prose prose-sm bg-gray-50'
                         : 'text-white'
                       } `}
                       style={{
@@ -585,7 +586,7 @@ const ChatContainer = ({
                         if (data.message) {
                           let content = '';
                           if (data.image) {
-                            const imageHtml = `<img src="${data.image}" alt="Chat Image" class="rounded-md max-w-full my-2" />`;
+                            const imageHtml = `<img src="${data.image}" alt="Chat Image" class="rounded-md max-w-full my-2 " />`;
                             const combinedMessage = `${data.message || ''}${imageHtml}`;
 
                             const assistantMessage: Message = { role: 'assistant', content: combinedMessage, confidenceScore: 100 };
@@ -772,6 +773,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   if (team) {
     team = JSON.parse(team)
   }
+  const searchParams = useSearchParams();
+  const standalone = searchParams.get('standalone');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1263,7 +1266,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
             messagesEndRef={messagesEndRef}
             chatbotId={chatbot.id}
             aiSettings={aiSettings}
-            embed={embed}
+            embed={embed && !standalone}
             setConfig={setConfig}
             leadSetting={leadSetting}
             conversationId={conversationId}

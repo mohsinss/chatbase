@@ -198,7 +198,7 @@ export const ChatSettings = ({
               className="w-full p-2.5 border rounded-lg bg-white text-gray-700"
             >
               {AI_MODELS[getSelectedProvider(localSettings.model)].map(model => (
-                <option key={model.value} value={model.value} disabled={!model.default && team.plan == "Free"}>
+                <option key={model.value} value={model.value} disabled={!model.default && team?.plan == "Free"}>
                   {model.label}
                 </option>
               ))}
