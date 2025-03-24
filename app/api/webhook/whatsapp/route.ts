@@ -297,6 +297,40 @@ export async function POST(request: Request) {
                 const nodeOptions = nextNode.data.options || [];
                 const nodeImage = nextNode.data.image || '';
 
+                // send text msg to from number
+                const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
+                  messaging_product: "whatsapp",
+                  to: from,
+                  text: {
+                    body: nodeMessage
+                  }
+                }, {
+                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
+                conversation.messages.push({ role: "assistant", nodeMessage });
+
+                if (nodeImage) {
+                  // send text msg to from number
+                  const response_image = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
+                    messaging_product: "whatsapp",
+                    recipient_type: "individual",
+                    type: "image",
+                    to: from,
+                    image: {
+                      link: nodeImage
+                    }
+                  }, {
+                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                  });
+                  await sleep(2000)
+                  conversation.messages.push({
+                    role: "assistant", content: JSON.stringify({
+                      type: "image",
+                      image: nodeImage
+                    })
+                  });
+                }
+
                 if (nodeOptions.length > 0) {
                   // Construct interactive button message payload
                   const buttonsPayload = {
@@ -321,40 +355,6 @@ export async function POST(request: Request) {
                     }
                   };
 
-                  // send text msg to from number
-                  const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-                    messaging_product: "whatsapp",
-                    to: from,
-                    text: {
-                      body: nodeMessage
-                    }
-                  }, {
-                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                  });
-                  conversation.messages.push({ role: "assistant", nodeMessage });
-
-                  if (nodeImage) {
-                    // send text msg to from number
-                    const response_image = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-                      messaging_product: "whatsapp",
-                      recipient_type: "individual",
-                      type: "image",
-                      to: from,
-                      image: {
-                        link: nodeImage
-                      }
-                    }, {
-                      headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                    });
-                    await sleep(2000)
-                    conversation.messages.push({
-                      role: "assistant", content: JSON.stringify({
-                        type: "image",
-                        image: nodeImage
-                      })
-                    });
-                  }
-
                   // Send interactive button message
                   const response_question = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
                     buttonsPayload, {
@@ -362,21 +362,9 @@ export async function POST(request: Request) {
                   });
 
                   conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
-                } else {
-                  // send text msg to from number
-                  const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-                    messaging_product: "whatsapp",
-                    to: from,
-                    text: {
-                      body: nodeMessage
-                    }
-                  }, {
-                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                  });
-
-                  conversation.messages.push({ role: "assistant", content: nodeMessage });
-                  await conversation.save();
                 }
+                
+                await conversation.save();
               }
             }
           }
