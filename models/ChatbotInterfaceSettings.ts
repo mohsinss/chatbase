@@ -6,6 +6,7 @@ const ChatbotInterfaceSettingsSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     initialMessage: {
       type: String,
@@ -47,6 +48,24 @@ const ChatbotInterfaceSettingsSchema = new mongoose.Schema(
     autoShowDelay: {
       type: Number,
       default: 3,
+    },
+    tooltipDelay: {
+      type: Number,
+      default: 1,
+      required: true,
+      index: true,
+      validate: {
+        validator: function(v: any) {
+          // Accept any valid number or numeric string
+          return !isNaN(Number(v));
+        },
+        message: 'tooltipDelay must be a valid number'
+      },
+      // Always cast to Number
+      set: function(v: any) {
+        if (v === undefined || v === null) return 1;
+        return Number(v);
+      }
     },
     theme: {
       type: String,

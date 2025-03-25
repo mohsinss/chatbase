@@ -21,6 +21,7 @@ interface ChatConfig {
   syncColors: boolean
   bubbleAlignment: 'left' | 'right'
   autoShowDelay: number
+  tooltipDelay: number
   theme: 'light' | 'dark'
   displayName: string
   footerText: string
@@ -49,6 +50,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     syncColors: false,
     bubbleAlignment: 'right',
     autoShowDelay: 3,
+    tooltipDelay: 1,
     theme: 'light',
     displayName: "Chatbot",
     footerText: "",
@@ -92,6 +94,11 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     setWidthInputValue(config.chatWidth.toString())
   }, [config.chatWidth])
 
+  // Debug tooltip delay when it changes
+  useEffect(() => {
+    console.log("Current tooltipDelay value:", config.tooltipDelay);
+  }, [config.tooltipDelay]);
+
   const fetchSettings = async () => {
     try {
       console.log('Fetching settings for chatbotId:', chatbotId);
@@ -99,19 +106,40 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       const data = await response.json();
       
       if (response.ok) {
+        console.log('Fetched settings - Raw data:', JSON.stringify(data));
         console.log('Fetched settings - Full data:', data);
+        console.log('Fetched settings - Has tooltipDelay property:', data.hasOwnProperty('tooltipDelay'));
+        console.log('Fetched settings - Tooltip delay:', data.tooltipDelay);
+        console.log('Fetched settings - Tooltip delay type:', typeof data.tooltipDelay);
         console.log('Fetched settings - Background:', {
           url: data.chatBackgroundUrl,
           opacity: data.chatBackgroundOpacity
         });
         
         if (data) {
+          // Handle tooltipDelay explicitly with appropriate defaults
+          let tooltipDelayValue;
+          
+          if (data.hasOwnProperty('tooltipDelay')) {
+            // If tooltipDelay exists in the response, use it as a number
+            tooltipDelayValue = Number(data.tooltipDelay);
+            console.log('Using tooltipDelay from response:', tooltipDelayValue);
+          } else {
+            // If not, use default value 1
+            tooltipDelayValue = 1;
+            console.log('Using default tooltipDelay:', tooltipDelayValue);
+          }
+          
           const newConfig = {
             ...config,
             ...data,
+            // Set tooltipDelay explicitly to ensure it's not undefined
+            tooltipDelay: tooltipDelayValue,
             chatBackgroundOpacity: data.chatBackgroundOpacity ?? 0.1
           };
+          
           console.log('Setting new config:', newConfig);
+          console.log('New config tooltip delay:', newConfig.tooltipDelay);
           console.log('New config background:', {
             url: newConfig.chatBackgroundUrl,
             opacity: newConfig.chatBackgroundOpacity
@@ -133,39 +161,65 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   const handleSave = async () => {
     setLoading(true);
     try {
-      const configToSave = {
-        ...config,
+      console.log('Before configToSave - tooltipDelay in config:', config.tooltipDelay);
+      console.log('Before configToSave - tooltipDelay type:', typeof config.tooltipDelay);
+      
+      // Ensure tooltipDelay is a valid number
+      let tooltipDelay = config.tooltipDelay;
+      if (isNaN(Number(tooltipDelay))) {
+        console.log('Invalid tooltipDelay value, setting to default 1');
+        tooltipDelay = 1;
+      } else {
+        tooltipDelay = Number(tooltipDelay);
+      }
+      
+      // Build request payload without MongoDB internal fields
+      const requestPayload = {
+        chatbotId,
+        tooltipDelay: tooltipDelay,
+        displayName: config.displayName,
+        initialMessage: config.initialMessage,
+        suggestedMessages: config.suggestedMessages,
+        messagePlaceholder: config.messagePlaceholder,
+        collectFeedback: config.collectFeedback,
+        regenerateMessages: config.regenerateMessages,
+        userMessageColor: config.userMessageColor,
+        chatBubbleColor: config.chatBubbleColor,
+        syncColors: config.syncColors,
+        bubbleAlignment: config.bubbleAlignment,
+        autoShowDelay: config.autoShowDelay,
+        theme: config.theme,
+        footerText: config.footerText,
+        roundedHeaderCorners: config.roundedHeaderCorners,
+        roundedChatCorners: config.roundedChatCorners,
         profilePictureUrl: profilePicture,
         chatIconUrl: chatIcon,
         chatBackgroundUrl: config.chatBackgroundUrl,
         chatBackgroundOpacity: config.chatBackgroundOpacity ?? 0.1,
-        chatWidth: config.chatWidth,
+        chatWidth: config.chatWidth
       };
-
-      console.log('Before save - Full config:', configToSave);
-      console.log('Before save - Background settings:', {
-        url: configToSave.chatBackgroundUrl,
-        opacity: configToSave.chatBackgroundOpacity
-      });
+      
+      console.log('Request payload:', JSON.stringify(requestPayload));
 
       const response = await fetch('/api/chatbot/interface-settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          chatbotId,
-          ...configToSave
-        }),
+        body: JSON.stringify(requestPayload),
       });
 
       const savedData = await response.json();
 
       if (!response.ok) {
-        throw new Error(savedData.error || 'Failed to save settings');
+        console.error('Server returned error:', response.status);
+        console.error('Error response data:', savedData);
+        throw new Error(savedData.error || savedData.details || 'Failed to save settings');
       }
 
       console.log('After save - Server response:', savedData);
+      console.log('After save - Tooltip delay in response:', savedData.tooltipDelay);
+      console.log('After save - Tooltip delay type in response:', typeof savedData.tooltipDelay);
       console.log('After save - Background in response:', {
         url: savedData.chatBackgroundUrl,
         opacity: savedData.chatBackgroundOpacity
@@ -175,26 +229,44 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       const verifyResponse = await fetch(`/api/chatbot/interface-settings?chatbotId=${chatbotId}`);
       const verifyData = await verifyResponse.json();
       console.log('Verification fetch - Full data:', verifyData);
+      console.log('Verification fetch - Has tooltipDelay:', verifyData.hasOwnProperty('tooltipDelay'));
+      console.log('Verification fetch - tooltipDelay value:', verifyData.tooltipDelay);
+      console.log('Verification fetch - tooltipDelay type:', typeof verifyData.tooltipDelay);
       console.log('Verification fetch - Background:', {
         url: verifyData.chatBackgroundUrl,
         opacity: verifyData.chatBackgroundOpacity
       });
 
       // Update local state
-      setConfig(prev => ({
-        ...prev,
-        ...savedData
-      }));
+      setConfig(prev => {
+        console.log('Updating local state with savedData:', savedData);
+        console.log('savedData.tooltipDelay:', savedData.tooltipDelay);
+        
+        // Make sure tooltipDelay is properly set from the server response
+        const tooltipDelayValue = savedData.tooltipDelay !== undefined 
+          ? Number(savedData.tooltipDelay) 
+          : prev.tooltipDelay;
+        
+        console.log('Using tooltipDelayValue:', tooltipDelayValue);
+        
+        return {
+          ...prev,
+          ...savedData,
+          tooltipDelay: tooltipDelayValue
+        };
+      });
 
       // Send message to update embedded chat
       window.postMessage({
         type: 'chatbot-settings-update',
-        settings: configToSave
+        settings: requestPayload
       }, '*');
       
       toast.success('Settings saved successfully.')
     } catch (error) {
       console.error('Save error:', error);
+      console.error('Error details:', error instanceof Error ? error.message : String(error));
+      
       toast.error(error instanceof Error ? error.message : "Failed to save settings.")
     } finally {
       setLoading(false);
@@ -205,10 +277,23 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   const [showBubbleColorPicker, setShowBubbleColorPicker] = useState(false)
 
   const handleConfigChange = (key: keyof ChatConfig, value: any) => {
-    setConfig(prev => ({
-      ...prev,
-      [key]: value
-    }))
+    // Ensure tooltipDelay is always stored as a number
+    if (key === 'tooltipDelay') {
+      // Convert to number and handle invalid cases
+      const numValue = Number(value);
+      const finalValue = !isNaN(numValue) ? numValue : 1;
+      console.log(`Converting tooltipDelay from ${value} (${typeof value}) to ${finalValue} (number)`);
+      
+      setConfig(prev => ({
+        ...prev,
+        [key]: finalValue
+      }));
+    } else {
+      setConfig(prev => ({
+        ...prev,
+        [key]: value
+      }));
+    }
   }
 
   const handleImageUpload = async (type: 'profile' | 'icon' | 'background') => {
@@ -563,6 +648,74 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 className="flex h-10 w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
               <span className="text-sm text-gray-500">seconds (negative to disable)</span>
+            </div>
+          </div>
+
+          {/* Tooltip Delay */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Show tooltip message
+            </label>
+            <div className="flex items-center gap-2">
+              <select
+                value={config.tooltipDelay === 0 ? "immediate" : 
+                      config.tooltipDelay === -1 ? "never" : 
+                      [1, 2, 3, 5, 10].includes(config.tooltipDelay) ? config.tooltipDelay.toString() : "custom"}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "immediate") {
+                    handleConfigChange('tooltipDelay', 0);
+                  } else if (value === "never") {
+                    handleConfigChange('tooltipDelay', -1);
+                  } else if (value === "custom") {
+                    // Keep the current value if switching to custom
+                    if (!([0, -1].includes(config.tooltipDelay) || [1, 2, 3, 5, 10].includes(config.tooltipDelay))) {
+                      // Current value is already custom, don't change it
+                    } else {
+                      // Set a default custom value
+                      handleConfigChange('tooltipDelay', 4);
+                    }
+                  } else {
+                    handleConfigChange('tooltipDelay', parseInt(value));
+                  }
+                }}
+                className="flex h-10 w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="immediate">Immediately</option>
+                <option value="never">Never</option>
+                <option value="1">After 1 second</option>
+                <option value="2">After 2 seconds</option>
+                <option value="3">After 3 seconds</option>
+                <option value="5">After 5 seconds</option>
+                <option value="10">After 10 seconds</option>
+                <option value="custom">Custom...</option>
+              </select>
+              
+              {config.tooltipDelay > 0 && 
+                ![1, 2, 3, 5, 10].includes(config.tooltipDelay) && (
+                <div className="flex items-center gap-2 ml-2">
+                  <input 
+                    type="number"
+                    value={config.tooltipDelay}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (!isNaN(value) && value > 0) {
+                        handleConfigChange('tooltipDelay', value);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (isNaN(value) || value <= 0) {
+                        // If invalid, reset to a safe default
+                        handleConfigChange('tooltipDelay', 4);
+                      }
+                    }}
+                    min="1"
+                    className="flex h-10 w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <span className="text-sm text-gray-500">seconds</span>
+                </div>
+              )}
             </div>
           </div>
 
