@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 		<html
 			lang="en"
 			data-theme={config.colors.theme}
-			className={font.className + ' h-dvh max-h-dvh'}
+			className={font.className + ' h-dvh max-h-dvh overflow-x-hidden'}
 		>
 			<head>
 				{/* other head elements */}

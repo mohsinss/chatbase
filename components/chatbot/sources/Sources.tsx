@@ -11,7 +11,6 @@ import QAInput from './QAInput';
 import NotionInput from './NotionInput';
 import toast, { Toaster } from 'react-hot-toast';
 import config from "@/config";
-import ChatbotFlow from "./Chatflow";
 import ChatflowV1 from "./ChatflowV1";
 
 interface IFile {
@@ -61,6 +60,7 @@ const Sources = ({
   const [links, setLinks] = useState<{ id: string; link: string, chars: number }[]>([]);
   const [qFlow, setQFlow] = useState(null);
   const [qFlowEnabled, setQFlowEnabled] = useState(false);
+  const [qFlowAIEnabled, setQFlowAIEnabled] = useState(false);
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
 
@@ -93,6 +93,9 @@ const Sources = ({
         if (data.questionFlowEnable) {
           setQFlowEnabled(data.questionFlowEnable)
         }
+        if (data.questionAiIResponseEnable) {
+          setQFlowEnabled(data.questionAiIResponseEnable)
+        }        
       } catch (error) {
         console.error("Error fetching dataset:", error);
         toast.error("Failed to load dataset" + error.message);
@@ -164,7 +167,9 @@ const Sources = ({
       case "qa":
         return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs} />;
       case "qf":
-        return <ChatflowV1 qFlow={qFlow} setQFlow={setQFlow} qFlowEnabled={qFlowEnabled} chatbotId={chatbotId}/>;
+        return <ChatflowV1 qFlow={qFlow} setQFlow={setQFlow} 
+        qFlowEnabled={qFlowEnabled} chatbotId={chatbotId} 
+        qFlowAIEnabled={qFlowAIEnabled}/>;
       case "notion":
         return <NotionInput
           onConnect={() => {

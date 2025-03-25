@@ -47,6 +47,7 @@ interface ChatbotFlowProps {
   setQFlow: React.Dispatch<React.SetStateAction<any>>;
   chatbotId: string;
   qFlowEnabled: boolean;
+  qFlowAIEnabled: boolean;
 }
 // Initialize with a simple flow
 //@ts-ignore
@@ -59,12 +60,15 @@ export default function ChatflowV1({
   setQFlow,
   chatbotId,
   qFlowEnabled,
+  qFlowAIEnabled
 }: ChatbotFlowProps) {
   const [nodes, setNodes, onNodesChange2] = useNodesState(qFlow?.nodes ?? []);
   const [edges, setEdges, onEdgesChange2] = useEdgesState(qFlow?.edges ?? []);
   const [isSaving, setIsSaving] = useState(false);
   const [isEnabling, setIsEnabling] = useState(false);
   const [enabled, setEnabled] = useState(qFlowEnabled);
+  const [isEnabling1, setIsEnabling1] = useState(false);
+  const [enabled1, setEnabled1] = useState(qFlowAIEnabled);
 
   const loadTemplate = () => {
     //@ts-ignore
@@ -88,6 +92,10 @@ export default function ChatflowV1({
   useEffect(() => {
     setEnabled(qFlowEnabled);
   }, [qFlowEnabled])
+
+  useEffect(() => {
+    setEnabled1(qFlowAIEnabled);
+  }, [qFlowAIEnabled])
 
   const handleNodesChange = useCallback(
     (changes: any) => {
@@ -207,11 +215,42 @@ export default function ChatflowV1({
       }
 
       setEnabled(!enabled);
+      toast.success("successfully updated")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to update flow status');
       console.error('Error updating flow status:', error);
     } finally {
       setIsEnabling(false)
+    }
+  };
+
+  const toggleFlowAIEnabled = async () => {
+    setIsEnabling1(true);
+    try {
+      const response = await fetch('/api/chatbot/train/questionflow/enable-ai-response', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          enabled: !enabled1,
+          chatbotId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update flow status');
+      }
+
+      setEnabled1(!enabled1);
+      toast.success("successfully updated")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update flow status');
+      console.error('Error updating flow status:', error);
+    } finally {
+      setIsEnabling1(false)
     }
   };
 
@@ -250,6 +289,19 @@ export default function ChatflowV1({
               disabled={isEnabling}
             >
               {enabled ? 'Turn Off' : 'Turn On'}
+            </Button>
+          </div>
+          <div className="flex items-center justify-between gap-2 mt-2">
+            <span className={`text-sm ${enabled1 ? 'text-green-600' : 'text-red-600'}`}>
+              {enabled1 ? 'AI response' : 'AI response'}
+            </span>
+            <Button
+              onClick={toggleFlowAIEnabled}
+              variant={enabled1 ? 'destructive' : 'default'}
+              size="sm"
+              disabled={isEnabling1}
+            >
+              {enabled1 ? 'Turn Off' : 'Turn On'}
             </Button>
           </div>
           <Button onClick={loadTemplate}

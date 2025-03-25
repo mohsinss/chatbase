@@ -38,6 +38,7 @@ interface IDataset {
   questionFlow?: {};
   metadata?: {};
   questionFlowEnable?: boolean;
+  questionAiIResponseEnable?: boolean;
 }
 
 const datasetSchema = new mongoose.Schema<IDataset>({
@@ -100,6 +101,10 @@ const datasetSchema = new mongoose.Schema<IDataset>({
       default: {}
     },
     questionFlowEnable: {
+      type: Boolean,
+      default: false,
+    },
+    questionAiIResponseEnable: {
       type: Boolean,
       default: false,
     },
