@@ -62,6 +62,8 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
   const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
   const [inputMsg, setInputMsg] = useState("");
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [userConversations, setUserConversations] = useState<Conversation[]>([]);
 
   useEffect(() => {
     if (selectedConversation?.platform == "whatsapp"
@@ -120,17 +122,25 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
 
     const fetchLeadConversations = async () => {
       try {
-        const response = await fetch(`/api/chatbot/conversation?chatbotId=${chatbotId}&lead=1`);
+        // First try to fetch all conversations if lead=1 is failing
+        const response = await fetch(`/api/chatbot/conversation?chatbotId=${chatbotId}`);
         if (response.ok) {
           const data = await response.json();
           const validConversations = Array.isArray(data) ? data.filter(conv =>
             conv.messages.length > 0 &&
-            conv.messages.some((m: Message) => m.content?.trim())
+            conv.messages.some((m: Message) => m.content?.trim()) &&
+            // Filter for conversations that have lead data
+            (conv.leadId || (conv.metadata && (conv.metadata.from || conv.metadata.from_name)))
           ) : [];
+          setAllConversations(validConversations);
           setConversations(validConversations);
+        } else {
+          console.error('Failed to fetch lead conversations, status:', response.status);
+          toast.error("Failed to load lead conversations");
         }
       } catch (error) {
-        console.error('Failed to fetch conversations:', error);
+        console.error('Failed to fetch lead conversations:', error);
+        toast.error("Error loading lead data");
       } finally {
         setLoading(false);
       }
@@ -335,6 +345,12 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
       filteredConversations = allConversations.filter(conv => conv.platform === platform);
     }
     setConversations(filteredConversations);
+  };
+
+  const handleUserSelect = (user: any) => {
+    setSelectedUser(user);
+    setUserConversations(user.conversations);
+    setSelectedConversation(null); // Clear selected conversation
   };
 
   const renderChatLogs = () => (
@@ -603,117 +619,226 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
     </div>
   );
 
-  const renderLeads = () => (
-    <div className="flex flex-col h-full">
-      {/* Top Header - Fixed */}
-      <div className="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-10">
-        <h2 className="text-xl font-semibold">Leads</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={handleRefresh}
-            className="btn btn-outline btn-sm gap-2"
-            disabled={loading}
-          >
-            <IconRefresh className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-          <button className="btn btn-outline btn-sm gap-2">
-            <IconFilter className="w-4 h-4" />
-            <span className="hidden sm:inline">Filter</span>
-          </button>
-          <button className="btn btn-outline btn-sm gap-2">
-            <IconDownload className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span>
-          </button>
-        </div>
-      </div>
+  const renderLeads = () => {
+    // Group conversations by user (using phone number or other identifier)
+    const userMap = new Map();
+    
+    allConversations.forEach(conv => {
+      const userId = conv.metadata?.from || 
+                    (conv.leadId?.phone || conv.leadId?.email || conv.leadId?.name || "Unknown User");
+      
+      // Determine the display name based on platform and available data
+      let displayName;
+      let icon = null;
+      
+      if (conv.platform === "whatsapp") {
+        // Format WhatsApp phone number with international code
+        const phone = conv.metadata?.from || "";
+        // Format phone number if it's a valid number
+        let formattedPhone = phone;
+        if (phone && /^\d+$/.test(phone.replace(/\+/g, ''))) {
+          // Add + if missing
+          if (!phone.startsWith('+')) {
+            formattedPhone = `+${phone}`;
+          }
+          // Try to format with country code and separators
+          try {
+            // Basic formatting: +1 XXX-XXX-XXXX format for US numbers
+            if (formattedPhone.startsWith('+1') && formattedPhone.length >= 12) {
+              formattedPhone = formattedPhone.replace(/^\+1(\d{3})(\d{3})(\d{4}).*/, '+1 $1-$2-$3');
+            }
+          } catch (e) {
+            // If formatting fails, use the original
+            formattedPhone = phone;
+          }
+        }
+        displayName = formattedPhone;
+        icon = "whatsapp";
+      } else if (conv.platform === "facebook") {
+        displayName = conv.metadata?.from_name || "Facebook User";
+        icon = "facebook";
+      } else if (conv.platform === "facebook-comment") {
+        displayName = conv.metadata?.from_name || "Facebook Comment";
+        icon = "facebook-comment";
+      } else if (conv.platform === "instagram") {
+        displayName = conv.metadata?.from_name || "Instagram User";
+        icon = "instagram";
+      } else if (!conv.platform || conv.platform === "" || conv.platform === "Playground") {
+        displayName = "Web Chat";
+        icon = "web";
+      } else {
+        displayName = conv.metadata?.from_name || conv.leadId?.name || "Unknown User";
+      }
+      
+      if (!userMap.has(userId)) {
+        userMap.set(userId, {
+          id: userId,
+          name: displayName,
+          email: conv.leadId?.email,
+          phone: conv.leadId?.phone || conv.metadata?.from,
+          icon: icon,
+          conversations: []
+        });
+      }
+      
+      userMap.get(userId).conversations.push(conv);
+    });
+    
+    const users = Array.from(userMap.values());
 
-      {/* Content Container - Scrollable */}
-      <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
-        {/* Conversation List - Responsive height */}
-        <div className="w-full lg:w-[400px] lg:border-r bg-white shrink-0">
-          {loading ? (
-            <div className="text-center py-12 text-gray-500">
-              Loading conversations...
-            </div>
-          ) : conversations.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              No chats found
-            </div>
-          ) : (
-            <div className="divide-y max-h-[192px] lg:max-h-[calc(100vh-300px)] overflow-y-auto">
-              {/* 192px = 3 rows * 64px per row on mobile */}
-              {/* calc(100vh-300px) = full height minus headers and padding on desktop */}
-              {conversations.map((conversation) => {
-                const firstUserMessage = conversation.messages.find(m => m.role === 'user');
-                return (
+    return (
+      <div className="flex flex-col h-full">
+        {/* Top Header - Fixed */}
+        <div className="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-10">
+          <h2 className="text-xl font-semibold">Leads</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={handleRefresh}
+              className="btn btn-outline btn-sm gap-2"
+              disabled={loading}
+            >
+              <IconRefresh className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+            <button className="btn btn-outline btn-sm gap-2">
+              <IconFilter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filter</span>
+            </button>
+            <button className="btn btn-outline btn-sm gap-2">
+              <IconDownload className="w-4 h-4" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Content Container - Scrollable */}
+        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto">
+          {/* User List - First column */}
+          <div className="w-full lg:w-[400px] lg:border-r bg-white shrink-0">
+            {loading ? (
+              <div className="text-center py-12 text-gray-500">
+                Loading users...
+              </div>
+            ) : users.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                No users found
+              </div>
+            ) : (
+              <div className="divide-y max-h-[192px] lg:max-h-[calc(100vh-300px)] overflow-y-auto">
+                {users.map((user) => (
                   <div
-                    key={conversation._id}
-                    onClick={() => setSelectedConversation(conversation)}
-                    className={`p-4 hover:bg-gray-50 cursor-pointer h-16 ${selectedConversation?._id === conversation._id ? 'bg-gray-50' : ''
-                      }`}
+                    key={user.id}
+                    onClick={() => {
+                      setSelectedUser(user);
+                      // Select the first conversation from this user
+                      if (user.conversations.length > 0) {
+                        setSelectedConversation(user.conversations[0]);
+                      }
+                    }}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer ${selectedUser?.id === user.id ? 'bg-gray-50' : ''}`}
                   >
                     <div className="flex justify-between items-start">
                       <div className="space-y-1 flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
-                          {truncateContent(conversation?.leadId?.name || conversation?.leadId?.email || conversation?.leadId?.phone || "No Lead information")}
+                        <p className="font-medium text-gray-900 truncate flex items-center gap-1">
+                          {user.icon === "whatsapp" && <IconBrandWhatsapp className="text-green-500 w-4 h-4" />}
+                          {user.icon === "facebook" && <IconBrandFacebook className="text-blue-600 w-4 h-4" />}
+                          {user.icon === "facebook-comment" && <IconMessage className="text-blue-600 w-4 h-4" />}
+                          {user.icon === "instagram" && <IconBrandInstagram className="text-pink-600 w-4 h-4" />}
+                          {user.icon === "web" && <IconBrowser className="text-gray-700 w-4 h-4" />}
+                          {user.name || "Unknown User"}
                         </p>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span>{formatDate(conversation.createdAt)}</span>
+                          <span>{user.phone || user.email || user.id}</span>
                           <span>•</span>
-                          <span>{conversation.messages.length} messages</span>
+                          <span>{user.conversations.length} conversations</span>
                         </div>
                       </div>
-                      <button
-                        className="p-1 hover:bg-gray-100 rounded ml-2"
-                        onClick={(e) => handleDeleteClick(conversation, e)}
-                      >
-                        <IconTrash className="w-4 h-4 text-gray-400 hover:text-red-500" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Conversation Details */}
-        <div className="flex-1 bg-gray-50">
-          {selectedConversation ? (
-            <div className="flex flex-col">
-              <div className="p-4 border-b bg-white sticky top-0 z-10">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-gray-500">
-                      {formatDate(selectedConversation.createdAt)}
-                    </div>
-                  </div>
-                  <button className="p-1 hover:bg-gray-100 rounded">
-                    <IconTrash className="w-4 h-4 text-gray-400 hover:text-red-500" />
-                  </button>
-                </div>
-              </div>
-              <div className="p-4">
-                {selectedConversation.messages.map((message, index) => (
-                  <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                    <div className={`rounded-lg p-4 inline-block max-w-[80%] ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'
-                      }`}>
-                      <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center text-gray-500">
-              Select a conversation to view details
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Conversation Details - Second column */}
+          <div className="flex-1 bg-gray-50">
+            {selectedConversation ? (
+              <div className="flex flex-col">
+                <div className="p-4 border-b bg-white sticky top-0 z-10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg flex items-center gap-2 font-semibold capitalize">
+                        {chatbot.name} -
+                        Source:
+                        {selectedConversation?.platform == "whatsapp" && <IconBrandWhatsapp className="text-green-400" />}
+                        {selectedConversation?.platform == "facebook" && <IconBrandFacebook className="text-blue-600" />}
+                        {selectedConversation?.platform == "facebook-comment" && <IconMessage className="text-blue-600" />}
+                        {selectedConversation?.platform == "instagram" && <IconBrandInstagram className="text-pink-600" />}
+                        {(!selectedConversation.platform || selectedConversation.platform === "" || selectedConversation.platform === "Playground") && <IconBrowser className="text-gray-700" />}
+                      </h3>
+                      <div className="text-sm text-gray-500">
+                        {formatDate(selectedConversation.createdAt)}
+                      </div>
+                    </div>
+                    <button className="p-1 hover:bg-gray-100 rounded">
+                      <IconTrash className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-4">
+                  {selectedConversation.messages.map((message, index) => {
+                    let parsedContent;
+                    try {
+                      parsedContent = JSON.parse(message.content);
+                    } catch (e) {
+                      parsedContent = null;
+                    }
+
+                    return (
+                      <div key={index} className={`max-w-[80%] mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
+                        <div className={`rounded-lg p-4 inline-block max-w-[80%] ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
+                          {parsedContent?.type === 'image' && parsedContent.image ? (
+                            <img src={parsedContent.image} alt="Chat Image" className="max-w-full h-auto rounded" />
+                          ) : parsedContent?.type === 'interactive' && parsedContent.interactive?.type === 'button' ? (
+                            <div>
+                              <p className="mb-2">{parsedContent.interactive.body.text}</p>
+                              <div className="flex flex-col gap-2">
+                                {parsedContent.interactive.action.buttons.map((button: any) => (
+                                  <button
+                                    key={button.reply.id}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                    onClick={() => {
+                                      console.log(`Button clicked: ${button.reply.title}`);
+                                    }}
+                                  >
+                                    {button.reply.title}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
+                          )}
+                          <div className={`text-xs mt-1 ${message.role === 'assistant' ? 'text-gray-500' : 'text-blue-200'}`}>
+                            {new Date(message.timestamp).toLocaleString()}
+                            {message.role === 'assistant' && ` by ${message?.from ?? 'Bot'}`}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-500">
+                Select a conversation to view details
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <>
