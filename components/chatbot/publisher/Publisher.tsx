@@ -182,13 +182,13 @@ const Publisher = ({
 
   return (
     <div className="flex justify-center w-full">
-      <div className="w-full max-w-6xl p-8">
-        <h1 className="text-2xl font-bold mb-8">Publisher</h1>
+      <div className="w-full max-w-6xl p-4 md:p-6">
+        <h1 className="text-2xl font-bold mb-4">Publisher</h1>
 
         {/* Responsive Nav */}
         <div className="md:flex md:space-x-8">
           {/* Nav Menu - Side on desktop, Top on mobile */}
-          <div className="mb-8 md:mb-0 md:w-48">
+          <div className="mb-6 md:mb-0 md:w-48">
             <div className="flex md:flex-col space-x-4 md:space-x-0 md:space-y-2 overflow-x-auto md:overflow-visible">
               {PUBLISHER_TABS.map((tab) => (
                 <button
@@ -208,7 +208,7 @@ const Publisher = ({
 
           {/* Content Area */}
           <div className="flex-1">
-            <div className="flex flex-row items-center gap-2 pb-4 mb-6 border-b">
+            <div className="flex flex-row items-center gap-2 pb-3 mb-4 border-b">
               <Link
                 href={`/dashboard/${teamId}/chatbot/${chatbotId}/publisher`}
                 className="hidden lg:flex items-center gap-2 text-gray-600 hover:text-gray-900"
@@ -233,28 +233,8 @@ const Publisher = ({
               </div>
             </div>
             
-            {/* View Options */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Posts</h2>
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                {VIEW_OPTIONS.map((view) => (
-                  <button
-                    key={view.id}
-                    onClick={() => setCurrentView(view.id)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors
-                      ${currentView === view.id
-                        ? "bg-white shadow-sm"
-                        : "text-gray-600 hover:bg-gray-200"}`}
-                  >
-                    {view.icon}
-                    <span className="text-sm font-medium">{view.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            
             {/* Post Composer */}
-            <div className="mb-8 border rounded-lg p-4">
+            <div className="mb-6 border rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Create New Post</h3>
                 <div className="flex space-x-2">
@@ -365,6 +345,26 @@ const Publisher = ({
                     Publish Now
                   </button>
                 </div>
+              </div>
+            </div>
+            
+            {/* View Options - Moved above the post lists */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Posts</h2>
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                {VIEW_OPTIONS.map((view) => (
+                  <button
+                    key={view.id}
+                    onClick={() => setCurrentView(view.id)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors
+                      ${currentView === view.id
+                        ? "bg-white shadow-sm"
+                        : "text-gray-600 hover:bg-gray-200"}`}
+                  >
+                    {view.icon}
+                    <span className="text-sm font-medium">{view.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
             
