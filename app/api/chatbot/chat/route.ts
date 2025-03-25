@@ -92,7 +92,7 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, selectedOption, optionIndex, currentNodeId, chatbotId, conversationId } = await req.json();
+    const { messages, selectedOption, optionIndex, nodeId, chatbotId, conversationId } = await req.json();
 
     await connectMongo();
 
@@ -142,16 +142,17 @@ export async function POST(req: NextRequest) {
       ));
     }
 
-    const { questionFlow, questionFlowEnable } = dataset;
+    const { questionFlow, questionFlowEnable, questionAiIResponseEnable, restartQFTimeoutMins } = dataset;
+    const isAiResponseEnabled = questionAiIResponseEnable !== undefined ? questionAiIResponseEnable : true;
 
     let nextNode = null;
 
-    if (questionFlowEnable && questionFlow ) {
-    
+    if (questionFlowEnable && questionFlow) {
+
       const { nodes, edges } = (questionFlow && questionFlow.nodes && questionFlow.edges) ? questionFlow : sampleFlow;
 
-      // If only one message and no currentNodeId, set currentNodeId to first node
-      if (!currentNodeId && messages.length == 0) {
+      // If only one message and no nodeId, set nodeId to first node
+      if (!nodeId && messages.length == 0) {
         // Find the top parent node (node without incoming edges)
         //@ts-ignore
         const childNodeIds = new Set(edges.map(edge => edge.target));
@@ -160,12 +161,21 @@ export async function POST(req: NextRequest) {
         nextNode = topParentNode;
       }
 
-      if (currentNodeId) {
+      if (nodeId) {
         // User selected an option or initial message, find next node based on selected option or initial node
         //@ts-ignore
-        const nextEdge = edges.find(edge => edge.source === currentNodeId && edge.sourceHandle === optionIndex?.toString());
+        const nextEdge = edges.find(edge => edge.source === nodeId && edge.sourceHandle === optionIndex?.toString());
         //@ts-ignore
         nextNode = nodes.find(node => node.id === nextEdge?.target);
+      }
+
+      if (!nextNode && !isAiResponseEnabled) {
+        // Find the top parent node (node without incoming edges)
+        //@ts-ignore
+        const childNodeIds = new Set(edges.map(edge => edge.target));
+        //@ts-ignore
+        const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
+        nextNode = topParentNode;
       }
 
       if (nextNode) {

@@ -61,6 +61,7 @@ interface ChatContainerProps {
   leadSetting?: ChatbotLeadSettings;
   conversationId?: string;
   currentNodeId?: Number;
+  qFlowAIEnabled: boolean
 }
 
 interface ChatConfig {
@@ -104,6 +105,7 @@ const ChatContainer = ({
   conversationId,
   setCurrentNodeId,
   currentNodeId,
+  qFlowAIEnabled
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
     if (confidenceScore === -1) {
@@ -527,7 +529,7 @@ const ChatContainer = ({
 
           <div className="flex flex-col justify-between pt-2">
             {/* Suggested Messages - Horizontal scrollable */}
-            <div className="px-3 overflow-x-auto whitespace-nowrap flex gap-2 mb-4 pb-2">
+            <div className="px-3 overflow-x-auto whitespace-nowrap flex gap-2 mb-1 pb-2">
               {!currentNodeId && config.suggestedMessages?.split('\n').filter((msg: string) => msg.trim()).map((message: string, index: number) => (
                 <button
                   key={index}
@@ -604,7 +606,7 @@ const ChatContainer = ({
                               <p>${data.question}</p>
                               <div class="mt-2">
                               ${data.options.map((option: string, index: number) => `
-                                <button class="chat-option-btn w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn" data-index="${index}">
+                                <button class="chat-option-btn w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn" data-index="${index}" data-node="${data.nextNodeId}">
                                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
                                   ${option}
                                 </button>
@@ -790,6 +792,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const [currentNodeId, setCurrentNodeId] = useState(null);
   const [qFlow, setQFlow] = useState(null);
   const [qFlowEnabled, setQFlowEnabled] = useState(false);
+  const [qFlowAIEnabled, setQFlowAIEnabled] = useState(true);
 
   const debouncedSave = React.useCallback(
     debounce((msgs: Message[]) => {
@@ -880,6 +883,9 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
         if (data.questionFlowEnable) {
           setQFlowEnabled(data.questionFlowEnable)
         }
+        if (data.questionAiIResponseEnable) {
+          setQFlowAIEnabled(data.questionAiIResponseEnable)
+        }
       } catch (error) {
         console.error("Error fetching dataset:", error);
         toast.error("Failed to load dataset" + error.message);
@@ -902,7 +908,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
       const target = e.target as HTMLElement;
       if (target.classList.contains('chat-option-btn')) {
         const option = target.textContent || '';
-        const index = target.getAttribute('data-index');
+        const optionIndex = target.getAttribute('data-index');
+        const nodeId = target.getAttribute('data-node');
 
         const userMessage: Message = { role: 'user', content: option };
         setMessages(prev => [...prev, userMessage]);
@@ -914,8 +921,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               selectedOption: option,
-              optionIndex: Number(index),
-              currentNodeId,
+              optionIndex: Number(optionIndex),
+              nodeId,
               chatbotId: chatbot.id,
               conversationId,
               messages: [...messages, userMessage],
@@ -953,7 +960,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
                   <p>${data.question}</p>
                   <div class="mt-2">
                   ${data.options.map((option: string, index: number) => `
-                    <button class="chat-option-btn w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn" data-index="${index}">
+                    <button class="chat-option-btn w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn" data-node="${data.nextNodeId}" data-index="${index}">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
                       ${option}
                     </button>
@@ -1138,7 +1145,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
               <p>${data.question}</p>
               <div class="mt-2">
               ${data.options.map((option: string, index: number) => `
-                <button class="chat-option-btn w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn" data-index="${index}">
+                <button class="chat-option-btn w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn" data-index="${index}" data-node="${data.nextNodeId}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
                   ${option}
                 </button>
@@ -1270,6 +1277,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
             setConfig={setConfig}
             leadSetting={leadSetting}
             conversationId={conversationId}
+            qFlowAIEnabled={qFlowAIEnabled}
           />
         </div>
       </AISettingsProvider>
@@ -1345,6 +1353,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
               aiSettings={aiSettings}
               conversationId={conversationId}
               embed={embed}
+              qFlowAIEnabled={qFlowAIEnabled}
             />
           </div>
         </div>
