@@ -14,6 +14,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   Panel,
+  useReactFlow,
 } from "reactflow"
 import "reactflow/dist/style.css"
 import { Button } from "@/components/ui/button"
@@ -72,17 +73,29 @@ export default function ChatflowV1({
   const [isEnabling1, setIsEnabling1] = useState(false);
   const [enabled1, setEnabled1] = useState(qFlowAIEnabled);
   const [restartQFTimeoutMins, setRestartQFTimeoutMins] = useState<number>(QFTimeout);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { fitView } = useReactFlow();
+
+  const toggleFullscreen = () => {
+    setIsFullscreen((prev) => !prev);
+  };
+
+  useEffect(() => {
+    // Set overflow based on fullscreen state
+    document.documentElement.style.overflow = isFullscreen ? 'hidden' : 'auto';
+
+    const timeout = setTimeout(() => {
+      fitView({ duration: 400 });
+    }, 300); // delay slightly to ensure fullscreen transition completes
+
+    return () => clearTimeout(timeout);
+  }, [isFullscreen, fitView]);
 
   const loadTemplate = () => {
     //@ts-ignore
     setNodes([...initialNodes]);
     setEdges([...initialEdges]);
   }
-
-  // Update qFlow whenever nodes or edges change
-  // useEffect(() => {
-  //   setQFlow({ nodes, edges });
-  // }, [nodes, edges, setQFlow]);
 
   // Update qFlow whenever nodes or edges change
   useEffect(() => {
@@ -263,7 +276,7 @@ export default function ChatflowV1({
   };
 
   return (
-    <div className="h-full border rounded-md">
+    <div className={`h-full border rounded-md ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : 'relative'}`}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -276,6 +289,23 @@ export default function ChatflowV1({
         <Background />
         <Controls />
         <MiniMap />
+
+        <Panel position="top-right" className="bg-white p-4 rounded-md shadow-md">
+          {/* Existing buttons and controls */}
+          <Button onClick={toggleFullscreen} className="w-full justify-start mt-2">
+            {isFullscreen ? (
+              <>
+                <Layout size={16} className="mr-2" />
+                Exit Fullscreen
+              </>
+            ) : (
+              <>
+                <LayoutTemplate size={16} className="mr-2" />
+                Fullscreen View
+              </>
+            )}
+          </Button>
+        </Panel>
 
         <Panel position="top-left" className="bg-white p-4 rounded-md shadow-md">
           <Button onClick={handleSave} className="w-full justify-start" disabled={isSaving}>

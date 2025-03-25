@@ -8,6 +8,7 @@ import IntegrationsSection from './IntegrationsSection';
 import WhatsappManagement from "./management/WhatsappManagement";
 import MessengerManagement from "./management/MessengerManagement";
 import InstagramManagement from "./management/InstagramManagement";
+import XManagement from "./management/XManagement";
 
 const CONNECT_TABS = [
   { id: "embed", label: "Embed", icon: <IconCode className="w-5 h-5" /> },
@@ -73,6 +74,7 @@ const Connect = ({
             {currentTab === 'whatsapp' && <WhatsappManagement chatbotId={chatbotId} domain={domain} teamId={teamId} />}
             {currentTab === 'messenger' && <MessengerManagement chatbotId={chatbotId} domain={domain} teamId={teamId} />}
             {currentTab === 'instagram' && <InstagramManagement chatbotId={chatbotId} domain={domain} teamId={teamId} />}
+            {currentTab === 'x' && <XManagement chatbotId={chatbotId} domain={domain} teamId={teamId} />}
           </div>
         </div>
       </div>

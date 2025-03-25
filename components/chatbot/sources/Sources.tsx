@@ -12,6 +12,7 @@ import NotionInput from './NotionInput';
 import toast, { Toaster } from 'react-hot-toast';
 import config from "@/config";
 import ChatflowV1 from "./ChatflowV1";
+import { ReactFlowProvider } from "reactflow";
 
 interface IFile {
   trieveId: string;
@@ -172,9 +173,11 @@ const Sources = ({
       case "qa":
         return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs} />;
       case "qf":
-        return <ChatflowV1 qFlow={qFlow} setQFlow={setQFlow}
-          qFlowEnabled={qFlowEnabled} chatbotId={chatbotId}
-          qFlowAIEnabled={qFlowAIEnabled} restartQFTimeoutMins={restartQFTimeoutMins} />;
+        return <ReactFlowProvider>
+          <ChatflowV1 qFlow={qFlow} setQFlow={setQFlow}
+            qFlowEnabled={qFlowEnabled} chatbotId={chatbotId}
+            qFlowAIEnabled={qFlowAIEnabled} restartQFTimeoutMins={restartQFTimeoutMins} />
+        </ReactFlowProvider>;
       case "notion":
         return <NotionInput
           onConnect={() => {

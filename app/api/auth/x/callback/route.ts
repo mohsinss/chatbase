@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
   // Save user data along with tokens
   await X.findOneAndUpdate(
-    { chatbotId },
+    { userId: userData.id_str },
     {
       chatbotId,
       accessToken,
@@ -39,9 +39,11 @@ export async function GET(req: NextRequest) {
       username: userData.screen_name,
       name: userData.name,
       profileImageUrl: userData.profile_image_url_https,
-      // Add any other details you want from userData here
     },
-    { new: true }
+    {
+      new: true,
+      upsert: true,
+    }
   );
 
   // Update Chatbot's integration flag
@@ -51,6 +53,23 @@ export async function GET(req: NextRequest) {
     { new: true }
   );
 
+  // Subscribe user to webhook for Account Activity
+  try {
+    const appClient = new TwitterApi({
+      appKey: process.env.X_API_KEY!,
+      appSecret: process.env.X_API_SECRET!,
+      accessToken,
+      accessSecret,
+    });
+
+    const envName = process.env.X_ENV_NAME!; // e.g., 'dev'
+    await appClient.v1.post(`account_activity/all/${envName}/subscriptions.json`);
+    console.log(`Webhook subscription successful for user ${userData.screen_name}`);
+  } catch (error) {
+    console.error('Webhook subscription failed:', error);
+    // Optional: return error response or continue
+  }
+  
   // Close popup window
   return new NextResponse(`
     <html>
