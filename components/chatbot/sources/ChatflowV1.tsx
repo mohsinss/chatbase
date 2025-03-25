@@ -48,6 +48,7 @@ interface ChatbotFlowProps {
   chatbotId: string;
   qFlowEnabled: boolean;
   qFlowAIEnabled: boolean;
+  restartQFTimeoutMins: number;
 }
 // Initialize with a simple flow
 //@ts-ignore
@@ -60,7 +61,8 @@ export default function ChatflowV1({
   setQFlow,
   chatbotId,
   qFlowEnabled,
-  qFlowAIEnabled
+  qFlowAIEnabled,
+  restartQFTimeoutMins: QFTimeout
 }: ChatbotFlowProps) {
   const [nodes, setNodes, onNodesChange2] = useNodesState(qFlow?.nodes ?? []);
   const [edges, setEdges, onEdgesChange2] = useEdgesState(qFlow?.edges ?? []);
@@ -69,6 +71,7 @@ export default function ChatflowV1({
   const [enabled, setEnabled] = useState(qFlowEnabled);
   const [isEnabling1, setIsEnabling1] = useState(false);
   const [enabled1, setEnabled1] = useState(qFlowAIEnabled);
+  const [restartQFTimeoutMins, setRestartQFTimeoutMins] = useState<number>(QFTimeout);
 
   const loadTemplate = () => {
     //@ts-ignore
@@ -96,6 +99,10 @@ export default function ChatflowV1({
   useEffect(() => {
     setEnabled1(qFlowAIEnabled);
   }, [qFlowAIEnabled])
+
+  useEffect(() => {
+    setRestartQFTimeoutMins(QFTimeout);
+  }, [QFTimeout])
 
   const handleNodesChange = useCallback(
     (changes: any) => {
@@ -143,7 +150,7 @@ export default function ChatflowV1({
           const buffer = Buffer.from(base64Data, 'base64');
           const newFileName = `node-image-${Date.now()}.${extension}`;
           const key = `node-images/${chatbotId}/${newFileName}`;
-  
+
           await s3Client.send(
             new PutObjectCommand({
               Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME!,
@@ -152,9 +159,9 @@ export default function ChatflowV1({
               ContentType: mimeType,
             })
           );
-  
+
           const fileUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${key}`;
-  
+
           return {
             ...node,
             data: {
@@ -173,10 +180,11 @@ export default function ChatflowV1({
         },
         body: JSON.stringify({
           chatbotId,
-          questionFlow: { 
-            nodes: updatedNodes, 
-            edges 
+          questionFlow: {
+            nodes: updatedNodes,
+            edges
           },
+          restartQFTimeoutMins
         }),
       });
 
@@ -304,6 +312,21 @@ export default function ChatflowV1({
               {enabled1 ? 'Turn Off' : 'Turn On'}
             </Button>
           </div>
+          {enabled1 && (
+            <div className="flex items-center gap-2 mt-2">
+              <label htmlFor="restartQFTimeoutMins" className="text-sm" title="Restart Question Flow trigger timeout (minutes)">
+                Timeout (mins):
+              </label>
+              <input
+                type="number"
+                id="restartQFTimeoutMins"
+                className="border rounded px-2 py-1 w-16"
+                value={restartQFTimeoutMins}
+                min={1}
+                onChange={(e) => setRestartQFTimeoutMins(Number(e.target.value))}
+              />
+            </div>
+          )}
           <Button onClick={loadTemplate}
             className="w-full justify-start mt-2">
             <LayoutTemplate size={16} className="mr-2" />

@@ -60,7 +60,9 @@ const Sources = ({
   const [links, setLinks] = useState<{ id: string; link: string, chars: number }[]>([]);
   const [qFlow, setQFlow] = useState(null);
   const [qFlowEnabled, setQFlowEnabled] = useState(false);
-  const [qFlowAIEnabled, setQFlowAIEnabled] = useState(false);
+  const [qFlowAIEnabled, setQFlowAIEnabled] = useState(true);
+  const [restartQFTimeoutMins, setRestartQFTimeoutMins] = useState(60);
+
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
 
@@ -94,8 +96,11 @@ const Sources = ({
           setQFlowEnabled(data.questionFlowEnable)
         }
         if (data.questionAiIResponseEnable) {
-          setQFlowEnabled(data.questionAiIResponseEnable)
-        }        
+          setQFlowAIEnabled(data.questionAiIResponseEnable)
+        }
+        if (data.restartQFTimeoutMins) {
+          setRestartQFTimeoutMins(data.restartQFTimeoutMins)
+        }
       } catch (error) {
         console.error("Error fetching dataset:", error);
         toast.error("Failed to load dataset" + error.message);
@@ -167,9 +172,9 @@ const Sources = ({
       case "qa":
         return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs} />;
       case "qf":
-        return <ChatflowV1 qFlow={qFlow} setQFlow={setQFlow} 
-        qFlowEnabled={qFlowEnabled} chatbotId={chatbotId} 
-        qFlowAIEnabled={qFlowAIEnabled}/>;
+        return <ChatflowV1 qFlow={qFlow} setQFlow={setQFlow}
+          qFlowEnabled={qFlowEnabled} chatbotId={chatbotId}
+          qFlowAIEnabled={qFlowAIEnabled} restartQFTimeoutMins={restartQFTimeoutMins} />;
       case "notion":
         return <NotionInput
           onConnect={() => {

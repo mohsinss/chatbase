@@ -39,6 +39,7 @@ interface IDataset {
   metadata?: {};
   questionFlowEnable?: boolean;
   questionAiIResponseEnable?: boolean;
+  restartQFTimeoutMins ?: number;
 }
 
 const datasetSchema = new mongoose.Schema<IDataset>({
@@ -104,6 +105,10 @@ const datasetSchema = new mongoose.Schema<IDataset>({
       type: Boolean,
       default: false,
     },
+    restartQFTimeoutMins: {
+      type: Number,
+      default: 60,
+    },    
     questionAiIResponseEnable: {
       type: Boolean,
       default: false,

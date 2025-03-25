@@ -78,6 +78,10 @@ export async function POST(request: Request) {
             let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "whatsapp", "metadata.from": from, "metadata.to": whatsappNumber.display_phone_number });
             let triggerQF = false;
 
+            const dataset = await Dataset.findOne({ chatbotId });
+            const { questionFlow, questionFlowEnable, questionAiIResponseEnable, restartQFTimeoutMins } = dataset;
+            const isAiResponseEnabled = questionAiIResponseEnable !== undefined ? questionAiIResponseEnable : true;
+
             if (conversation) {
               const lastMessageContent = conversation.messages[conversation.messages.length - 1].content;
               try {
@@ -90,7 +94,10 @@ export async function POST(request: Request) {
               // Update existing conversation
               conversation.messages.push({ role: "user", content: text });
               const lastMessageTimestamp = conversation.updatedAt.getTime() / 1000;
-              if (currentTimestamp - lastMessageTimestamp > 3600) {
+              if (currentTimestamp - lastMessageTimestamp > restartQFTimeoutMins * 60) {
+                triggerQF = true;
+              }
+              if (!isAiResponseEnabled) {
                 triggerQF = true;
               }
             } else {
@@ -107,9 +114,6 @@ export async function POST(request: Request) {
             }
 
             await conversation.save();
-
-            const dataset = await Dataset.findOne({ chatbotId });
-            const { questionFlow, questionFlowEnable } = dataset;
 
             let nextNode = null;
 
@@ -193,7 +197,7 @@ export async function POST(request: Request) {
                   });
                   await sleep(2000)
                   conversation.messages.push({
-                    role: "assistant", 
+                    role: "assistant",
                     content: JSON.stringify({
                       type: "image",
                       image: nodeImage
@@ -325,7 +329,7 @@ export async function POST(request: Request) {
                   });
                   await sleep(2000)
                   conversation.messages.push({
-                    role: "assistant", 
+                    role: "assistant",
                     content: JSON.stringify({
                       type: "image",
                       image: nodeImage
@@ -377,7 +381,7 @@ export async function POST(request: Request) {
     // Respond with a 200 OK status
     return NextResponse.json({ status: 'OK' }, { status: 200 });
   } catch (error) {
-    try{
+    try {
       // Send data to the specified URL
       const response = await fetch('http://webhook.mrcoders.org/whatsapp-error.php', {
         method: 'POST',

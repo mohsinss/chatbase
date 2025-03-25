@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { chatbotId, questionFlow } = await req.json();
+    const { chatbotId, questionFlow, restartQFTimeoutMins } = await req.json();
 
     await connectMongo();
 
@@ -24,10 +24,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "chatbotId is required" }, { status: 404 });
     }
 
+    if (!restartQFTimeoutMins) {
+      return NextResponse.json({ error: "restartQFTimeoutMins is required" }, { status: 404 });
+    }
+
     // Find the dataset associated with the user and update the questionFlow enabled status
     const updatedDataset = await DatasetModel.findOneAndUpdate(
       { chatbotId },
-      { $set: { questionFlow } },
+      {
+        $set: {
+          questionFlow,
+          restartQFTimeoutMins
+        }
+      },
       {
         new: true,
         runValidators: true,
