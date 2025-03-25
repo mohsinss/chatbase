@@ -25,9 +25,9 @@ export async function POST(request: Request) {
     // Parse the incoming request body
     const data = await request.json();
 
-    if (process.env.ENABLE_WEBHOOK_LOGGING) {
+    if (process.env.ENABLE_WEBHOOK_LOGGING_INSTA_MESSENGER == '1') {
       // Send data to the specified URL
-      const response = await fetch('http://webhook.mrcoders.org/instagram.php', {
+      const response = await fetch('http://webhook.mrcoders.org/instagram-messenger.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
