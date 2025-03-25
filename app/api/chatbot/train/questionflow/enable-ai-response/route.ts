@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     // Find the dataset associated with the user and update the questionFlow AI response status
     const updatedDataset = await DatasetModel.findOneAndUpdate(
       { chatbotId },
-      { $set: { questionAiIResponseEnable: enabled } },
+      { $set: { questionAIResponseEnable: enabled } },
       {
         new: true,
         runValidators: true,

@@ -93,12 +93,8 @@ const Sources = ({
         if (data.questionFlow) {
           setQFlow(data.questionFlow)
         }
-        if (data.questionFlowEnable) {
-          setQFlowEnabled(data.questionFlowEnable)
-        }
-        if (data.questionAiIResponseEnable) {
-          setQFlowAIEnabled(data.questionAiIResponseEnable)
-        }
+        setQFlowEnabled(!!data.questionFlowEnable);
+        setQFlowAIEnabled(!!data.questionAIResponseEnable)
         if (data.restartQFTimeoutMins) {
           setRestartQFTimeoutMins(data.restartQFTimeoutMins)
         }

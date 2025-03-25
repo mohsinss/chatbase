@@ -142,8 +142,8 @@ export async function POST(req: NextRequest) {
       ));
     }
 
-    const { questionFlow, questionFlowEnable, questionAiIResponseEnable, restartQFTimeoutMins } = dataset;
-    const isAiResponseEnabled = questionAiIResponseEnable !== undefined ? questionAiIResponseEnable : true;
+    const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
+    const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
 
     let nextNode = null;
 

@@ -79,8 +79,8 @@ export async function POST(request: Request) {
             let triggerQF = false;
 
             const dataset = await Dataset.findOne({ chatbotId });
-            const { questionFlow, questionFlowEnable, questionAiIResponseEnable, restartQFTimeoutMins } = dataset;
-            const isAiResponseEnabled = questionAiIResponseEnable !== undefined ? questionAiIResponseEnable : true;
+            const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
+            const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
 
             if (conversation) {
               const lastMessageContent = conversation.messages[conversation.messages.length - 1].content;
