@@ -149,3 +149,29 @@ progress::-webkit-progress-value {
     @apply bg-background text-foreground;
   }
 }
+
+#chatbot-loading-spinner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483647;
+}
+
+.spinner {
+  border: 4px solid rgba(0,0,0,0.1);
+  border-left-color: #000;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

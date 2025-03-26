@@ -786,7 +786,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showPlaygroundInfo, setShowPlaygroundInfo] = useState(false);
   const { config, setConfig } = useChatInterfaceSettings(chatbot.id);
-  const { settings: aiSettings, fetchSettings } = useAISettings(chatbot.id);
+  const { settings: aiSettings, fetchSettings, loading: loadingAISettings } = useAISettings(chatbot.id);
   const [confidenceScore, setConfidenceScore] = useState(0);
   const { leadSetting } = useChatbotLeadSetting(chatbot.id);
   const [currentNodeId, setCurrentNodeId] = useState(null);
@@ -1253,6 +1253,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   };
 
   if (embed) {
+    if (loadingAISettings)
+      return <div id='chatbot-loading-spinner'><div className="spinner"></div></div>
     return (
       <AISettingsProvider chatbotId={chatbot.id}>
         <div className="relative" style={{ height: '100dvh' }}>
@@ -1332,29 +1334,31 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
               />
             </div>
 
-            {/* Chat Container */}
-            <ChatContainer
-              setCurrentNodeId={setCurrentNodeId}
-              isSettingsOpen={isSettingsOpen}
-              setIsSettingsOpen={setIsSettingsOpen}
-              currentNodeId={currentNodeId}
-              messages={messages}
-              setMessages={setMessages}
-              config={config}
-              setConfig={setConfig}
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
-              input={input}
-              setInput={setInput}
-              handleSubmit={handleSubmit}
-              handleRefresh={handleRefresh}
-              messagesEndRef={messagesEndRef}
-              chatbotId={chatbot.id}
-              aiSettings={aiSettings}
-              conversationId={conversationId}
-              embed={embed}
-              qFlowAIEnabled={qFlowAIEnabled}
-            />
+            {loadingAISettings ?
+              <div id='chatbot-loading-spinner'><div className="spinner"></div></div> :
+              <ChatContainer
+                setCurrentNodeId={setCurrentNodeId}
+                isSettingsOpen={isSettingsOpen}
+                setIsSettingsOpen={setIsSettingsOpen}
+                currentNodeId={currentNodeId}
+                messages={messages}
+                setMessages={setMessages}
+                config={config}
+                setConfig={setConfig}
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                input={input}
+                setInput={setInput}
+                handleSubmit={handleSubmit}
+                handleRefresh={handleRefresh}
+                messagesEndRef={messagesEndRef}
+                chatbotId={chatbot.id}
+                aiSettings={aiSettings}
+                conversationId={conversationId}
+                embed={embed}
+                qFlowAIEnabled={qFlowAIEnabled}
+              />
+            }
           </div>
         </div>
       </div>
