@@ -39,7 +39,7 @@ export default function Home() {
         dangerouslySetInnerHTML={{
           __html: `
             window.embeddedChatbotConfig = {
-              chatbotId: "8_7wHq7EZZCTegegq5zSK",
+              chatbotId: "3Fio_IIfzQDKTGsjEKwil",
               domain: "${process.env.NODE_ENV === 'development' ? 'localhost:3000' : 'chatsa.co'}",
               protocol: "${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}"
             }
