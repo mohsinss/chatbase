@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     // Parse the incoming request body
     const data = await request.json();
 
-    if (process.env.ENABLE_WEBHOOK_LOGGING_INSTA_MESSENGER == '1') {
+    if (process.env.ENABLE_WEBHOOK_LOGGING_INSTAGRAM == '1') {
       // Send data to the specified URL
       const response = await fetch('http://webhook.mrcoders.org/instagram-messenger.php', {
         method: 'POST',
@@ -469,7 +469,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error processing webhook event:', error);
 
-    if (process.env.ENABLE_WEBHOOK_LOGGING) {
+    if (process.env.ENABLE_WEBHOOK_LOGGING_INSTAGRAM) {
       const response = await fetch('http://webhook.mrcoders.org/instagram-page-error.php', {
         method: 'POST',
         headers: {
