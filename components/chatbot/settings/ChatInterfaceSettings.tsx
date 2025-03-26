@@ -372,7 +372,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           onClose={() => setNotification(null)}
         />
       )} */}
-      <div className="grid grid-cols-[1fr_400px] gap-10 p-4 h-screen">
+      <div className="grid grid-cols-[1fr_500px] gap-10 p-4 h-screen">
         {/* Configuration Panel */}
         <div className="space-y-6 overflow-y-auto relative pb-16">
           <h1 className="text-2xl font-bold">Chat Interface</h1>
@@ -1045,7 +1045,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
             {/* Chat Icon in the bottom right */}
             {config.chatIconUrl && (
               <div 
-                className="absolute -bottom-5 right-14 h-12 w-12 rounded-full shadow-lg overflow-hidden cursor-pointer"
+                className="absolute -bottom-[56px] right-0 h-12 w-12 rounded-full shadow-lg overflow-hidden cursor-pointer"
                 style={{
                   backgroundImage: `url(${config.chatIconUrl})`,
                   backgroundSize: 'cover',
