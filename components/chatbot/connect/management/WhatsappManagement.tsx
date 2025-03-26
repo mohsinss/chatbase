@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment } from "react";
 import { Switch, Menu, Transition } from "@headlessui/react";
-import { IconInfoCircle, IconCopy } from "@tabler/icons-react";
+import { IconInfoCircle, IconCopy, IconPlus, IconTrash } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -166,7 +166,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                 throw new Error(data?.error || "Failed to fetch profile");
             }
 
-            setSettingsData(data);
+            setProfileData(data);
         } catch (error) {
             console.error("Error fetching profile:", error);
             toast.error("Failed to fetch profile.");
@@ -340,6 +340,15 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
         setIsConnecting(false);
         setIsDeleteDialogOpen(false);
     }
+
+    const isValidUrl = (url: string) => {
+        try {
+            new URL(url);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    };
 
     return (
         <div>
@@ -690,13 +699,53 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Websites (comma-separated)</label>
-                                        <input
-                                            type="text"
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            value={profileData.websites.join(", ")}
-                                            onChange={(e) => setProfileData({ ...profileData, websites: e.target.value.split(",").map(url => url.trim()) })}
-                                        />
+                                        <label className="block text-sm font-medium text-gray-700">Websites</label>
+                                        {profileData.websites.map((website, index) => {
+                                            const isUrlValid = website !== "" || isValidUrl(website);
+                                            return (
+                                                <div key={`website-${index}`} className="flex items-center gap-2 mt-1">
+                                                    <input
+                                                        type="text"
+                                                        className={`block w-full border rounded-md shadow-sm p-2 ${isUrlValid ? "border-gray-300" : "border-red-500"
+                                                            }`}
+                                                        value={website}
+                                                        onChange={(e) => {
+                                                            const updatedWebsites = [...profileData.websites];
+                                                            updatedWebsites[index] = e.target.value;
+                                                            setProfileData({ ...profileData, websites: updatedWebsites });
+                                                        }}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="text-red-500 hover:text-red-700"
+                                                        onClick={() => {
+                                                            const updatedWebsites = profileData.websites.filter((_, i) => i !== index);
+                                                            setProfileData({ ...profileData, websites: updatedWebsites });
+                                                        }}
+                                                    >
+                                                        <IconTrash className="h-5 w-5" />
+                                                    </button>
+                                                </div>
+                                            )
+                                        }
+                                        )}
+                                        <button
+                                            type="button"
+                                            className={`mt-2 text-sm ${profileData.websites.every((url) => isValidUrl(url) && url !== "")
+                                                    ? "text-blue-600 hover:text-blue-800"
+                                                    : "text-gray-400 cursor-not-allowed"
+                                                }`}
+                                            onClick={() => {
+                                                if (profileData.websites.every((url) => isValidUrl(url) && url !== "")) {
+                                                    setProfileData({ ...profileData, websites: [...profileData.websites, ""] });
+                                                } else {
+                                                    toast.error("Please enter valid URLs before adding a new one.");
+                                                }
+                                            }}
+                                            disabled={!profileData.websites.every((url) => isValidUrl(url) && url !== "")}
+                                        >
+                                            <IconPlus className="h-5 w-5" />
+                                        </button>
                                     </div>
                                 </div>
                             ) : (
