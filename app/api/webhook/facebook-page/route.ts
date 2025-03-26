@@ -326,23 +326,12 @@ export async function POST(request: Request) {
 
           // Find existing conversation or create a new one
           let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "facebook", "metadata.from": sender, "metadata.to": facebookPage.name });
-          let triggerQF = false;
 
           const dataset = await Dataset.findOne({ chatbotId });
           const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
           const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
 
-          // send typing action
-          const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
-            recipient: {
-              id: sender
-            },
-            sender_action: "typing_on"
-          }, {
-            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-          });
-
-          if (questionFlowEnable && questionFlow && triggerQF) {
+          if (questionFlowEnable && questionFlow) {
             const { nodes, edges } = (questionFlow && questionFlow.nodes && questionFlow.edges) ? questionFlow : sampleFlow;
 
             //@ts-ignore
@@ -353,6 +342,68 @@ export async function POST(request: Request) {
             const nodeQuestion = nextNode.data.question || '';
             const nodeOptions = nextNode.data.options || [];
             const nodeImage = nextNode.data.image || '';
+
+            // send typing action
+            const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+              recipient: {
+                id: sender
+              },
+              sender_action: "typing_on"
+            }, {
+              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+            });
+
+            // send text msg to from number
+            const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+              recipient: {
+                id: sender
+              },
+              message: {
+                text: nodeMessage
+              },
+              messaging_type: "RESPONSE",
+            }, {
+              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+            });
+            conversation.messages.push({ role: "assistant", content: nodeMessage });
+
+            if (nodeImage) {
+              // send typing action
+              const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                recipient: {
+                  id: sender
+                },
+                sender_action: "typing_on"
+              }, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              });
+
+              // send iamge to from number
+              const response_image = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                recipient: {
+                  id: sender
+                },
+                message: {
+                  attachment: {
+                    type: 'image',
+                    payload: {
+                      url: nodeImage,
+                      is_reusable: true,
+                    }
+                  }
+                },
+              }, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              });
+              await sleep(2000)
+              conversation.messages.push({
+                role: "assistant",
+                content: JSON.stringify({
+                  type: "image",
+                  image: nodeImage
+                })
+              });
+            }
 
             if (nodeOptions.length > 0) {
               // Construct interactive button message payload
@@ -393,58 +444,6 @@ export async function POST(request: Request) {
                   }
                 }
               };
-
-              // send text msg to from number
-              const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
-                recipient: {
-                  id: sender
-                },
-                message: {
-                  text: nodeMessage
-                },
-                messaging_type: "RESPONSE",
-              }, {
-                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-              });
-              conversation.messages.push({ role: "assistant", content: nodeMessage });
-
-              if (nodeImage) {
-                // send typing action
-                const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
-                  recipient: {
-                    id: sender
-                  },
-                  sender_action: "typing_on"
-                }, {
-                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                });
-
-                // send iamge to from number
-                const response_image = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
-                  recipient: {
-                    id: sender
-                  },
-                  message: {
-                    attachment: {
-                      type: 'image',
-                      payload: {
-                        url: nodeImage,
-                        is_reusable: true,
-                      }
-                    }
-                  },
-                }, {
-                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                });
-                await sleep(2000)
-                conversation.messages.push({
-                  role: "assistant",
-                  content: JSON.stringify({
-                    type: "image",
-                    image: nodeImage
-                  })
-                });
-              }
 
               // send typing action
               const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
