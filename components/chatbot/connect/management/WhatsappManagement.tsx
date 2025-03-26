@@ -39,6 +39,18 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
     const [isFetchingSettings, setIsFetchingSettings] = useState(false);
     const [settingsData, setSettingsData] = useState<{ prompt: string; delay: number } | null>(null);
     const [isSavingSettings, setIsSavingSettings] = useState(false);
+    const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+    const [isFetchingProfile, setIsFetchingProfile] = useState(false);
+    const [profileData, setProfileData] = useState<{
+        about: string;
+        address: string;
+        description: string;
+        email: string;
+        profile_picture_url: string;
+        websites: string[];
+    } | null>(null);
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+
     const router = useRouter();
 
     useEffect(() => {
@@ -72,7 +84,6 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
             });
 
             const data = await response.json();
-            console.log(data)
 
             if (!response.ok || !data.success) {
                 throw new Error(data.message || "Failed to save settings");
@@ -97,17 +108,70 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                 },
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                throw new Error("Failed to fetch settings");
+                throw new Error(data?.error || "Failed to fetch settings");
             }
 
-            const data = await response.json();
             setSettingsData(data);
         } catch (error) {
             console.error("Error fetching settings:", error);
             toast.error("Failed to fetch settings.");
         }
         setIsFetchingSettings(false);
+    };
+
+    const saveProfile = async () => {
+        setIsSavingProfile(true);
+        try {
+            const response = await fetch(`/api/chatbot/integrations/whatsapp/profile?_id=${selectedNumberId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    ...profileData
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to save profile");
+            }
+
+            toast.success("Profile is saved successfully!");
+            setIsProfileDialogOpen(false);
+        } catch (error) {
+            console.error(error.message);
+            toast.error(error.message);
+        }
+        setIsSavingProfile(false);
+    };
+
+    const fetchProfile = async (id: string) => {
+        setIsFetchingProfile(true);
+        try {
+            const response = await fetch(`/api/chatbot/integrations/whatsapp/profile?_id=${id}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data?.error || "Failed to fetch profile");
+            }
+
+            setSettingsData(data);
+        } catch (error) {
+            console.error("Error fetching profile:", error);
+            toast.error("Failed to fetch profile.");
+        }
+        setIsFetchingProfile(false);
     };
 
     const handleNumberChange = (phoneNumber: string) => () => {
@@ -369,6 +433,20 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                                                 {({ active }) => (
                                                                     <div
                                                                         className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
+                                                                        onClick={() => {
+                                                                            setSelectedNumberId(phone._id);
+                                                                            setIsProfileDialogOpen(true);
+                                                                            fetchProfile(phone._id);
+                                                                        }}
+                                                                    >
+                                                                        Manage Profile
+                                                                    </div>
+                                                                )}
+                                                            </Menu.Item>
+                                                            <Menu.Item>
+                                                                {({ active }) => (
+                                                                    <div
+                                                                        className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
                                                                         onClick={() => handleSettingsMenu(phone._id)}
                                                                     >
                                                                         Advanced Settings
@@ -415,6 +493,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                             </button>
                         </div>
                     </div>
+
                     <div className="flex items-center flex-col lg:flex-row lg:justify-between rounded-md border-1 border-[1px] border-gray-200 p-4 gap-10 justify-center">
                         <div className="max-w-[600px]">
                             <h2 className="text-xl font-extrabold text-gray-900">Test Your Integration</h2>
@@ -470,7 +549,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
 
                         <QRCodeCanvas id="qr-code-canvas" value={integrationUrl} className="w-[400px]" />
                     </div>
-
+                    {/* for manage setting */}
                     <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                         <DialogContent>
                             <DialogHeader>
@@ -497,6 +576,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                         </DialogContent>
                     </Dialog>
 
+                    {/* for manage profile */}
                     <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
                         <DialogContent>
                             <DialogHeader>
@@ -541,6 +621,94 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                 </Button>
                                 <Button onClick={saveSettings} disabled={isSavingSettings}>
                                     {isSavingSettings ? "Saving..." : "Save"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle className="text-xl">WhatsApp Profile Management</DialogTitle>
+                                <DialogDescription>
+                                    Manage your WhatsApp business profile here.
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            {isFetchingProfile ? (
+                                <div className="flex justify-center items-center">
+                                    <Spinner />
+                                </div>
+                            ) : profileData ? (
+                                <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh]">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">About</label>
+                                        <textarea
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={profileData.about}
+                                            onChange={(e) => setProfileData({ ...profileData, about: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Address</label>
+                                        <input
+                                            type="text"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={profileData.address}
+                                            onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Description</label>
+                                        <textarea
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={profileData.description}
+                                            onChange={(e) => setProfileData({ ...profileData, description: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Email</label>
+                                        <input
+                                            type="email"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={profileData.email}
+                                            onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Profile Picture URL</label>
+                                        <input
+                                            type="text"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={profileData.profile_picture_url}
+                                            onChange={(e) => setProfileData({ ...profileData, profile_picture_url: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Websites (comma-separated)</label>
+                                        <input
+                                            type="text"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={profileData.websites.join(", ")}
+                                            onChange={(e) => setProfileData({ ...profileData, websites: e.target.value.split(",").map(url => url.trim()) })}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-gray-500">No profile data available.</div>
+                            )}
+
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsProfileDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={saveProfile} disabled={isSavingProfile}>
+                                    {isSavingProfile ? "Saving..." : "Save"}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
