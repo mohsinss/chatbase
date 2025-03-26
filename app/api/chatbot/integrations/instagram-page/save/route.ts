@@ -63,7 +63,7 @@ export async function POST(req: Request) {
                 console.log(igUserData)
 
                 // Subscribe Page to webhook
-                const response2 = await axios.post(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages,comments,mention,feed&access_token=${page.access_token}`, {}, {
+                const response2 = await axios.post(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages,messaging_postbacks,mention,feed&access_token=${page.access_token}`, {}, {
                     headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                 });
                 if (!response2.data.success) {
