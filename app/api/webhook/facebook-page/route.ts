@@ -7,6 +7,7 @@ import axios from 'axios';
 import { getAIResponse } from '@/libs/utils-ai';
 import { sleep } from '@/libs/utils';
 import Dataset from '@/models/Dataset';
+import { sampleFlow } from '@/types';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -46,8 +47,8 @@ export async function POST(request: Request) {
     if (data?.entry?.length > 0) {
       // this is for messenger
       if (data?.entry[0]?.messaging?.length > 0) {
+        // handle normal message
         if (data?.entry[0]?.messaging[0].message?.text?.length > 0) {
-
           await connectMongo();
 
           const page_id = data?.entry[0].id;
@@ -184,6 +185,205 @@ export async function POST(request: Request) {
                         type: "postback",
                         title: option,
                         payload: `${topParentNode.id}-option-${index}`,
+                      }))
+                    },
+                  }
+                }
+              };
+
+              // send text msg to from number
+              const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                recipient: {
+                  id: sender
+                },
+                message: {
+                  text: nodeMessage
+                },
+                messaging_type: "RESPONSE",
+              }, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              });
+              conversation.messages.push({ role: "assistant", content: nodeMessage });
+
+              if (nodeImage) {
+                // send typing action
+                const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                  recipient: {
+                    id: sender
+                  },
+                  sender_action: "typing_on"
+                }, {
+                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
+
+                // send iamge to from number
+                const response_image = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                  recipient: {
+                    id: sender
+                  },
+                  message: {
+                    attachment: {
+                      type: 'image',
+                      payload: {
+                        url: nodeImage,
+                        is_reusable: true,
+                      }
+                    }
+                  },
+                }, {
+                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
+                await sleep(2000)
+                conversation.messages.push({
+                  role: "assistant",
+                  content: JSON.stringify({
+                    type: "image",
+                    image: nodeImage
+                  })
+                });
+              }
+
+              // send typing action
+              const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                recipient: {
+                  id: sender
+                },
+                sender_action: "typing_on"
+              }, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              });
+
+              // Send interactive button message
+              const response_question = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`,
+                buttonsPayload,
+                {
+                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
+
+              conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
+              await conversation.save();
+            }
+          } else {
+            const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
+
+            // send text msg to page
+            const response2 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+              message: {
+                text: response_text
+              },
+              recipient: {
+                id: sender
+              },
+              messaging_type: "RESPONSE",
+            }, {
+              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+            });
+
+            conversation.messages.push({ role: "assistant", content: response_text });
+
+            await conversation.save();
+          }
+        }
+        // handle postback (button reply)
+        if (data.entry[0].messaging[0]?.postback) {
+          const page_id = data?.entry[0].id;
+          const sender = data?.entry[0]?.messaging[0].sender.id;
+          const recipient = data?.entry[0]?.messaging[0].recipient.id;
+          const timestamp = data?.entry[0]?.messaging[0].timestamp;
+          const text = data.entry[0].messaging[0]?.postback.title;
+          const button_id = data.entry[0].messaging[0]?.postback.payload;
+
+          const node_id = button_id.split('-')[0];
+          const option_index = button_id.split('-').pop();
+
+          if (page_id == sender) {
+            return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
+          }
+
+          let messages = [{ role: 'user', content: text }];
+
+          // Fetch the existing FacebookPage model
+          const facebookPage = await FacebookPage.findOne({ pageId: recipient });
+          if (!facebookPage) {
+            // Respond with a 200 OK status
+            return NextResponse.json({ status: "FB page doesn't registered to the site." }, { status: 200 });
+          }
+
+          if (page_id == sender) {
+            return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
+          }
+
+          const chatbotId = facebookPage.chatbotId;
+          const updatedPrompt = facebookPage?.settings?.prompt;
+          const delay = facebookPage?.settings?.delay;
+
+          if (delay && delay > 0) {
+            await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
+          }
+
+          // Find existing conversation or create a new one
+          let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "facebook", "metadata.from": sender, "metadata.to": facebookPage.name });
+          let triggerQF = false;
+
+          const dataset = await Dataset.findOne({ chatbotId });
+          const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
+          const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
+
+          // send typing action
+          const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+            recipient: {
+              id: sender
+            },
+            sender_action: "typing_on"
+          }, {
+            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+          });
+
+          if (questionFlowEnable && questionFlow && triggerQF) {
+            const { nodes, edges } = (questionFlow && questionFlow.nodes && questionFlow.edges) ? questionFlow : sampleFlow;
+
+            //@ts-ignore
+            const nextEdge = edges.find(edge => edge.source === node_id && edge.sourceHandle === option_index);
+            //@ts-ignore
+            const nextNode = nodes.find(node => node.id === nextEdge?.target);
+            const nodeMessage = nextNode.data.message || '';
+            const nodeQuestion = nextNode.data.question || '';
+            const nodeOptions = nextNode.data.options || [];
+            const nodeImage = nextNode.data.image || '';
+
+            if (nodeOptions.length > 0) {
+              // Construct interactive button message payload
+              const buttonsPayloadForLogging = {
+                interactive: {
+                  type: "button",
+                  body: {
+                    text: nodeQuestion
+                  },
+                  action: {
+                    buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
+                      type: "reply",
+                      reply: {
+                        id: `${nextNode.id}-option-${index}`,
+                        title: option
+                      }
+                    }))
+                  }
+                }
+              };
+              const buttonsPayload = {
+                recipient: {
+                  id: sender
+                },
+                message: {
+                  attachment: {
+                    type: "template",
+                    payload: {
+                      template_type: 'button',
+                      text: nodeQuestion,
+                      buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
+                        type: "postback",
+                        title: option,
+                        payload: `${nextNode.id}-option-${index}`,
                       }))
                     },
                   }
