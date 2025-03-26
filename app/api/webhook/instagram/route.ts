@@ -311,7 +311,6 @@ export async function POST(request: Request) {
                     type: 'image',
                     payload: {
                       url: nodeImage,
-                      is_reusable: true,
                     }
                   }
                 },
