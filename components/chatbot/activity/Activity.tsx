@@ -61,9 +61,10 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
   const [inputMsg, setInputMsg] = useState("");
-  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
   const [userConversations, setUserConversations] = useState<Conversation[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (selectedConversation?.platform == "whatsapp"
@@ -108,7 +109,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
           const data = await response.json();
           const validConversations = Array.isArray(data) ? data.filter(conv =>
             conv.messages.length > 0 &&
-            conv.messages.some((m: Message) => m.content?.trim())
+            conv.messages.some((m: Message) => m.role === 'user' && m.content?.trim())
           ) : [];
           setAllConversations(validConversations);
           setConversations(validConversations);
@@ -128,7 +129,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
           const data = await response.json();
           const validConversations = Array.isArray(data) ? data.filter(conv =>
             conv.messages.length > 0 &&
-            conv.messages.some((m: Message) => m.content?.trim()) &&
+            conv.messages.some((m: Message) => m.role === 'user' && m.content?.trim()) &&
             // Filter for conversations that have lead data
             (conv.leadId || (conv.metadata && (conv.metadata.from || conv.metadata.from_name)))
           ) : [];
@@ -181,7 +182,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
           const data = await response.json();
           const validConversations = Array.isArray(data) ? data.filter(conv =>
             conv.messages.length > 0 &&
-            conv.messages.some((m: Message) => m.content?.trim())
+            conv.messages.some((m: Message) => m.role === 'user' && m.content?.trim())
           ) : [];
           console.log(validConversations);
           setAllConversations(validConversations);
@@ -223,6 +224,8 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
     if (!conversationToDelete) return;
 
     try {
+      setIsDeleting(true);
+
       const response = await fetch('/api/chatbot/conversation/delete', {
         method: 'DELETE',
         headers: {
@@ -250,6 +253,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
       console.error('Failed to delete conversation:', error);
       toast.error('Failed to delete conversation');
     } finally {
+      setIsDeleting(false);
       setIsDeleteDialogOpen(false);
       setConversationToDelete(null);
     }
@@ -622,15 +626,15 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
   const renderLeads = () => {
     // Group conversations by user (using phone number or other identifier)
     const userMap = new Map();
-    
+
     allConversations.forEach(conv => {
-      const userId = conv.metadata?.from || 
-                    (conv.leadId?.phone || conv.leadId?.email || conv.leadId?.name || "Unknown User");
-      
+      const userId = conv.metadata?.from ||
+        (conv.leadId?.phone || conv.leadId?.email || conv.leadId?.name || "Unknown User");
+
       // Determine the display name based on platform and available data
       let displayName;
       let icon = null;
-      
+
       if (conv.platform === "whatsapp") {
         // Format WhatsApp phone number with international code
         const phone = conv.metadata?.from || "";
@@ -669,7 +673,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
       } else {
         displayName = conv.metadata?.from_name || conv.leadId?.name || "Unknown User";
       }
-      
+
       if (!userMap.has(userId)) {
         userMap.set(userId, {
           id: userId,
@@ -680,10 +684,10 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
           conversations: []
         });
       }
-      
+
       userMap.get(userId).conversations.push(conv);
     });
-    
+
     const users = Array.from(userMap.values());
 
     return (
@@ -860,8 +864,9 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
             <Button
               variant="destructive"
               onClick={handleDelete}
+              disabled={isDeleting}
             >
-              Delete
+              {isDeleting ? <span className="loading loading-spinner loading-xs"></span> : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>
