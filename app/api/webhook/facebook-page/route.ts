@@ -153,20 +153,41 @@ export async function POST(request: Request) {
 
             if (nodeOptions.length > 0) {
               // Construct interactive button message payload
+              const buttonsPayloadForLogging = {
+                interactive: {
+                  type: "button",
+                  body: {
+                    text: nodeQuestion
+                  },
+                  action: {
+                    buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
+                      type: "reply",
+                      reply: {
+                        id: `${topParentNode.id}-option-${index}`,
+                        title: option
+                      }
+                    }))
+                  }
+                }
+              };
               const buttonsPayload = {
                 recipient: {
                   id: sender
                 },
-                type: "template",
-                payload: {
-                  template_type: 'button',
-                  text: nodeQuestion,
-                  buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
-                    type: "postback",
-                    title: option,
-                    payload: `${topParentNode.id}-option-${index}`,
-                  }))
-                },
+                message: {
+                  attachment: {
+                    type: "template",
+                    payload: {
+                      template_type: 'button',
+                      text: nodeQuestion,
+                      buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
+                        type: "postback",
+                        title: option,
+                        payload: `${topParentNode.id}-option-${index}`,
+                      }))
+                    },
+                  }
+                }
               };
 
               // send text msg to from number
@@ -184,7 +205,17 @@ export async function POST(request: Request) {
               conversation.messages.push({ role: "assistant", content: nodeMessage });
 
               if (nodeImage) {
-                // send text msg to from number
+                // send typing action
+                const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                  recipient: {
+                    id: sender
+                  },
+                  sender_action: "typing_on"
+                }, {
+                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
+
+                // send iamge to from number
                 const response_image = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
                   recipient: {
                     id: sender
@@ -211,13 +242,24 @@ export async function POST(request: Request) {
                 });
               }
 
-              // Send interactive button message
-              const response_question = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`,
-                buttonsPayload, {
+              // send typing action
+              const response1 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                recipient: {
+                  id: sender
+                },
+                sender_action: "typing_on"
+              }, {
                 headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
               });
 
-              conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
+              // Send interactive button message
+              const response_question = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`,
+                buttonsPayload,
+                {
+                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
+
+              conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
               await conversation.save();
             }
           } else {
@@ -334,7 +376,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error processing webhook event:', error);
 
-    if (process.env.ENABLE_WEBHOOK_LOGGING) {
+    if (process.env.ENABLE_WEBHOOK_LOGGING_FB_PAGE == "1") {
       const response = await fetch('http://webhook.mrcoders.org/facebook-page-error.php', {
         method: 'POST',
         headers: {
