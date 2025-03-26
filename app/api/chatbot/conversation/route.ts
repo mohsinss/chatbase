@@ -5,6 +5,7 @@ import Lead from '@/models/Lead';
 
 interface ChatMessage {
   content?: string;
+  role?: string;
   // Add other message properties if needed
 }
 
@@ -66,8 +67,18 @@ export async function GET(req: NextRequest) {
 
     // Additional filter for conversations with non-empty messages
     let validConversations = conversations.filter(conv =>
-      conv.messages.some((m: ChatMessage) => m.content?.trim())
+      conv.messages.some((m: ChatMessage) => m.role === 'user' && m.content?.trim())
     );
+
+    const invalidConversations = conversations.filter(conv =>
+      !conv.messages.some((m: ChatMessage) => m.role === 'user' && m.content?.trim())
+    );
+
+    // Delete invalid conversations
+    const invalidIds = invalidConversations.map(conv => conv._id);
+    if (invalidIds.length > 0) {
+      await ChatbotConversation.deleteMany({ _id: { $in: invalidIds } });
+    }
 
     // If lead equals 1, filter conversations that have a leadId
     if (lead === '1') {
