@@ -155,6 +155,7 @@ export async function POST(request: Request) {
             if (nodeOptions.length > 0) {
               // Construct interactive button message payload
               const buttonsPayloadForLogging = {
+                type: "interactive",
                 interactive: {
                   type: "button",
                   body: {
@@ -286,6 +287,8 @@ export async function POST(request: Request) {
         }
         // handle postback (button reply)
         if (data.entry[0].messaging[0]?.postback) {
+          await connectMongo();
+
           const page_id = data?.entry[0].id;
           const sender = data?.entry[0]?.messaging[0].sender.id;
           const recipient = data?.entry[0]?.messaging[0].recipient.id;
@@ -354,6 +357,7 @@ export async function POST(request: Request) {
             if (nodeOptions.length > 0) {
               // Construct interactive button message payload
               const buttonsPayloadForLogging = {
+                type: "interactive",
                 interactive: {
                   type: "button",
                   body: {
@@ -462,25 +466,6 @@ export async function POST(request: Request) {
               conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
               await conversation.save();
             }
-          } else {
-            const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
-
-            // send text msg to page
-            const response2 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
-              message: {
-                text: response_text
-              },
-              recipient: {
-                id: sender
-              },
-              messaging_type: "RESPONSE",
-            }, {
-              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-            });
-
-            conversation.messages.push({ role: "assistant", content: response_text });
-
-            await conversation.save();
           }
         }
       }

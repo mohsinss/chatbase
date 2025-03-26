@@ -6,6 +6,7 @@ import InstagramPage from '@/models/InstagramPage';
 import axios from 'axios';
 import { getAIResponse } from '@/libs/utils-ai';
 import { sleep } from '@/libs/utils';
+import Dataset from '@/models/Dataset';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -44,8 +45,9 @@ export async function POST(request: Request) {
     if (data?.entry?.length > 0) {
       // this is for messenger
       if (data?.entry[0]?.messaging?.length > 0) {
-        if (data?.entry[0]?.messaging[0].message?.text?.length > 0) {
-
+        const messagingEvent = data.entry[0].messaging[0];
+        // Handle normal text messages
+        if (messagingEvent.message?.text?.length > 0) {
           await connectMongo();
 
           const instagram_account_id = data?.entry[0].id;
@@ -80,9 +82,29 @@ export async function POST(request: Request) {
 
           // Find existing conversation or create a new one
           let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "instagram", "metadata.from": sender, "metadata.to": instagramPage.name });
+
+          const dataset = await Dataset.findOne({ chatbotId });
+          const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
+          const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
+
+          let triggerQF = false;
+
           if (conversation) {
-            // Update existing conversation
-            conversation.messages.push({ role: "user", content: text });
+            const lastMessageContent = conversation.messages[conversation.messages.length - 1].content;
+            try {
+              JSON.parse(lastMessageContent);
+              triggerQF = true;
+            } catch (e) {
+              // Content is not JSON, do nothing
+            }
+
+            const lastMessageTimestamp = conversation.updatedAt.getTime() / 1000;
+            if (currentTimestamp - lastMessageTimestamp > restartQFTimeoutMins * 60) {
+              triggerQF = true;
+            }
+            if (!isAiResponseEnabled) {
+              triggerQF = true;
+            }
           } else {
             // Create new conversation
             conversation = new ChatbotConversation({
@@ -92,6 +114,7 @@ export async function POST(request: Request) {
               metadata: { from: sender, to: instagramPage.name },
               messages: [{ role: "user", content: text },]
             });
+            triggerQF = true;
           }
 
           await conversation.save();
@@ -106,34 +129,131 @@ export async function POST(request: Request) {
             return NextResponse.json({ status: 'Delievery denied coz long delay.' }, { status: 200 });
           }
 
-          // send typing action
-          // const response1 = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
-          //   recipient: {
-          //     id: sender
-          //   },
-          //   sender_action: "typing_on"
-          // }, {
-          //   headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-          // });
+          if (questionFlowEnable && questionFlow && triggerQF) {
+            const { nodes, edges } = questionFlow;
 
-          const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
+            //@ts-ignore
+            const childNodeIds = new Set(edges.map(edge => edge.target));
+            //@ts-ignore
+            const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
+            const nodeMessage = topParentNode.data.message || '';
+            const nodeOptions = topParentNode.data.options || [];
+            const nodeQuestion = topParentNode.data.question || '';
+            const nodeImage = topParentNode.data.image || '';
 
-          // send text msg to page
-          const response2 = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
-            message: {
-              text: response_text
-            },
-            recipient: {
-              id: sender
-            },
-            messaging_type: "RESPONSE",
-          }, {
-            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-          });
+            if (nodeOptions.length > 0) {
+              const buttonsPayloadForLogging = {
+                type: "interactive",
+                interactive: {
+                  type: "button",
+                  body: { text: nodeQuestion },
+                  action: {
+                    buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
+                      type: "reply",
+                      reply: {
+                        id: `${topParentNode.id}-option-${index}`,
+                        title: option
+                      }
+                    }))
+                  }
+                }
+              };
 
-          conversation.messages.push({ role: "assistant", content: response_text });
+              const buttonsPayload = {
+                recipient: { id: sender },
+                message: {
+                  text: `${nodeMessage}\n\n${nodeQuestion}\n${nodeOptions.map((opt: string, idx: number) => `${idx + 1}. ${opt}`).join('\n')}`
+                }
+              };
 
-          await conversation.save();
+              // Send message with options as plain text (Instagram doesn't support buttons directly)
+              await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, buttonsPayload, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              });
+
+              conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
+              await conversation.save();
+            }
+          } else {
+            const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
+
+            await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+              message: { text: response_text },
+              recipient: { id: sender },
+              messaging_type: "RESPONSE",
+            }, {
+              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+            });
+
+            conversation.messages.push({ role: "assistant", content: response_text });
+            await conversation.save();
+          }
+        }
+        // Handle postback (button reply)
+        if (messagingEvent.postback) {
+          await connectMongo();
+          
+          const sender = messagingEvent.sender.id;
+          const recipient = messagingEvent.recipient.id;
+          const button_id = messagingEvent.postback.payload;
+          const text = messagingEvent.postback.title;
+
+          const node_id = button_id.split('-')[0];
+          const option_index = button_id.split('-').pop();
+
+          const instagramPage = await InstagramPage.findOne({ pageId: recipient });
+          if (!instagramPage) {
+            return NextResponse.json({ status: "Instagram account doesn't registered to the site." }, { status: 200 });
+          }
+
+          const chatbotId = instagramPage.chatbotId;
+          const dataset = await Dataset.findOne({ chatbotId });
+          const { questionFlow, questionFlowEnable } = dataset;
+
+          if (questionFlowEnable && questionFlow) {
+            const { nodes, edges } = questionFlow;
+
+            //@ts-ignore
+            const nextEdge = edges.find(edge => edge.source === node_id && edge.sourceHandle === option_index);
+            //@ts-ignore
+            const nextNode = nodes.find(node => node.id === nextEdge?.target);
+            const nodeMessage = nextNode.data.message || '';
+            const nodeQuestion = nextNode.data.question || '';
+            const nodeOptions = nextNode.data.options || [];
+
+            const buttonsPayloadForLogging = {
+              type: "interactive",
+              interactive: {
+                type: "button",
+                body: { text: nodeQuestion },
+                action: {
+                  buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
+                    type: "reply",
+                    reply: {
+                      id: `${nextNode.id}-option-${index}`,
+                      title: option
+                    }
+                  }))
+                }
+              }
+            };
+
+            const buttonsPayload = {
+              recipient: { id: sender },
+              message: {
+                text: `${nodeMessage}\n\n${nodeQuestion}\n${nodeOptions.map((opt: string, idx: number) => `${idx + 1}. ${opt}`).join('\n')}`
+              }
+            };
+
+            await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, buttonsPayload, {
+              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+            });
+
+            let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "instagram", "metadata.from": sender, "metadata.to": instagramPage.name });
+            conversation.messages.push({ role: "user", content: text });
+            conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
+            await conversation.save();
+          }
         }
       }
       // this is for post comments
