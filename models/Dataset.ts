@@ -129,6 +129,6 @@ datasetSchema.pre('save', function (next) {
     next();
 });
 
-const DatasetModel = mongoose.models.Dataset || mongoose.model('Dataset', datasetSchema);
+const Dataset = mongoose.models.Dataset || mongoose.model('Dataset', datasetSchema);
 
-export default DatasetModel;
+export default Dataset;

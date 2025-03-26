@@ -6,6 +6,7 @@ import FacebookPage from '@/models/FacebookPage';
 import axios from 'axios';
 import { getAIResponse } from '@/libs/utils-ai';
 import { sleep } from '@/libs/utils';
+import Dataset from '@/models/Dataset';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -80,9 +81,31 @@ export async function POST(request: Request) {
 
           // Find existing conversation or create a new one
           let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "facebook", "metadata.from": sender, "metadata.to": facebookPage.name });
+          let triggerQF = false;
+
+          const dataset = await Dataset.findOne({ chatbotId });
+          const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
+          const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
+
           if (conversation) {
             // Update existing conversation
+            const lastMessageContent = conversation.messages[conversation.messages.length - 1].content;
+            try {
+              JSON.parse(lastMessageContent);
+              triggerQF = true; // Set triggerQF to true if parsing succeeds (content is JSON)
+            } catch (e) {
+              // Content is not JSON, do nothing
+            }
+
+            // Update existing conversation
             conversation.messages.push({ role: "user", content: text });
+            const lastMessageTimestamp = conversation.updatedAt.getTime() / 1000;
+            if (currentTimestamp - lastMessageTimestamp > restartQFTimeoutMins * 60) {
+              triggerQF = true;
+            }
+            if (!isAiResponseEnabled) {
+              triggerQF = true;
+            }
           } else {
             // Create new conversation
             conversation = new ChatbotConversation({
@@ -92,6 +115,8 @@ export async function POST(request: Request) {
               metadata: { from: sender, to: facebookPage.name },
               messages: [{ role: "user", content: text },]
             });
+
+            triggerQF = true;
           }
 
           await conversation.save();
@@ -114,24 +139,107 @@ export async function POST(request: Request) {
             headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
           });
 
-          const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
+          if (questionFlowEnable && questionFlow && triggerQF) {
+            const { nodes, edges } = questionFlow;
 
-          // send text msg to page
-          const response2 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
-            message: {
-              text: response_text
-            },
-            recipient: {
-              id: sender
-            },
-            messaging_type: "RESPONSE",
-          }, {
-            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-          });
+            //@ts-ignore
+            const childNodeIds = new Set(edges.map(edge => edge.target));
+            //@ts-ignore
+            const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
+            const nodeMessage = topParentNode.data.message || '';
+            const nodeOptions = topParentNode.data.options || [];
+            const nodeQuestion = topParentNode.data.question || '';
+            const nodeImage = topParentNode.data.image || '';
 
-          conversation.messages.push({ role: "assistant", content: response_text });
+            if (nodeOptions.length > 0) {
+              // Construct interactive button message payload
+              const buttonsPayload = {
+                recipient: {
+                  id: sender
+                },
+                type: "template",
+                payload: {
+                  template_type: 'button',
+                  text: nodeQuestion,
+                  buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
+                    type: "postback",
+                    title: option,
+                    payload: `${topParentNode.id}-option-${index}`,
+                  }))
+                },
+              };
 
-          await conversation.save();
+              // send text msg to from number
+              const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                recipient: {
+                  id: sender
+                },
+                message: {
+                  text: nodeMessage
+                },
+                messaging_type: "RESPONSE",
+              }, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              });
+              conversation.messages.push({ role: "assistant", content: nodeMessage });
+
+              if (nodeImage) {
+                // send text msg to from number
+                const response_image = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                  recipient: {
+                    id: sender
+                  },
+                  message: {
+                    attachment: {
+                      type: 'image',
+                      payload: {
+                        url: nodeImage,
+                        is_reusable: true,
+                      }
+                    }
+                  },
+                }, {
+                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                });
+                await sleep(2000)
+                conversation.messages.push({
+                  role: "assistant",
+                  content: JSON.stringify({
+                    type: "image",
+                    image: nodeImage
+                  })
+                });
+              }
+
+              // Send interactive button message
+              const response_question = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`,
+                buttonsPayload, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              });
+
+              conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
+              await conversation.save();
+            }
+          } else {
+            const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
+
+            // send text msg to page
+            const response2 = await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+              message: {
+                text: response_text
+              },
+              recipient: {
+                id: sender
+              },
+              messaging_type: "RESPONSE",
+            }, {
+              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+            });
+
+            conversation.messages.push({ role: "assistant", content: response_text });
+
+            await conversation.save();
+          }
         }
       }
       // this is for post comments

@@ -214,8 +214,7 @@ export async function POST(request: Request) {
                 conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
                 await conversation.save();
               }
-            }
-            else {
+            } else {
               const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
 
               // send text msg to from number
