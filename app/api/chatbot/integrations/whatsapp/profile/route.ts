@@ -84,7 +84,7 @@ export async function POST(req: Request) {
             profile_picture_handle = uploadResponse.data.h;
         }
 
-        const updateData: any = {
+        const profilePayload: any = {
             about,
             address,
             description,
@@ -92,9 +92,13 @@ export async function POST(req: Request) {
             websites,
         };
 
+        if (profile_picture_handle) {
+            profilePayload.profile_picture_handle = profile_picture_handle;
+        }
+
         // Retrive profile from Phone Number Id.
         const profile_response = await axios.post(`https://graph.facebook.com/v22.0/${whatsAppuNumber.phoneNumberId}/whatsapp_business_profile`, {
-            profile: updateData,
+            ...profilePayload,
         }, {
             headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
