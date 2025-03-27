@@ -37,7 +37,8 @@ export async function POST(req: Request) {
         const address = formData.get("address") as string;
         const description = formData.get("description") as string;
         const email = formData.get("email") as string;
-        const websites = JSON.parse(formData.get("websites") as string);
+        const websites = formData.get("websites");
+        // const websites = JSON.parse(formData.get("websites") as string);
 
         const profile_picture_file = formData.get("profile_picture") as File | null;
 
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
             const fileBuffer = Buffer.from(await profile_picture_file.arrayBuffer());
             const fileLength = fileBuffer.length;
             const fileType = profile_picture_file.type;
+            console.log(fileType, fileLength)
 
             // Step 1: Create upload session
             const sessionResponse = await axios.post(
@@ -82,9 +84,11 @@ export async function POST(req: Request) {
             );
 
             profile_picture_handle = uploadResponse.data.h;
+            console.log(profile_picture_handle)
         }
 
         const profilePayload: any = {
+            messaging_product: "whatsapp",
             about,
             address,
             description,
@@ -94,6 +98,9 @@ export async function POST(req: Request) {
 
         if (profile_picture_handle) {
             profilePayload.profile_picture_handle = profile_picture_handle;
+
+            // Wait for 3 seconds to ensure WhatsApp processes the uploaded image
+            await new Promise(resolve => setTimeout(resolve, 3000));
         }
 
         // Retrive profile from Phone Number Id.
@@ -109,6 +116,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: false });
     } catch (error) {
+        // console.log(error)
         return new NextResponse(error?.message || "Internal Server Error", { status: 500 });
     }
 }
