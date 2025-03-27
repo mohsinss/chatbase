@@ -74,6 +74,10 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const [widthInputValue, setWidthInputValue] = useState(config.chatWidth.toString())
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showUserColorPicker, setShowUserColorPicker] = useState(false)
+  const [showBubbleColorPicker, setShowBubbleColorPicker] = useState(false)
+  const userColorPickerRef = useRef<HTMLDivElement>(null)
+  const bubbleColorPickerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchSettings();
@@ -99,6 +103,22 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   useEffect(() => {
     console.log("Current tooltipDelay value:", config.tooltipDelay);
   }, [config.tooltipDelay]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userColorPickerRef.current && !userColorPickerRef.current.contains(event.target as Node)) {
+        setShowUserColorPicker(false)
+      }
+      if (bubbleColorPickerRef.current && !bubbleColorPickerRef.current.contains(event.target as Node)) {
+        setShowBubbleColorPicker(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const fetchSettings = async () => {
     try {
@@ -273,9 +293,6 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       setLoading(false);
     }
   };
-
-  const [showUserColorPicker, setShowUserColorPicker] = useState(false)
-  const [showBubbleColorPicker, setShowBubbleColorPicker] = useState(false)
 
   const handleConfigChange = (key: keyof ChatConfig, value: any) => {
     // Ensure tooltipDelay is always stored as a number
@@ -627,7 +644,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                       User Message Color
                     </label>
                     <div className="flex items-center gap-2">
-                      <div className="relative">
+                      <div className="relative" ref={userColorPickerRef}>
                         <div 
                           className="w-8 h-8 rounded-full border cursor-pointer"
                           style={{ backgroundColor: config.userMessageColor }}
@@ -671,7 +688,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                       Chat Bubble Button Color
                     </label>
                     <div className="flex items-center gap-2">
-                      <div className="relative">
+                      <div className="relative" ref={bubbleColorPickerRef}>
                         <div 
                           className="w-8 h-8 rounded-full border cursor-pointer"
                           style={{ backgroundColor: config.chatBubbleColor }}
