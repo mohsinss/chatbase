@@ -51,7 +51,6 @@ export async function POST(req: Request) {
             const fileBuffer = Buffer.from(await profile_picture_file.arrayBuffer());
             const fileLength = fileBuffer.length;
             const fileType = profile_picture_file.type;
-            console.log(fileType, fileLength)
 
             // Step 1: Create upload session
             const sessionResponse = await axios.post(
@@ -84,7 +83,6 @@ export async function POST(req: Request) {
             );
 
             profile_picture_handle = uploadResponse.data.h;
-            console.log(profile_picture_handle)
         }
 
         const profilePayload: any = {

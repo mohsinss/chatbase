@@ -675,7 +675,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                         {profileImagePreview && (
                                             <button
                                                 type="button"
-                                                className="text-red-500 hover:text-red-700 text-sm"
+                                                className="mt-2 inline-flex items-center rounded-md border border-transparent bg-red-600 px-3 py-1 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                                                 onClick={() => {
                                                     setProfileImagePreview(null);
                                                     setProfileData({ ...profileData, profile_picture_file: undefined });
@@ -687,7 +687,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                         <input
                                             type="file"
                                             accept="image/*"
-                                            className="mt-2"
+                                            className="mt-2 block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-700 cursor-pointer"
                                             onChange={(e) => {
                                                 const file = e.target.files?.[0];
                                                 if (file) {
@@ -697,7 +697,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                             }}
                                         />
                                     </div>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">About</label>
                                         <textarea
