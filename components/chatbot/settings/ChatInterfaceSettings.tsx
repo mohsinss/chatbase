@@ -288,6 +288,15 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         ...prev,
         [key]: finalValue
       }));
+
+      // Immediately update the embed script with the new tooltip delay
+      window.postMessage({
+        type: 'chatbot-settings-update',
+        settings: {
+          ...config,
+          tooltipDelay: finalValue
+        }
+      }, '*');
     } else {
       setConfig(prev => ({
         ...prev,
