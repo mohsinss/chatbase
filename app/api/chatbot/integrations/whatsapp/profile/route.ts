@@ -4,45 +4,107 @@ import WhatsAppNumber from "@/models/WhatsAppNumber";
 import axios from "axios";
 
 export async function GET(req: Request) {
-    const url = new URL(req.url);
-    const _id = url.searchParams.get("_id");
+    try {
+        const url = new URL(req.url);
+        const _id = url.searchParams.get("_id");
 
-    await connectMongo();
-    const whatsAppuNumber = await WhatsAppNumber.findById(_id);
+        await connectMongo();
+        const whatsAppuNumber = await WhatsAppNumber.findById(_id);
 
-    // Retrive profile from Phone Number Id.
-    const profile_response = await axios.get(`https://graph.facebook.com/v22.0/${whatsAppuNumber.phoneNumberId}/whatsapp_business_profile?fields=about,address,description,email,profile_picture_url,websites,vertical`, {
-        headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-    });
-
-    const profile = profile_response.data.data[0];
-
-    return NextResponse.json(
-        {
-            ...profile
+        // Retrive profile from Phone Number Id.
+        const profile_response = await axios.get(`https://graph.facebook.com/v22.0/${whatsAppuNumber.phoneNumberId}/whatsapp_business_profile?fields=about,address,description,email,profile_picture_url,websites,vertical`, {
+            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
+
+        const profile = profile_response.data.data[0];
+
+        return NextResponse.json(
+            {
+                ...profile
+            });
+    } catch (error) {
+        return new NextResponse(error?.message || "Internal Server Error", { status: 500 });
+    }
 }
 
 export async function POST(req: Request) {
-    const url = new URL(req.url);
-    const _id = url.searchParams.get("_id");
-    const profile = await req.json();
+    try {
+        const url = new URL(req.url);
+        const _id = url.searchParams.get("_id");
+        const formData = await req.formData();
 
-    await connectMongo();
+        const about = formData.get("about") as string;
+        const address = formData.get("address") as string;
+        const description = formData.get("description") as string;
+        const email = formData.get("email") as string;
+        const websites = JSON.parse(formData.get("websites") as string);
 
-    const whatsAppuNumber = await WhatsAppNumber.findById(_id);
-    console.log(whatsAppuNumber.phoneNumberId)
+        const profile_picture_file = formData.get("profile_picture") as File | null;
 
-    // Retrive profile from Phone Number Id.
-    const profile_response = await axios.post(`https://graph.facebook.com/v22.0/${whatsAppuNumber.phoneNumberId}/whatsapp_business_profile`,{
-        ...profile
-    }, {
-        headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-    });
+        await connectMongo();
+        const whatsAppuNumber = await WhatsAppNumber.findById(_id);
 
-    if (profile_response.data.success){
-        return NextResponse.json({ success: true, settings: profile });
-    };
-    
-    return NextResponse.json({ success: true, settings: profile });
+        let profile_picture_handle: string | undefined;
+
+        if (profile_picture_file) {
+            const fileBuffer = Buffer.from(await profile_picture_file.arrayBuffer());
+            const fileLength = fileBuffer.length;
+            const fileType = profile_picture_file.type;
+
+            // Step 1: Create upload session
+            const sessionResponse = await axios.post(
+                `https://graph.facebook.com/v22.0/app/uploads`,
+                null,
+                {
+                    params: {
+                        file_length: fileLength,
+                        file_type: fileType,
+                    },
+                    headers: {
+                        Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`,
+                    },
+                }
+            );
+
+            const uploadId = sessionResponse.data.id;
+
+            // Step 2: Upload file data
+            const uploadResponse = await axios.post(
+                `https://graph.facebook.com/v22.0/${uploadId}`,
+                fileBuffer,
+                {
+                    headers: {
+                        Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`,
+                        "Content-Type": fileType,
+                        "file_offset": 0,
+                    },
+                }
+            );
+
+            profile_picture_handle = uploadResponse.data.h;
+        }
+
+        const updateData: any = {
+            about,
+            address,
+            description,
+            email,
+            websites,
+        };
+
+        // Retrive profile from Phone Number Id.
+        const profile_response = await axios.post(`https://graph.facebook.com/v22.0/${whatsAppuNumber.phoneNumberId}/whatsapp_business_profile`, {
+            profile: updateData,
+        }, {
+            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+        });
+
+        if (profile_response.data.success) {
+            return NextResponse.json({ success: true });
+        };
+
+        return NextResponse.json({ success: false });
+    } catch (error) {
+        return new NextResponse(error?.message || "Internal Server Error", { status: 500 });
+    }
 }

@@ -8,7 +8,8 @@ const nextConfig = {
       "images.unsplash.com",
       "logos-world.net",
       "randomuser.me",
-      "upload.wikimedia.org"
+      "upload.wikimedia.org",
+      "pps.whatsapp.net"
     ],
   },
   async headers() {

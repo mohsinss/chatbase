@@ -47,9 +47,11 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
         description: string;
         email: string;
         profile_picture_url: string;
+        profile_picture_file?: File;
         websites: string[];
     } | null>(null);
     const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
 
     const router = useRouter();
 
@@ -125,14 +127,21 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
     const saveProfile = async () => {
         setIsSavingProfile(true);
         try {
+            const formData = new FormData();
+
+            formData.append("about", profileData.about);
+            formData.append("address", profileData.address);
+            formData.append("description", profileData.description);
+            formData.append("email", profileData.email);
+            formData.append("websites", JSON.stringify(profileData.websites));
+
+            if (profileData.profile_picture_file) {
+                formData.append("profile_picture", profileData.profile_picture_file);
+            }
+
             const response = await fetch(`/api/chatbot/integrations/whatsapp/profile?_id=${selectedNumberId}`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    ...profileData
-                }),
+                body: formData, // Send formData instead of JSON
             });
 
             const data = await response.json();
@@ -143,6 +152,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
 
             toast.success("Profile is saved successfully!");
             setIsProfileDialogOpen(false);
+            fetchProfile(selectedNumberId);
         } catch (error) {
             console.error(error.message);
             toast.error(error.message);
@@ -650,6 +660,44 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                 </div>
                             ) : profileData ? (
                                 <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh]">
+
+                                    <div className="flex flex-col items-center gap-2">
+                                        <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
+                                        {(profileImagePreview || profileData.profile_picture_url) && (
+                                            <Image
+                                                src={profileImagePreview || profileData.profile_picture_url}
+                                                alt="Profile Picture"
+                                                width={100}
+                                                height={100}
+                                                className="rounded-full object-cover"
+                                            />
+                                        )}
+                                        {profileImagePreview && (
+                                            <button
+                                                type="button"
+                                                className="text-red-500 hover:text-red-700 text-sm"
+                                                onClick={() => {
+                                                    setProfileImagePreview(null);
+                                                    setProfileData({ ...profileData, profile_picture_file: undefined });
+                                                }}
+                                            >
+                                                Cancel Selection
+                                            </button>
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="mt-2"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setProfileData({ ...profileData, profile_picture_file: file });
+                                                    setProfileImagePreview(URL.createObjectURL(file));
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                    
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">About</label>
                                         <textarea
@@ -689,16 +737,6 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 hidden">Profile Picture URL</label>
-                                        <input
-                                            type="text"
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            value={profileData.profile_picture_url}
-                                            onChange={(e) => setProfileData({ ...profileData, profile_picture_url: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div>
                                         <label className="block text-sm font-medium text-gray-700">Websites</label>
                                         {profileData.websites?.map((website, index) => {
                                             const isUrlValid = website !== "" || isValidUrl(website);
@@ -732,8 +770,8 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                         <button
                                             type="button"
                                             className={`mt-2 text-sm ${profileData.websites?.every((url) => isValidUrl(url) && url !== "")
-                                                    ? "text-blue-600 hover:text-blue-800"
-                                                    : "text-gray-400 cursor-not-allowed"
+                                                ? "text-blue-600 hover:text-blue-800"
+                                                : "text-gray-400 cursor-not-allowed"
                                                 }`}
                                             onClick={() => {
                                                 if (profileData.websites?.every((url) => isValidUrl(url) && url !== "")) {
