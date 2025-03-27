@@ -689,7 +689,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Profile Picture URL</label>
+                                        <label className="block text-sm font-medium text-gray-700 hidden">Profile Picture URL</label>
                                         <input
                                             type="text"
                                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
@@ -700,7 +700,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">Websites</label>
-                                        {profileData.websites.map((website, index) => {
+                                        {profileData.websites?.map((website, index) => {
                                             const isUrlValid = website !== "" || isValidUrl(website);
                                             return (
                                                 <div key={`website-${index}`} className="flex items-center gap-2 mt-1">
@@ -731,18 +731,18 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                         )}
                                         <button
                                             type="button"
-                                            className={`mt-2 text-sm ${profileData.websites.every((url) => isValidUrl(url) && url !== "")
+                                            className={`mt-2 text-sm ${profileData.websites?.every((url) => isValidUrl(url) && url !== "")
                                                     ? "text-blue-600 hover:text-blue-800"
                                                     : "text-gray-400 cursor-not-allowed"
                                                 }`}
                                             onClick={() => {
-                                                if (profileData.websites.every((url) => isValidUrl(url) && url !== "")) {
+                                                if (profileData.websites?.every((url) => isValidUrl(url) && url !== "")) {
                                                     setProfileData({ ...profileData, websites: [...profileData.websites, ""] });
                                                 } else {
                                                     toast.error("Please enter valid URLs before adding a new one.");
                                                 }
                                             }}
-                                            disabled={!profileData.websites.every((url) => isValidUrl(url) && url !== "")}
+                                            disabled={profileData.websites?.length > 0 && !profileData.websites?.every((url) => isValidUrl(url) && url !== "")}
                                         >
                                             <IconPlus className="h-5 w-5" />
                                         </button>
