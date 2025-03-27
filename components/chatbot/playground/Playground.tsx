@@ -1253,8 +1253,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
   };
 
   if (embed) {
-    if (loadingAISettings)
-      return <div id='chatbot-loading-spinner'><div className="spinner"></div></div>
+    // if (loadingAISettings)
+    //   return <div id='chatbot-loading-spinner'><div className="spinner"></div></div>
     return (
       <AISettingsProvider chatbotId={chatbot.id}>
         <div className="relative" style={{ height: '100dvh' }}>
@@ -1334,8 +1334,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
               />
             </div>
 
-            {loadingAISettings ?
-              <div id='chatbot-loading-spinner'><div className="spinner"></div></div> :
+            {/* {loadingAISettings ? */}
+              {/* <div id='chatbot-loading-spinner'><div className="spinner"></div></div> : */}
               <ChatContainer
                 setCurrentNodeId={setCurrentNodeId}
                 isSettingsOpen={isSettingsOpen}
@@ -1358,7 +1358,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
                 embed={embed}
                 qFlowAIEnabled={qFlowAIEnabled}
               />
-            }
+             {/* } */}
           </div>
         </div>
       </div>
