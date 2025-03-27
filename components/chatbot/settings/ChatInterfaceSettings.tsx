@@ -73,6 +73,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   const chatIconInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
   const [widthInputValue, setWidthInputValue] = useState(config.chatWidth.toString())
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -374,733 +375,752 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
 
   return (
     <>
-      {/* {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
-      )} */}
-      <div className="grid grid-cols-[1fr_500px] gap-10 p-4 h-screen">
-        {/* Configuration Panel */}
-        <div className="space-y-6 overflow-y-auto relative pb-16">
-          <h1 className="text-2xl font-bold">Chat Interface</h1>
-          
-          {/* Initial Messages */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">
-              Initial Messages
-            </label>
-            <textarea 
-              value={config.initialMessage}
-              onChange={(e) => handleConfigChange('initialMessage', e.target.value)}
-              placeholder="Enter each message in a new line."
-              className="flex w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[50px]"
-            />
-            <Button variant="secondary" size="sm" onClick={() => handleReset('initialMessage')}>
-              Reset
-            </Button>
-          </div>
-
-          {/* Suggested Messages */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">
-              Suggested Messages
-            </label>
-            <textarea 
-              value={config.suggestedMessages}
-              onChange={(e) => handleConfigChange('suggestedMessages', e.target.value)}
-              placeholder="Enter each message in a new line."
-              className="flex w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[50px]"
-            />
-          </div>
-
-          {/* Message Placeholder */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">
-              Message Placeholder
-            </label>
-            <input 
-              type="text"
-              value={config.messagePlaceholder}
-              onChange={(e) => handleConfigChange('messagePlaceholder', e.target.value)}
-              className="flex h-20 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-
-          {/* Toggles */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium leading-none">
-                Collect User Feedback
-              </label>
-              <div
-                className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                  config.collectFeedback ? 'bg-primary' : 'bg-input'
-                }`}
-                onClick={() => handleConfigChange('collectFeedback', !config.collectFeedback)}
-              >
-                <span
-                  className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
-                    config.collectFeedback ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium leading-none">
-                Regenerate Messages
-              </label>
-              <div
-                className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                  config.regenerateMessages ? 'bg-primary' : 'bg-input'
-                }`}
-                onClick={() => handleConfigChange('regenerateMessages', !config.regenerateMessages)}
-              >
-                <span
-                  className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
-                    config.regenerateMessages ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Editor */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Footer
-            </label>
-            <div className="flex gap-2 mb-2">
-              <Button variant="outline" size="icon"><Bold className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon"><Italic className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon"><Underline className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon"><Link2 className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon"><AlignLeft className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon"><AlignCenter className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon"><AlignRight className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon"><Undo2 className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon"><Redo2 className="h-4 w-4" /></Button>
-            </div>
-            <textarea 
-              value={config.footerText}
-              onChange={(e) => handleConfigChange('footerText', e.target.value)}
-              className="flex w-[90%] min-h-[50px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-
-          {/* Theme */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">
-              Theme
-            </label>
-            <select
-              value={config.theme}
-              onChange={(e) => handleConfigChange('theme', e.target.value as 'light' | 'dark')}
-              className="flex h-10 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)]">
+        {/* Preview Panel - Now on top for mobile */}
+        <div className="lg:w-[40%] h-[40vh] lg:h-full overflow-y-auto order-first lg:order-last">
+          <div className="h-[500px]">
+            <Card 
+              className="h-full flex flex-col mx-auto transition-all duration-300 ease-in-out"
+              style={{ 
+                width: isExpanded ? '300px' : `${config.chatWidth}px`,
+              }}
             >
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </div>
-
-          {/* Display Name */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Display Name
-            </label>
-            <Input 
-              value={config.displayName}
-              onChange={(e) => handleConfigChange('displayName', e.target.value)}
-              className="flex h-10 w-full max-w-xl"
-              placeholder="Enter chatbot name"
-            />
-          </div>
-
-          {/* Color Controls */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                User Message Color
-              </label>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <div 
-                    className="w-8 h-8 rounded-full border cursor-pointer"
-                    style={{ backgroundColor: config.userMessageColor }}
-                    onClick={() => setShowUserColorPicker(!showUserColorPicker)}
-                  />
-                  {showUserColorPicker && (
-                    <div className="absolute top-full mt-2 z-10">
-                      <HexColorPicker 
-                        color={config.userMessageColor} 
-                        onChange={(color) => handleConfigChange('userMessageColor', color)} 
-                      />
-                    </div>
-                  )}
-                </div>
-                <Button variant="secondary" size="sm" onClick={() => handleReset('userMessageColor')}>
-                  Reset
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <div
-                className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                  config.syncColors ? 'bg-primary' : 'bg-input'
-                }`}
-                onClick={() => handleConfigChange('syncColors', !config.syncColors)}
-              >
-                <span
-                  className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
-                    config.syncColors ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </div>
-              <label className="text-sm font-medium leading-none">
-                Sync User Message Color with Chatbot Header
-              </label>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Chat Bubble Button Color
-              </label>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <div 
-                    className="w-8 h-8 rounded-full border cursor-pointer"
-                    style={{ backgroundColor: config.chatBubbleColor }}
-                    onClick={() => setShowBubbleColorPicker(!showBubbleColorPicker)}
-                  />
-                  {showBubbleColorPicker && (
-                    <div className="absolute top-full mt-2 z-10">
-                      <HexColorPicker 
-                        color={config.chatBubbleColor} 
-                        onChange={(color) => handleConfigChange('chatBubbleColor', color)} 
-                      />
-                    </div>
-                  )}
-                </div>
-                <Button variant="secondary" size="sm" onClick={() => handleReset('chatBubbleColor')}>
-                  Reset
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <div
-                  className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                    config.roundedHeaderCorners ? 'bg-primary' : 'bg-input'
-                  }`}
-                  onClick={() => handleConfigChange('roundedHeaderCorners', !config.roundedHeaderCorners)}
-                >
-                  <span
-                    className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
-                      config.roundedHeaderCorners ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </div>
-                <label className="text-sm font-medium leading-none">
-                  Rounded Header Corners
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <div
-                  className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                    config.roundedChatCorners ? 'bg-primary' : 'bg-input'
-                  }`}
-                  onClick={() => handleConfigChange('roundedChatCorners', !config.roundedChatCorners)}
-                >
-                  <span
-                    className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
-                      config.roundedChatCorners ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </div>
-                <label className="text-sm font-medium leading-none">
-                  Rounded Chat Corners
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* Alignment Control */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">
-              Align Chat Bubble Button
-            </label>
-            <select
-              value={config.bubbleAlignment}
-              onChange={(e) => handleConfigChange('bubbleAlignment', e.target.value as 'left' | 'right')}
-              className="flex h-10 w-[100px] max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="left">Left</option>
-              <option value="right">Right</option>
-            </select>
-          </div>
-
-          {/* Auto Show Delay */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Auto show initial messages pop-ups after
-            </label>
-            <div className="flex items-center gap-2">
-              <input 
-                type="number"
-                value={config.autoShowDelay}
-                onChange={(e) => handleConfigChange('autoShowDelay', parseInt(e.target.value))}
-                min="-1"
-                className="flex h-10 w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-              <span className="text-sm text-gray-500">seconds (negative to disable)</span>
-            </div>
-          </div>
-
-          {/* Tooltip Delay */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Show tooltip message
-            </label>
-            <div className="flex items-center gap-2">
-              <select
-                value={config.tooltipDelay === 0 ? "immediate" : 
-                      config.tooltipDelay === -1 ? "never" : 
-                      [1, 2, 3, 5, 10].includes(config.tooltipDelay) ? config.tooltipDelay.toString() : "custom"}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === "immediate") {
-                    handleConfigChange('tooltipDelay', 0);
-                  } else if (value === "never") {
-                    handleConfigChange('tooltipDelay', -1);
-                  } else if (value === "custom") {
-                    // Keep the current value if switching to custom
-                    if (!([0, -1].includes(config.tooltipDelay) || [1, 2, 3, 5, 10].includes(config.tooltipDelay))) {
-                      // Current value is already custom, don't change it
-                    } else {
-                      // Set a default custom value
-                      handleConfigChange('tooltipDelay', 4);
-                    }
-                  } else {
-                    handleConfigChange('tooltipDelay', parseInt(value));
-                  }
-                }}
-                className="flex h-10 w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="immediate">Immediately</option>
-                <option value="never">Never</option>
-                <option value="1">After 1 second</option>
-                <option value="2">After 2 seconds</option>
-                <option value="3">After 3 seconds</option>
-                <option value="5">After 5 seconds</option>
-                <option value="10">After 10 seconds</option>
-                <option value="custom">Custom...</option>
-              </select>
-              
-              {config.tooltipDelay > 0 && 
-                ![1, 2, 3, 5, 10].includes(config.tooltipDelay) && (
-                <div className="flex items-center gap-2 ml-2">
-                  <input 
-                    type="number"
-                    value={config.tooltipDelay}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value);
-                      if (!isNaN(value) && value > 0) {
-                        handleConfigChange('tooltipDelay', value);
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const value = parseInt(e.target.value);
-                      if (isNaN(value) || value <= 0) {
-                        // If invalid, reset to a safe default
-                        handleConfigChange('tooltipDelay', 4);
-                      }
-                    }}
-                    min="1"
-                    className="flex h-10 w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                  <span className="text-sm text-gray-500">seconds</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Chat Window Width */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Chat Window Width
-            </label>
-            <div className="flex flex-col gap-4">
-              <Slider 
-                value={[config.chatWidth]}
-                onValueChange={(value: number[]) => {
-                  handleConfigChange('chatWidth', value[0])
-                  setWidthInputValue(value[0].toString())
-                }}
-                min={200}
-                max={900}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex items-center">
-                <button
-                  className="px-2 py-1 border rounded-l"
-                  onClick={() => {
-                    const newWidth = Math.max(200, config.chatWidth - 10)
-                    handleConfigChange('chatWidth', newWidth)
-                    setWidthInputValue(newWidth.toString())
-                  }}
-                >
-                  -
-                </button>
-                <input 
-                  type="number"
-                  value={widthInputValue}
-                  onChange={(e) => {
-                    setWidthInputValue(e.target.value)
-                  }}
-                  onBlur={(e) => {
-                    const num = parseInt(e.target.value)
-                    const validNum = Math.max(200, Math.min(900, num || 200))
-                    handleConfigChange('chatWidth', validNum)
-                    setWidthInputValue(validNum.toString())
-                  }}
-                  min="200"
-                  max="900"
-                  className="flex h-10 w-[100px] border-y bg-background px-3 py-2 text-sm text-center"
-                />
-                <button
-                  className="px-2 py-1 border rounded-r"
-                  onClick={() => {
-                    const newWidth = Math.min(900, config.chatWidth + 10)
-                    handleConfigChange('chatWidth', newWidth)
-                    setWidthInputValue(newWidth.toString())
-                  }}
-                >
-                  +
-                </button>
-                <span className="ml-2 text-sm text-gray-500">pixels</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Image Uploads */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Profile Picture
-              </label>
-              <div className="space-y-4">
-                {/* Preview */}
-                <div 
-                  className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden"
-                  style={{
-                    backgroundImage: profilePicture ? `url(${profilePicture})` : 'none',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                />
-                {/* Upload controls */}
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="file"
-                      ref={profileInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, 'profile')}
-                    />
-                    <Button onClick={() => handleImageUpload('profile')}>
-                      Upload Image
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="url"
-                      placeholder="Or enter image URL..."
-                      value={config.profilePictureUrl}
-                      onChange={(e) => {
-                        setProfilePicture(e.target.value);
-                        handleConfigChange('profilePictureUrl', e.target.value);
-                      }}
-                      className="flex-1"
-                    />
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setProfilePicture("");
-                        handleConfigChange('profilePictureUrl', "");
-                      }}
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Chat Icon
-              </label>
-              <div className="space-y-4">
-                {/* Preview */}
-                <div 
-                  className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden"
-                  style={{
-                    backgroundImage: chatIcon ? `url(${chatIcon})` : 'none',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                />
-                {/* Upload controls */}
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="file"
-                      ref={chatIconInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, 'icon')}
-                    />
-                    <Button onClick={() => handleImageUpload('icon')}>
-                      Upload Image
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="url"
-                      placeholder="Or enter image URL..."
-                      value={config.chatIconUrl}
-                      onChange={(e) => {
-                        setChatIcon(e.target.value);
-                        handleConfigChange('chatIconUrl', e.target.value);
-                      }}
-                      className="flex-1"
-                    />
-                    <Button 
-                      variant="outline"
-                      onClick={() => {
-                        setChatIcon("");
-                        handleConfigChange('chatIconUrl', "");
-                      }}
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Chat Background
-            </label>
-            <div className="space-y-4">
-              {/* Preview */}
               <div 
-                className="h-32 w-full rounded-lg bg-gray-200 overflow-hidden"
+                className={`p-4 border-b flex items-center justify-between ${
+                  config.roundedHeaderCorners ? 'rounded-t-xl' : ''
+                }`}
+                style={{
+                  backgroundColor: config.syncColors ? config.userMessageColor : undefined,
+                  color: config.syncColors ? 'white' : undefined
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Profile Picture */}
+                  {config.profilePictureUrl && (
+                    <div 
+                      className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden"
+                      style={{
+                        backgroundImage: `url(${config.profilePictureUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                  )}
+                  <div className="font-medium">{config.displayName}</div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className={config.syncColors ? 'text-white hover:bg-white/10' : ''}
+                >
+                  <RefreshCcw className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div 
+                className="flex-1 p-4 space-y-4 overflow-y-auto relative"
                 style={{
                   backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  opacity: config.chatBackgroundOpacity
                 }}
-              />
-              {/* Upload controls */}
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-4">
-                  <input
-                    type="file"
-                    ref={backgroundInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, 'background')}
-                  />
-                  <Button onClick={() => handleImageUpload('background')}>
-                    Upload Background
-                  </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    type="url"
-                    placeholder="Or enter image URL..."
-                    value={config.chatBackgroundUrl}
-                    onChange={(e) => handleConfigChange('chatBackgroundUrl', e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    variant="outline"
-                    onClick={() => handleConfigChange('chatBackgroundUrl', "")}
-                  >
-                    Clear
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Opacity Control */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Background Opacity</label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={config.chatBackgroundOpacity}
-                    onChange={(e) => handleConfigChange('chatBackgroundOpacity', parseFloat(e.target.value))}
-                    className="flex-1"
-                  />
-                  <span className="text-sm text-gray-500">
-                    {Math.round(config.chatBackgroundOpacity * 100)}%
-                  </span>
-                </div>
-              </div>
-              <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
-            </div>
-          </div>
-          <div className="bottom-0 pb-4 pt-2 bg-background">
-            <Button 
-              className="w-full" 
-              size="lg" 
-              onClick={handleSave}
-              disabled={loading}
-            >
-              {loading ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </div>
-
-        {/* Preview Panel - Add position relative and move to right */}
-        <div className="relative">
-          <Card 
-            className="h-full flex flex-col max-h-[70%] absolute right-0" 
-            style={{ width: `${config.chatWidth}px` }}
-          >
-            <div 
-              className={`p-4 border-b flex items-center justify-between ${
-                config.roundedHeaderCorners ? 'rounded-t-xl' : ''
-              }`}
-              style={{
-                backgroundColor: config.syncColors ? config.userMessageColor : undefined,
-                color: config.syncColors ? 'white' : undefined
-              }}
-            >
-              <div className="flex items-center gap-3">
-                {/* Profile Picture */}
-                {config.profilePictureUrl && (
+              >
+                {/* Add a background overlay div to control opacity */}
+                {config.chatBackgroundUrl && (
                   <div 
-                    className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden"
+                    className="absolute inset-0" 
                     style={{
-                      backgroundImage: `url(${config.profilePictureUrl})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center'
+                      backgroundColor: 'white',
+                      opacity: 1 - config.chatBackgroundOpacity
                     }}
                   />
                 )}
-                <div className="font-medium">{config.displayName}</div>
+                {/* Keep existing chat messages */}
+                <div className="relative z-10">
+                  <div className={`bg-gray-100 p-3 ${
+                    config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                  } max-w-[80%]`}>
+                    {config.initialMessage}
+                  </div>
+                  <div 
+                    className={`ml-auto p-3 mt-3 ${
+                      config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
+                    } max-w-[80%] text-white`}
+                    style={{ backgroundColor: config.userMessageColor }}
+                  >
+                    Hello
+                  </div>
+                </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className={config.syncColors ? 'text-white hover:bg-white/10' : ''}
-              >
-                <RefreshCcw className="h-4 w-4" />
-              </Button>
-            </div>
 
-            <div 
-              className="flex-1 p-4 space-y-4 overflow-y-auto relative"
-              style={{
-                backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-            >
-              {/* Add a background overlay div to control opacity */}
-              {config.chatBackgroundUrl && (
+              {/* Chat Icon in the bottom right */}
+              {config.chatIconUrl && (
                 <div 
-                  className="absolute inset-0" 
+                  className="absolute -bottom-[56px] right-0 h-12 w-12 rounded-full shadow-lg overflow-hidden cursor-pointer"
                   style={{
-                    backgroundColor: 'white',
-                    opacity: 1 - config.chatBackgroundOpacity
+                    backgroundImage: `url(${config.chatIconUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
                   }}
                 />
               )}
-              {/* Keep existing chat messages */}
-              <div className="relative z-10">
-                <div className={`bg-gray-100 p-3 ${
-                  config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                } max-w-[80%]`}>
-                  {config.initialMessage}
-                </div>
-                <div 
-                  className={`ml-auto p-3 mt-3 ${
-                    config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                  } max-w-[80%] text-white`}
-                  style={{ backgroundColor: config.userMessageColor }}
-                >
-                  Hello
-                </div>
-              </div>
-            </div>
 
-            {/* Chat Icon in the bottom right */}
-            {config.chatIconUrl && (
-              <div 
-                className="absolute -bottom-[56px] right-0 h-12 w-12 rounded-full shadow-lg overflow-hidden cursor-pointer"
-                style={{
-                  backgroundImage: `url(${config.chatIconUrl})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                }}
-              />
-            )}
+              <div className="p-4 border-t">
+                {/* Suggested Messages - display only */}
+                <div className="mb-4 flex flex-wrap gap-2 overflow-x-auto pb-2 lg:pb-0">
+                  <div className="flex gap-2 min-w-full lg:min-w-0">
+                    {config.suggestedMessages.split('\n').filter(msg => msg.trim()).map((message, index) => (
+                      <button
+                        key={index}
+                        className="px-4 py-2 bg-gray-100 rounded-full text-sm whitespace-nowrap"
+                      >
+                        {message}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="p-4 border-t">
-              {/* Suggested Messages - display only */}
-              <div className="mb-4 flex flex-wrap gap-2">
-                {config.suggestedMessages.split('\n').filter(msg => msg.trim()).map((message, index) => (
-                  <button
-                    key={index}
-                    className="px-4 py-2 bg-gray-100 rounded-full text-sm"
+                {/* Message input area */}
+                <div className="flex gap-2">
+                  <input 
+                    type="text"
+                    placeholder={config.messagePlaceholder}
+                    className={`flex h-10 w-full border border-input bg-background px-3 py-2 text-sm ${
+                      config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
+                    }`}
+                  />
+                  <Button 
+                    size="icon" 
+                    className={config.roundedChatCorners ? 'rounded-lg' : ''}
+                    style={{ backgroundColor: config.userMessageColor }}
                   >
-                    {message}
-                  </button>
-                ))}
-              </div>
+                    <Send className="h-4 w-4 text-white" />
+                  </Button>
+                </div>
 
-              {/* Message input area */}
-              <div className="flex gap-2">
-                <input 
-                  type="text"
-                  placeholder={config.messagePlaceholder}
-                  className={`flex h-10 w-full border border-input bg-background px-3 py-2 text-sm ${
-                    config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
-                  }`}
-                />
-                <Button 
-                  size="icon" 
-                  className={config.roundedChatCorners ? 'rounded-lg' : ''}
-                  style={{ backgroundColor: config.userMessageColor }}
-                >
-                  <Send className="h-4 w-4 text-white" />
-                </Button>
+                {/* Footer */}
+                <div className="mt-2 text-center text-sm text-gray-500 flex items-center justify-center gap-1">
+                  <span>Powered By ChatSA.co</span>
+                  <span>{config.footerText}</span>
+                </div>
               </div>
+            </Card>
+          </div>
+        </div>
 
-              {/* Footer */}
-              <div className="mt-2 text-center text-sm text-gray-500 flex items-center justify-center gap-1">
-                <span>Powered By ChatSA.co</span>
-                <span>{config.footerText}</span>
+        {/* Configuration Panel - Now on bottom for mobile */}
+        <div className="flex-1 overflow-y-auto relative order-last lg:order-first h-[60vh] lg:h-full">
+          <div className="sticky top-0 z-10 bg-background border-b p-4 hidden lg:block">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold">Chat Interface</h1>
+              <Button 
+                className="w-[200px]" 
+                size="lg" 
+                onClick={handleSave}
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
+          
+          <div className="p-4 space-y-8">
+            {/* Basic Settings Section */}
+            <div className="space-y-6 p-6 bg-card rounded-lg border">
+              <h2 className="text-lg font-semibold">Basic Settings</h2>
+              <div className="space-y-4">
+                {/* Display Name */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Display Name
+                  </label>
+                  <Input 
+                    value={config.displayName}
+                    onChange={(e) => handleConfigChange('displayName', e.target.value)}
+                    className="flex h-10 w-full"
+                    placeholder="Enter chatbot name"
+                  />
+                </div>
+
+                {/* Theme */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Theme
+                  </label>
+                  <select
+                    value={config.theme}
+                    onChange={(e) => handleConfigChange('theme', e.target.value as 'light' | 'dark')}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                  </select>
+                </div>
+
+                {/* Chat Window Width */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Chat Window Width
+                  </label>
+                  <div className="flex flex-col gap-4">
+                    <Slider 
+                      value={[config.chatWidth]}
+                      onValueChange={(value: number[]) => {
+                        handleConfigChange('chatWidth', value[0])
+                        setWidthInputValue(value[0].toString())
+                      }}
+                      min={200}
+                      max={900}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex items-center">
+                      <button
+                        className="px-2 py-1 border rounded-l"
+                        onClick={() => {
+                          const newWidth = Math.max(200, config.chatWidth - 10)
+                          handleConfigChange('chatWidth', newWidth)
+                          setWidthInputValue(newWidth.toString())
+                        }}
+                      >
+                        -
+                      </button>
+                      <input 
+                        type="number"
+                        value={widthInputValue}
+                        onChange={(e) => setWidthInputValue(e.target.value)}
+                        onBlur={(e) => {
+                          const num = parseInt(e.target.value)
+                          const validNum = Math.max(200, Math.min(900, num || 200))
+                          handleConfigChange('chatWidth', validNum)
+                          setWidthInputValue(validNum.toString())
+                        }}
+                        min="200"
+                        max="900"
+                        className="flex h-10 w-[100px] border-y bg-background px-3 py-2 text-sm text-center"
+                      />
+                      <button
+                        className="px-2 py-1 border rounded-r"
+                        onClick={() => {
+                          const newWidth = Math.min(900, config.chatWidth + 10)
+                          handleConfigChange('chatWidth', newWidth)
+                          setWidthInputValue(newWidth.toString())
+                        }}
+                      >
+                        +
+                      </button>
+                      <span className="ml-2 text-sm text-gray-500">pixels</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </Card>
+
+            {/* Appearance Section */}
+            <div className="space-y-6 p-6 bg-card rounded-lg border">
+              <h2 className="text-lg font-semibold">Appearance</h2>
+              <div className="space-y-4">
+                {/* Color Controls */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      User Message Color
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <div 
+                          className="w-8 h-8 rounded-full border cursor-pointer"
+                          style={{ backgroundColor: config.userMessageColor }}
+                          onClick={() => setShowUserColorPicker(!showUserColorPicker)}
+                        />
+                        {showUserColorPicker && (
+                          <div className="absolute top-full mt-2 z-10">
+                            <HexColorPicker 
+                              color={config.userMessageColor} 
+                              onChange={(color) => handleConfigChange('userMessageColor', color)} 
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <Button variant="secondary" size="sm" onClick={() => handleReset('userMessageColor')}>
+                        Reset
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                        config.syncColors ? 'bg-primary' : 'bg-input'
+                      }`}
+                      onClick={() => handleConfigChange('syncColors', !config.syncColors)}
+                    >
+                      <span
+                        className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
+                          config.syncColors ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </div>
+                    <label className="text-sm font-medium leading-none">
+                      Sync User Message Color with Chatbot Header
+                    </label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      Chat Bubble Button Color
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <div 
+                          className="w-8 h-8 rounded-full border cursor-pointer"
+                          style={{ backgroundColor: config.chatBubbleColor }}
+                          onClick={() => setShowBubbleColorPicker(!showBubbleColorPicker)}
+                        />
+                        {showBubbleColorPicker && (
+                          <div className="absolute top-full mt-2 z-10">
+                            <HexColorPicker 
+                              color={config.chatBubbleColor} 
+                              onChange={(color) => handleConfigChange('chatBubbleColor', color)} 
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <Button variant="secondary" size="sm" onClick={() => handleReset('chatBubbleColor')}>
+                        Reset
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Corner Settings */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                        config.roundedHeaderCorners ? 'bg-primary' : 'bg-input'
+                      }`}
+                      onClick={() => handleConfigChange('roundedHeaderCorners', !config.roundedHeaderCorners)}
+                    >
+                      <span
+                        className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
+                          config.roundedHeaderCorners ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </div>
+                    <label className="text-sm font-medium leading-none">
+                      Rounded Header Corners
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                        config.roundedChatCorners ? 'bg-primary' : 'bg-input'
+                      }`}
+                      onClick={() => handleConfigChange('roundedChatCorners', !config.roundedChatCorners)}
+                    >
+                      <span
+                        className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
+                          config.roundedChatCorners ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </div>
+                    <label className="text-sm font-medium leading-none">
+                      Rounded Chat Corners
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Behavior Section */}
+            <div className="space-y-6 p-6 bg-card rounded-lg border">
+              <h2 className="text-lg font-semibold">Chat Behavior</h2>
+              <div className="space-y-4">
+                {/* Initial Messages */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Initial Messages
+                  </label>
+                  <textarea 
+                    value={config.initialMessage}
+                    onChange={(e) => handleConfigChange('initialMessage', e.target.value)}
+                    placeholder="Enter each message in a new line."
+                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[50px]"
+                  />
+                </div>
+
+                {/* Suggested Messages */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Suggested Messages
+                  </label>
+                  <textarea 
+                    value={config.suggestedMessages}
+                    onChange={(e) => handleConfigChange('suggestedMessages', e.target.value)}
+                    placeholder="Enter each message in a new line."
+                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[50px]"
+                  />
+                </div>
+
+                {/* Message Placeholder */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Message Placeholder
+                  </label>
+                  <input 
+                    type="text"
+                    value={config.messagePlaceholder}
+                    onChange={(e) => handleConfigChange('messagePlaceholder', e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+
+                {/* Toggles */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium leading-none">
+                      Collect User Feedback
+                    </label>
+                    <div
+                      className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                        config.collectFeedback ? 'bg-primary' : 'bg-input'
+                      }`}
+                      onClick={() => handleConfigChange('collectFeedback', !config.collectFeedback)}
+                    >
+                      <span
+                        className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
+                          config.collectFeedback ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium leading-none">
+                      Regenerate Messages
+                    </label>
+                    <div
+                      className={`relative inline-flex h-[24px] w-[44px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                        config.regenerateMessages ? 'bg-primary' : 'bg-input'
+                      }`}
+                      onClick={() => handleConfigChange('regenerateMessages', !config.regenerateMessages)}
+                    >
+                      <span
+                        className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform duration-200 ease-in-out ${
+                          config.regenerateMessages ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Display Settings Section */}
+            <div className="space-y-6 p-6 bg-card rounded-lg border">
+              <h2 className="text-lg font-semibold">Display Settings</h2>
+              <div className="space-y-4">
+                {/* Alignment Control */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Align Chat Bubble Button
+                  </label>
+                  <select
+                    value={config.bubbleAlignment}
+                    onChange={(e) => handleConfigChange('bubbleAlignment', e.target.value as 'left' | 'right')}
+                    className="flex h-10 w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                  </select>
+                </div>
+
+                {/* Auto Show Delay */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Auto show initial messages pop-ups after
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="number"
+                      value={config.autoShowDelay}
+                      onChange={(e) => handleConfigChange('autoShowDelay', parseInt(e.target.value))}
+                      min="-1"
+                      className="flex h-10 w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                    <span className="text-sm text-gray-500">seconds (negative to disable)</span>
+                  </div>
+                </div>
+
+                {/* Tooltip Delay */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Show tooltip message
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={config.tooltipDelay === 0 ? "immediate" : 
+                            config.tooltipDelay === -1 ? "never" : 
+                            [1, 2, 3, 5, 10].includes(config.tooltipDelay) ? config.tooltipDelay.toString() : "custom"}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "immediate") {
+                          handleConfigChange('tooltipDelay', 0);
+                        } else if (value === "never") {
+                          handleConfigChange('tooltipDelay', -1);
+                        } else if (value === "custom") {
+                          if (!([0, -1].includes(config.tooltipDelay) || [1, 2, 3, 5, 10].includes(config.tooltipDelay))) {
+                          } else {
+                            handleConfigChange('tooltipDelay', 4);
+                          }
+                        } else {
+                          handleConfigChange('tooltipDelay', parseInt(value));
+                        }
+                      }}
+                      className="flex h-10 w-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value="immediate">Immediately</option>
+                      <option value="never">Never</option>
+                      <option value="1">After 1 second</option>
+                      <option value="2">After 2 seconds</option>
+                      <option value="3">After 3 seconds</option>
+                      <option value="5">After 5 seconds</option>
+                      <option value="10">After 10 seconds</option>
+                      <option value="custom">Custom...</option>
+                    </select>
+                    
+                    {config.tooltipDelay > 0 && 
+                      ![1, 2, 3, 5, 10].includes(config.tooltipDelay) && (
+                      <div className="flex items-center gap-2 ml-2">
+                        <input 
+                          type="number"
+                          value={config.tooltipDelay}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value);
+                            if (!isNaN(value) && value > 0) {
+                              handleConfigChange('tooltipDelay', value);
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const value = parseInt(e.target.value);
+                            if (isNaN(value) || value <= 0) {
+                              handleConfigChange('tooltipDelay', 4);
+                            }
+                          }}
+                          min="1"
+                          className="flex h-10 w-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        />
+                        <span className="text-sm text-gray-500">seconds</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Media Section */}
+            <div className="space-y-6 p-6 bg-card rounded-lg border">
+              <h2 className="text-lg font-semibold">Media</h2>
+              <div className="space-y-6">
+                {/* Profile Picture */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Profile Picture
+                  </label>
+                  <div className="space-y-4">
+                    <div 
+                      className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden"
+                      style={{
+                        backgroundImage: profilePicture ? `url(${profilePicture})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-4">
+                        <input
+                          type="file"
+                          ref={profileInputRef}
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => handleFileChange(e, 'profile')}
+                        />
+                        <Button onClick={() => handleImageUpload('profile')}>
+                          Upload Image
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          type="url"
+                          placeholder="Or enter image URL..."
+                          value={config.profilePictureUrl}
+                          onChange={(e) => {
+                            setProfilePicture(e.target.value);
+                            handleConfigChange('profilePictureUrl', e.target.value);
+                          }}
+                          className="flex-1"
+                        />
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setProfilePicture("");
+                            handleConfigChange('profilePictureUrl', "");
+                          }}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
+                  </div>
+                </div>
+
+                {/* Chat Icon */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Chat Icon
+                  </label>
+                  <div className="space-y-4">
+                    <div 
+                      className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden"
+                      style={{
+                        backgroundImage: chatIcon ? `url(${chatIcon})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-4">
+                        <input
+                          type="file"
+                          ref={chatIconInputRef}
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => handleFileChange(e, 'icon')}
+                        />
+                        <Button onClick={() => handleImageUpload('icon')}>
+                          Upload Image
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          type="url"
+                          placeholder="Or enter image URL..."
+                          value={config.chatIconUrl}
+                          onChange={(e) => {
+                            setChatIcon(e.target.value);
+                            handleConfigChange('chatIconUrl', e.target.value);
+                          }}
+                          className="flex-1"
+                        />
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            setChatIcon("");
+                            handleConfigChange('chatIconUrl', "");
+                          }}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
+                  </div>
+                </div>
+
+                {/* Chat Background */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Chat Background
+                  </label>
+                  <div className="space-y-4">
+                    <div 
+                      className="h-32 w-full rounded-lg bg-gray-200 overflow-hidden"
+                      style={{
+                        backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        opacity: config.chatBackgroundOpacity
+                      }}
+                    />
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-4">
+                        <input
+                          type="file"
+                          ref={backgroundInputRef}
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => handleFileChange(e, 'background')}
+                        />
+                        <Button onClick={() => handleImageUpload('background')}>
+                          Upload Background
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          type="url"
+                          placeholder="Or enter image URL..."
+                          value={config.chatBackgroundUrl}
+                          onChange={(e) => handleConfigChange('chatBackgroundUrl', e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button 
+                          variant="outline"
+                          onClick={() => handleConfigChange('chatBackgroundUrl', "")}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Opacity Control */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Background Opacity</label>
+                      <div className="flex items-center gap-4">
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={config.chatBackgroundOpacity}
+                          onChange={(e) => handleConfigChange('chatBackgroundOpacity', parseFloat(e.target.value))}
+                          className="flex-1"
+                        />
+                        <span className="text-sm text-gray-500">
+                          {Math.round(config.chatBackgroundOpacity * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Section */}
+            <div className="space-y-6 p-6 bg-card rounded-lg border">
+              <h2 className="text-lg font-semibold">Footer</h2>
+              <div className="space-y-4">
+                <div className="flex gap-2 mb-2">
+                  <Button variant="outline" size="icon"><Bold className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon"><Italic className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon"><Underline className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon"><Link2 className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon"><AlignLeft className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon"><AlignCenter className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon"><AlignRight className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon"><Undo2 className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon"><Redo2 className="h-4 w-4" /></Button>
+                </div>
+                <textarea 
+                  value={config.footerText}
+                  onChange={(e) => handleConfigChange('footerText', e.target.value)}
+                  className="flex w-full min-h-[50px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </>
