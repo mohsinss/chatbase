@@ -78,6 +78,42 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   const [showBubbleColorPicker, setShowBubbleColorPicker] = useState(false)
   const userColorPickerRef = useRef<HTMLDivElement>(null)
   const bubbleColorPickerRef = useRef<HTMLDivElement>(null)
+  const [topHeight, setTopHeight] = useState(40)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartY = useRef(0)
+  const dragStartHeight = useRef(0)
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    dragStartY.current = e.clientY
+    dragStartHeight.current = topHeight
+  }
+
+  const handleDragMove = (e: MouseEvent) => {
+    if (!isDragging) return
+
+    const deltaY = e.clientY - dragStartY.current
+    const deltaPercent = (deltaY / window.innerHeight) * 100
+    const newHeight = Math.max(20, Math.min(80, dragStartHeight.current + deltaPercent))
+    
+    setTopHeight(newHeight)
+  }
+
+  const handleDragEnd = () => {
+    setIsDragging(false)
+  }
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleDragMove)
+      window.addEventListener('mouseup', handleDragEnd)
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleDragMove)
+      window.removeEventListener('mouseup', handleDragEnd)
+    }
+  }, [isDragging])
 
   useEffect(() => {
     fetchSettings();
@@ -392,10 +428,13 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)]">
+      <div className="flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-200px)]">
         {/* Preview Panel - Now on top for mobile */}
-        <div className="lg:w-[40%] h-[40vh] lg:h-full overflow-y-auto order-first lg:order-last">
-          <div className="h-[500px]">
+        <div 
+          className="lg:w-[40%] overflow-y-auto order-first lg:order-last relative lg:min-h-[calc(100vh-200px)]"
+          style={{ height: `${topHeight}vh` }}
+        >
+          <div className="h-[500px] lg:min-h-[calc(100vh-200px)]">
             <Card 
               className="h-full flex flex-col mx-auto transition-all duration-300 ease-in-out"
               style={{ 
@@ -525,8 +564,17 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           </div>
         </div>
 
+        {/* Draggable Divider */}
+        <div 
+          className="h-2 bg-gray-200 cursor-ns-resize hover:bg-gray-300 transition-colors lg:hidden"
+          onMouseDown={handleDragStart}
+        />
+
         {/* Configuration Panel - Now on bottom for mobile */}
-        <div className="flex-1 overflow-y-auto relative order-last lg:order-first h-[60vh] lg:h-full">
+        <div 
+          className="flex-1 overflow-y-auto relative order-last lg:order-first lg:min-h-[calc(100vh-200px)]"
+          style={{ height: `${100 - topHeight}vh`, maxHeight: `${100 - topHeight}vh`, overflowY: 'auto' }}
+        >
           <div className="sticky top-0 z-10 bg-background border-b p-4 hidden lg:block">
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold">Chat Interface</h1>
