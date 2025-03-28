@@ -182,7 +182,8 @@ export async function POST(request: Request) {
                 }
               };
 
-              // send text msg to from number
+              await sleep(2000)
+              // send text msg to to sender
               const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
                 recipient: {
                   id: sender
@@ -197,7 +198,7 @@ export async function POST(request: Request) {
               conversation.messages.push({ role: "assistant", content: nodeMessage });
 
               if (nodeImage) {
-                // send iamge to from number
+                // send iamge to to sender
                 const response_image = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
                   recipient: {
                     id: sender
@@ -207,6 +208,7 @@ export async function POST(request: Request) {
                       type: 'image',
                       payload: {
                         url: nodeImage,
+                        is_reusable: true
                       }
                     }
                   },
@@ -223,8 +225,10 @@ export async function POST(request: Request) {
                 });
               }
 
+              await sleep(2000)
               // Send message with options
-              await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, buttonsPayload, {
+              await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`,
+                buttonsPayload, {
                 headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
               });
 
@@ -262,12 +266,12 @@ export async function POST(request: Request) {
           if (!instagramPage) {
             return NextResponse.json({ status: "Instagram account doesn't registered to the site." }, { status: 200 });
           }
-          
+
           const chatbotId = instagramPage.chatbotId;
           const delay = instagramPage?.settings?.delay;
           const dataset = await Dataset.findOne({ chatbotId });
           const { questionFlow, questionFlowEnable } = dataset;
-          
+
           if (delay && delay > 0) {
             await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
           }
@@ -299,7 +303,7 @@ export async function POST(request: Request) {
               headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
             });
             conversation.messages.push({ role: "assistant", content: nodeMessage });
-            
+
             if (nodeImage) {
               // send iamge to from number
               const response_image = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
@@ -327,7 +331,7 @@ export async function POST(request: Request) {
               });
             }
 
-            if (nodeOptions.length > 0)  {
+            if (nodeOptions.length > 0) {
               const buttonsPayloadForLogging = {
                 type: "interactive",
                 interactive: {
