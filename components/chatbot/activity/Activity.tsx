@@ -880,7 +880,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
               {SUB_TABS.map((tab) => (
                 <Link
                   key={tab.id}
-                  href={`/dashboard/${teamId}/chatbot/${chatbotId}/activity/${tab.id}`}
+                  href={pathname.split('/').slice(0, -1).join('/') + `/${tab.id}`}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors w-full
                     ${currentSubTab === tab.id
                       ? "bg-primary/10 text-primary"

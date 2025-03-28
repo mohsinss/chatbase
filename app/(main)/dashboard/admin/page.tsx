@@ -202,7 +202,8 @@ export default function AdminDashboard() {
     })));
 
     // Then navigate to the chatbot conversations
-    router.push(`/dashboard/admin/conversations/${chatbotId}`);
+    // router.push(`/dashboard/admin/conversations/${teamId}/${chatbotId}/chat-logs`);
+    window.open(`/dashboard/admin/conversations/${teamId}/${chatbotId}/chat-logs`);
   };
 
   const handleChatbotPreview = async (teamId: string, chatbotId: string) => {
@@ -210,10 +211,10 @@ export default function AdminDashboard() {
       // First, ensure admin has access to this chatbot
       const response = await fetch(`/api/admin/access?teamId=${teamId}&chatbotId=${chatbotId}`);
       
-      if (!response.ok) {
-        alert('Unable to access this chatbot. Please check permissions.');
-        return;
-      }
+      // if (!response.ok) {
+      //   alert('Unable to access this chatbot. Please check permissions.');
+      //   return;
+      // }
       
       // Then navigate to the chatbot playground
       router.push(`/dashboard/${teamId}/chatbot/${chatbotId}`);

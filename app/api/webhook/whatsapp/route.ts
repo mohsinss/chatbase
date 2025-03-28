@@ -237,6 +237,8 @@ export async function POST(request: Request) {
           if (data?.entry[0]?.changes[0]?.value?.messages[0]?.type == "interactive") {
             //handle buttong reply
             if (data.entry[0].changes[0].value.messages[0].interactive.type == "button_reply") {
+              await connectMongo();
+              
               const from = data?.entry[0]?.changes[0]?.value?.messages[0]?.from;
               const phone_number_id = data?.entry[0]?.changes[0]?.value?.metadata.phone_number_id;
               const message_id = data?.entry[0]?.changes[0]?.value?.messages[0]?.id;

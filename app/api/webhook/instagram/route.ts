@@ -7,6 +7,7 @@ import axios from 'axios';
 import { getAIResponse } from '@/libs/utils-ai';
 import { sleep } from '@/libs/utils';
 import Dataset from '@/models/Dataset';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -182,7 +183,7 @@ export async function POST(request: Request) {
                 }
               };
 
-              // send text msg to from number
+              // send text msg to to sender
               const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
                 recipient: {
                   id: sender
@@ -197,8 +198,7 @@ export async function POST(request: Request) {
               conversation.messages.push({ role: "assistant", content: nodeMessage });
 
               if (nodeImage) {
-                // send iamge to from number
-                const response_image = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+                const image_payload = {
                   recipient: {
                     id: sender
                   },
@@ -207,12 +207,25 @@ export async function POST(request: Request) {
                       type: 'image',
                       payload: {
                         url: nodeImage,
+                        // is_reusable: true
                       }
                     }
                   },
-                }, {
-                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                }
+                console.log(nodeImage)
+
+                await sleep(2000)
+                // send iamge to to sender
+                const response_image = await fetch(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`,
+                    "Content-Type": 'application/json'
+                  },
+                  body: JSON.stringify(image_payload),
                 });
+                const response_image_data = await response_image.json();
+                console.log(response_image_data)
                 await sleep(2000)
                 conversation.messages.push({
                   role: "assistant",
@@ -223,8 +236,10 @@ export async function POST(request: Request) {
                 });
               }
 
+              await sleep(2000)
               // Send message with options
-              await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, buttonsPayload, {
+              await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`,
+                buttonsPayload, {
                 headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
               });
 
@@ -262,12 +277,12 @@ export async function POST(request: Request) {
           if (!instagramPage) {
             return NextResponse.json({ status: "Instagram account doesn't registered to the site." }, { status: 200 });
           }
-          
+
           const chatbotId = instagramPage.chatbotId;
           const delay = instagramPage?.settings?.delay;
           const dataset = await Dataset.findOne({ chatbotId });
           const { questionFlow, questionFlowEnable } = dataset;
-          
+
           if (delay && delay > 0) {
             await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
           }
@@ -299,10 +314,9 @@ export async function POST(request: Request) {
               headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
             });
             conversation.messages.push({ role: "assistant", content: nodeMessage });
-            
+
             if (nodeImage) {
-              // send iamge to from number
-              const response_image = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+              const image_payload = {
                 recipient: {
                   id: sender
                 },
@@ -314,9 +328,18 @@ export async function POST(request: Request) {
                     }
                   }
                 },
-              }, {
-                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              }
+              // send iamge to from number
+              const response_image = await fetch(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`,
+                  "Content-Type": 'application/json'
+                },
+                body: JSON.stringify(image_payload),
               });
+              const response_image_data = await response_image.json();
+              console.log(response_image_data)
               await sleep(2000)
               conversation.messages.push({
                 role: "assistant",
@@ -327,7 +350,7 @@ export async function POST(request: Request) {
               });
             }
 
-            if (nodeOptions.length > 0)  {
+            if (nodeOptions.length > 0) {
               const buttonsPayloadForLogging = {
                 type: "interactive",
                 interactive: {
@@ -366,7 +389,10 @@ export async function POST(request: Request) {
               };
 
               await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, buttonsPayload, {
-                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                headers: {
+                  Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`,
+                  "Content-Type": 'application/json'
+                }
               });
 
               conversation.messages.push({ role: "user", content: text });
@@ -465,7 +491,7 @@ export async function POST(request: Request) {
     // Respond with a 200 OK status
     return NextResponse.json({ status: 'OK' }, { status: 200 });
   } catch (error) {
-    console.error('Error processing webhook event:', error);
+    // console.error('Error processing webhook event:', error);
 
     if (process.env.ENABLE_WEBHOOK_LOGGING_INSTAGRAM) {
       const response = await fetch('http://webhook.mrcoders.org/instagram-page-error.php', {
