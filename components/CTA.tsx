@@ -24,9 +24,9 @@ const CTASection = () => {
             Get Started Free
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
-          <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10 px-8 py-6 hover-lift">
+          {/* <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10 px-8 py-6 hover-lift">
             Request Demo
-          </Button>
+          </Button> */}
         </div>
         
         <p className="text-white/80 mt-6">

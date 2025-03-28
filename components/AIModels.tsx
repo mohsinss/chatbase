@@ -1,6 +1,11 @@
+'use client'
+
 import Image from "next/image";
+import { useState } from "react";
 
 export default function AIModels() {
+  const [showAll, setShowAll] = useState(false);
+  
   const aiModels = [
     {
       name: "OpenAI",
@@ -93,7 +98,7 @@ export default function AIModels() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {aiModels.map((model, index) => (
+          {aiModels.slice(0, showAll ? aiModels.length : 3).map((model, index) => (
             <div 
               key={index} 
               className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300"
@@ -120,6 +125,16 @@ export default function AIModels() {
             </div>
           ))}
         </div>
+        {!showAll && aiModels.length > 3 && (
+          <div className="text-center mt-8">
+            <button
+              onClick={() => setShowAll(true)}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-300"
+            >
+              Show More Models
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

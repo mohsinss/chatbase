@@ -8,27 +8,27 @@ const steps = [
     number: "01",
     title: "Upload your data",
     description: "Add documents, PDFs, or connect your website to train your AI chatbot on your specific content.",
-    image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=1100&q=80",
+    image: "./landingPage/Uploadyourdata.png",
   },
   {
     number: "02",
     title: "Customize your chatbot",
     description: "Personalize your bot's appearance, behavior, and responses to match your brand and requirements.",
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=1100&q=80",
+    image: "./landingPage/Customizeyourchatbot.png",
   },
   {
     number: "03",
     title: "Integrate with your website",
     description: "Add a single line of code to your website to embed your AI chatbot and start engaging with visitors.",
-    image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&w=1100&q=80",
+    image: "./landingPage/Integrate.png",
   }
 ];
 
 const HowItWorks = () => {
   return (
-    <section id="how-it-works" className="py-24 px-4 bg-white">
+    <section id="how-it-works" className="py-8 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
+        <div className="text-center mb-6">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             How ChatSa <span className="text-gradient">Works</span>
           </h2>

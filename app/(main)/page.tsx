@@ -27,7 +27,7 @@ export default function Home() {
       <Dashboard />
       <AIModels />
       <UseCases />
-      <Testimonials />
+      {/* <Testimonials /> */}
       <FAQ />
       <CTA />
       <Footer />
