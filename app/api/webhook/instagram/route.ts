@@ -265,6 +265,7 @@ export async function POST(request: Request) {
         if (messagingEvent.postback) {
           await connectMongo();
 
+          const instagram_account_id = data?.entry[0].id;
           const sender = messagingEvent.sender.id;
           const recipient = messagingEvent.recipient.id;
           const button_id = messagingEvent.postback.payload;
@@ -273,7 +274,7 @@ export async function POST(request: Request) {
           const node_id = button_id.split('-')[0];
           const option_index = button_id.split('-').pop();
 
-          const instagramPage = await InstagramPage.findOne({ pageId: recipient });
+          const instagramPage = await InstagramPage.findOne({ instagram_business_account: instagram_account_id });
           if (!instagramPage) {
             return NextResponse.json({ status: "Instagram account doesn't registered to the site." }, { status: 200 });
           }
