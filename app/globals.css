@@ -175,3 +175,31 @@ progress::-webkit-progress-value {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@keyframes infinite-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-50% - 1.5rem)); /* Account for gap between items */
+  }
+}
+
+.animate-infinite-scroll {
+  animation: infinite-scroll 30s linear infinite;
+  will-change: transform;
+}
+
+.animate-infinite-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Hide scrollbar but keep functionality */
+.overflow-x-auto {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
