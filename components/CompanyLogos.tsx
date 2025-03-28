@@ -73,28 +73,28 @@ export default function CompanyLogos() {
         </div>
         
         <div className="overflow-hidden">
-          <div className="relative w-full overflow-hidden py-6 h-20">
+          <div className="relative w-full overflow-hidden py-6 h-32">
             <div ref={firstRowRef} className="flex absolute whitespace-nowrap">
               {firstRowLogos.map((logo, index) => (
-                <div key={index} className="flex-shrink-0 w-64 mx-16 h-20 flex items-center justify-center">
+                <div key={index} className="flex-shrink-0 w-64 mx-16 h-32 flex items-center justify-center">
                   <img
                     src={logo.src}
                     alt={logo.alt}
-                    className="max-h-12 max-w-[200px] object-contain opacity-90 hover:opacity-100 transition-opacity duration-300"
+                    className="h-auto w-auto max-h-28 max-w-[220px] object-contain opacity-100 hover:opacity-80 transition-opacity duration-300 filter drop-shadow-sm"
                   />
                 </div>
               ))}
             </div>
           </div>
           
-          <div className="relative w-full overflow-hidden py-6 mt-8 h-20">
+          <div className="relative w-full overflow-hidden py-6 mt-8 h-32">
             <div ref={secondRowRef} className="flex absolute whitespace-nowrap">
               {secondRowLogos.map((logo, index) => (
-                <div key={index} className="flex-shrink-0 w-64 mx-16 h-20 flex items-center justify-center">
+                <div key={index} className="flex-shrink-0 w-64 mx-16 h-32 flex items-center justify-center">
                   <img
                     src={logo.src}
                     alt={logo.alt}
-                    className="max-h-12 max-w-[200px] object-contain opacity-90 hover:opacity-100 transition-opacity duration-300"
+                    className="h-auto w-auto max-h-28 max-w-[220px] object-contain opacity-100 hover:opacity-80 transition-opacity duration-300 filter drop-shadow-sm"
                   />
                 </div>
               ))}
