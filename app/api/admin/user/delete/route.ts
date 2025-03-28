@@ -7,6 +7,7 @@ import Team from "@/models/Team";
 import Chatbot from "@/models/Chatbot";
 import ChatbotConversation from "@/models/ChatbotConversation";
 import Dataset from "@/models/Dataset";
+import Account from "@/models/Account";
 
 const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || ['admin@example.com'];
 
@@ -59,6 +60,7 @@ export async function DELETE(req: Request) {
     // Delete all related data
     await Promise.all([
       User.deleteOne({ _id: userId }),
+      Account.deleteOne({ userId }),
       Team.deleteMany({ 
         $or: [
           { createdBy: userId },
