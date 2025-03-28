@@ -19,35 +19,47 @@ export const authOptions: NextAuthOptionsExtended = {
   // Set any random key in .env.local
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
-    // EmailProvider({
-    //   // server: {
-    //   //   host: 'smtp.sendgrid.net',
-    //   //   port: 587,
-    //   //   auth: {
-    //   //     user: 'apikey', // This is the username SendGrid expects
-    //   //     pass: process.env.SENDGRID_API_KEY, // Your SendGrid API Key
-    //   //   },
-    //   // },
-    //   from: process.env.EMAIL_FROM,
-    //   //@ts-ignore
-    //   sendVerificationRequest: async ({ identifier: email, url, token, baseUrl, provider }) => {
-    //     const { server, from } = provider;
-    //     // Initialize SendGrid
-    //     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    EmailProvider({
+      // server: {
+      //   host: 'smtp.sendgrid.net',
+      //   port: 587,
+      //   auth: {
+      //     user: 'apikey', // This is the username SendGrid expects
+      //     pass: process.env.SENDGRID_API_KEY, // Your SendGrid API Key
+      //   },
+      // },
+      from: process.env.EMAIL_FROM,
+      //@ts-ignore
+      sendVerificationRequest: async ({ identifier: email, url, token, baseUrl, provider }) => {
+        const { server, from } = provider;
+        // Initialize SendGrid
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        // Create email data
+        const msg = {
+          to: email,
+          from,
+          subject: `Sign in link for Chatsa`,
+          text: `Use the link below to sign in:\n\n${url}\n\n`,
+          html: `
+  <p>Use the button below to sign in:</p>
+  <a href="${url}" style="
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #0070f3;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+  ">
+    Sign In
+  </a>
+`,
+        }
 
-    //     // Create email data
-    //     const msg = {
-    //       to: email,
-    //       from,
-    //       subject: `Sign in link for ${baseUrl}`,
-    //       text: `Use the link below to sign in:\n\n${url}\n\n`,
-    //       html: `<p>Use the link below to sign in:</p><p><a href="${url}">${url}</a></p>`,
-    //     };
-
-    //     // Send email
-    //     await sgMail.send(msg);
-    //   },
-    // }),
+          // Send email
+          await sgMail.send(msg);
+        },
+      }),
     GoogleProvider({
       // Follow the "Login with Google" tutorial to get your credentials
       clientId: process.env.GOOGLE_ID,
@@ -70,12 +82,14 @@ export const authOptions: NextAuthOptionsExtended = {
 
   callbacks: {
     session: async ({ session, token }) => {
+      // console.log("session Callback:", { session, token });
       if (session?.user) {
         session.user.id = token.sub;
       }
       return session;
     },
     async signIn({ user, account, profile }) {
+      // console.log("signIn Callback:", { account, user, profile });
       if (account.provider === 'google' && user.email) {
         await connectMongo1();
         const existingUser = await User.findOne({ email: user.email });
@@ -84,7 +98,7 @@ export const authOptions: NextAuthOptionsExtended = {
           // If the user already exists, link the Google account to the existing user
           const existingAccount = await Account.findOne({
             provider: 'google',
-            providerAccountId: profile.sub,
+            providerAccountId: profile?.sub,
           });
 
           if (!existingAccount) {
@@ -93,7 +107,7 @@ export const authOptions: NextAuthOptionsExtended = {
               userId: existingUser._id,
               type: 'oauth',
               provider: 'google',
-              providerAccountId: profile.sub,
+              providerAccountId: profile?.sub,
               access_token: account.access_token,
               expires_at: account.expires_at,
               token_type: account.token_type,
@@ -118,7 +132,7 @@ export const authOptions: NextAuthOptionsExtended = {
             userId: newUser._id,
             type: 'oauth',
             provider: 'google',
-            providerAccountId: profile.sub,
+            providerAccountId: profile?.sub,
             access_token: account.access_token,
             expires_at: account.expires_at,
             token_type: account.token_type,
@@ -132,6 +146,14 @@ export const authOptions: NextAuthOptionsExtended = {
         }
       }
       return true; // Allow sign-in for other providers
+    },
+    async jwt({ token, user, account, profile }) {
+      // console.log("JWT Callback:", { token, user });
+      // Ensure `user` or `account` are not undefined before using them
+      if (user) {
+        token.id = user.id;  // <-- Could be undefined if not checked
+      }
+      return token;
     },
   },
   session: {
