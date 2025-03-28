@@ -9,7 +9,17 @@ const config = {
   ],
   darkMode: ['class'],
   theme: {
-    extend: {},
+    extend: {
+      animation: {
+        'infinite-scroll': 'infinite-scroll 25s linear infinite',
+      },
+      keyframes: {
+        'infinite-scroll': {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(calc(-100% - 1.5rem))' }, // 1.5rem accounts for the gap-6
+        },
+      },
+    },
   },
   plugins: [
     require('daisyui'),
