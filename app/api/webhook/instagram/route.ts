@@ -226,7 +226,6 @@ export async function POST(request: Request) {
                 });
                 const response_image_data = await response_image.json();
                 console.log(response_image_data)
-                console.log(image_payload)
                 await sleep(2000)
                 conversation.messages.push({
                   role: "assistant",
@@ -317,8 +316,7 @@ export async function POST(request: Request) {
             conversation.messages.push({ role: "assistant", content: nodeMessage });
 
             if (nodeImage) {
-              // send iamge to from number
-              const response_image = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+              const image_payload = {
                 recipient: {
                   id: sender
                 },
@@ -330,9 +328,18 @@ export async function POST(request: Request) {
                     }
                   }
                 },
-              }, {
-                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              }
+              // send iamge to from number
+              const response_image = await fetch(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`,
+                  "Content-Type": 'application/json'
+                },
+                body: JSON.stringify(image_payload),
               });
+              const response_image_data = await response_image.json();
+              console.log(response_image_data)
               await sleep(2000)
               conversation.messages.push({
                 role: "assistant",
@@ -382,7 +389,10 @@ export async function POST(request: Request) {
               };
 
               await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, buttonsPayload, {
-                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                headers: {
+                  Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`,
+                  "Content-Type": 'application/json'
+                }
               });
 
               conversation.messages.push({ role: "user", content: text });
