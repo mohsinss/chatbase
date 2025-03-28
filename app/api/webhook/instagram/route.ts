@@ -7,6 +7,7 @@ import axios from 'axios';
 import { getAIResponse } from '@/libs/utils-ai';
 import { sleep } from '@/libs/utils';
 import Dataset from '@/models/Dataset';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -182,7 +183,6 @@ export async function POST(request: Request) {
                 }
               };
 
-              await sleep(2000)
               // send text msg to to sender
               const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
                 recipient: {
@@ -198,8 +198,7 @@ export async function POST(request: Request) {
               conversation.messages.push({ role: "assistant", content: nodeMessage });
 
               if (nodeImage) {
-                // send iamge to to sender
-                const response_image = await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+                const image_payload = {
                   recipient: {
                     id: sender
                   },
@@ -208,13 +207,26 @@ export async function POST(request: Request) {
                       type: 'image',
                       payload: {
                         url: nodeImage,
-                        is_reusable: true
+                        // is_reusable: true
                       }
                     }
                   },
-                }, {
-                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                }
+                console.log(nodeImage)
+
+                await sleep(2000)
+                // send iamge to to sender
+                const response_image = await fetch(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`,
+                    "Content-Type": 'application/json'
+                  },
+                  body: JSON.stringify(image_payload),
                 });
+                const response_image_data = await response_image.json();
+                console.log(response_image_data)
+                console.log(image_payload)
                 await sleep(2000)
                 conversation.messages.push({
                   role: "assistant",
@@ -469,7 +481,7 @@ export async function POST(request: Request) {
     // Respond with a 200 OK status
     return NextResponse.json({ status: 'OK' }, { status: 200 });
   } catch (error) {
-    console.error('Error processing webhook event:', error);
+    // console.error('Error processing webhook event:', error);
 
     if (process.env.ENABLE_WEBHOOK_LOGGING_INSTAGRAM) {
       const response = await fetch('http://webhook.mrcoders.org/instagram-page-error.php', {
