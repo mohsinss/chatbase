@@ -102,10 +102,10 @@ export default function Footer() {
             © {currentYear} ChatSa. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link href="/privacy" className="text-sm text-gray-500 hover:text-indigo-600">
+            <Link href="/privacy-policy" className="text-sm text-gray-500 hover:text-indigo-600">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="text-sm text-gray-500 hover:text-indigo-600">
+            <Link href="/tos" className="text-sm text-gray-500 hover:text-indigo-600">
               Terms of Service
             </Link>
             <Link href="/cookies" className="text-sm text-gray-500 hover:text-indigo-600">
