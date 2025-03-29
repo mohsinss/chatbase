@@ -216,25 +216,12 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   };
 
   const handleSave = async () => {
-    setLoading(true);
     try {
-      console.log('Before configToSave - tooltipDelay in config:', config.tooltipDelay);
-      console.log('Before configToSave - tooltipDelay type:', typeof config.tooltipDelay);
+      setLoading(true);
       
-      // Ensure tooltipDelay is a valid number
-      let tooltipDelay = config.tooltipDelay;
-      if (isNaN(Number(tooltipDelay))) {
-        console.log('Invalid tooltipDelay value, setting to default 1');
-        tooltipDelay = 1;
-      } else {
-        tooltipDelay = Number(tooltipDelay);
-      }
-      
-      // Build request payload without MongoDB internal fields
+      // Prepare the request payload
       const requestPayload = {
         chatbotId,
-        tooltipDelay: tooltipDelay,
-        displayName: config.displayName,
         initialMessage: config.initialMessage,
         suggestedMessages: config.suggestedMessages,
         messagePlaceholder: config.messagePlaceholder,
@@ -245,7 +232,9 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         syncColors: config.syncColors,
         bubbleAlignment: config.bubbleAlignment,
         autoShowDelay: config.autoShowDelay,
+        tooltipDelay: Number(config.tooltipDelay) || 1, // Ensure it's a number
         theme: config.theme,
+        displayName: config.displayName,
         footerText: config.footerText,
         roundedHeaderCorners: config.roundedHeaderCorners,
         roundedChatCorners: config.roundedChatCorners,
@@ -272,6 +261,22 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         console.error('Server returned error:', response.status);
         console.error('Error response data:', savedData);
         throw new Error(savedData.error || savedData.details || 'Failed to save settings');
+      }
+
+      // Update dataset name in Trieve to keep it in sync
+      const datasetResponse = await fetch(`/api/chatbot/update/dataset-name`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chatbotId,
+          name: config.displayName,
+        }),
+      });
+
+      if (!datasetResponse.ok) {
+        console.warn('Failed to update dataset name in Trieve');
       }
 
       console.log('After save - Server response:', savedData);
@@ -351,6 +356,15 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           tooltipDelay: finalValue
         }
       }, '*');
+    } else if (key === 'displayName') {
+      // Update display name in config
+      setConfig(prev => ({
+        ...prev,
+        displayName: value
+      }));
+      
+      // Sync chatbot name with display name
+      syncChatbotName(value);
     } else {
       setConfig(prev => ({
         ...prev,
@@ -358,6 +372,29 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
       }));
     }
   }
+
+  // Function to sync chatbot name in database when displayName changes
+  const syncChatbotName = async (name: string) => {
+    try {
+      // Update chatbot name in the database
+      const response = await fetch(`/api/chatbot/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chatbotId,
+          name: name,
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to sync chatbot name in database');
+      }
+    } catch (error) {
+      console.error('Error syncing chatbot name:', error);
+    }
+  };
 
   const handleImageUpload = async (type: 'profile' | 'icon' | 'background') => {
     const inputRef = type === 'profile' ? profileInputRef : type === 'icon' ? chatIconInputRef : backgroundInputRef;
