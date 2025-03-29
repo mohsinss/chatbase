@@ -71,6 +71,7 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
       languageDistribution: {}
     }
   });
+  const [totalCreditsUsed, setTotalCreditsUsed] = useState(0);
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
 
@@ -89,10 +90,41 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
       if (!response.ok) throw new Error('Failed to fetch usage data');
       const data = await response.json();
       setUsageData(data);
+      
+      // Calculate the actual total credits used from each chatbot's data
+      fetchChatbotCredits(data);
     } catch (error) {
       console.error('Error fetching usage data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const fetchChatbotCredits = async (data: UsageData) => {
+    try {
+      // Get all chatbot IDs
+      const chatbotIds = Object.keys(data.usage);
+      let totalCredits = 0;
+      
+      // Fetch credit usage for each chatbot
+      for (const chatbotId of chatbotIds) {
+        const response = await fetch(`/api/chatbot/analytics/${chatbotId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dateRange)
+        });
+        
+        if (response.ok) {
+          const analyticsData = await response.json();
+          if (analyticsData.creditsUsed) {
+            totalCredits += analyticsData.creditsUsed;
+          }
+        }
+      }
+      
+      setTotalCreditsUsed(totalCredits);
+    } catch (error) {
+      console.error('Error fetching chatbot credits:', error);
     }
   };
 
@@ -129,7 +161,7 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
         <Card className="p-6">
           <div className="flex flex-col">
             <div className="text-5xl font-bold">
-              {usageData.chatbots.creditsUsed}
+              {totalCreditsUsed}
               <span className="text-xl text-gray-500 font-normal"> / {planConfig.credits}</span>
             </div>
             <div className="text-gray-500 mt-2">Total Credits Used</div>
@@ -176,17 +208,29 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
               <YAxis />
               <Tooltip />
               <Legend />
-              {Object.keys(usageData.usage).map((chatbotId, index) => (
-                <Area
-                  key={chatbotId}
-                  type="monotone"
-                  dataKey="count"
-                  name={usageData.usage[chatbotId].name}
-                  stackId="1"
-                  fill={COLORS[index % COLORS.length]}
-                  stroke={COLORS[index % COLORS.length]}
-                />
-              ))}
+              {Object.keys(usageData.usage).map((chatbotId, index) => {
+                // Find this chatbot's daily usage data
+                const chatbotData = usageData.usage[chatbotId];
+                // Map the data to ensure proper structure for stacked area chart
+                return (
+                  <Area
+                    key={chatbotId}
+                    type="monotone"
+                    // Map the actual data from each chatbot's dailyUsage
+                    dataKey={(entry) => {
+                      // Find matching date in this chatbot's dailyUsage
+                      const matchingDataPoint = chatbotData.dailyUsage.find(
+                        (dataPoint) => dataPoint.date === entry.date
+                      );
+                      return matchingDataPoint ? matchingDataPoint.count : 0;
+                    }}
+                    name={chatbotData.name}
+                    stackId="1"
+                    fill={COLORS[index % COLORS.length]}
+                    stroke={COLORS[index % COLORS.length]}
+                  />
+                );
+              })}
             </AreaChart>
           </ResponsiveContainer>
         </div>

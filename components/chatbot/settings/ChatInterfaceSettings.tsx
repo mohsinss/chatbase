@@ -52,7 +52,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     autoShowDelay: 3,
     tooltipDelay: 1,
     theme: 'light',
-    displayName: "Chatbot",
+    displayName: "Loading...",
     footerText: "",
     roundedHeaderCorners: false,
     roundedChatCorners: false,
@@ -119,6 +119,41 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     fetchSettings();
   }, [chatbotId]);
 
+  // Refresh settings when window gains focus (to sync with changes from other tabs/components)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchSettings();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  // Listen for name updates from GeneralSettings
+  useEffect(() => {
+    const handleNameUpdate = (event: CustomEvent) => {
+      const { chatbotId: updatedChatbotId, name } = event.detail;
+      
+      // Only update if it's for this chatbot
+      if (updatedChatbotId === chatbotId) {
+        setConfig(prev => ({
+          ...prev,
+          displayName: name
+        }));
+      }
+    };
+
+    // Add event listener with type assertion
+    window.addEventListener('chatbot-name-updated', handleNameUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('chatbot-name-updated', handleNameUpdate as EventListener);
+    };
+  }, [chatbotId]);
+
   useEffect(() => {
     const chatbotIconDiv = document.getElementById('chatbot-widget-icon');
     if (chatbotIconDiv) {
@@ -159,6 +194,13 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
   const fetchSettings = async () => {
     try {
       console.log('Fetching settings for chatbotId:', chatbotId);
+      
+      // First, fetch chatbot details to get the latest name
+      const chatbotResponse = await fetch(`/api/chatbot/list/single?chatbotId=${chatbotId}`);
+      const chatbotData = await chatbotResponse.json();
+      const chatbotName = chatbotData.chatbot?.name || "Chatbot";
+      
+      // Then fetch interface settings
       const response = await fetch(`/api/chatbot/interface-settings?chatbotId=${chatbotId}`);
       const data = await response.json();
       
@@ -190,6 +232,8 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
           const newConfig = {
             ...config,
             ...data,
+            // Always use the name from the chatbot (GeneralSettings)
+            displayName: chatbotName,
             // Set tooltipDelay explicitly to ensure it's not undefined
             tooltipDelay: tooltipDelayValue,
             chatBackgroundOpacity: data.chatBackgroundOpacity ?? 0.1

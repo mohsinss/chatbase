@@ -169,6 +169,11 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
         console.warn('Failed to update dataset name in Trieve');
       }
 
+      // Dispatch a custom event to notify other components about the name change
+      window.dispatchEvent(new CustomEvent('chatbot-name-updated', { 
+        detail: { chatbotId, name: newName } 
+      }));
+
       // Show success notification
       setNotification({
         message: "Chatbot name updated successfully",
