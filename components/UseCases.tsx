@@ -62,9 +62,10 @@ export default function UseCases() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {useCases.map((useCase, index) => (
-            <div 
-              key={index} 
-              className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100"
+            <Link 
+              key={index}
+              href={`/use-cases/${useCase.title.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and')}`}
+              className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 cursor-pointer"
               data-aos="fade-up"
               data-aos-delay={100 + (index * 100)}
             >
@@ -91,13 +92,11 @@ export default function UseCases() {
                     </li>
                   ))}
                 </ul>
-                <Link href={`/use-cases/${useCase.title.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and')}`}>
-                  <Button variant="outline" className="w-full text-indigo-600 border-indigo-600 hover:bg-indigo-50">
-                    Learn more
-                  </Button>
-                </Link>
+                <div className="w-full text-indigo-600 border border-indigo-600 rounded-md py-2 px-4 text-center hover:bg-indigo-50 transition-colors">
+                  Learn more
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

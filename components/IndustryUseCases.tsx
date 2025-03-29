@@ -106,49 +106,51 @@ export default function IndustryUseCases() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {industries.map((industry, index) => (
-            <div 
-              key={index} 
-              className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300"
-              data-aos="fade-up"
-              data-aos-delay={100 + (index * 100)}
+            <Link 
+              href={`/industries/${industry.name.toLowerCase().replace(/\s+/g, '-')}`} 
+              key={index}
             >
-              <div className="h-48 relative">
-                <Image
-                  src={industry.image}
-                  alt={`${industry.name} industry`}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-                  <div className="p-6">
-                    <div className="flex items-center mb-2">
-                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-3">
-                        {renderIcon(industry.name)}
+              <div 
+                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 h-full cursor-pointer"
+                data-aos="fade-up"
+                data-aos-delay={100 + (index * 100)}
+              >
+                <div className="h-48 relative">
+                  <Image
+                    src={industry.image}
+                    alt={`${industry.name} industry`}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
+                    <div className="p-6">
+                      <div className="flex items-center mb-2">
+                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-3">
+                          {renderIcon(industry.name)}
+                        </div>
+                        <h3 className="text-xl font-bold text-white">{industry.name}</h3>
                       </div>
-                      <h3 className="text-xl font-bold text-white">{industry.name}</h3>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">{industry.description}</p>
-                <ul className="space-y-2 mb-4">
-                  {industry.benefits.map((benefit, i) => (
-                    <li key={i} className="flex items-start">
-                      <svg className="h-5 w-5 text-indigo-500 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href={`/industries/${industry.name.toLowerCase().replace(/\s+/g, '-')}`}>
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4">{industry.description}</p>
+                  <ul className="space-y-2 mb-4">
+                    {industry.benefits.map((benefit, i) => (
+                      <li key={i} className="flex items-start">
+                        <svg className="h-5 w-5 text-indigo-500 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
                   <Button variant="outline" className="w-full text-indigo-600 border-indigo-600 hover:bg-indigo-50">
                     Learn more
                   </Button>
-                </Link>
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
