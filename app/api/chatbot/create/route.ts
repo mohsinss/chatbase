@@ -38,7 +38,7 @@ export async function POST(req: Request) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        dataset_name: name || `Chatbot Dataset ${chatbotId}`,
+        dataset_name: name || `Chatbot ${chatbotId}`,
         server_configuration: {
           chunk_size: 512,
           chunk_overlap: 50

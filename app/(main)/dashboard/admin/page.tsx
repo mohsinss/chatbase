@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardNav from '@/components/DashboardNav';
 import AdminMetrics from '@/components/AdminMetrics';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface ChatbotType {
   chatbotId: string;
@@ -38,6 +40,8 @@ export default function AdminDashboard() {
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
   const [updatingPlan, setUpdatingPlan] = useState<string | null>(null);
+  const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -161,18 +165,27 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user? All their teams and chatbots will also be deleted. This action cannot be undone.')) {
-      return;
-    }
-
     setDeletingUser(userId);
     try {
+      // Find all chatbotIds associated with this user
+      const userToDelete = users.find(user => user._id === userId);
+      if (!userToDelete) throw new Error('User not found');
+      
+      // Collect all chatbot IDs from all teams
+      const chatbotIds = userToDelete.teams.flatMap(team => 
+        team.chatbots.map(bot => bot.chatbotId)
+      );
+      
       const response = await fetch('/api/admin/user/delete', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ 
+          userId,
+          chatbotIds,
+          teamIds: userToDelete.teams.map(team => team.teamId)
+        }),
       });
 
       if (!response.ok) {
@@ -187,7 +200,13 @@ export default function AdminDashboard() {
       alert('Failed to delete user');
     } finally {
       setDeletingUser(null);
+      setIsDeleteUserDialogOpen(false);
     }
+  };
+
+  const initiateUserDelete = (userId: string) => {
+    setUserToDelete(userId);
+    setIsDeleteUserDialogOpen(true);
   };
 
   const handleChatbotSelect = (userId: string, teamId: string, chatbotId: string) => {
@@ -296,7 +315,7 @@ export default function AdminDashboard() {
                 <div className="p-4 bg-white">
                   <div className="flex justify-end mb-4">
                     <button
-                      onClick={() => handleDeleteUser(user._id)}
+                      onClick={() => initiateUserDelete(user._id)}
                       className={`px-3 py-1 text-sm text-red-500 bg-white border-2 border-red-500 rounded hover:bg-red-50 transition-all ${
                         deletingUser === user._id ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
@@ -404,6 +423,32 @@ export default function AdminDashboard() {
           ))}
         </div>
       </div>
+
+      {/* User Delete Dialog */}
+      <Dialog open={isDeleteUserDialogOpen} onOpenChange={setIsDeleteUserDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this user? This action cannot be undone and all associated data including teams, chatbots, and conversations will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteUserDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => userToDelete && handleDeleteUser(userToDelete)}
+            >
+              Delete Permanently
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 } 

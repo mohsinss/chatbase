@@ -81,12 +81,15 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
   const handleSave = async () => {
     setLoading(true);
     try {
+      // Update name first to ensure syncing with external services
+      await handleNameUpdate(name);
+      
+      // Update other settings
       const response = await fetch("/api/chatbot/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chatbotId,
-          name,
           characterCount,
           creditLimitEnabled: creditLimit,
           creditLimit: creditLimitValue,
@@ -118,6 +121,7 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
 
   const handleNameUpdate = async (newName: string) => {
     try {
+      // Update chatbot name in the database
       const response = await fetch(`/api/chatbot/update`, {
         method: 'PUT',
         headers: {
@@ -132,10 +136,53 @@ const GeneralSettings = ({ chatbotId }: GeneralSettingsProps) => {
       if (!response.ok) {
         throw new Error('Failed to update chatbot name');
       }
+      
+      // Update interface settings to keep display name in sync
+      const interfaceResponse = await fetch('/api/chatbot/interface-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chatbotId,
+          displayName: newName,
+        }),
+      });
 
-      // Optionally refresh the page or update local state
+      if (!interfaceResponse.ok) {
+        console.warn('Failed to update interface settings with new name');
+      }
+
+      // Update dataset name in Trieve
+      const datasetResponse = await fetch(`/api/chatbot/update/dataset-name`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chatbotId,
+          name: newName,
+        }),
+      });
+
+      if (!datasetResponse.ok) {
+        console.warn('Failed to update dataset name in Trieve');
+      }
+
+      // Show success notification
+      setNotification({
+        message: "Chatbot name updated successfully",
+        type: "success"
+      });
+      
+      // Refresh settings
+      fetchSettings();
     } catch (error) {
       console.error('Error updating chatbot name:', error);
+      setNotification({
+        message: "Failed to update chatbot name",
+        type: "error"
+      });
     }
   };
 
