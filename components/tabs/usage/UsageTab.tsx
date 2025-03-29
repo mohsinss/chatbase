@@ -18,9 +18,10 @@ import {
   Line,
   Area,
   AreaChart,
+  ComposedChart,
 } from "recharts";
 import config from "@/config";
-import { Loader2 } from "lucide-react";
+import { BarChart3, LineChart as LineChartIcon, AreaChart as AreaChartIcon, MoreHorizontal, Loader2, PieChart as PieChartIcon, BarChart as BarChartIcon, RefreshCcw, Focus } from "lucide-react";
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#22c55e', '#ef4444', '#f97316', '#06b6d4', '#ec4899', '#14b8a6'];
 
@@ -75,6 +76,8 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
   });
   const [totalCreditsUsed, setTotalCreditsUsed] = useState(0);
   const [chatbotCredits, setChatbotCredits] = useState<{[chatbotId: string]: number}>({});
+  const [chartType, setChartType] = useState<'area' | 'line' | 'bar' | 'composed' | 'pie'>('area');
+  const [focusedChatbots, setFocusedChatbots] = useState<Set<string>>(new Set());
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
 
@@ -153,6 +156,27 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleChartItemClick = (chatbotId: string) => {
+    setFocusedChatbots(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(chatbotId)) {
+        // If already selected, remove it
+        newSet.delete(chatbotId);
+        console.log('Unfocusing chatbot:', chatbotId);
+      } else {
+        // If not selected, add it
+        newSet.add(chatbotId);
+        console.log('Focusing on chatbot:', chatbotId);
+      }
+      return newSet;
+    });
+  };
+
+  // Helper function to check if a chatbot is focused
+  const isChatbotFocused = (chatbotId: string) => {
+    return focusedChatbots.size === 0 || focusedChatbots.has(chatbotId);
   };
 
   if (loading) return (
@@ -258,41 +282,308 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
 
       {/* Usage Over Time */}
       <Card className="p-6">
-        <h2 className="text-xl font-bold mb-4">Usage Over Time</h2>
-        <div className="h-[400px] w-full">
-          <ResponsiveContainer>
-            <AreaChart data={usageData.aggregatedData.messagesByDate}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              {Object.keys(usageData.usage).map((chatbotId, index) => {
-                // Find this chatbot's daily usage data
-                const chatbotData = usageData.usage[chatbotId];
-                // Map the data to ensure proper structure for stacked area chart
-                return (
-                  <Area
-                    key={chatbotId}
-                    type="monotone"
-                    // Map the actual data from each chatbot's dailyUsage
-                    dataKey={(entry) => {
-                      // Find matching date in this chatbot's dailyUsage
-                      const matchingDataPoint = chatbotData.dailyUsage.find(
-                        (dataPoint) => dataPoint.date === entry.date
-                      );
-                      return matchingDataPoint ? matchingDataPoint.count : 0;
-                    }}
-                    name={chatbotData.name}
-                    stackId="1"
-                    fill={COLORS[index % COLORS.length]}
-                    stroke={COLORS[index % COLORS.length]}
-                  />
-                );
-              })}
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Usage Over Time</h2>
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => setChartType('area')}
+              className={`p-2 rounded-md ${chartType === 'area' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+              title="Area Chart"
+            >
+              <AreaChartIcon size={18} />
+            </button>
+            <button 
+              onClick={() => setChartType('line')}
+              className={`p-2 rounded-md ${chartType === 'line' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+              title="Line Chart"
+            >
+              <LineChartIcon size={18} />
+            </button>
+            <button 
+              onClick={() => setChartType('bar')}
+              className={`p-2 rounded-md ${chartType === 'bar' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+              title="Bar Chart"
+            >
+              <BarChart3 size={18} />
+            </button>
+            <button 
+              onClick={() => setChartType('pie')}
+              className={`p-2 rounded-md ${chartType === 'pie' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+              title="Pie Chart"
+            >
+              <PieChartIcon size={18} />
+            </button>
+            <button 
+              onClick={() => setChartType('composed')}
+              className={`p-2 rounded-md ${chartType === 'composed' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+              title="Combined Chart"
+            >
+              <MoreHorizontal size={18} />
+            </button>
+            {focusedChatbots.size > 0 && (
+              <button 
+                onClick={() => setFocusedChatbots(new Set())}
+                className="p-2 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-700"
+                title="Reset Selection"
+              >
+                <RefreshCcw size={18} />
+              </button>
+            )}
+          </div>
         </div>
+        <div className="h-[400px] w-full">
+          {/* Wrap each chart type in its own ResponsiveContainer to avoid multiple children error */}
+          {chartType === 'area' && (
+            <ResponsiveContainer>
+              <AreaChart data={usageData.aggregatedData.messagesByDate}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend onClick={(e) => {
+                  // Find the chatbotId by matching the name
+                  const chatbotId = Object.keys(usageData.usage).find(
+                    id => usageData.usage[id].name === e.value
+                  );
+                  if (chatbotId) handleChartItemClick(chatbotId);
+                }} />
+                {Object.keys(usageData.usage).map((chatbotId, index) => {
+                  const chatbotData = usageData.usage[chatbotId];
+                  const isFocused = isChatbotFocused(chatbotId);
+                  
+                  return (
+                    <Area
+                      key={chatbotId}
+                      type="monotone"
+                      dataKey={(entry) => {
+                        if (!entry || !entry.date) return 0;
+                        const matchingDataPoint = chatbotData.dailyUsage.find(
+                          (dataPoint) => dataPoint.date === entry.date
+                        );
+                        return matchingDataPoint ? matchingDataPoint.count : 0;
+                      }}
+                      name={chatbotData.name}
+                      stackId="1"
+                      fill={isFocused ? COLORS[index % COLORS.length] : COLORS[index % COLORS.length] + '40'}
+                      stroke={isFocused ? COLORS[index % COLORS.length] : COLORS[index % COLORS.length] + '40'}
+                      opacity={isFocused ? 1 : 0.6}
+                      onClick={() => {
+                        console.log('Area clicked for chatbot:', chatbotId);
+                        handleChartItemClick(chatbotId);
+                      }}
+                    />
+                  );
+                })}
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+          
+          {chartType === 'line' && (
+            <ResponsiveContainer>
+              <LineChart data={usageData.aggregatedData.messagesByDate}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend onClick={(e) => {
+                  // Find the chatbotId by matching the name
+                  const chatbotId = Object.keys(usageData.usage).find(
+                    id => usageData.usage[id].name === e.value
+                  );
+                  if (chatbotId) handleChartItemClick(chatbotId);
+                }} />
+                {Object.keys(usageData.usage).map((chatbotId, index) => {
+                  const chatbotData = usageData.usage[chatbotId];
+                  const isFocused = isChatbotFocused(chatbotId);
+                  
+                  return (
+                    <Line
+                      key={chatbotId}
+                      type="monotone"
+                      dataKey={(entry) => {
+                        if (!entry || !entry.date) return 0;
+                        const matchingDataPoint = chatbotData.dailyUsage.find(
+                          (dataPoint) => dataPoint.date === entry.date
+                        );
+                        return matchingDataPoint ? matchingDataPoint.count : 0;
+                      }}
+                      name={chatbotData.name}
+                      stroke={isFocused ? COLORS[index % COLORS.length] : COLORS[index % COLORS.length] + '40'}
+                      strokeWidth={isFocused ? 2 : 1}
+                      dot={isFocused ? { r: 3 } : { r: 2, fill: COLORS[index % COLORS.length] + '40', strokeWidth: 0 }}
+                      activeDot={isFocused ? { r: 5 } : { r: 3 }}
+                      opacity={isFocused ? 1 : 0.6}
+                      onClick={() => {
+                        console.log('Line clicked for chatbot:', chatbotId);
+                        handleChartItemClick(chatbotId);
+                      }}
+                    />
+                  );
+                })}
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+          
+          {chartType === 'bar' && (
+            <ResponsiveContainer>
+              <BarChart data={usageData.aggregatedData.messagesByDate}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend onClick={(e) => {
+                  // Find the chatbotId by matching the name
+                  const chatbotId = Object.keys(usageData.usage).find(
+                    id => usageData.usage[id].name === e.value
+                  );
+                  if (chatbotId) handleChartItemClick(chatbotId);
+                }} />
+                {Object.keys(usageData.usage).map((chatbotId, index) => {
+                  const chatbotData = usageData.usage[chatbotId];
+                  const isFocused = isChatbotFocused(chatbotId);
+                  
+                  return (
+                    <Bar
+                      key={chatbotId}
+                      dataKey={(entry) => {
+                        if (!entry || !entry.date) return 0;
+                        const matchingDataPoint = chatbotData.dailyUsage.find(
+                          (dataPoint) => dataPoint.date === entry.date
+                        );
+                        return matchingDataPoint ? matchingDataPoint.count : 0;
+                      }}
+                      name={chatbotData.name}
+                      stackId={focusedChatbots.size > 0 ? (isFocused ? "focused" : "unfocused") : "stack"}
+                      fill={isFocused ? COLORS[index % COLORS.length] : COLORS[index % COLORS.length] + '40'}
+                      opacity={isFocused ? 1 : 0.6}
+                      onClick={() => {
+                        console.log('Bar clicked for chatbot:', chatbotId);
+                        handleChartItemClick(chatbotId);
+                      }}
+                    />
+                  );
+                })}
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+          
+          {chartType === 'pie' && (
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={Object.keys(usageData.usage).map((chatbotId, index) => {
+                    const chatbotData = usageData.usage[chatbotId];
+                    const totalMessages = chatbotData.dailyUsage.reduce((sum, day) => sum + day.count, 0);
+                    const isFocused = isChatbotFocused(chatbotId);
+                    
+                    return {
+                      name: chatbotData.name,
+                      value: totalMessages,
+                      chatbotId: chatbotId,
+                      fill: isFocused ? COLORS[index % COLORS.length] : COLORS[index % COLORS.length] + '40',
+                      opacity: isFocused ? 1 : 0.6
+                    };
+                  })}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={120}
+                  paddingAngle={2}
+                  dataKey="value"
+                  nameKey="name"
+                  label={({name, value, percent}) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  onClick={(data) => {
+                    console.log('Pie segment clicked for chatbot:', data.chatbotId);
+                    handleChartItemClick(data.chatbotId);
+                  }}
+                />
+                <Tooltip formatter={(value) => Number(value).toLocaleString()} />
+                <Legend onClick={(e) => {
+                  // Find the chatbotId by matching the name
+                  const chatbotId = Object.keys(usageData.usage).find(
+                    id => usageData.usage[id].name === e.value
+                  );
+                  if (chatbotId) handleChartItemClick(chatbotId);
+                }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+          
+          {chartType === 'composed' && (
+            <ResponsiveContainer>
+              <ComposedChart data={usageData.aggregatedData.messagesByDate}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend onClick={(e) => {
+                  // Find the chatbotId by matching the name
+                  const chatbotId = Object.keys(usageData.usage).find(
+                    id => usageData.usage[id].name === e.value
+                  );
+                  if (chatbotId) handleChartItemClick(chatbotId);
+                }} />
+                {Object.keys(usageData.usage).map((chatbotId, index) => {
+                  const chatbotData = usageData.usage[chatbotId];
+                  const isFocused = isChatbotFocused(chatbotId);
+                  
+                  // Alternate between bar and line for different chatbots
+                  return index % 2 === 0 ? (
+                    <Bar
+                      key={chatbotId}
+                      dataKey={(entry) => {
+                        if (!entry || !entry.date) return 0;
+                        const matchingDataPoint = chatbotData.dailyUsage.find(
+                          (dataPoint) => dataPoint.date === entry.date
+                        );
+                        return matchingDataPoint ? matchingDataPoint.count : 0;
+                      }}
+                      name={chatbotData.name}
+                      fill={isFocused ? COLORS[index % COLORS.length] : COLORS[index % COLORS.length] + '40'}
+                      opacity={isFocused ? 1 : 0.6}
+                      barSize={20}
+                      onClick={() => {
+                        console.log('Composed Bar clicked for chatbot:', chatbotId);
+                        handleChartItemClick(chatbotId);
+                      }}
+                    />
+                  ) : (
+                    <Line
+                      key={chatbotId}
+                      type="monotone"
+                      dataKey={(entry) => {
+                        if (!entry || !entry.date) return 0;
+                        const matchingDataPoint = chatbotData.dailyUsage.find(
+                          (dataPoint) => dataPoint.date === entry.date
+                        );
+                        return matchingDataPoint ? matchingDataPoint.count : 0;
+                      }}
+                      name={chatbotData.name}
+                      stroke={isFocused ? COLORS[index % COLORS.length] : COLORS[index % COLORS.length] + '40'}
+                      strokeWidth={isFocused ? 2 : 1}
+                      dot={isFocused ? { r: 3 } : { r: 2, fill: COLORS[index % COLORS.length] + '40', strokeWidth: 0 }}
+                      activeDot={isFocused ? { r: 5 } : { r: 3 }}
+                      opacity={isFocused ? 1 : 0.6}
+                      onClick={() => {
+                        console.log('Composed Line clicked for chatbot:', chatbotId);
+                        handleChartItemClick(chatbotId);
+                      }}
+                    />
+                  );
+                })}
+              </ComposedChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+        {focusedChatbots.size > 0 && (
+          <div className="mt-3 flex items-center justify-center space-x-1 text-sm text-blue-600">
+            <Focus size={14} />
+            <span>
+              Focusing on {Array.from(focusedChatbots).map(id => usageData.usage[id]?.name).join(', ')}. 
+              Click a chatbot again to deselect or use the reset button to clear all.
+            </span>
+          </div>
+        )}
       </Card>
 
       {/* Model Distribution */}
@@ -302,9 +593,10 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
           <ResponsiveContainer>
             <PieChart>
               <Pie
-                data={Object.entries(usageData.aggregatedData.modelDistribution).map(([model, count]) => ({
+                data={Object.entries(usageData.aggregatedData.modelDistribution).map(([model, count], index) => ({
                   name: model,
-                  value: count
+                  value: count,
+                  fill: COLORS[index % COLORS.length]
                 }))}
                 cx="50%"
                 cy="50%"
@@ -314,15 +606,42 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
                 dataKey="value"
                 nameKey="name"
                 label={({name, value}) => value > 0 ? `${name} (${value})` : ''}
-              >
-                {Object.entries(usageData.aggregatedData.modelDistribution).map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => Number(value).toLocaleString()} />
+              />
+              <Tooltip />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
+        </div>
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+          {Object.entries(usageData.aggregatedData.modelDistribution).map(([model, count], index) => {
+            // Calculate model-specific credits
+            let totalChars = 0;
+            Object.values(usageData.usage).forEach(chatbot => {
+              if (chatbot.modelUsage && chatbot.modelUsage[model]) {
+                const modelMsgCount = chatbot.modelUsage[model];
+                const totalMsgCount = Object.values(chatbot.modelUsage).reduce((sum, count) => sum + Number(count), 0);
+                const proportion = modelMsgCount / totalMsgCount;
+                totalChars += chatbot.totalChars * proportion;
+              }
+            });
+            const modelCredits = Math.round(totalChars / 4);
+            
+            return (
+              <div key={index} className="flex justify-between items-center p-2 rounded-md border">
+                <div className="flex items-center">
+                  <div 
+                    className="w-3 h-3 rounded-full mr-2" 
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  />
+                  <span className="font-medium">{model}</span>
+                </div>
+                <div className="text-right">
+                  <div>{Number(count).toLocaleString()} messages</div>
+                  <div className="text-xs text-gray-500">{modelCredits.toLocaleString()} credits</div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </Card>
 
@@ -353,10 +672,46 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {Object.entries(usageData.usage).map(([chatbotId, data], index) => {
           const chatbotCreditUsage = chatbotCredits[chatbotId] || 0;
+          const isSelected = focusedChatbots.has(chatbotId);
           
           return (
-            <Card key={chatbotId} className="p-6">
-              <h3 className="text-lg font-bold mb-4">{data.name}</h3>
+            <Card 
+              key={chatbotId} 
+              className={`p-6 transition-colors ${isSelected ? 'border-2' : 'border'}`}
+              style={{
+                borderColor: isSelected ? COLORS[index % COLORS.length] : '',
+                backgroundColor: isSelected ? `${COLORS[index % COLORS.length]}10` : ''
+              }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold flex items-center">
+                  {isSelected && (
+                    <div 
+                      className="w-3 h-3 rounded-full mr-2" 
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    />
+                  )}
+                  {data.name}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleChartItemClick(chatbotId)}
+                    className={`p-1 rounded-md text-xs font-medium transition-colors ${
+                      isSelected 
+                        ? 'bg-primary text-white' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {isSelected ? 'Deselect' : 'Select'}
+                  </button>
+                  <a 
+                    href={`/dashboard/${teamId}/chatbot/${chatbotId}/analytics/chats`} 
+                    className="px-3 py-1 text-sm bg-primary hover:bg-primary/90 text-white rounded-md transition-colors"
+                  >
+                    View Detailed Analytics
+                  </a>
+                </div>
+              </div>
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div>
