@@ -209,43 +209,6 @@ const Hero = () => {
       <div className="absolute inset-0 bg-gradient-radial from-blue-50 to-transparent opacity-70"></div>
       
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Language selector */}
-        <div className="absolute top-0 left-4 z-50">
-          <div className="relative">
-            <button 
-              onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-              className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow px-3 py-2 text-sm font-medium"
-            >
-              <Globe className="w-4 h-4" />
-              {languages.find(l => l.id === language)?.flag}
-              {languages.find(l => l.id === language)?.name}
-              <ChevronDown className="w-4 h-4" />
-            </button>
-            
-            {isLangDropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                <div className="py-1">
-                  {languages.map(lang => (
-                    <button
-                      key={lang.id}
-                      onClick={() => {
-                        setLanguage(lang.id as LanguageType);
-                        setIsLangDropdownOpen(false);
-                      }}
-                      className={`${
-                        language === lang.id ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
-                      } flex items-center w-full px-4 py-2 text-sm`}
-                    >
-                      <span className="mr-2">{lang.flag}</span>
-                      {lang.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        
         <div className="text-center mb-12">
           <div className="inline-block bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-sm font-medium mb-6 animate-fade-up">
             <Sparkles className="inline-block w-4 h-4 mr-2" />
@@ -258,10 +221,10 @@ const Hero = () => {
           </h1>
           
           <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-10 animate-fade-up stagger-2">
-            Build custom AI chatbots trained on your data without coding. Connect to your website in 2 minutes.
+            Build custom AI chatbots trained on a single unified knowledge base. Deploy consistent responses across all social media channels without coding. Connect to your website in 2 minutes.
           </p>
           
-          <div className="flex flex-col items-center justify-center gap-4 animate-fade-up stagger-3 w-full mx-auto mb-12">
+          <div className="flex flex-col items-center justify-center gap-4 animate-fade-up stagger-3 w-full mx-auto mb-6">
             <ButtonSignin 
               text="Get Started Free"
               extraStyle="bg-blue-600 hover:bg-blue-700 text-white px-8 h-16 hover-lift w-[70%] mx-auto text-center inline-flex items-center justify-center text-lg font-semibold tracking-wide shadow-xl transition-all duration-300 rounded-xl"
@@ -271,6 +234,43 @@ const Hero = () => {
         
         <div className="mt-16 animate-blur-in">
           <div className="relative">
+            {/* Language selector repositioned */}
+            <div className="absolute -top-12 left-4 z-20">
+              <div className="relative inline-block">
+                <button 
+                  onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                  className="flex items-center gap-1.5 bg-white hover:bg-gray-50 rounded-lg shadow-sm px-4 py-2 text-sm font-medium border border-gray-200 transition-colors"
+                >
+                  <Globe className="w-4 h-4" />
+                  {languages.find(l => l.id === language)?.flag}
+                  {languages.find(l => l.id === language)?.name}
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+                
+                {isLangDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <div className="py-1">
+                      {languages.map(lang => (
+                        <button
+                          key={lang.id}
+                          onClick={() => {
+                            setLanguage(lang.id as LanguageType);
+                            setIsLangDropdownOpen(false);
+                          }}
+                          className={`${
+                            language === lang.id ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                          } flex items-center w-full px-4 py-2 text-sm hover:bg-gray-50`}
+                        >
+                          <span className="mr-2">{lang.flag}</span>
+                          {lang.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="neo-shadow rounded-2xl p-1 bg-gradient-to-r from-blue-50 to-white">
               <div className="overflow-hidden rounded-xl shadow-sm relative">
                 {/* Fixed position buttons */}
