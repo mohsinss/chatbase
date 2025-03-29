@@ -19,7 +19,7 @@ export default function Home() {
     <div className="bg-gradient-to-b from-slate-50 to-white">
       <Header />
       <Hero />
-      <CompanyLogos />
+      {/* <CompanyLogos /> */}
       <FeaturesSection />
       <HowItWorks />
       {/* <ValueProposition /> */}

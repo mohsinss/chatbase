@@ -3,62 +3,62 @@ import React from 'react';
 export default function RoadmapPage() {
   const quarters = [
     {
-      title: "Q2 2024",
+      title: "Q2 2025",
       status: "in-progress",
       features: [
         {
           name: "Advanced Analytics Dashboard",
           description: "Detailed insights into chatbot performance and user interactions",
           status: "in-development",
-          eta: "May 2024"
+          eta: "May 2025"
         },
         {
           name: "Custom AI Model Training",
           description: "Train models on your specific industry data",
           status: "planned",
-          eta: "June 2024"
+          eta: "June 2025"
         },
         {
           name: "Voice Integration",
           description: "Support for voice commands and responses",
           status: "research",
-          eta: "June 2024"
+          eta: "June 2025"
         }
       ]
     },
     {
-      title: "Q3 2024",
+      title: "Q3 2025",
       status: "planned",
       features: [
         {
           name: "Multi-Agent Collaboration",
           description: "Multiple chatbots working together to solve complex queries",
           status: "planned",
-          eta: "August 2024"
+          eta: "August 2025"
         },
         {
           name: "Sentiment Analysis",
           description: "Real-time analysis of user sentiment during conversations",
           status: "research",
-          eta: "September 2024"
+          eta: "September 2025"
         }
       ]
     },
     {
-      title: "Q4 2024",
+      title: "Q4 2025",
       status: "planned",
       features: [
         {
           name: "Enterprise SSO",
           description: "Single sign-on support for enterprise customers",
           status: "planned",
-          eta: "October 2024"
+          eta: "October 2025"
         },
         {
           name: "Advanced Compliance Tools",
           description: "Enhanced security and compliance features for regulated industries",
           status: "research",
-          eta: "November 2024"
+          eta: "November 2025"
         }
       ]
     }
