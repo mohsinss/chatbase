@@ -7,7 +7,7 @@ import ButtonSignin from "./ButtonSignin";
 
 // Define types
 type LanguageType = "english" | "arabic" | "spanish";
-type PlatformType = "whatsapp" | "twitter" | "facebook" | "instagram" | "snapchat";
+type PlatformType = "whatsapp" | "twitter" | "facebook" | "instagram" | "snapchat" | "web";
 type MessageType = {
   text: string;
   isBot: boolean;
@@ -23,7 +23,7 @@ const Hero = () => {
   // Language options with flags
   const languages = [
     { id: "english" as LanguageType, name: "English", flag: "🇺🇸" },
-    { id: "arabic" as LanguageType, name: "العربية", flag: "🇦🇪" },
+    { id: "arabic" as LanguageType, name: "العربية", flag: "🇸🇦" },
     { id: "spanish" as LanguageType, name: "Español", flag: "🇪🇸" },
   ];
 
@@ -198,6 +198,29 @@ const Hero = () => {
           { text: "¿Cuándo estará listo?", isBot: false },
           { text: "Lanzaremos nuestro servicio completo de Snapchat el próximo mes con snaps diarios de entrenamiento, contenido exclusivo tras bastidores y destacados de miembros. ¡Mantente atento!", isBot: true }
         ]
+      },
+      web: {
+        english: [
+          { text: "👋 Hi there! How can I assist you today?", isBot: true },
+          { text: "I need help with my order", isBot: false },
+          { text: "I'd be happy to help you with your order. Could you please provide your order number?", isBot: true },
+          { text: "#ORD-12345", isBot: false },
+          { text: "Thanks! I can see your order was placed yesterday. It's currently being processed and will ship within 24 hours. Would you like tracking updates via email?", isBot: true }
+        ],
+        arabic: [
+          { text: "👋 مرحباً! كيف يمكنني مساعدتك اليوم؟", isBot: true },
+          { text: "أحتاج مساعدة بخصوص طلبي", isBot: false },
+          { text: "يسعدني مساعدتك بخصوص طلبك. هل يمكنك تزويدي برقم الطلب؟", isBot: true },
+          { text: "#ORD-12345", isBot: false },
+          { text: "شكراً! أرى أن طلبك تم تقديمه بالأمس. يتم معالجته حالياً وسيتم شحنه خلال 24 ساعة. هل تريد تحديثات التتبع عبر البريد الإلكتروني؟", isBot: true }
+        ],
+        spanish: [
+          { text: "👋 ¡Hola! ¿Cómo puedo ayudarte hoy?", isBot: true },
+          { text: "Necesito ayuda con mi pedido", isBot: false },
+          { text: "Me encantaría ayudarte con tu pedido. ¿Podrías proporcionarme el número de pedido?", isBot: true },
+          { text: "#ORD-12345", isBot: false },
+          { text: "¡Gracias! Veo que tu pedido se realizó ayer. Actualmente está siendo procesado y se enviará dentro de 24 horas. ¿Te gustaría recibir actualizaciones de seguimiento por correo electrónico?", isBot: true }
+        ]
       }
     };
     
@@ -329,6 +352,13 @@ const Hero = () => {
                       isComingSoon: true,
                       icon: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.012-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z",
                       messages: getMessages("snapchat")
+                    },
+                    {
+                      name: "Web Widget",
+                      status: "Online",
+                      bgColor: "bg-black",
+                      icon: "M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z",
+                      messages: getMessages("web")
                     }
                   ].map((bot, index) => (
                     <div key={index} className={`flex-none w-[350px] ${bot.bgColor} rounded-2xl p-4 shadow-lg snap-center relative`}>
@@ -337,7 +367,7 @@ const Hero = () => {
                           Coming Soon
                         </div>
                       )}
-                      <div className={`bg-white rounded-xl p-4 h-[600px] flex flex-col ${bot.name === "WhatsApp Bot" ? "relative" : ""}`}>
+                      <div className={`${bot.name === "Web Widget" ? "bg-white" : "bg-white"} rounded-xl p-4 h-[600px] flex flex-col ${bot.name === "WhatsApp Bot" ? "relative" : ""}`}>
                         {bot.name === "WhatsApp Bot" && (
                           <div 
                             className="absolute top-16 inset-x-0 bottom-0 rounded-xl overflow-hidden" 
@@ -351,12 +381,12 @@ const Hero = () => {
                         )}
                         
                         <div className="flex items-center gap-2 mb-4 z-10">
-                          <div className={`w-10 h-10 rounded-full ${bot.bgColor} flex items-center justify-center`}>
-                            <svg className={`w-6 h-6 ${bot.name === "Snapchat Bot" ? "text-black" : "text-white"}`} fill="currentColor" viewBox="0 0 24 24">
+                          <div className={`w-10 h-10 rounded-full ${bot.bgColor} flex items-center justify-center ${bot.name === "Web Widget" ? "border border-gray-200" : ""}`}>
+                            <svg className={`w-6 h-6 ${bot.name === "Snapchat Bot" ? "text-black" : bot.name === "Web Widget" ? "text-white" : "text-white"}`} fill="currentColor" viewBox="0 0 24 24">
                               <path d={bot.icon} />
                             </svg>
                           </div>
-                          <div>
+                          <div className={bot.name === "Web Widget" ? "text-gray-900" : ""}>
                             <h3 className="font-semibold">{bot.name}</h3>
                             <p className="text-sm text-gray-500">{bot.status}</p>
                           </div>
@@ -364,16 +394,16 @@ const Hero = () => {
                         
                         <div className={`flex-1 overflow-y-auto space-y-3 ${bot.isComingSoon ? "opacity-50" : ""} z-10`}>
                           {bot.messages.map((message, msgIndex) => (
-                            <div key={msgIndex} className={`${message.isBot ? "bg-gray-100" : bot.bgColor} ${!message.isBot && !bot.isComingSoon ? "text-white" : ""} rounded-lg p-3 max-w-[80%] ${!message.isBot ? "ml-auto" : ""}`}>
+                            <div key={msgIndex} className={`${message.isBot ? (bot.name === "Web Widget" ? "bg-gray-100 text-gray-900" : "bg-gray-100") : bot.bgColor} ${!message.isBot && !bot.isComingSoon ? "text-white" : ""} rounded-lg p-3 max-w-[80%] ${!message.isBot ? "ml-auto" : ""}`}>
                               <p className="text-sm">{message.text}</p>
                             </div>
                           ))}
                         </div>
                         
-                        <div className={`mt-4 border-t pt-4 ${bot.isComingSoon ? "opacity-50" : ""} z-10`}>
+                        <div className={`mt-4 border-t ${bot.name === "Web Widget" ? "border-gray-200" : ""} pt-4 ${bot.isComingSoon ? "opacity-50" : ""} z-10`}>
                           <div className="flex gap-2">
                             <textarea 
-                              className={`flex-1 resize-none rounded-lg border border-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-${bot.bgColor.split("bg-")[1]}`}
+                              className={`flex-1 resize-none rounded-lg ${bot.name === "Web Widget" ? "bg-white border-gray-200 text-gray-900 placeholder-gray-500" : "border border-gray-200"} p-2 text-sm focus:outline-none focus:ring-2 focus:ring-${bot.bgColor.split("bg-")[1]}`}
                               placeholder={bot.isComingSoon ? "Coming soon..." : "Type your message..."}
                               rows={1}
                               disabled={bot.isComingSoon}
