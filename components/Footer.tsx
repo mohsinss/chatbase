@@ -10,7 +10,7 @@ export default function Footer() {
       links: [
         { label: "Features", href: "#features" },
         { label: "Pricing", href: "#pricing" },
-        { label: "Integrations", href: "/integrations" },
+        { label: "Integrations", href: "/guide/category/integrations" },
         { label: "Changelog", href: "/changelog" },
         { label: "Roadmap", href: "/roadmap" }
       ]
@@ -18,7 +18,7 @@ export default function Footer() {
     {
       title: "Resources",
       links: [
-        { label: "Documentation", href: "/docs" },
+        { label: "Documentation", href: "/guide" },
         { label: "Tutorials", href: "/tutorials" },
         { label: "Blog", href: "/blog" },
         { label: "Support", href: "/support" },
