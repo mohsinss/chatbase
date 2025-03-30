@@ -11,7 +11,7 @@ import Actions from "@/components/chatbot/actions/Actions";
 export default async function ActionsPage({ 
   params 
 }: { 
-  params: { teamId: string; chatbotId: string; path?: string[] } 
+  params: { teamId: string; chatbotId: string; subTab: string } 
 }) {
   const session = await getServerSession(authOptions);
   
@@ -32,7 +32,7 @@ export default async function ActionsPage({
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <Actions teamId={params.teamId} chatbotId={params.chatbotId} />
+        <Actions teamId={params.teamId} chatbotId={params.chatbotId} subTab={params.subTab}/>
       </main>
     </>
   );

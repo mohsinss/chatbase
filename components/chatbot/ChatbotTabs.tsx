@@ -14,7 +14,7 @@ interface TabCommon {
 // Type for tabs with subroutes
 interface TabWithSubRoutes extends TabCommon {
   subRoutes: ReadonlyArray<{ id: string; label: string }>;
-  defaultSubRoute?: undefined;
+  defaultSubRoute?: string;
 }
 
 // Type for tabs with default subroute
@@ -40,7 +40,8 @@ const TABS: ReadonlyArray<Tab> = [
     subRoutes: [
       { id: "chat-logs", label: "Chat Logs" },
       { id: "leads", label: "Leads" }
-    ]
+    ],
+    defaultSubRoute: "chat-logs",
   },
   { 
     id: "analytics", 
@@ -49,10 +50,20 @@ const TABS: ReadonlyArray<Tab> = [
       { id: "chats", label: "Chats" },
       { id: "topics", label: "Topics" },
       { id: "sentiment", label: "Sentiment" }
-    ]
+    ],
+    defaultSubRoute: "chats",
   },
   { id: "sources", label: "Sources" },
-  { id: "actions", label: "Actions", badge: "New" },
+  { 
+    id: "actions", 
+    label: "Actions", 
+    badge: "New",
+    subRoutes: [
+      { id: "main", label: "Actions" },
+      { id: "integrations", label: "Integrations" }
+    ],
+    defaultSubRoute: "main",
+  },
   { id: "contacts", label: "Contacts", badge: "New" },
   { id: "publisher", label: "Publisher", badge: "New", defaultSubRoute: "whatsapp" },
   { id: "connect", label: "Connect", defaultSubRoute: "embed" },
@@ -80,11 +91,6 @@ const ChatbotTabs = ({
   const getTabHref = (tab: Tab): string => {
     if (tab.id === 'playground') {
       return `/dashboard/${teamId}/chatbot/${chatbotId}`;
-    }
-    
-    if ('subRoutes' in tab && tab.subRoutes) {
-      const defaultSubRoute = tab.id === 'activity' ? 'chat-logs' : 'chats';
-      return `/dashboard/${teamId}/chatbot/${chatbotId}/${tab.id}/${defaultSubRoute}`;
     }
 
     if ('defaultSubRoute' in tab && tab.defaultSubRoute) {

@@ -69,7 +69,6 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
           throw new Error('Failed to fetch teams');
         }
         const data = await response.json();
-        console.log(data.teams)
         setTeams(data.teams || []);
       } catch (error) {
         console.error("Failed to fetch teams:", error);
