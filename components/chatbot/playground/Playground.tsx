@@ -145,7 +145,7 @@ const ChatContainer = ({
   const [sources, setSources] = useState([]);
   const [showLead, setShowLead] = useState(true);
   const { settings: globalSettings, updateSettings: updateGlobalSettings } = useAISettingsProvider();
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(window.navigator.userAgent);
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(window?.navigator?.userAgent);
 
   const fetchDataset = async () => {
     try {
@@ -1095,7 +1095,7 @@ const Playground = ({
       return;
     }
 
-    if (!isMockingDataValid) {
+    if (mocking && !isMockingDataValid) {
       toast.error('The data is not valid.😒');
       return;
     }

@@ -124,7 +124,8 @@ const Actions = (
   const currentTab = params.subTab
   const [actions, setActions] = useState([])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [actionToDelete, setActionToDelete] = useState<string | null>(null)
+  const [actionIdToDelete, setActionIdToDelete] = useState<string | null>(null)
+  const [actionIdToToggle, setActionIdToToggle] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -168,6 +169,7 @@ const Actions = (
 
   const handleToggle = async (actionId: string, enabled: boolean) => {
     setIsToggling(true);
+    setActionIdToToggle(actionId);
     try {
       const response = await fetch(`/api/chatbot/action`, {
         method: "PUT",
@@ -194,16 +196,16 @@ const Actions = (
   }
 
   const openDeleteDialog = (actionId: string) => {
-    setActionToDelete(actionId)
+    setActionIdToDelete(actionId)
     setDeleteDialogOpen(true)
   }
 
   const handleDelete = async () => {
-    if (!actionToDelete) return;
+    if (!actionIdToDelete) return;
 
     setDeleting(true); // Start deleting
     try {
-      const response = await fetch(`/api/chatbot/action?actionId=${actionToDelete}`, {
+      const response = await fetch(`/api/chatbot/action?actionId=${actionIdToDelete}`, {
         method: "DELETE",
       });
 
@@ -214,14 +216,14 @@ const Actions = (
 
       toast.success('Action deleted successfully.');
 
-      setActions((prev) => prev.filter((action) => action._id !== actionToDelete));
+      setActions((prev) => prev.filter((action) => action._id !== actionIdToDelete));
     } catch (error) {
       console.error("Failed to delete action:", error);
       toast.error(error.message);
     } finally {
       setDeleting(false); // End deleting
       setDeleteDialogOpen(false);
-      setActionToDelete(null);
+      setActionIdToDelete(null);
     }
   };
 
@@ -294,7 +296,7 @@ const Actions = (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {actions.map((action) => (
-                  <Card key={action.id} className="border rounded-lg overflow-hidden">
+                  <Card key={`action-card-${action._id}`} className="border rounded-lg overflow-hidden">
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -305,7 +307,7 @@ const Actions = (
                           }
                         </div>
                         <div className="flex gap-1">
-                          {toggling && <Loader2 className="animate-spin" />}
+                          {action._id == actionIdToToggle && toggling && <Loader2 className="animate-spin" />}
                           <Switch
                             checked={action.enabled}
                             onCheckedChange={(checked) => handleToggle(action._id, checked)}
