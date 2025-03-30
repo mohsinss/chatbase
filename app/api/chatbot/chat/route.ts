@@ -26,6 +26,34 @@ const xai = new OpenAI({
   apiKey: process.env.X_GROK_API_KEY,
 });
 
+const tools = [
+  {
+    type: "function" as const,
+    function: {
+      name: "getAvailableSlots",
+      description: "Get available meeting slots from a Cal.com URL",
+      parameters: {
+        type: "object",
+        properties: {
+          calUrl: {
+            type: "string",
+            description: "The Cal.com URL to fetch available slots from",
+          },
+          dateFrom: {
+            type: "string",
+            description: "Start date/time for fetching slots in ISO 8601 format",
+          },
+          dateTo: {
+            type: "string",
+            description: "End date/time for fetching slots in ISO 8601 format",
+          },
+        },
+        required: ["calUrl", "dateFrom", "dateTo"],
+      },
+    },
+  },
+];
+
 // Helper function to process messages for deepseek-reasoner
 //@ts-ignore
 function processMessagesForReasoner(systemPrompt, relevant_chunk, messages, confidencePrompt) {
@@ -599,6 +627,8 @@ export async function POST(req: NextRequest) {
       const response = await openai.chat.completions.create({
         ...modelParams,
         messages: formattedMessages,
+        tools,
+        tool_choice: "auto",
         stream: true,
       });
 
@@ -607,12 +637,46 @@ export async function POST(req: NextRequest) {
       const stream = new ReadableStream({
         async start(controller) {
           try {
-            for await (const chunk of response) {
-              const text = chunk.choices[0]?.delta?.content || '';
+            let functionCallData: any = null;
+            let assistantMessage = "";
 
-              if (text) {
-                const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
-                controller.enqueue(encoder.encode(sseMessage));
+            for await (const chunk of response) {
+              const choice = chunk.choices[0];
+
+              if (choice.delta.tool_calls) {
+                functionCallData = functionCallData || { name: "", arguments: "" };
+                const toolCall = choice.delta.tool_calls[0];
+
+                if (toolCall.function.name) {
+                  functionCallData.name = toolCall.function.name;
+                }
+                if (toolCall.function.arguments) {
+                  functionCallData.arguments += toolCall.function.arguments;
+                }
+              } else if (choice.delta.content) {
+                assistantMessage += choice.delta.content;
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: choice.delta.content })}\n\n`));
+              }
+              // const text = chunk.choices[0]?.delta?.content || '';
+
+              // if (text) {
+              //   const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
+              //   controller.enqueue(encoder.encode(sseMessage));
+              // }
+            }
+
+            if (functionCallData) {
+              const args = JSON.parse(functionCallData.arguments);
+      
+              if (functionCallData.name === "getAvailableSlots") {
+                const slotsResponse = await fetch(`${args.calUrl}?start=${encodeURIComponent(args.dateFrom)}&end=${encodeURIComponent(args.dateTo)}`, {
+                  method: 'GET',
+                  headers: { 'Content-Type': 'application/json' },
+                });
+        
+                const slotsResult = await slotsResponse.json();
+        
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ slots: slotsResult })}\n\n`));
               }
             }
 

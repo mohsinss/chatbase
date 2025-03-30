@@ -38,7 +38,7 @@ export default async function ChatbotPage({
   return (
     <>
       <main className="w-full h-[100dvh] bg-white">
-        <Playground chatbot={serializedChatbot} embed={true}/>
+        <Playground chatbot={serializedChatbot} embed={true} standalone={true}/>
       </main>
     </>
   );

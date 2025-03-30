@@ -102,7 +102,22 @@ const actionsData = [
 const Actions = (
   params
     :
-    { teamId: string; chatbotId: string, subTab: string }
+    {
+      teamId: string;
+      chatbotId: string;
+      subTab: string;
+      chatbot: {
+        name: string;
+        id: string;
+        settings?: {
+          model?: string;
+          temperature?: number;
+          maxTokens?: number;
+          systemPrompt?: string;
+          language?: string;
+        };
+      },
+    }
 ) => {
   const router = useRouter()
   const pathname = usePathname()
@@ -213,7 +228,7 @@ const Actions = (
   if (currentTab == "calcom") {
     return (
       <div>
-        <Calcom teamId={params.teamId} chatbotId={params.chatbotId} />
+        <Calcom teamId={params.teamId} chatbotId={params.chatbotId} chatbot={params.chatbot} />
       </div>
     )
   }

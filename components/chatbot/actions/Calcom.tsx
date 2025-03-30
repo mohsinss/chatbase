@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import toast from "react-hot-toast"
+import Playground from "../playground/Playground"
 
 const calComTemplate = {
   name: "Cal com",
@@ -21,7 +22,21 @@ const calComTemplate = {
 export default function Calcom(
   params
     :
-    { teamId: string; chatbotId: string; }
+    { 
+      teamId: string; 
+      chatbotId: string;
+      chatbot: {
+        name: string;
+        id: string;
+        settings?: {
+          model?: string;
+          temperature?: number;
+          maxTokens?: number;
+          systemPrompt?: string;
+          language?: string;
+        };
+      },
+    }
 ) {
   const router = useRouter()
   const [isEnabled, setIsEnabled] = useState(true)
@@ -29,6 +44,22 @@ export default function Calcom(
   const [formData, setFormData] = useState(calComTemplate)
   const searchParams = useSearchParams()
   const actionId = searchParams.get("actionId")
+  const [isformDataValid, setIsformDataValid] = useState(false);
+
+  useEffect(() => {
+    const isValidCalComUrl = (url: string) => /^https:\/\/cal\.com\/.+/.test(url);
+  
+    const validateFormData = () => {
+      const isValid =
+        formData.name.trim().length > 0 &&
+        isValidCalComUrl(formData.url) &&
+        formData.instructions.trim().length > 0;
+  
+      setIsformDataValid(isValid);
+    };
+  
+    validateFormData();
+  }, [formData]);
 
   useEffect(() => {
     const fetchAction = async () => {
@@ -80,6 +111,10 @@ export default function Calcom(
   };
 
   const handleSave = async () => {
+    if (!isformDataValid) {
+      toast.error('The data is not valid.😒');
+      return;
+    }
     setIsSaving(true);
     try {
       const response = await fetch(`/api/chatbot/action`, {
@@ -141,8 +176,8 @@ export default function Calcom(
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
+      <div className="flex flex-wrap justify-center gap-8">
+        <div className="flex-grow">
           <div className="bg-white rounded-lg border p-6 mb-6">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-xs">
@@ -196,44 +231,8 @@ export default function Calcom(
           </div>
         </div>
 
-        <div className="md:col-span-1">
-          <div className="bg-blue-600 rounded-lg p-4 text-white">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-sm">Chatbot 12/26/2024, 12:11:01 AM</div>
-              <RefreshCw className="h-4 w-4" />
-            </div>
-            <div className="bg-gray-100 rounded-lg p-3 text-gray-800 mb-4">
-              <p className="text-sm">Hi! What can I help you with?</p>
-            </div>
-            <div className="mt-auto pt-4">
-              <div className="relative">
-                <Input
-                  placeholder="Message..."
-                  className="w-full bg-white/10 border-none text-white placeholder:text-white/60"
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M22 2L11 13"></path>
-                    <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
-                  </svg>
-                </Button>
-              </div>
-            </div>
-          </div>
+        <div className="w-fit flex justify-end">
+          <Playground chatbot={params.chatbot} embed={true} standalone={true} mocking={true} mockingData={formData} isMockingDataValid={isformDataValid}/>
         </div>
       </div>
     </div>

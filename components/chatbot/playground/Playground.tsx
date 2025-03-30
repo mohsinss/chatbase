@@ -31,7 +31,11 @@ interface PlaygroundProps {
     };
   };
   embed?: boolean,
+  mocking?: boolean,
   team?: any,
+  standalone?: boolean,
+  mockingData?: Object,
+  isMockingDataValid?: boolean
 }
 
 const InfoTooltip = ({ content }: { content: string }) => (
@@ -57,11 +61,13 @@ interface ChatContainerProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
   aiSettings: any;
   embed?: boolean;
+  mocking?: boolean;
   setConfig: React.Dispatch<React.SetStateAction<any>>;
   leadSetting?: ChatbotLeadSettings;
   conversationId?: string;
   currentNodeId?: Number;
-  qFlowAIEnabled: boolean
+  qFlowAIEnabled: boolean;
+  standalone?: boolean;
 }
 
 interface ChatConfig {
@@ -105,7 +111,9 @@ const ChatContainer = ({
   conversationId,
   setCurrentNodeId,
   currentNodeId,
-  qFlowAIEnabled
+  qFlowAIEnabled,
+  standalone = false,
+  mocking = false,
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
     if (confidenceScore === -1) {
@@ -316,12 +324,12 @@ const ChatContainer = ({
   };
 
   return (
-    <div className={`${embed ? '' : 'pt-4 px-4'} min-h-[calc(100dvh-80px)] flex-1 flex justify-center h-full`}>
+    <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center ${mocking ? 'h-[calc(100dvh-300px)]' : 'min-h-[calc(100dvh-80px)] h-full'}`}>
       <div
         className={`${embed ? 'w-full h-full' : ''} relative`}
-        style={{ width: `${embed ? 'w-full' : (config.chatWidth + 'px')}` }}
+        style={{ width: `${(embed && !standalone) ? 'w-full' : (config.chatWidth + 'px')}` }}
       >
-        {!embed && !isSettingsOpen && (
+        {!embed && !isSettingsOpen && !standalone && (
           <button
             onClick={() => setIsSettingsOpen(true)}
             className={`absolute ${config.bubbleAlignment === 'right' ? '-left-12' : '-right-12'} h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white`}
@@ -441,7 +449,7 @@ const ChatContainer = ({
                 ))}
                 {isLoading && <span className="loading loading-spinner loading-xs"></span>}
                 {
-                  !isLoading && showLead && (leadSetting?.enable == "immediately"
+                  embed && !standalone && !isLoading && showLead && (leadSetting?.enable == "immediately"
                     || (leadSetting?.enable == "after"
                       && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))
                   &&
@@ -530,7 +538,7 @@ const ChatContainer = ({
           <div className="flex flex-col justify-between pt-2">
             {/* Suggested Messages - Horizontal scrollable */}
             <div className="px-3 overflow-x-auto whitespace-nowrap flex gap-2 mb-1 pb-2">
-              {!currentNodeId && config.suggestedMessages?.split('\n').filter((msg: string) => msg.trim()).map((message: string, index: number) => (
+              {!mocking && !currentNodeId && config.suggestedMessages?.split('\n').filter((msg: string) => msg.trim()).map((message: string, index: number) => (
                 <button
                   key={index}
                   className={`px-4 py-2  rounded-full text-sm hover:bg-gray-200 transition-colors flex-none ${config.theme == "dark" ? "bg-black text-white" : "bg-gray-100"}`}
@@ -545,7 +553,7 @@ const ChatContainer = ({
                     // Start the chat process
                     setIsLoading(true);
                     try {
-                      if (!isLoading && showLead && (leadSetting?.enable == "immediately"
+                      if (embed && !standalone && !isLoading && showLead && (leadSetting?.enable == "immediately"
                         || (leadSetting?.enable == "after"
                           && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
                         toast.error('Please submit the form. 🙂');
@@ -710,7 +718,7 @@ const ChatContainer = ({
             {/* Chat Input */}
             <form onSubmit={(e) => {
               e.preventDefault();
-              if (!isLoading && showLead && (leadSetting?.enable == "immediately"
+              if (embed && !standalone && !isLoading && showLead && (leadSetting?.enable == "immediately"
                 || (leadSetting?.enable == "after"
                   && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
                 toast.error('Please submit the form. 🙂');
@@ -743,7 +751,7 @@ const ChatContainer = ({
             </form>
 
             {/* Footer */}
-            {embed && <div className="p-2 text-center text-sm text-gray-500">
+            {!mocking && embed && <div className="p-2 text-center text-sm text-gray-500">
               <span>Powered by <a href={`${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}//${process.env.NEXT_PUBLIC_DOMAIN}`} target="_black" className="text-blue-600 hover:text-blue-800">Chatsa.co</a></span>
               {config.footerText && <span className="ml-1">{config.footerText}</span>}
             </div>}
@@ -771,12 +779,19 @@ const debounce = (func: Function, wait: number) => {
   return debouncedFunc;
 };
 
-const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
+const Playground = ({
+  chatbot,
+  embed = false,
+  team,
+  mocking = false,
+  standalone = false,
+  mockingData = {},
+  isMockingDataValid = false,
+}: PlaygroundProps) => {
   if (team) {
     team = JSON.parse(team)
   }
   const searchParams = useSearchParams();
-  const standalone = searchParams.get('standalone');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -1069,7 +1084,21 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+
+    if (!input.trim()) {
+      toast.error('Please input correct.😒');
+      return;
+    }
+
+    if (isLoading) {
+      toast.error('Please wait while answerting.😒');
+      return;
+    }
+
+    if (!isMockingDataValid) {
+      toast.error('The data is not valid.😒');
+      return;
+    }
 
     handleSendMessage(input);
   };
@@ -1103,6 +1132,8 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
           maxTokens: aiSettings?.maxTokens,
           systemPrompt: aiSettings?.systemPrompt,
           conversationId,
+          mocking,
+          mockingData,
         }),
       });
 
@@ -1257,7 +1288,7 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
     //   return <div id='chatbot-loading-spinner'><div className="spinner"></div></div>
     return (
       <AISettingsProvider chatbotId={chatbot.id}>
-        <div className="relative" style={{ height: '100dvh' }}>
+        <div className={`relative ${mocking ? '' : 'h-full'}`}>
           <ChatContainer
             setCurrentNodeId={setCurrentNodeId}
             currentNodeId={currentNodeId}
@@ -1275,11 +1306,13 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
             messagesEndRef={messagesEndRef}
             chatbotId={chatbot.id}
             aiSettings={aiSettings}
-            embed={embed && !standalone}
+            embed={embed}
+            standalone={standalone}
             setConfig={setConfig}
             leadSetting={leadSetting}
             conversationId={conversationId}
             qFlowAIEnabled={qFlowAIEnabled}
+            mocking={mocking}
           />
         </div>
       </AISettingsProvider>
@@ -1335,30 +1368,31 @@ const Playground = ({ chatbot, embed = false, team }: PlaygroundProps) => {
             </div>
 
             {/* {loadingAISettings ? */}
-              {/* <div id='chatbot-loading-spinner'><div className="spinner"></div></div> : */}
-              <ChatContainer
-                setCurrentNodeId={setCurrentNodeId}
-                isSettingsOpen={isSettingsOpen}
-                setIsSettingsOpen={setIsSettingsOpen}
-                currentNodeId={currentNodeId}
-                messages={messages}
-                setMessages={setMessages}
-                config={config}
-                setConfig={setConfig}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-                input={input}
-                setInput={setInput}
-                handleSubmit={handleSubmit}
-                handleRefresh={handleRefresh}
-                messagesEndRef={messagesEndRef}
-                chatbotId={chatbot.id}
-                aiSettings={aiSettings}
-                conversationId={conversationId}
-                embed={embed}
-                qFlowAIEnabled={qFlowAIEnabled}
-              />
-             {/* } */}
+            {/* <div id='chatbot-loading-spinner'><div className="spinner"></div></div> : */}
+            <ChatContainer
+              setCurrentNodeId={setCurrentNodeId}
+              isSettingsOpen={isSettingsOpen}
+              setIsSettingsOpen={setIsSettingsOpen}
+              currentNodeId={currentNodeId}
+              messages={messages}
+              setMessages={setMessages}
+              config={config}
+              setConfig={setConfig}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
+              input={input}
+              setInput={setInput}
+              handleSubmit={handleSubmit}
+              handleRefresh={handleRefresh}
+              messagesEndRef={messagesEndRef}
+              chatbotId={chatbot.id}
+              aiSettings={aiSettings}
+              conversationId={conversationId}
+              leadSetting={leadSetting}
+              embed={embed}
+              qFlowAIEnabled={qFlowAIEnabled}
+            />
+            {/* } */}
           </div>
         </div>
       </div>
