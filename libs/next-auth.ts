@@ -3,6 +3,7 @@ import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import Providers from "next-auth/providers";
 import EmailProvider from "next-auth/providers/email";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import config from "@/config";
 import connectMongo from "./mongo";
@@ -19,39 +20,47 @@ export const authOptions: NextAuthOptionsExtended = {
   // Set any random key in .env.local
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
-    // EmailProvider({
-    //   from: process.env.EMAIL_FROM,
-    //   //@ts-ignore
-    //   sendVerificationRequest: async ({ identifier: email, url, token, baseUrl, provider }) => {
-    //     const { server, from } = provider;
-    //     // Initialize SendGrid
-    //     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    //     // Create email data
-    //     const msg = {
-    //       to: email,
-    //       from,
-    //       subject: `Sign in link for Chatsa`,
-    //       text: `Use the link below to sign in:\n\n${url}\n\n`,
-    //       html: `
-    //   <p>Use the button below to sign in:</p>
-    //   <a href="${url}" style="
-    //     display: inline-block;
-    //     padding: 10px 20px;
-    //     background-color: #0070f3;
-    //     color: #ffffff;
-    //     text-decoration: none;
-    //     border-radius: 5px;
-    //     font-weight: bold;
-    //   ">
-    //     Sign In
-    //   </a>
-    // `,
-    //     }
+    EmailProvider({
+      // server: {
+      //   host: 'smtp.sendgrid.net',
+      //   port: 587,
+      //   auth: {
+      //     user: 'apikey', // This is the username SendGrid expects
+      //     pass: process.env.SENDGRID_API_KEY, // Your SendGrid API Key
+      //   },
+      // },
+      from: process.env.EMAIL_FROM,
+      //@ts-ignore
+      sendVerificationRequest: async ({ identifier: email, url, token, baseUrl, provider }) => {
+        const { server, from } = provider;
+        // Initialize SendGrid
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        // Create email data
+        const msg = {
+          to: email,
+          from,
+          subject: `Sign in link for Chatsa`,
+          text: `Use the link below to sign in:\n\n${url}\n\n`,
+          html: `
+  <p>Use the button below to sign in:</p>
+  <a href="${url}" style="
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #0070f3;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+  ">
+    Sign In
+  </a>
+`,
+        }
 
-    //       // Send email
-    //       await sgMail.send(msg);
-    //     },
-    //   }),
+        // Send email
+        await sgMail.send(msg);
+      },
+    }),
     GoogleProvider({
       // Follow the "Login with Google" tutorial to get your credentials
       clientId: process.env.GOOGLE_ID,
@@ -64,6 +73,37 @@ export const authOptions: NextAuthOptionsExtended = {
           image: profile.picture,
           createdAt: new Date(),
         };
+      },
+    }),
+    CredentialsProvider({
+      name: "Test User",
+      credentials: {
+        email: { label: "Email", type: "email" },
+      },
+      //@ts-ignore
+      async authorize(credentials) {
+        if (credentials.email === "test@test.com") {
+          await connectMongo1();
+
+          let user = await User.findOne({ email: "test@test.com" });
+
+          if (!user) {
+            user = await User.create({
+              email: "test@test.com",
+              name: "Test User",
+              createdAt: new Date(),
+            });
+          }
+
+          return {
+            id: user._id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          };
+        }
+
+        throw new Error("Invalid credentials");
       },
     }),
   ],
