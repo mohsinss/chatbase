@@ -68,6 +68,7 @@ interface ChatContainerProps {
   currentNodeId?: Number;
   qFlowAIEnabled: boolean;
   standalone?: boolean;
+  handleSendMessage: (message: string) => Promise<void>;
 }
 
 interface ChatConfig {
@@ -114,6 +115,7 @@ const ChatContainer = ({
   qFlowAIEnabled,
   standalone = false,
   mocking = false,
+  handleSendMessage,
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
     if (confidenceScore === -1) {
@@ -545,12 +547,16 @@ const ChatContainer = ({
                     config.theme === 'dark' ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
                   }`}
                   onClick={() => {
-                    setInput(message);
-                    // Focus the input field
-                    const inputField = document.querySelector('input[type="text"]');
-                    if (inputField) {
-                      (inputField as HTMLInputElement).focus();
+                    if (embed && !standalone && !isLoading && showLead && (leadSetting?.enable == "immediately"
+                      || (leadSetting?.enable == "after"
+                        && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
+                      toast.error('Please submit the form. 🙂');
+                      return;
                     }
+                    
+                    // Set input and immediately send the message
+                    setInput(message);
+                    handleSendMessage(message);
                   }}
                 >
                   {message}
@@ -1161,6 +1167,7 @@ const Playground = ({
             conversationId={conversationId}
             qFlowAIEnabled={qFlowAIEnabled}
             mocking={mocking}
+            handleSendMessage={handleSendMessage}
           />
         </div>
       </AISettingsProvider>
@@ -1239,6 +1246,7 @@ const Playground = ({
               leadSetting={leadSetting}
               embed={embed}
               qFlowAIEnabled={qFlowAIEnabled}
+              handleSendMessage={handleSendMessage}
             />
             {/* } */}
           </div>
