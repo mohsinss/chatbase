@@ -28,6 +28,7 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast"
+import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings'
 
 const ACTION_TABS = [
   { id: "main", label: "Actions", icon: <Zap className="w-5 h-5" /> },
@@ -130,6 +131,7 @@ const Actions = (
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [toggling, setIsToggling] = useState(false);
+  const { config } = useChatInterfaceSettings(params.chatbotId);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -237,7 +239,7 @@ const Actions = (
 
   //@ts-ignore
   const ActionButton = ({ id, title, description, icon, bgColor, textColor, active }) => (
-    <div className={`mb-6  ${active ? "bg-gray-50" : "bg-gray-200 cursor-not-allowed"} rounded-2xl`}>
+    <div className={`mb-6  ${active ? (config?.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50') : "bg-gray-200 cursor-not-allowed"} rounded-2xl`}>
       <div className="flex items-center gap-3 mb-2">
         <div className={`flex items-center justify-center w-10 h-10 rounded-full ${bgColor} ${textColor}`}>
           {icon}
@@ -245,7 +247,13 @@ const Actions = (
         <h3 className="text-lg font-medium">{title}</h3>
       </div>
       <button
-        className={`w-full p-4 border rounded-lg transition-colors flex items-center justify-between ${active ? "hover:bg-gray-100 " : "bg-gray-200 cursor-not-allowed"}`}
+        className={`w-full p-4 border rounded-lg transition-colors flex items-center justify-between ${
+          active ? (
+            config?.theme === 'dark' 
+              ? 'hover:bg-gray-700 border-gray-700 text-white' 
+              : 'hover:bg-gray-100'
+          ) : "bg-gray-200 cursor-not-allowed"
+        }`}
         onClick={() => {
           setIsModalOpen(false);
           router.push(`/dashboard/${params.teamId}/chatbot/${params.chatbotId}/actions/${id}`);
@@ -254,19 +262,19 @@ const Actions = (
       >
         <div>
           <h4 className="font-medium text-left">{title}</h4>
-          <p className="text-sm text-gray-500 text-left">{description}</p>
+          <p className={`text-sm ${config?.theme === 'dark' ? 'text-gray-300' : 'text-gray-500'} text-left`}>{description}</p>
         </div>
-        <ChevronRight className="h-5 w-5 text-gray-400" />
+        <ChevronRight className={`h-5 w-5 ${config?.theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`} />
       </button>
     </div>
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className={`max-w-6xl mx-auto px-4 py-6 ${config?.theme === 'dark' ? 'text-white' : ''}`}>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Actions</h1>
+        <h1 className={`text-3xl font-bold ${config?.theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Actions</h1>
         {currentTab === "main" && actions.length > 0 && (
-          <Button variant="default" className="bg-gray-800 hover:bg-gray-700" onClick={openModal}>
+          <Button variant="default" className={config?.theme === 'dark' ? 'bg-blue-800 hover:bg-blue-700' : 'bg-gray-800 hover:bg-gray-700'} onClick={openModal}>
             Create action
           </Button>
         )}
@@ -281,9 +289,13 @@ const Actions = (
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm
-                  ${currentTab === tab.id ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-100"}`}
+                  ${currentTab === tab.id 
+                    ? "bg-primary/10 text-primary" 
+                    : config?.theme === 'dark' 
+                      ? "text-gray-300 hover:bg-gray-800" 
+                      : "text-gray-600 hover:bg-gray-100"}`}
               >
-                <div className={`${currentTab === tab.id ? "text-primary" : "text-gray-400"}`}>{tab.icon}</div>
+                <div className={`${currentTab === tab.id ? "text-primary" : config?.theme === 'dark' ? "text-gray-300" : "text-gray-400"}`}>{tab.icon}</div>
                 <span>{tab.label}</span>
               </button>
             ))}
@@ -296,7 +308,9 @@ const Actions = (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {actions.map((action) => (
-                  <Card key={`action-card-${action._id}`} className="border rounded-lg overflow-hidden">
+                  <Card key={`action-card-${action._id}`} className={`border rounded-lg overflow-hidden ${
+                    config?.theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : ''
+                  }`}>
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -315,20 +329,22 @@ const Actions = (
                         </div>
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900">{action.name}</h3>
-                        <p className="text-sm text-gray-500 mt-1">{action.description}</p>
+                        <h3 className={`font-medium ${config?.theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{action.name}</h3>
+                        <p className={`text-sm ${config?.theme === 'dark' ? 'text-gray-300' : 'text-gray-500'} mt-1`}>{action.description}</p>
                       </div>
-                      <div className="border-t pt-4 mt-2 flex items-center justify-between">
-                        <Button variant="outline" className="w-full mr-2" onClick={() => handleCustomize(action)}>
+                      <div className={`border-t pt-4 mt-2 flex items-center justify-between ${config?.theme === 'dark' ? 'border-gray-700' : ''}`}>
+                        <Button variant={config?.theme === 'dark' ? "outline" : "outline"} 
+                          className={`w-full mr-2 ${config?.theme === 'dark' ? 'border-gray-700 text-white hover:bg-gray-800' : ''}`} 
+                          onClick={() => handleCustomize(action)}>
                           Customize
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" className={config?.theme === 'dark' ? 'text-white hover:bg-gray-800' : ''}>
                               <MoreHorizontal className="h-5 w-5" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className={config?.theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : ''}>
                             <DropdownMenuItem
                               className="text-red-600 focus:text-red-600 cursor-pointer"
                               onClick={() => openDeleteDialog(action._id)}
@@ -343,13 +359,15 @@ const Actions = (
                 ))}
               </div>
               {actions.length === 0 && (
-                <div className="text-center max-w-[400px] mx-auto mt-20">
+                <div className={`text-center max-w-[400px] mx-auto mt-20 ${config?.theme === 'dark' ? 'text-gray-300' : ''}`}>
                   <h2 className="text-xl font-semibold">Create your first action</h2>
                   <p className="mb-4">Customize how your users interact with the chatbot, connect to an integration or create your own actions.</p>
-                  <Button variant="default" className="bg-gray-800 hover:bg-gray-700 mr-4" onClick={openModal}>
+                  <Button variant="default" className={config?.theme === 'dark' ? 'bg-blue-800 hover:bg-blue-700 mr-4' : 'bg-gray-800 hover:bg-gray-700 mr-4'} onClick={openModal}>
                     Create action
                   </Button>
-                  <Button variant="outline" onClick={() => router.push(`/dashboard/${params.teamId}/chatbot/${params.chatbotId}/actions/integrations`)}>
+                  <Button variant="outline" 
+                    className={config?.theme === 'dark' ? 'border-gray-700 text-white hover:bg-gray-800' : ''}
+                    onClick={() => router.push(`/dashboard/${params.teamId}/chatbot/${params.chatbotId}/actions/integrations`)}>
                     View all integrations
                   </Button>
                 </div>
@@ -357,23 +375,23 @@ const Actions = (
             </>
           )}
           {currentTab === "integrations" && (
-            <div className="p-4 border rounded-lg bg-gray-50">
-              <p className="text-gray-600">Integrations will be soon here</p>
+            <div className={`p-4 border rounded-lg ${config?.theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50'}`}>
+              <p className={config?.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>Integrations will be soon here</p>
             </div>
           )}
         </div>
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className={config?.theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : ''}>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you want to delete this action?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className={config?.theme === 'dark' ? 'text-gray-300' : ''}>
               This action will be permanently removed from your chatbot. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className={config?.theme === 'dark' ? 'bg-gray-800 text-white hover:bg-gray-700 border-gray-700' : ''}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700 text-white"
@@ -390,7 +408,7 @@ const Actions = (
       </AlertDialog>
 
       <Dialog open={isModalOpen} onOpenChange={closeModal}>
-        <DialogContent className="max-w-6xl w-full">
+        <DialogContent className={`max-w-6xl w-full ${config?.theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : ''}`}>
           <DialogHeader className="mb-6">
             <DialogTitle className="text-xl">Select Action</DialogTitle>
           </DialogHeader>

@@ -931,18 +931,21 @@ const Playground = ({
     e.preventDefault();
 
     if (!input.trim()) {
-      toast.error('Please input correct.😒');
+      toast.error('Please enter a message first.');
       return;
     }
 
     if (isLoading) {
-      toast.error('Please wait while answerting.😒');
+      toast.error('Please wait while the previous message is being processed.');
       return;
     }
 
-    if (mocking && !isMockingDataValid) {
-      toast.error('The data is not valid.😒');
-      return;
+    // Only validate mock data when in mocking mode
+    if (mocking) {
+      if (!isMockingDataValid) {
+        toast.error('The action data is not valid. Please complete all required fields.');
+        return;
+      }
     }
 
     handleSendMessage(input);
