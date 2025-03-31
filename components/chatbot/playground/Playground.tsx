@@ -338,15 +338,16 @@ const ChatContainer = ({
           </button>
         )}
 
-        <div className={`h-full flex flex-col bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+        <div className={`h-full flex flex-col bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : ''
           } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
           {/* Chat Header */}
           <div
             className={`flex items-center justify-between p-3 border-b ${config.roundedHeaderCorners ? 'rounded-t-xl' : ''
               }`}
             style={{
-              backgroundColor: config.syncColors ? config.userMessageColor : undefined,
-              color: config.syncColors ? 'white' : undefined
+              backgroundColor: config.syncColors ? config.userMessageColor : 
+                              config.theme === 'dark' ? '#1e3a8a' : undefined, // Dark blue for dark theme
+              color: config.syncColors || config.theme === 'dark' ? 'white' : undefined
             }}
           >
             <div className="flex items-center gap-3">
@@ -387,21 +388,20 @@ const ChatContainer = ({
 
           {/* Chat Messages */}
           <div
-            className={`overflow-y-hidden p-4 flex-grow relative`}
+            className={`overflow-y-hidden p-4 flex-grow relative ${config.theme === 'dark' ? 'border-b-0' : ''}`}
             style={{
-              // backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
+              backgroundColor: config.theme === 'dark' ? '#111827' : undefined,
             }}
           >
             <div className="absolute inset-0 p-4 overflow-y-auto"
               style={{
                 backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
-                backgroundColor: 'white',
+                backgroundColor: config.theme === 'dark' ? '#111827' : 'white',
                 opacity: config.chatBackgroundOpacity,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                // opacity: config.chatBackgroundUrl ? 1 - (config.chatBackgroundOpacity || 0.1) : 1,
               }}>
             </div>
             <div className="absolute inset-0 p-4 overflow-y-auto"
@@ -412,7 +412,7 @@ const ChatContainer = ({
               <div className="relative z-10">
                 {messages.length === 0 && (
                   <div className={`max-w-[80%] p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                    } ${config.theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    } ${config.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-50'}`}>
                     {config.initialMessage}
                   </div>
                 )}
@@ -535,178 +535,21 @@ const ChatContainer = ({
             </div>
           </div>
 
-          <div className="flex flex-col justify-between pt-2">
+          <div className={`flex flex-col justify-between ${config.theme === 'dark' ? 'bg-gray-900' : ''}`}>
             {/* Suggested Messages - Horizontal scrollable */}
-            <div className="px-3 overflow-x-auto whitespace-nowrap flex gap-2 mb-1 pb-2">
-              {!mocking && !currentNodeId && config.suggestedMessages?.split('\n').filter((msg: string) => msg.trim()).map((message: string, index: number) => (
+            <div className={`w-full overflow-x-auto pb-2 mb-2 px-4 pt-2 ${config.theme === 'dark' ? 'bg-gray-900' : ''}`}>
+              {config.suggestedMessages && config.suggestedMessages.split('\n').filter(Boolean).map((message: string, i: number) => (
                 <button
-                  key={index}
-                  className={`px-4 py-2  rounded-full text-sm hover:bg-gray-200 transition-colors flex-none ${config.theme == "dark" ? "bg-black text-white" : "bg-gray-100"}`}
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    // Create the message directly
-                    const userMessage: Message = { role: 'user', content: message };
-                    setMessages(prev => [...prev, userMessage]);
-                    setInput('');
-
-                    if (!conversationId) return;
-                    // Start the chat process
-                    setIsLoading(true);
-                    try {
-                      if (embed && !standalone && !isLoading && showLead && (leadSetting?.enable == "immediately"
-                        || (leadSetting?.enable == "after"
-                          && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
-                        toast.error('Please submit the form. 🙂');
-                        setIsLoading(false);
-                        return;
-                      }
-                      const response = await fetch('/api/chatbot/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          messages: [...messages, userMessage],
-                          chatbotId: chatbotId,
-                          language: aiSettings?.language,
-                          model: aiSettings?.model,
-                          temperature: aiSettings?.temperature,
-                          maxTokens: aiSettings?.maxTokens,
-                          systemPrompt: aiSettings?.systemPrompt,
-                          conversationId,
-                        }),
-                      });
-
-                      if (!response.ok) {
-                        if (response.status === 500) {
-                          const data = await response.json();
-                          if (data.error === 'limit reached, upgrade for more messages.') {
-                            // Handle the 'Credits are limited' error here
-                            console.error('limit reached, upgrade for more messages.');
-                            throw new Error('limit reached, upgrade for more messages.');
-                          }
-                        }
-                        throw new Error('Stream failed.');
-                      }
-
-                      const contentType = response.headers.get('Content-Type');
-
-                      if (contentType?.includes('application/json')) {
-                        // Non-streaming response
-                        const data = await response.json();
-
-                        if (data.message) {
-                          let content = '';
-                          if (data.image) {
-                            const imageHtml = `<img src="${data.image}" alt="Chat Image" class="rounded-md max-w-full my-2 " />`;
-                            const combinedMessage = `${data.message || ''}${imageHtml}`;
-
-                            const assistantMessage: Message = { role: 'assistant', content: combinedMessage, confidenceScore: 100 };
-                            setMessages(prev => [...prev, assistantMessage]);
-                          } else {
-                            content = data.message
-                            const assistantMessage: Message = { role: 'assistant', content, confidenceScore: 100 };
-                            setMessages(prev => [...prev, assistantMessage]);
-                          }
-                        }
-
-                        if (data.options && data.options.length > 0) {
-                          const optionsHtml = `
-                            <div>
-                              <p>${data.question}</p>
-                              <div class="mt-2">
-                              ${data.options.map((option: string, index: number) => `
-                                <button class="chat-option-btn w-full text-left px-4 py-2 rounded hover:bg-gray-200 embed-btn" data-index="${index}" data-node="${data.nextNodeId}">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
-                                  ${option}
-                                </button>
-                              `).join('')}
-                              </div>
-                            </div>
-                          `;
-                          const optionsMessage: Message = { role: 'assistant', content: optionsHtml, confidenceScore: 100 };
-                          setMessages(prev => [...prev, optionsMessage]);
-                          setCurrentNodeId(data.nextNodeId);
-                        } else {
-                          setCurrentNodeId(null);
-                        }
-                        setIsLoading(false);
-                      } else {
-                        const assistantMessage: Message = { role: 'assistant', content: '', reasonal_content: '' };
-                        setMessages(prev => [...prev, assistantMessage]);
-
-                        const reader = response.body?.getReader();
-                        const decoder = new TextDecoder();
-
-                        if (reader) {
-                          let done = false;
-                          while (!done) {
-                            const result = await reader.read();
-                            done = result.done;
-                            if (done) break;
-
-                            const chunk = decoder.decode(result.value);
-                            const lines = chunk.split('\n');
-                            // console.log(lines)
-
-                            for (const line of lines) {
-                              if (line.startsWith('data: ')) {
-                                const data = line.slice(5).trim();
-
-                                if (data === '[DONE]') {
-                                  setIsLoading(false);
-                                  continue
-                                }
-
-                                const parsed = JSON.parse(data);
-                                if (parsed.text) {
-                                  setMessages(prev => {
-                                    const lastMessage = prev[prev.length - 1];
-                                    let lastMessage_content = lastMessage.content + parsed.text;
-
-                                    let confidenceScore1 = -1;
-
-                                    if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
-                                      const confidenceScore = lastMessage_content.split(":::")[1];
-                                      confidenceScore1 = Number(confidenceScore)
-                                      console.log(confidenceScore1)
-                                      lastMessage_content = lastMessage_content.split(":::")[0];
-                                    }
-                                    return [
-                                      ...prev.slice(0, -1),
-                                      { ...lastMessage, content: lastMessage_content, confidenceScore: confidenceScore1 }
-                                    ];
-                                  });
-                                }
-                              }
-                              else if (line.startsWith('reason: ')) {
-                                const data = line.slice(7).trim();
-                                console.log(data)
-
-                                try {
-                                  const parsed = JSON.parse(data);
-                                  if (parsed.reasonal_text) {
-
-                                    setMessages(prev => {
-                                      const lastMessage = prev[prev.length - 1];
-                                      let lastMessage_reasonal_content = lastMessage?.reasonal_content + parsed.reasonal_text;
-                                      return [
-                                        ...prev.slice(0, -1),
-                                        { ...lastMessage, reasonal_content: lastMessage_reasonal_content }
-                                      ];
-                                    });
-                                  }
-
-                                } catch (e) {
-                                  console.log(e)
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    } catch (error) {
-                      console.error('Chat error:', error);
-                      setIsLoading(false);
-                      toast.error(error.message)
+                  key={i}
+                  className={`inline-block mr-2 mb-2 px-3 py-1.5 text-xs rounded-full ${
+                    config.theme === 'dark' ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
+                  onClick={() => {
+                    setInput(message);
+                    // Focus the input field
+                    const inputField = document.querySelector('input[type="text"]');
+                    if (inputField) {
+                      (inputField as HTMLInputElement).focus();
                     }
                   }}
                 >
@@ -725,7 +568,7 @@ const ChatContainer = ({
                 return;
               }
               handleSubmit(e)
-            }} className="border-t p-3">
+            }} className={`border-t p-3 ${config.theme === 'dark' ? 'border-gray-800 bg-gray-900' : ''}`}>
               <div className="relative">
                 <input
                   type="text"
@@ -733,7 +576,7 @@ const ChatContainer = ({
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={config.messagePlaceholder}
                   className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
-                    } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`}
+                    } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
                   disabled={isLoading || !!currentNodeId}
                 />
                 <button
@@ -742,7 +585,7 @@ const ChatContainer = ({
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full disabled:opacity-50"
                   style={{
                     backgroundColor: !isLoading && input.trim() && !currentNodeId ? config.userMessageColor : 'transparent',
-                    color: !isLoading && input.trim() && !currentNodeId ? 'white' : 'gray'
+                    color: !isLoading && input.trim() && !currentNodeId ? 'white' : config.theme === 'dark' ? '#9ca3af' : 'gray'
                   }}
                 >
                   <IconSend className="w-4 h-4" />
@@ -751,15 +594,17 @@ const ChatContainer = ({
             </form>
 
             {/* Footer */}
-            {!mocking && embed && <div className="p-2 text-center text-sm text-gray-500">
-              <span>Powered by <a href={`${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}//${process.env.NEXT_PUBLIC_DOMAIN}`} target="_black" className="text-blue-600 hover:text-blue-800">Chatsa.co</a></span>
+            {!mocking && embed && <div className={`p-2 text-center text-sm ${config.theme === 'dark' ? 'text-gray-400 bg-gray-900' : 'text-gray-500'}`}>
+              <span>Powered by <a href={`${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}//${process.env.NEXT_PUBLIC_DOMAIN}`} target="_black" className={`${config.theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}>Chatsa.co</a></span>
               {config.footerText && <span className="ml-1">{config.footerText}</span>}
             </div>}
           </div>
         </div>
         <button
           onClick={() => { loadSources(); setIsModalOpen(true); }} // Open modal on button click
-          className={`${embed ? 'hidden' : ""} mt-2 w-full rounded-md border-[1px] bg-white p-2 text-center hover:bg-slate-100`}
+          className={`${embed ? 'hidden' : ""} mt-2 w-full rounded-md border-[1px] ${
+            config.theme === 'dark' ? 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700' : 'bg-white hover:bg-slate-100'
+          } p-2 text-center`}
         >
           {loadingSources ? 'Loading Sources...' : "Show Sources"}
         </button>

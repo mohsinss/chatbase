@@ -517,7 +517,9 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
         >
           <div className="h-[500px] lg:min-h-[calc(100vh-200px)]">
             <Card 
-              className="h-full flex flex-col mx-auto transition-all duration-300 ease-in-out"
+              className={`h-full flex flex-col mx-auto transition-all duration-300 ease-in-out ${
+                config.theme === 'dark' ? 'bg-gray-900 border-gray-800' : ''
+              }`}
               style={{ 
                 width: isExpanded ? '300px' : `${config.chatWidth}px`,
               }}
@@ -525,10 +527,10 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
               <div 
                 className={`p-4 border-b flex items-center justify-between ${
                   config.roundedHeaderCorners ? 'rounded-t-xl' : ''
-                }`}
+                } ${config.theme === 'dark' ? 'border-gray-800' : ''}`}
                 style={{
-                  backgroundColor: config.syncColors ? config.userMessageColor : undefined,
-                  color: config.syncColors ? 'white' : undefined
+                  backgroundColor: config.syncColors ? config.userMessageColor : config.theme === 'dark' ? '#1f2937' : undefined,
+                  color: config.syncColors || config.theme === 'dark' ? 'white' : undefined
                 }}
               >
                 <div className="flex items-center gap-3">
@@ -555,7 +557,9 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
               </div>
 
               <div 
-                className="flex-1 p-4 space-y-4 overflow-y-auto relative"
+                className={`flex-1 p-4 space-y-4 overflow-y-auto relative ${
+                  config.theme === 'dark' ? 'bg-gray-900 text-white' : ''
+                }`}
                 style={{
                   backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
                   backgroundSize: 'cover',
@@ -567,14 +571,16 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                   <div 
                     className="absolute inset-0" 
                     style={{
-                      backgroundColor: 'white',
+                      backgroundColor: config.theme === 'dark' ? '#111827' : 'white',
                       opacity: 1 - config.chatBackgroundOpacity
                     }}
                   />
                 )}
                 {/* Keep existing chat messages */}
                 <div className="relative z-10">
-                  <div className={`bg-gray-100 p-3 ${
+                  <div className={`${
+                    config.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100'
+                  } p-3 ${
                     config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
                   } max-w-[80%]`}>
                     {config.initialMessage}
@@ -602,14 +608,16 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 />
               )}
 
-              <div className="p-4 border-t">
+              <div className={`p-4 border-t ${config.theme === 'dark' ? 'border-gray-800' : ''}`}>
                 {/* Suggested Messages - display only */}
                 <div className="mb-4 flex flex-wrap gap-2 overflow-x-auto pb-2 lg:pb-0">
                   <div className="flex gap-2 min-w-full lg:min-w-0">
                     {config.suggestedMessages.split('\n').filter(msg => msg.trim()).map((message, index) => (
                       <button
                         key={index}
-                        className="px-4 py-2 bg-gray-100 rounded-full text-sm whitespace-nowrap"
+                        className={`px-4 py-2 ${
+                          config.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100'
+                        } rounded-full text-sm whitespace-nowrap`}
                       >
                         {message}
                       </button>
@@ -622,7 +630,9 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                   <input 
                     type="text"
                     placeholder={config.messagePlaceholder}
-                    className={`flex h-10 w-full border border-input bg-background px-3 py-2 text-sm ${
+                    className={`flex h-10 w-full border ${
+                      config.theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-background border-input'
+                    } px-3 py-2 text-sm ${
                       config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
                     }`}
                   />
@@ -636,7 +646,9 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 </div>
 
                 {/* Footer */}
-                <div className="mt-2 text-center text-sm text-gray-500 flex items-center justify-center gap-1">
+                <div className={`mt-2 text-center text-sm ${
+                  config.theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                } flex items-center justify-center gap-1`}>
                   <span>Powered By ChatSA.co</span>
                   <span>{config.footerText}</span>
                 </div>
@@ -695,7 +707,19 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                   </label>
                   <select
                     value={config.theme}
-                    onChange={(e) => handleConfigChange('theme', e.target.value as 'light' | 'dark')}
+                    onChange={(e) => {
+                      const newTheme = e.target.value as 'light' | 'dark';
+                      handleConfigChange('theme', newTheme)
+                      
+                      // Immediately update the embed script with the new theme
+                      window.postMessage({
+                        type: 'chatbot-settings-update',
+                        settings: {
+                          ...config,
+                          theme: newTheme
+                        }
+                      }, '*');
+                    }}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     <option value="light">Light</option>
