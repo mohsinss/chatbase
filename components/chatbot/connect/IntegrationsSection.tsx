@@ -14,6 +14,7 @@ interface IntegrationCardProps {
   icon: string;
   onClick: () => void;
   showDeviceIcon?: boolean;
+  commingSoon?: boolean;
   isConnecting: boolean;
   connected: boolean;
 }
@@ -32,39 +33,49 @@ interface MetaBusinessResponse {
   error?: string;
 }
 
-const IntegrationCard = ({ title, description, icon, onClick, showDeviceIcon = false, isConnecting, connected }: IntegrationCardProps) => (
-  <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-    <div className={`w-12 h-12 rounded-full overflow-hidden ${connected ? '' : 'bg-gray-500'}`}>
-      {icon.endsWith('.svg') ? (
-        <img
-          src={icon}
-          alt={title}
-          className={`object-contain w-full h-full ${connected ? '' : 'bg-gray-500'}`}
-          // style={{ filter: connected ? 'invert(41%) sepia(99%) saturate(749%) hue-rotate(87deg) brightness(95%) contrast(89%)' : 'none' }}
-        />
-      ) : (
-        <Image
-          src={icon}
-          alt={title}
-          width={48}
-          height={48}
-          className="object-contain"
-        />
-      )}
-    </div>
-
+const IntegrationCard = ({
+  title,
+  description,
+  icon,
+  onClick,
+  showDeviceIcon = false,
+  isConnecting,
+  connected,
+  commingSoon
+}: IntegrationCardProps) => (
+  <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4 flex flex-col justify-between">
     <div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600 text-sm mb-4">{description}</p>
-    </div>
+      <div className={`w-12 h-12 rounded-full overflow-hidden ${connected ? '' : 'bg-gray-500'}`}>
+        {icon.endsWith('.svg') ? (
+          <img
+            src={icon}
+            alt={title}
+            className={`object-contain w-full h-full ${connected ? '' : 'bg-gray-500'}`}
+          // style={{ filter: connected ? 'invert(41%) sepia(99%) saturate(749%) hue-rotate(87deg) brightness(95%) contrast(89%)' : 'none' }}
+          />
+        ) : (
+          <Image
+            src={icon}
+            alt={title}
+            width={48}
+            height={48}
+            className="object-contain"
+          />
+        )}
+      </div>
 
+      <div>
+        <h3 className="text-lg font-semibold mb-2">{title}</h3>
+        <p className="text-gray-600 text-sm mb-4">{description}</p>
+      </div>
+    </div>
     <div className="flex items-center gap-2">
       <button
         onClick={onClick}
         className="flex-1 px-4 py-2 text-center rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50"
-        disabled={isConnecting}
+        disabled={isConnecting || commingSoon}
       >
-        {connected ? "Manage" : isConnecting ? "Connecting..." : "Connect"}
+        {commingSoon ? "Comming Soon" : connected ? "Manage" : isConnecting ? "Connecting..." : "Connect"}
       </button>
       {showDeviceIcon && (
         <button className="p-2 rounded-lg border border-gray-200 hover:border-gray-300">
@@ -126,9 +137,9 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
         toast.success("Successfully connected to X!");
       }
     };
-  
+
     window.addEventListener('message', handleMessage);
-  
+
     return () => {
       window.removeEventListener('message', handleMessage);
     };
@@ -265,13 +276,13 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
       const height = 700;
       const left = window.screen.width / 2 - width / 2;
       const top = window.screen.height / 2 - height / 2;
-  
+
       const popup = window.open(
         `/api/auth/x?chatbotId=${chatbotId}`,
         "X OAuth",
         `width=${width},height=${height},top=${top},left=${left}`
       );
-  
+
       // Listen for messages from the popup window
       const popupTick = setInterval(() => {
         if (popup?.closed) {
@@ -328,47 +339,51 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
       description: "Connect your chatbot with Slack, mention it, and have it reply to any message.",
       icon: "/integrations/slack.svg",
       onClick: () => handleConnect("Slack"),
-      showDeviceIcon: true
+      showDeviceIcon: false,
+      commingSoon: true,
     },
     {
       title: "Wordpress",
       description: "Use the official Chatsa plugin for Wordpress to add the chat widget to your website.",
       icon: "/integrations/wordpress.svg",
-      onClick: () => handleConnect("Wordpress")
+      onClick: () => handleConnect("Wordpress"),
+      commingSoon: true,
     },
     {
       title: "Whatsapp",
       description: "Connect your chatbot to a WhatsApp number and let it respond to messages from your customers.",
       icon: "/integrations/whatsapp.svg",
       onClick: () => handleConnect("Whatsapp"),
-      showDeviceIcon: true
+      showDeviceIcon: false
     },
     {
       title: "Messenger",
       description: "Connect your chatbot to a facebook page and let it respond to messages from your customers.",
       icon: "/integrations/messenger.svg",
       onClick: () => handleConnect("Messenger"),
-      showDeviceIcon: true
+      showDeviceIcon: false
     },
     {
       title: "Instagram",
       description: "Connect your chatbot to a instagram page and let it respond to messages from your customers.",
       icon: "/integrations/instagram.svg",
       onClick: () => handleConnect("Instagram"),
-      showDeviceIcon: true
+      showDeviceIcon: false
     },
     {
       title: "X",
       description: "Connect your chatbot to a x page and let it respond to messages from your customers.",
       icon: "/integrations/x.svg",
       onClick: () => handleConnect("x"),
-      showDeviceIcon: true
+      showDeviceIcon: false,
+      commingSoon: true,
     },
     {
       title: "Shopify",
       description: "Add your chatbot to your Shopify store to help customers with their questions.",
       icon: "/integrations/shopify.svg",
-      onClick: () => handleConnect("Shopify")
+      onClick: () => handleConnect("Shopify"),
+      commingSoon: true,
     }
   ];
 
