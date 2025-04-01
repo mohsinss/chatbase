@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { IconCopy, IconExternalLink } from "@tabler/icons-react";
 import { QRCodeCanvas } from 'qrcode.react';
+import { Card } from "@/components/ui/card";
 
 interface ShareSectionProps {
   chatbotId: string;
@@ -47,7 +48,7 @@ const ShareSection = ({ chatbotId, domain }: ShareSectionProps) => {
   };
 
   return (
-    <div className="w-full max-w-2xl space-y-6">
+    <Card className="w-full max-w-2xl space-y-6 py-4 px-8 mx-auto">
       <div>
         <h2 className="text-2xl font-semibold mb-2">Share</h2>
         <p className="text-gray-600 mb-6">
@@ -110,7 +111,7 @@ const ShareSection = ({ chatbotId, domain }: ShareSectionProps) => {
           </button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Switch } from "@headlessui/react";
 import { IconInfoCircle, IconCopy } from "@tabler/icons-react";
+import { Card } from "@/components/ui/card";
 
 const EmbedSection = ({ chatbotId, domain }: { chatbotId: string, domain: string }) => {
   const [isPublic, setIsPublic] = useState(false);
@@ -85,10 +86,10 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
   };
 
   return (
-    <div className="w-full max-w-2xl">
+    <Card className="w-full max-w-2xl mx-auto py-4 px-8">
       {/* Public Toggle */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-medium">Embed Settings</h2>
+        <h2 className="text-2xl font-medium">Embed Settings</h2>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-600">Make Public</span>
           <Switch
@@ -285,7 +286,7 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 };
 
