@@ -12,6 +12,8 @@ import Link from "next/link";
 import { useSearchParams } from 'next/navigation';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PlansSettings } from "@/components/tabs/settings/PlansSettings";
+import CalComBooker from "@/components/chatbot/actions/CalComBooker";
+import { getEventTypeId, bookMeeting, combineDateAndTime } from "@/lib/calcom";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -70,7 +72,11 @@ interface ChatContainerProps {
   currentNodeId?: Number;
   qFlowAIEnabled: boolean;
   standalone?: boolean;
+  showCalendar: boolean;
+  setShowCalendar: React.Dispatch<React.SetStateAction<boolean>>;
+  availableSlots: Record<string, { time: string }[]>;
   handleSendMessage: (message: string) => Promise<void>;
+  meetingUrl?: string;
 }
 
 interface ChatConfig {
@@ -117,7 +123,11 @@ const ChatContainer = ({
   qFlowAIEnabled,
   standalone = false,
   mocking = false,
+  showCalendar,
+  setShowCalendar,
   handleSendMessage,
+  availableSlots,
+  meetingUrl
 }: ChatContainerProps) => {
   const getBackgroundColor = (confidenceScore: number) => {
     if (confidenceScore === -1) {
@@ -327,6 +337,59 @@ const ChatContainer = ({
     }
   };
 
+  const handleTimeSlotSelect = (data: any) => {
+    console.log(data)
+  }
+
+  const onScheduleSubmit = async (date: Date, timeSlot: string, formData: { name: string; email: string; notes?: string; guests?: string; rescheduleReason?: string }) => {
+    const [username, eventSlug] = meetingUrl.replace("https://cal.com/", "").split("/");
+    const eventTypeId = await getEventTypeId(username, eventSlug);
+
+    if (!eventTypeId) {
+      toast.error('Unable to retrieve event type ID.');
+      return false;
+    }
+
+    const startTime = combineDateAndTime(date, timeSlot);
+
+    const bookingPayload = {
+      eventTypeId,
+      start: startTime.toISOString(),
+      responses: {
+        name: formData.name,
+        email: formData.email,
+        location: { value: 'userPhone', optionValue: '' },
+      },
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      language: 'en',
+      title: `Meeting between ${username} and ${formData.name}`,
+      description: formData.notes || null,
+      status: 'PENDING',
+      metadata: {},
+    };
+
+    try {
+      const bookingResult = await bookMeeting(bookingPayload);
+      toast.success('Meeting successfully booked!');
+
+      // Add assistant message after successful booking
+      setMessages(prevMessages => [
+        ...prevMessages,
+        {
+          role: 'assistant',
+          content: `Your meeting has been successfully booked for ${startTime.toLocaleString()}.`,
+          confidenceScore: 100,
+        }
+      ]);
+
+      setShowCalendar(false);
+      return true;
+    } catch (error) {
+      toast.error(`Booking failed: ${error.message}`);
+      return false;
+    }
+  }
+
   return (
     <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center ${mocking ? 'h-[calc(100dvh-300px)]' : 'min-h-[calc(100dvh-80px)] h-full'}`}>
       <div
@@ -342,15 +405,15 @@ const ChatContainer = ({
           </button>
         )}
 
-        <div className={`h-full flex flex-col bg-white shadow-sm border ${config.theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : ''
+        <div className={`h-full flex flex-col bg-white shadow-sm border overflow-hidden ${config.theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : ''
           } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
           {/* Chat Header */}
           <div
             className={`flex items-center justify-between p-3 border-b ${config.roundedHeaderCorners ? 'rounded-t-xl' : ''
               }`}
             style={{
-              backgroundColor: config.syncColors ? config.userMessageColor : 
-                              config.theme === 'dark' ? '#1e3a8a' : undefined, // Dark blue for dark theme
+              backgroundColor: config.syncColors ? config.userMessageColor :
+                config.theme === 'dark' ? '#1e3a8a' : undefined, // Dark blue for dark theme
               color: config.syncColors || config.theme === 'dark' ? 'white' : undefined
             }}
           >
@@ -534,6 +597,15 @@ const ChatContainer = ({
                     </div>
                   </div>
                 }
+                {showCalendar && (
+                  <div className="flex justify-start pt-4">
+                    <div className="flex gap-3 max-w-[80%]">
+                      <div className="bg-muted rounded-lg p-0">
+                        <CalComBooker onSubmit={onScheduleSubmit} availableSlots={availableSlots} theme={config.theme} />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div ref={messagesEndRef} />
             </div>
@@ -545,9 +617,8 @@ const ChatContainer = ({
               {config.suggestedMessages && config.suggestedMessages.split('\n').filter(Boolean).map((message: string, i: number) => (
                 <button
                   key={i}
-                  className={`inline-block mr-2 mb-2 px-3 py-1.5 text-xs rounded-full ${
-                    config.theme === 'dark' ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
+                  className={`inline-block mr-2 mb-2 px-3 py-1.5 text-xs rounded-full ${config.theme === 'dark' ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
                   onClick={() => {
                     if (embed && !standalone && !isLoading && showLead && (leadSetting?.enable == "immediately"
                       || (leadSetting?.enable == "after"
@@ -555,7 +626,7 @@ const ChatContainer = ({
                       toast.error('Please submit the form. 🙂');
                       return;
                     }
-                    
+
                     // Set input and immediately send the message
                     setInput(message);
                     handleSendMessage(message);
@@ -610,14 +681,14 @@ const ChatContainer = ({
         </div>
         <button
           onClick={() => { loadSources(); setIsModalOpen(true); }} // Open modal on button click
-          className={`${embed ? 'hidden' : ""} mt-2 w-full rounded-md border-[1px] ${
-            config.theme === 'dark' ? 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700' : 'bg-white hover:bg-slate-100'
-          } p-2 text-center`}
+          className={`${embed ? 'hidden' : ""} mt-2 w-full rounded-md border-[1px] ${config.theme === 'dark' ? 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700' : 'bg-white hover:bg-slate-100'
+            } p-2 text-center`}
         >
           {loadingSources ? 'Loading Sources...' : "Show Sources"}
         </button>
       </div>
       {!embed && <Modal isOpen={isModalOpen && !loadingSources} onClose={() => setIsModalOpen(false)} />}
+
     </div>
   );
 };
@@ -662,6 +733,98 @@ const Playground = ({
   const [qFlowEnabled, setQFlowEnabled] = useState(false);
   const [qFlowAIEnabled, setQFlowAIEnabled] = useState(true);
   const [isUpgradePlanModalOpen, setIsUpgradePlanModalOpen] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [meetingUrl, setMeetingUrl] = useState(process.env.NEXT_PUBLIC_MEETING_URL);
+  const [availableSlots, setAvailableSlots] = useState<Record<string, { time: string }[]>>({
+    '2025-03-31': [
+      { time: '2025-03-31T00:00:00.000Z' },
+      { time: '2025-03-31T01:30:00.000Z' },
+      { time: '2025-03-31T02:00:00.000Z' },
+      { time: '2025-03-31T02:30:00.000Z' },
+      { time: '2025-03-31T03:00:00.000Z' },
+      { time: '2025-03-31T03:30:00.000Z' },
+      { time: '2025-03-31T04:00:00.000Z' },
+      { time: '2025-03-31T04:30:00.000Z' },
+      { time: '2025-03-31T05:00:00.000Z' },
+      { time: '2025-03-31T05:30:00.000Z' },
+      { time: '2025-03-31T06:00:00.000Z' },
+      { time: '2025-03-31T06:30:00.000Z' },
+      { time: '2025-03-31T07:00:00.000Z' },
+      { time: '2025-03-31T07:30:00.000Z' }
+    ],
+    '2025-04-01': [
+      { time: '2025-04-01T00:00:00.000Z' },
+      { time: '2025-04-01T00:30:00.000Z' },
+      { time: '2025-04-01T01:00:00.000Z' },
+      { time: '2025-04-01T01:30:00.000Z' },
+      { time: '2025-04-01T02:00:00.000Z' },
+      { time: '2025-04-01T02:30:00.000Z' },
+      { time: '2025-04-01T03:00:00.000Z' },
+      { time: '2025-04-01T03:30:00.000Z' },
+      { time: '2025-04-01T04:00:00.000Z' },
+      { time: '2025-04-01T04:30:00.000Z' },
+      { time: '2025-04-01T05:00:00.000Z' },
+      { time: '2025-04-01T05:30:00.000Z' },
+      { time: '2025-04-01T06:00:00.000Z' },
+      { time: '2025-04-01T06:30:00.000Z' },
+      { time: '2025-04-01T07:00:00.000Z' },
+      { time: '2025-04-01T07:30:00.000Z' }
+    ],
+    '2025-04-02': [
+      { time: '2025-04-02T00:00:00.000Z' },
+      { time: '2025-04-02T00:30:00.000Z' },
+      { time: '2025-04-02T01:00:00.000Z' },
+      { time: '2025-04-02T01:30:00.000Z' },
+      { time: '2025-04-02T02:00:00.000Z' },
+      { time: '2025-04-02T02:30:00.000Z' },
+      { time: '2025-04-02T03:00:00.000Z' },
+      { time: '2025-04-02T03:30:00.000Z' },
+      { time: '2025-04-02T04:00:00.000Z' },
+      { time: '2025-04-02T04:30:00.000Z' },
+      { time: '2025-04-02T05:00:00.000Z' },
+      { time: '2025-04-02T05:30:00.000Z' },
+      { time: '2025-04-02T06:00:00.000Z' },
+      { time: '2025-04-02T06:30:00.000Z' },
+      { time: '2025-04-02T07:00:00.000Z' },
+      { time: '2025-04-02T07:30:00.000Z' }
+    ],
+    '2025-04-03': [
+      { time: '2025-04-03T00:00:00.000Z' },
+      { time: '2025-04-03T00:30:00.000Z' },
+      { time: '2025-04-03T01:00:00.000Z' },
+      { time: '2025-04-03T01:30:00.000Z' },
+      { time: '2025-04-03T02:00:00.000Z' },
+      { time: '2025-04-03T02:30:00.000Z' },
+      { time: '2025-04-03T03:00:00.000Z' },
+      { time: '2025-04-03T03:30:00.000Z' },
+      { time: '2025-04-03T04:00:00.000Z' },
+      { time: '2025-04-03T04:30:00.000Z' },
+      { time: '2025-04-03T05:00:00.000Z' },
+      { time: '2025-04-03T05:30:00.000Z' },
+      { time: '2025-04-03T06:00:00.000Z' },
+      { time: '2025-04-03T06:30:00.000Z' },
+      { time: '2025-04-03T07:00:00.000Z' },
+      { time: '2025-04-03T07:30:00.000Z' }
+    ],
+    '2025-04-04': [
+      { time: '2025-04-04T00:00:00.000Z' },
+      { time: '2025-04-04T00:30:00.000Z' },
+      { time: '2025-04-04T01:00:00.000Z' },
+      { time: '2025-04-04T01:30:00.000Z' },
+      { time: '2025-04-04T02:00:00.000Z' },
+      { time: '2025-04-04T02:30:00.000Z' },
+      { time: '2025-04-04T03:00:00.000Z' },
+      { time: '2025-04-04T03:30:00.000Z' },
+      { time: '2025-04-04T04:00:00.000Z' },
+      { time: '2025-04-04T04:30:00.000Z' },
+      { time: '2025-04-04T05:00:00.000Z' },
+      { time: '2025-04-04T05:30:00.000Z' },
+      { time: '2025-04-04T06:00:00.000Z' },
+      { time: '2025-04-04T06:30:00.000Z' },
+      { time: '2025-04-04T07:00:00.000Z' },
+      { time: '2025-04-04T07:30:00.000Z' }
+    ]
+  });
 
   const debouncedSave = React.useCallback(
     debounce((msgs: Message[]) => {
@@ -1096,6 +1259,12 @@ const Playground = ({
                     ];
                   });
                 }
+                if (parsed?.slots && Object.keys(parsed.slots).some(date => parsed.slots[date].length > 0)) {
+                  // for selecting time slot
+                  setShowCalendar(true);
+                  setAvailableSlots(parsed.slots);
+                  setMeetingUrl(parsed.meetingUrl);
+                }
               }
               else if (line.startsWith('reason: ')) {
                 const data = line.slice(7).trim();
@@ -1149,9 +1318,8 @@ const Playground = ({
     toast.custom(
       (t) => (
         <div
-          className={`${
-            t.visible ? 'animate-enter' : 'animate-leave'
-          } max-w-md w-full bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg rounded-lg pointer-events-auto`}
+          className={`${t.visible ? 'animate-enter' : 'animate-leave'
+            } max-w-md w-full bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg rounded-lg pointer-events-auto`}
         >
           <div className="p-4">
             <div className="flex items-start">
@@ -1227,9 +1395,13 @@ const Playground = ({
             conversationId={conversationId}
             qFlowAIEnabled={qFlowAIEnabled}
             mocking={mocking}
+            showCalendar={showCalendar}
+            setShowCalendar={setShowCalendar}
+            availableSlots={availableSlots}
             handleSendMessage={handleSendMessage}
+            meetingUrl={meetingUrl}
           />
-          
+
           {/* Upgrade Plan Modal - also available in embed view */}
           <Dialog open={isUpgradePlanModalOpen} onOpenChange={handleUpgradePlanModalClose}>
             <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
@@ -1243,7 +1415,7 @@ const Playground = ({
                         You've reached your plan's message limit
                       </p>
                     </div>
-                    <button 
+                    <button
                       onClick={handleUpgradePlanModalClose}
                       className="btn btn-sm btn-circle bg-white/20 hover:bg-white/30 border-none text-white"
                     >
@@ -1251,7 +1423,7 @@ const Playground = ({
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Note below header */}
                 <div className="bg-blue-50 border-b border-blue-100 px-6 py-4">
                   <div className="flex gap-3 items-center">
@@ -1263,7 +1435,7 @@ const Playground = ({
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Content with slight padding */}
                 <div className="p-6">
                   {/* Get the teamId from the URL */}
@@ -1349,12 +1521,16 @@ const Playground = ({
               leadSetting={leadSetting}
               embed={embed}
               qFlowAIEnabled={qFlowAIEnabled}
+              showCalendar={showCalendar}
+              setShowCalendar={setShowCalendar}
+              availableSlots={availableSlots}
+              meetingUrl={meetingUrl}
               handleSendMessage={handleSendMessage}
             />
             {/* } */}
           </div>
         </div>
-        
+
         {/* Upgrade Plan Modal */}
         <Dialog open={isUpgradePlanModalOpen} onOpenChange={handleUpgradePlanModalClose}>
           <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
@@ -1368,7 +1544,7 @@ const Playground = ({
                       You've reached your plan's message limit
                     </p>
                   </div>
-                  <button 
+                  <button
                     onClick={handleUpgradePlanModalClose}
                     className="btn btn-sm btn-circle bg-white/20 hover:bg-white/30 border-none text-white"
                   >
@@ -1376,7 +1552,7 @@ const Playground = ({
                   </button>
                 </div>
               </div>
-              
+
               {/* Note below header */}
               <div className="bg-blue-50 border-b border-blue-100 px-6 py-4">
                 <div className="flex gap-3 items-center">
@@ -1388,7 +1564,7 @@ const Playground = ({
                   </p>
                 </div>
               </div>
-              
+
               {/* Content with slight padding */}
               <div className="p-6">
                 {/* Get the teamId from the URL */}

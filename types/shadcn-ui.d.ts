@@ -6,10 +6,6 @@ declare module '@/components/ui/popover' {
   export const PopoverTrigger: React.ForwardRefExoticComponent<any>;
 }
 
-declare module '@/components/ui/calendar' {
-  export const Calendar: React.FC<any>;
-}
-
 declare module '@/components/ui/radio-group' {
   export const RadioGroup: React.ForwardRefExoticComponent<any>;
   export const RadioGroupItem: React.ForwardRefExoticComponent<any>;
