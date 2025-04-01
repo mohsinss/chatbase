@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "instagram", "metadata.from": from, "metadata.to": to });
     if (conversation) {
         // Update existing conversation
-        conversation.messages.push({ role: "assistant", content: text, from: session.user.name });
+        conversation.messages.push({ role: "assistant", content: text, from_name: session.user.name });
     } else {
         return NextResponse.json({ error: "Can't find conversation." }, { status: 200 });
     }

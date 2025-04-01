@@ -445,7 +445,8 @@ export async function POST(request: Request) {
             chatbotId,
             platform: "instagram-comment",
             disable_auto_reply: false,
-            metadata: { from: from, 
+            metadata: { 
+              from: from, 
               to: instagram_business_account, 
               parent_id, 
               from_name, 

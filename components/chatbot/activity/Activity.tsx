@@ -34,6 +34,7 @@ interface Conversation {
   metadata?: {
     from?: string,
     to?: string,
+    to_name?: string,
     from_name?: string
     page_id?: string
     comment_id?: string
@@ -313,6 +314,19 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
             text: inputMsg,
           }),
         });
+      } else if (conversation?.platform == "instagram-comment") {
+        response = await fetch('/api/chatbot/chat/sendviainstagramcomment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: conversation.metadata.from,
+            to: conversation.metadata.to,
+            comment_id: conversation.metadata.comment_id,
+            text: inputMsg,
+          }),
+        });
       }
 
       if (!response.ok) {
@@ -460,6 +474,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                           {conversation?.platform == "facebook" && <IconBrandFacebook className="text-blue-600" />}
                           {conversation?.platform == "facebook-comment" && <IconMessage className="text-blue-600" />}
                           {conversation?.platform == "instagram" && <IconBrandInstagram className="text-pink-600" />}
+                          {conversation?.platform == "instagram-comment" && <IconMessage className="text-pink-600" />}
                           {(!conversation.platform || conversation.platform === "" || conversation.platform === "Playground") && <IconBrowser className="text-gray-700" />}
                           {truncateContent(firstUserMessage?.content || 'No message content')}
                         </p>
@@ -497,20 +512,15 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                         {selectedConversation?.platform == "whatsapp" && <IconBrandWhatsapp className="text-green-400" />}
                         {selectedConversation?.platform == "facebook" && <IconBrandFacebook className="text-blue-600" />}
                         {selectedConversation?.platform == "facebook-comment" && <IconMessage className="text-blue-600" />}
+                        {selectedConversation?.platform == "instagram-comment" && <IconMessage className="text-pink-600" />}
                       </h3>
-                      {selectedConversation?.platform == "whatsapp" &&
+                      {(selectedConversation?.platform == "whatsapp" ||
+                        selectedConversation?.platform == "facebook" ||
+                        selectedConversation?.platform == "facebook-comment" ||
+                        selectedConversation?.platform == "instagram-comment" ||
+                        selectedConversation?.platform == "instagram") &&
                         <div>
-                          from {selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to}
-                        </div>
-                      }
-                      {selectedConversation?.platform == "facebook" &&
-                        <div>
-                          from {selectedConversation?.metadata?.from_name ?? selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to}
-                        </div>
-                      }
-                      {selectedConversation?.platform == "facebook-comment" &&
-                        <div>
-                          from {selectedConversation?.metadata?.from_name ?? selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to}
+                          from {selectedConversation?.metadata?.from_name ?? selectedConversation?.metadata?.from} to {selectedConversation?.metadata?.to_name ?? selectedConversation?.metadata?.to}
                         </div>
                       }
                       <div className="text-sm text-gray-500">
@@ -518,15 +528,19 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={toggleAutoReply}
-                          className={`btn btn-sm gap-2 ${autoReplyEnabled ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'
-                            } hover:opacity-80 transition-opacity`}
-                        >
-                          {autoReplyEnabled ? 'Disable Auto-Reply' : 'Enable Auto-Reply'}
-                        </button>
-                      </div>
+                      {!(!selectedConversation?.platform ||
+                        selectedConversation?.platform === "" ||
+                        selectedConversation?.platform === "Playground") &&
+                        <div className="flex gap-2">
+                          <button
+                            onClick={toggleAutoReply}
+                            className={`btn btn-sm gap-2 ${autoReplyEnabled ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'
+                              } hover:opacity-80 transition-opacity`}
+                          >
+                            {autoReplyEnabled ? 'Disable Auto-Reply' : 'Enable Auto-Reply'}
+                          </button>
+                        </div>
+                      }
                       <button className="p-1 hover:bg-gray-100 rounded">
                         <IconTrash className="w-6 h-6 text-gray-400 hover:text-red-500" />
                       </button>
@@ -586,6 +600,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                   || selectedConversation?.platform == "facebook"
                   || selectedConversation?.platform == "instagram"
                   || selectedConversation?.platform == "facebook-comment"
+                  || selectedConversation?.platform == "instagram-comment"
                 )
                 &&
                 <div className="relative">
