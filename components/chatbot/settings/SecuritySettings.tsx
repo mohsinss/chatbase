@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Card } from "@/components/ui/card";
 
 interface SecuritySettingsProps {
   chatbotId: string;
@@ -29,7 +30,7 @@ export default function SecuritySettings({ chatbotId }: SecuritySettingsProps) {
   };
 
   return (
-    <div className="w-full max-w-2xl">
+    <Card className="p-6 space-y-6 max-w-3xl mx-auto">
       <div className="space-y-6">
         {/* Visibility Section */}
         <div className="space-y-4">
@@ -139,6 +140,6 @@ export default function SecuritySettings({ chatbotId }: SecuritySettingsProps) {
           </button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 } 

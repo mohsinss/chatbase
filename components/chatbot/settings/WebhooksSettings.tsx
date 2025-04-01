@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { CustomNotification } from './GeneralSettings'
+import { Card } from "@/components/ui/card";
 
 interface WebhooksSettingsProps {
   chatbotId: string;
@@ -90,7 +91,7 @@ export default function WebhooksSettings({ chatbotId }: WebhooksSettingsProps) {
           onClose={() => setNotification(null)}
         />
       )}
-      <div className="w-full max-w-2xl">
+      <Card className="p-6 space-y-6 max-w-3xl mx-auto">
         <div className="space-y-8">
           {/* Events Section */}
           <div className="space-y-4">
@@ -148,7 +149,7 @@ export default function WebhooksSettings({ chatbotId }: WebhooksSettingsProps) {
             </Button>
           </div>
         </div>
-      </div>
+      </Card>
     </>
   );
 } 

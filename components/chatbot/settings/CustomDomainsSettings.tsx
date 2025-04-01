@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Card } from "@/components/ui/card";
 
 interface CustomDomainsSettingsProps {
   chatbotId: string;
@@ -15,7 +16,7 @@ export default function CustomDomainsSettings({ chatbotId }: CustomDomainsSettin
   };
 
   return (
-    <div className="w-full max-w-2xl">
+    <Card className="p-6 space-y-6 max-w-3xl mx-auto">
       <div className="space-y-6">
         {!isPremium ? (
           <div className="text-center space-y-6 py-8">
@@ -58,6 +59,6 @@ export default function CustomDomainsSettings({ chatbotId }: CustomDomainsSettin
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 } 

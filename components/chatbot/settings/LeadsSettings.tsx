@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CustomNotification } from './GeneralSettings'
+import { CustomNotification } from './GeneralSettings';
+import { Card } from "@/components/ui/card";
 import toast from "react-hot-toast";
 import { IconTrash, IconRefresh, IconFile, IconDownload, IconEye, IconImageInPicture, IconPdf } from "@tabler/icons-react";
 
@@ -142,7 +143,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
           onClose={() => setNotification(null)}
         />
       )}
-      <div className="w-full max-w-2xl">
+      <Card className="p-6 space-y-6 max-w-3xl mx-auto">
         <div className="space-y-6">
           <p className="text-sm text-gray-500">
             Note: Leads form only appears when chatting through the iframe or the chat bubble.
@@ -322,7 +323,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
           </div>
         </div>
 
-      </div>
+      </Card>
     </>
   );
 } 
