@@ -12,7 +12,13 @@ export async function GET() {
       return NextResponse.json({ isAdmin: false }, { status: 403 });
     }
 
-    return NextResponse.json({ isAdmin: true });
+    return NextResponse.json({ 
+      isAdmin: true,
+      user: {
+        email: session.user.email,
+        name: session.user.name
+      }
+    });
   } catch (error) {
     return NextResponse.json({ error: "Authentication failed" }, { status: 500 });
   }

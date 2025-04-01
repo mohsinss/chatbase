@@ -6,6 +6,8 @@ import DashboardNav from '@/components/DashboardNav';
 import AdminMetrics from '@/components/AdminMetrics';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ChevronDown, Settings, Database, Brush, Users, ExternalLink, MessageSquare, BookOpen, Code, Share2 } from 'lucide-react';
 
 interface ChatbotType {
   chatbotId: string;
@@ -42,6 +44,7 @@ export default function AdminDashboard() {
   const [updatingPlan, setUpdatingPlan] = useState<string | null>(null);
   const [isDeleteUserDialogOpen, setIsDeleteUserDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [adminUser, setAdminUser] = useState<{email: string} | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -50,11 +53,19 @@ export default function AdminDashboard() {
 
   const checkAdminAndFetchUsers = async () => {
     try {
+      // Check if current user is in the ADMIN_EMAILS list
       const authRes = await fetch('/api/admin/auth');
       if (!authRes.ok) {
+        // If not authorized, redirect to dashboard
         router.push('/dashboard');
         return;
       }
+      
+      const authData = await authRes.json();
+      if (authData.user) {
+        setAdminUser(authData.user);
+      }
+      
       setAuthChecking(false);
 
       const usersRes = await fetch('/api/admin/users');
@@ -271,6 +282,102 @@ export default function AdminDashboard() {
     }
   };
 
+  const navigateToChatbotPage = (teamId: string, chatbotId: string, path: string = '') => {
+    // Ensure admin access and then navigate to specific chatbot page
+    try {
+      // First create or verify admin session for this resource
+      fetch('/api/admin/impersonate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamId, chatbotId }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to create admin access session');
+        }
+        
+        // After successful authentication, navigate to the target page
+        const url = `/dashboard/${teamId}/chatbot/${chatbotId}${path}`;
+        window.open(url, '_blank');
+      })
+      .catch(error => {
+        console.error('Error setting up admin access:', error);
+        alert('Failed to access user resources. Please try again.');
+      });
+    } catch (error) {
+      console.error('Error accessing chatbot page:', error);
+      alert('Failed to access chatbot page');
+    }
+  };
+  
+  const handleChatbotAccess = (teamId: string, chatbotId: string, page: string) => {
+    switch(page) {
+      case 'chat':
+        navigateToChatbotPage(teamId, chatbotId, '');
+        break;
+      case 'sources':
+        navigateToChatbotPage(teamId, chatbotId, '/sources');
+        break;
+      case 'settings':
+        navigateToChatbotPage(teamId, chatbotId, '/settings');
+        break;
+      case 'chat-interface':
+        navigateToChatbotPage(teamId, chatbotId, '/settings/chat-interface');
+        break;
+      case 'users':
+        navigateToChatbotPage(teamId, chatbotId, '/settings/users');
+        break;
+      case 'usage':
+        navigateToChatbotPage(teamId, chatbotId, '/settings/usage');
+        break;
+      case 'training':
+        navigateToChatbotPage(teamId, chatbotId, '/training');
+        break;
+      case 'embed':
+        navigateToChatbotPage(teamId, chatbotId, '/settings/embed');
+        break;
+      case 'api':
+        navigateToChatbotPage(teamId, chatbotId, '/settings/api');
+        break;
+      case 'team-settings':
+        navigateToTeamPage(teamId);
+        break;
+      default:
+        navigateToChatbotPage(teamId, chatbotId);
+    }
+  };
+
+  const navigateToTeamPage = (teamId: string) => {
+    try {
+      // Authenticate admin for team access
+      fetch('/api/admin/impersonate-team', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamId }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to create admin team access session');
+        }
+        
+        // Navigate to team settings page
+        const url = `/dashboard/${teamId}/settings`;
+        window.open(url, '_blank');
+      })
+      .catch(error => {
+        console.error('Error setting up admin team access:', error);
+        alert('Failed to access team settings. Please try again.');
+      });
+    } catch (error) {
+      console.error('Error accessing team page:', error);
+      alert('Failed to access team settings');
+    }
+  };
+
   if (authChecking || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -288,7 +395,15 @@ export default function AdminDashboard() {
     <>
       <DashboardNav teamId="" />
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+          {adminUser && (
+            <div className="bg-purple-100 text-purple-800 px-4 py-2 rounded-md text-sm flex items-center">
+              <span className="font-medium">Admin:</span> 
+              <span className="ml-2">{adminUser.email}</span>
+            </div>
+          )}
+        </div>
         
         <AdminMetrics 
           users={users}
@@ -358,18 +473,29 @@ export default function AdminDashboard() {
                           </div>
                           <span>{team.chatbots.length} Chatbots</span>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteTeam(team.teamId, team.chatbots);
-                          }}
-                          className={`opacity-0 group-hover:opacity-100 ml-4 px-3 py-1 text-sm text-red-500 bg-white border-2 border-red-500 rounded hover:bg-red-50 transition-all ${
-                            deletingTeam === team.teamId ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
-                          disabled={deletingTeam === team.teamId}
-                        >
-                          {deletingTeam === team.teamId ? 'Deleting...' : 'Delete'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigateToTeamPage(team.teamId);
+                            }}
+                            className="px-3 py-1 text-sm text-purple-500 bg-white border-2 border-purple-500 rounded hover:bg-purple-50 transition-all"
+                          >
+                            Team Settings
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTeam(team.teamId, team.chatbots);
+                            }}
+                            className={`opacity-0 group-hover:opacity-100 ml-4 px-3 py-1 text-sm text-red-500 bg-white border-2 border-red-500 rounded hover:bg-red-50 transition-all ${
+                              deletingTeam === team.teamId ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                            disabled={deletingTeam === team.teamId}
+                          >
+                            {deletingTeam === team.teamId ? 'Deleting...' : 'Delete'}
+                          </button>
+                        </div>
                       </div>
 
                       {team.isExpanded && (
@@ -398,6 +524,91 @@ export default function AdminDashboard() {
                                 >
                                   Preview Chatbot
                                 </button>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      className="px-3 py-1 text-sm text-purple-500 bg-white border-2 border-purple-500 rounded hover:bg-purple-50 transition-all flex items-center gap-1"
+                                    >
+                                      <span>Admin Access</span>
+                                      <ChevronDown className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-56 p-0">
+                                    <div className="space-y-1 p-2">
+                                      <p className="text-xs font-medium text-gray-500 p-2 border-b">
+                                        Access as User
+                                      </p>
+                                      <button 
+                                        onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'chat')}
+                                        className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
+                                      >
+                                        <MessageSquare className="h-4 w-4" />
+                                        <span>Chat Interface</span>
+                                      </button>
+                                      <button 
+                                        onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'sources')}
+                                        className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
+                                      >
+                                        <Database className="h-4 w-4" />
+                                        <span>Manage Sources</span>
+                                      </button>
+                                      <button 
+                                        onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'training')}
+                                        className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
+                                      >
+                                        <BookOpen className="h-4 w-4" />
+                                        <span>Training</span>
+                                      </button>
+                                      <div className="border-t pt-1">
+                                        <p className="text-xs font-medium text-gray-500 p-2">
+                                          Settings
+                                        </p>
+                                        <button 
+                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'settings')}
+                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
+                                        >
+                                          <Settings className="h-4 w-4" />
+                                          <span>General Settings</span>
+                                        </button>
+                                        <button 
+                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'chat-interface')}
+                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
+                                        >
+                                          <Brush className="h-4 w-4" />
+                                          <span>Chat Interface</span>
+                                        </button>
+                                        <button 
+                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'users')}
+                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
+                                        >
+                                          <Users className="h-4 w-4" />
+                                          <span>Users & Access</span>
+                                        </button>
+                                        <button 
+                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'usage')}
+                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
+                                        >
+                                          <ExternalLink className="h-4 w-4" />
+                                          <span>Usage & Analytics</span>
+                                        </button>
+                                        <button 
+                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'embed')}
+                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
+                                        >
+                                          <Code className="h-4 w-4" />
+                                          <span>Embed Settings</span>
+                                        </button>
+                                        <button 
+                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'api')}
+                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
+                                        >
+                                          <Share2 className="h-4 w-4" />
+                                          <span>API Access</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
