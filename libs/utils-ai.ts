@@ -71,12 +71,12 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
     //@ts-ignore
     const creditLimit = config.stripe.plans[team.plan].credits;
     if (team.credits >= creditLimit) {
-      return NextResponse.json({ status: 'Credit is limited.' }, { status: 200 });
+      return 'Credit is limited.';
     }
   }
 
   if (!dataset) {
-    return NextResponse.json({ status: "Can't find dataset." }, { status: 200 });
+    return "Can't find dataset.";
   }
 
   const options = {
@@ -98,7 +98,7 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
 
   if (!chunk_response.ok) {
     console.error("Semantic search failed.", chunk_response_data);
-    return NextResponse.json({ status: "Semantic search failed." }, { status: 200 });
+    return "Semantic search failed.";
   }
   let relevant_chunk = "Please use the following information for answering.\n";
   for (let i = 0; i < chunk_response_data.chunks.length; i++) {
