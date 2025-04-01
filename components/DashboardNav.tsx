@@ -6,11 +6,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { IconSearch, IconPlus, IconMenu2 } from "@tabler/icons-react";
+import { IconSearch, IconPlus, IconMenu2, IconX, IconArrowUp } from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
 import ButtonAccount from "./ButtonAccount";
 import toast from "react-hot-toast";
 import config from "@/config";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { PlansSettings } from "@/components/tabs/settings/PlansSettings";
 
 interface Chatbot {
   chatbotId: string;
@@ -32,6 +34,8 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
   const router = useRouter();
   const [teams, setTeams] = useState<any[]>([]);
   const [teamSearchQuery, setTeamSearchQuery] = useState("");
+  const [isUpgradePlanModalOpen, setIsUpgradePlanModalOpen] = useState(false);
+  const [currentChatbotLimit, setCurrentChatbotLimit] = useState(0);
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" });
@@ -119,6 +123,11 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
   const filteredTeams = teams.filter(team =>
     team.name.toLowerCase().includes(teamSearchQuery.toLowerCase())
   );
+
+  // Add function to handle modal close
+  const handleUpgradePlanModalClose = () => {
+    setIsUpgradePlanModalOpen(false);
+  };
 
   return (
     <div className="border-b bg-base-100 z-50 relative">
@@ -301,14 +310,26 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
                           <button
                             onClick={() => {
                               if (teamId) {
-                                //@ts-ignore
-                                const chatbotLimit = config.stripe.plans[teams.find(t => t.id == teamId).plan].chatbotLimit;
-                                console.log("chatbotLimit", chatbotLimit)
-                                if (chatbots.length < chatbotLimit) {
-                                  router.push(`/dashboard/${teamId}/create-new-chatbot`);
-                                } else {
+                                try {
                                   //@ts-ignore
-                                  toast.error(`Please update your plan, You can't create more than ${chatbotLimit} chatbots`)
+                                  const team = teams.find(t => t.id === teamId);
+                                  if (team && team.plan) {
+                                    //@ts-ignore
+                                    const chatbotLimit = config.stripe.plans[team.plan].chatbotLimit;
+                                    console.log("chatbotLimit", chatbotLimit);
+                                    
+                                    if (chatbots.length < chatbotLimit) {
+                                      router.push(`/dashboard/${teamId}/create-new-chatbot`);
+                                    } else {
+                                      setCurrentChatbotLimit(chatbotLimit);
+                                      setIsUpgradePlanModalOpen(true);
+                                    }
+                                  } else {
+                                    toast.error("Team information not available");
+                                  }
+                                } catch (error) {
+                                  console.error("Error accessing plan limits:", error);
+                                  toast.error("Could not retrieve plan information");
                                 }
                               }
                               setIsChatbotMenuOpen(false);
@@ -429,6 +450,48 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
           </div>
         </div>
       )}
+
+      {/* Upgrade Plan Modal */}
+      <Dialog open={isUpgradePlanModalOpen} onOpenChange={handleUpgradePlanModalClose}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+          <div className="relative">
+            {/* Header with gradient background */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-6 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1 text-white">
+                  <h2 className="text-2xl font-bold">Upgrade Your Plan</h2>
+                  <p className="opacity-90">
+                    You've reached the limit of {currentChatbotLimit} chatbots on your current plan
+                  </p>
+                </div>
+                <button 
+                  onClick={handleUpgradePlanModalClose}
+                  className="btn btn-sm btn-circle bg-white/20 hover:bg-white/30 border-none text-white"
+                >
+                  <IconX className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Note below header */}
+            <div className="bg-blue-50 border-b border-blue-100 px-6 py-4">
+              <div className="flex gap-3 items-center">
+                <span className="bg-blue-100 p-2 rounded-full">
+                  <IconArrowUp className="w-4 h-4 text-blue-700" />
+                </span>
+                <p className="text-blue-800 text-sm">
+                  Upgrading your plan gives you access to more chatbots, advanced features, and higher message limits.
+                </p>
+              </div>
+            </div>
+            
+            {/* Content with slight padding */}
+            <div className="p-6">
+              <PlansSettings teamId={teamId} />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

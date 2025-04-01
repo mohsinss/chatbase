@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { IconMessage, IconPlus } from "@tabler/icons-react";
+import { IconMessage, IconPlus, IconArrowUp, IconX } from "@tabler/icons-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ConfigPanel from "@/components/chatbot/ConfigPanel";
 import Team from "@/models/Team";
 import config from "@/config";
 import toast from "react-hot-toast";
 import ReactConfetti from 'react-confetti';
+import { PlansSettings } from "@/components/tabs/settings/PlansSettings";
 
 interface Chatbot {
   chatbotId: string;
@@ -30,6 +31,7 @@ const ChatbotsTab = ({ teamId, team }: ChatbotsTabProps) => {
   const [chatbots, setChatbots] = useState<Chatbot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isUpgradePlanModalOpen, setIsUpgradePlanModalOpen] = useState(false);
   const [windowSize, setWindowSize] = useState({
     width: typeof window !== 'undefined' ? window.innerWidth : 0,
     height: typeof window !== 'undefined' ? window.innerHeight : 0
@@ -128,13 +130,17 @@ const ChatbotsTab = ({ teamId, team }: ChatbotsTabProps) => {
     if (chatbots.length < config.stripe.plans[team.plan].chatbotLimit) {
       setIsCreateModalOpen(true);
     } else {
-      //@ts-ignore
-      toast.error(`Please update your plan, You can't create more than ${config.stripe.plans[team.plan].chatbotLimit} chatbots`)
+      // Instead of showing toast error, open the upgrade plan modal
+      setIsUpgradePlanModalOpen(true);
     }
   };
 
   const handleCreateModalClose = () => {
     setIsCreateModalOpen(false);
+  };
+
+  const handleUpgradePlanModalClose = () => {
+    setIsUpgradePlanModalOpen(false);
   };
 
   if (isLoading) {
@@ -234,6 +240,50 @@ const ChatbotsTab = ({ teamId, team }: ChatbotsTabProps) => {
             teamId={teamId}
             onSuccess={refreshChatbots}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Upgrade Plan Modal */}
+      <Dialog open={isUpgradePlanModalOpen} onOpenChange={handleUpgradePlanModalClose}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+          <div className="relative">
+            {/* Header with gradient background */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-6 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1 text-white">
+                  <h2 className="text-2xl font-bold">Upgrade Your Plan</h2>
+                  <p className="opacity-90">
+                    {/* Adding @ts-ignore to fix type error */}
+                    {/* @ts-ignore */}
+                    You've reached the limit of {config.stripe.plans[team.plan].chatbotLimit} chatbots on your current plan
+                  </p>
+                </div>
+                <button 
+                  onClick={handleUpgradePlanModalClose}
+                  className="btn btn-sm btn-circle bg-white/20 hover:bg-white/30 border-none text-white"
+                >
+                  <IconX className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Note below header */}
+            <div className="bg-blue-50 border-b border-blue-100 px-6 py-4">
+              <div className="flex gap-3 items-center">
+                <span className="bg-blue-100 p-2 rounded-full">
+                  <IconArrowUp className="w-4 h-4 text-blue-700" />
+                </span>
+                <p className="text-blue-800 text-sm">
+                  Upgrading your plan gives you access to more chatbots, advanced features, and higher message limits.
+                </p>
+              </div>
+            </div>
+            
+            {/* Content with slight padding */}
+            <div className="p-6">
+              <PlansSettings teamId={teamId} />
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
