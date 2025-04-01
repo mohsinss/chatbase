@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { IconSearch, IconPlus, IconMenu2, IconX, IconArrowUp } from "@tabler/icons-react";
+import { IconSearch, IconPlus, IconMenu2, IconX, IconArrowUp, IconAlertCircle } from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
 import ButtonAccount from "./ButtonAccount";
 import toast from "react-hot-toast";
@@ -21,6 +21,40 @@ interface Chatbot {
   createdBy: string;
   sources: any[];
 }
+
+// Custom toast styles
+const showErrorToast = (message: string) => {
+  toast.custom(
+    (t) => (
+      <div
+        className={`${
+          t.visible ? 'animate-enter' : 'animate-leave'
+        } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+      >
+        <div className="flex-1 w-0 p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0 pt-0.5">
+              <IconAlertCircle className="h-6 w-6 text-red-500" />
+            </div>
+            <div className="ml-3 flex-1">
+              <p className="text-sm font-medium text-gray-900">Error</p>
+              <p className="mt-1 text-sm text-gray-500">{message}</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex border-l border-gray-200">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    ),
+    { duration: 5000, position: 'top-center' }
+  );
+};
 
 const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
   const { data: session } = useSession();
@@ -325,11 +359,11 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
                                       setIsUpgradePlanModalOpen(true);
                                     }
                                   } else {
-                                    toast.error("Team information not available");
+                                    showErrorToast("Team information not available. Please refresh the page and try again.");
                                   }
                                 } catch (error) {
                                   console.error("Error accessing plan limits:", error);
-                                  toast.error("Could not retrieve plan information");
+                                  showErrorToast("Could not retrieve plan information. Please try again later.");
                                 }
                               }
                               setIsChatbotMenuOpen(false);

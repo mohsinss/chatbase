@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { IconSend, IconRefresh, IconX } from "@tabler/icons-react";
+import { IconSend, IconRefresh, IconX, IconAlertCircle, IconArrowUp } from "@tabler/icons-react";
 import ReactMarkdown from 'react-markdown';
 import { ChatSettings } from './ChatSettings';
 import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings';
@@ -10,6 +10,8 @@ import { AISettingsProvider, useAISettings as useAISettingsProvider } from "@/co
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { useSearchParams } from 'next/navigation';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { PlansSettings } from "@/components/tabs/settings/PlansSettings";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -659,6 +661,7 @@ const Playground = ({
   const [qFlow, setQFlow] = useState(null);
   const [qFlowEnabled, setQFlowEnabled] = useState(false);
   const [qFlowAIEnabled, setQFlowAIEnabled] = useState(true);
+  const [isUpgradePlanModalOpen, setIsUpgradePlanModalOpen] = useState(false);
 
   const debouncedSave = React.useCallback(
     debounce((msgs: Message[]) => {
@@ -1127,7 +1130,11 @@ const Playground = ({
       }
     } catch (error) {
       console.error('Chat error:', error);
-      toast.error(error.message)
+      if (error.message === 'limit reached, upgrade for more messages.') {
+        showLimitReachedToast();
+      } else {
+        toast.error(error.message);
+      }
       setIsLoading(false);
     }
   }
@@ -1135,6 +1142,59 @@ const Playground = ({
   const handleContent = (text: string, confidenceScore: number) => {
     console.log(`Received text: ${text} with confidence score: ${confidenceScore}`);
     // Handle the text and confidence score as needed
+  };
+
+  // Custom toast for limit reached error
+  const showLimitReachedToast = () => {
+    toast.custom(
+      (t) => (
+        <div
+          className={`${
+            t.visible ? 'animate-enter' : 'animate-leave'
+          } max-w-md w-full bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg rounded-lg pointer-events-auto`}
+        >
+          <div className="p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 pt-0.5">
+                <div className="bg-white/20 p-2 rounded-full">
+                  <IconArrowUp className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium text-white">Message Limit Reached</p>
+                <p className="mt-1 text-sm text-white/90">
+                  You've reached your plan's message limit. Upgrade to continue chatting.
+                </p>
+                <div className="mt-3 flex gap-3">
+                  <button
+                    onClick={() => {
+                      // Close the toast and show the upgrade modal
+                      toast.dismiss(t.id);
+                      setIsUpgradePlanModalOpen(true);
+                    }}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Upgrade Now
+                  </button>
+                  <button
+                    onClick={() => toast.dismiss(t.id)}
+                    className="inline-flex items-center px-3 py-1.5 border border-white/30 text-xs font-medium rounded-md text-white bg-transparent hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      { duration: 10000, position: 'top-center' }
+    );
+  };
+
+  // Add function to handle modal close
+  const handleUpgradePlanModalClose = () => {
+    setIsUpgradePlanModalOpen(false);
   };
 
   if (embed) {
@@ -1169,6 +1229,49 @@ const Playground = ({
             mocking={mocking}
             handleSendMessage={handleSendMessage}
           />
+          
+          {/* Upgrade Plan Modal - also available in embed view */}
+          <Dialog open={isUpgradePlanModalOpen} onOpenChange={handleUpgradePlanModalClose}>
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+              <div className="relative">
+                {/* Header with gradient background */}
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-6 rounded-t-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1 text-white">
+                      <h2 className="text-2xl font-bold">Upgrade Your Plan</h2>
+                      <p className="opacity-90">
+                        You've reached your plan's message limit
+                      </p>
+                    </div>
+                    <button 
+                      onClick={handleUpgradePlanModalClose}
+                      className="btn btn-sm btn-circle bg-white/20 hover:bg-white/30 border-none text-white"
+                    >
+                      <IconX className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Note below header */}
+                <div className="bg-blue-50 border-b border-blue-100 px-6 py-4">
+                  <div className="flex gap-3 items-center">
+                    <span className="bg-blue-100 p-2 rounded-full">
+                      <IconArrowUp className="w-4 h-4 text-blue-700" />
+                    </span>
+                    <p className="text-blue-800 text-sm">
+                      Upgrading your plan gives you access to more messages, advanced features, and higher limits.
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Content with slight padding */}
+                <div className="p-6">
+                  {/* Get the teamId from the URL */}
+                  <PlansSettings teamId={window.location.pathname.match(/\/dashboard\/([^\/]+)/)?.[1] || ''} />
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </AISettingsProvider>
     )
@@ -1251,6 +1354,49 @@ const Playground = ({
             {/* } */}
           </div>
         </div>
+        
+        {/* Upgrade Plan Modal */}
+        <Dialog open={isUpgradePlanModalOpen} onOpenChange={handleUpgradePlanModalClose}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+            <div className="relative">
+              {/* Header with gradient background */}
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-6 rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1 text-white">
+                    <h2 className="text-2xl font-bold">Upgrade Your Plan</h2>
+                    <p className="opacity-90">
+                      You've reached your plan's message limit
+                    </p>
+                  </div>
+                  <button 
+                    onClick={handleUpgradePlanModalClose}
+                    className="btn btn-sm btn-circle bg-white/20 hover:bg-white/30 border-none text-white"
+                  >
+                    <IconX className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Note below header */}
+              <div className="bg-blue-50 border-b border-blue-100 px-6 py-4">
+                <div className="flex gap-3 items-center">
+                  <span className="bg-blue-100 p-2 rounded-full">
+                    <IconArrowUp className="w-4 h-4 text-blue-700" />
+                  </span>
+                  <p className="text-blue-800 text-sm">
+                    Upgrading your plan gives you access to more messages, advanced features, and higher limits.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Content with slight padding */}
+              <div className="p-6">
+                {/* Get the teamId from the URL */}
+                <PlansSettings teamId={window.location.pathname.match(/\/dashboard\/([^\/]+)/)?.[1] || ''} />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AISettingsProvider>
   );
