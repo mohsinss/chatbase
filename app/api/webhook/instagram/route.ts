@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
     if (process.env.ENABLE_WEBHOOK_LOGGING_INSTAGRAM == '1') {
       // Send data to the specified URL
-      const response = await fetch('http://webhook.mrcoders.org/instagram-messenger.php', {
+      const response = await fetch('http://webhook.mrcoders.org/instagram.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,6 +106,7 @@ export async function POST(request: Request) {
             if (!isAiResponseEnabled) {
               triggerQF = true;
             }
+            conversation.messages.push({ role: "user", content: text });
           } else {
             // Create new conversation
             conversation = new ChatbotConversation({
@@ -404,38 +405,20 @@ export async function POST(request: Request) {
         }
       }
       // this is for post comments
-      if (data?.entry[0]?.changes?.length > 0 && data?.entry[0]?.changes[0]?.field == "feed") {
-        const page_id = data?.entry[0].id;
+      if (data?.entry[0]?.changes?.length > 0 && data?.entry[0]?.changes[0]?.field == "comments") {
+        const instagram_business_account = data?.entry[0].id;
         const from = data?.entry[0]?.changes[0]?.value.from.id;
-        const from_name = data?.entry[0]?.changes[0]?.value.from.name;
-        const post_id = data?.entry[0]?.changes[0]?.value.post_id;
-        const comment_id = data?.entry[0]?.changes[0]?.value.comment_id;
-        const parent_id = data?.entry[0]?.changes[0]?.value.parent_id;
-        const item = data?.entry[0]?.changes[0]?.value.item;
+        const from_name = data?.entry[0]?.changes[0]?.value.from.username;
+        const comment_id = data?.entry[0]?.changes[0]?.value.id;
+        const parent_id = data?.entry[0]?.changes[0]?.value?.parent_id;
+        const message = data?.entry[0]?.changes[0]?.value.text;
 
-        if (item !== "comment") {
-          return NextResponse.json({ status: `Skip for item ${item}.` }, { status: 200 });
-        }
-
-        if (page_id == from) {
+        if (instagram_business_account == from) {
           return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
         }
-
-        if (parent_id != post_id) {
-          return NextResponse.json({ status: "Skip for reply comments." }, { status: 200 });
-        }
-
         await connectMongo();
 
-        const instagramPage = await InstagramPage.findOne({ pageId: page_id });
-
-        const response = await axios.get(`https://graph.facebook.com/v22.0/${comment_id}?fields=id,message,from,created_time,comment_count&access_token=${instagramPage.access_token}`,
-          {
-            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-          });
-
-        // Extract data from response
-        const { id, message, created_time, comment_count } = response.data;
+        const instagramPage = await InstagramPage.findOne({ instagram_business_account });
 
         const chatbotId = instagramPage.chatbotId;
         const updatedPrompt = instagramPage?.settings?.prompt1;
@@ -450,7 +433,7 @@ export async function POST(request: Request) {
           chatbotId,
           platform: "instagram-comment",
           "metadata.from": from,
-          "metadata.to": post_id,
+          "metadata.to": instagram_business_account,
         });
         if (conversation) {
           // Update existing conversation
@@ -462,7 +445,13 @@ export async function POST(request: Request) {
             chatbotId,
             platform: "instagram-comment",
             disable_auto_reply: false,
-            metadata: { from: from, to: post_id, parent_id, from_name, page_id, comment_id },
+            metadata: { from: from, 
+              to: instagram_business_account, 
+              parent_id, 
+              from_name, 
+              comment_id, 
+              to_name: instagramPage.instagram_business_account_name
+             },
             messages: [{ role: "user", content: message },]
           });
         }
@@ -478,8 +467,8 @@ export async function POST(request: Request) {
         const response_text = await getAIResponse(chatbotId, messages, message, updatedPrompt);
 
         // send msg
-        const response2 = await axios.post(`https://graph.facebook.com/v22.0/${comment_id}/comments?access_token=${instagramPage.access_token}`, {
-          message: `@[${from}] ${response_text}`
+        const response2 = await axios.post(`https://graph.facebook.com/v22.0/${parent_id ?? comment_id}/replies?access_token=${instagramPage.access_token}`, {
+          message: `${response_text}`
         }, {
           headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
