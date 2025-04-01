@@ -28,11 +28,17 @@ const nextConfig = {
     serverComponentsExternalPackages: ['tesseract.js'],
     outputFileTracingIncludes: {
       '/api/**/*': ['./node_modules/**/*.wasm', './node_modules/**/*.proto']
-    },
-    turbo: true, // Optional: faster builds
-    webpackMemoryOptimizations: true,
+    }
   },
   swcMinify: true,
+  experimental: {
+    turbo: true, // Optional: faster builds
+  },
+  experimental: {
+    turbo: true, // Optional: faster builds
+    webpackMemoryOptimizations: true,
+    // webpackBuildWorker: true,
+  },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
