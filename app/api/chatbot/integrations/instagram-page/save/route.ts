@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         for (let i = 0; i < data.data.length; i++) {
             let page = data.data[i];
             let pageId = page.id;
-            let instagram_business_account = page.instagram_business_account.id;
+            let instagram_business_account = page?.instagram_business_account?.id;
 
             if (instagram_business_account) {
                 // Retrive instagram user.
