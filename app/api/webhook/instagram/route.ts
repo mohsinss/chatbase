@@ -467,8 +467,7 @@ export async function POST(request: Request) {
         const response_text = await getAIResponse(chatbotId, messages, message, updatedPrompt);
 
         // send msg
-        const response2 = await axios.post(`https://graph.facebook.com/v22.0/${parent_id ?? comment_id}/replies?access_token=${instagramPage.access_token}`, {
-          message: `${response_text}`
+        const response2 = await axios.post(`https://graph.facebook.com/v22.0/${parent_id ?? comment_id}/replies?message=${response_text}&access_token=${instagramPage.access_token}`, {
         }, {
           headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
