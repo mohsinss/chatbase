@@ -36,7 +36,7 @@ export async function DELETE(req: Request) {
     const page_access_token = existingInstagramPage.access_token;
 
     // UnSubscribe Page to webhook
-    const response1 = await axios.delete(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages&access_token=${page_access_token}`, {
+    const response1 = await axios.delete(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messaging_postbacks,messages,mention,conversations,feed,message_mention,group_feed&access_token=${page_access_token}`, {
       headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
     });
     if (!response1.data.success) {
