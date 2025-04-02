@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { Calendar } from "../../ui/calendar"
+import { format as formatT, toZonedTime } from 'date-fns-tz';
 import { Button } from "../../ui/button"
 import { ArrowLeft, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -17,7 +18,7 @@ export default function CalendarSelector({
     availableSlots,
     theme = 'light'
 }: CalendarSelectorProps) {
-    const [date, setDate] = useState<Date | undefined>(new Date())
+    const [date, setDate] = useState<Date | undefined>(undefined)
 
     const getSlotsForDate = (selectedDate: Date): string[] => {
         const dateKey = format(selectedDate, 'yyyy-MM-dd');
@@ -26,7 +27,7 @@ export default function CalendarSelector({
 
     // Helper function to check if a date is available
     const isDateUnAvailable = (date: Date) => {
-      const dateKey = date.toISOString().split('T')[0]; // format YYYY-MM-DD
+      const dateKey = date.toLocaleDateString("en-CA").replace(/-/g, "-"); // format YYYY-MM-DD
       return !availableSlots.hasOwnProperty(dateKey);
     };
     

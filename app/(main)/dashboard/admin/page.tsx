@@ -502,7 +502,7 @@ export default function AdminDashboard() {
                         <div className="ml-4 space-y-2">
                           {team.chatbots.map(chatbot => (
                             <div 
-                              key={chatbot.chatbotId}
+                              key={`chatbot-${chatbot.chatbotId}`}
                               className="p-2 hover:bg-gray-50 group flex justify-between items-center"
                             >
                               <div className="flex-grow">

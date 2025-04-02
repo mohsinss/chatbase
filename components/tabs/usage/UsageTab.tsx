@@ -353,7 +353,7 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
                   
                   return (
                     <Area
-                      key={chatbotId}
+                      key={`area-${chatbotId}`}
                       type="monotone"
                       dataKey={(entry) => {
                         if (!entry || !entry.date) return 0;
@@ -398,7 +398,7 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
                   
                   return (
                     <Line
-                      key={chatbotId}
+                      key={`line-${chatbotId}`}
                       type="monotone"
                       dataKey={(entry) => {
                         if (!entry || !entry.date) return 0;
@@ -444,7 +444,7 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
                   
                   return (
                     <Bar
-                      key={chatbotId}
+                      key={`bar-${chatbotId}`}
                       dataKey={(entry) => {
                         if (!entry || !entry.date) return 0;
                         const matchingDataPoint = chatbotData.dailyUsage.find(
@@ -530,7 +530,7 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
                   // Alternate between bar and line for different chatbots
                   return index % 2 === 0 ? (
                     <Bar
-                      key={chatbotId}
+                      key={`bar2-${chatbotId}`}
                       dataKey={(entry) => {
                         if (!entry || !entry.date) return 0;
                         const matchingDataPoint = chatbotData.dailyUsage.find(
@@ -549,7 +549,7 @@ export default function UsageTab({ teamId, team }: UsageTabProps) {
                     />
                   ) : (
                     <Line
-                      key={chatbotId}
+                      key={`line2-${chatbotId}`}
                       type="monotone"
                       dataKey={(entry) => {
                         if (!entry || !entry.date) return 0;

@@ -130,7 +130,7 @@ export default function CalComBooker({
                     />
                 </div>
 
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 hidden">
                     <label htmlFor="guests">Guests (comma-separated emails)</label>
                     <input
                         id="guests"
@@ -148,7 +148,7 @@ export default function CalComBooker({
                     />
                 </div>
 
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 hidden">
                     <label htmlFor="rescheduleReason">Reschedule Reason</label>
                     <textarea
                         id="rescheduleReason"

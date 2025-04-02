@@ -192,7 +192,7 @@ const ChatbotsTab = ({ teamId, team }: ChatbotsTabProps) => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {chatbots.map((chatbot) => (
             <div
-              key={chatbot.chatbotId}
+              key={`tab-${chatbot.chatbotId}`}
               onClick={() => router.push(`/dashboard/${teamId}/chatbot/${chatbot.chatbotId}`)}
               className="card bg-base-100 border hover:border-primary hover:shadow-md transition-all cursor-pointer"
             >

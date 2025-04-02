@@ -362,7 +362,7 @@ const Hero = () => {
                       messages: getMessages("web")
                     }
                   ].map((bot, index) => (
-                    <div key={index} className={`flex-none w-[350px] ${bot.bgColor} rounded-2xl p-4 shadow-lg snap-center relative transition-all duration-300 hover:shadow-xl hover:shadow-${bot.bgColor.split("bg-")[1]}/30 hover:-translate-y-1`}>
+                    <div key={`Hero-${index}`} className={`flex-none w-[350px] ${bot.bgColor} rounded-2xl p-4 shadow-lg snap-center relative transition-all duration-300 hover:shadow-xl hover:shadow-${bot.bgColor.split("bg-")[1]}/30 hover:-translate-y-1`}>
                       {bot.isComingSoon && (
                         <div className="absolute top-0 left-0 bg-orange-700 text-white px-3 py-1 rounded-full text-sm font-medium z-20">
                           Coming Soon

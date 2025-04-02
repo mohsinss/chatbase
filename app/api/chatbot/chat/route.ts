@@ -33,24 +33,24 @@ const tools = [
     type: "function" as const,
     function: {
       name: "getAvailableSlots",
-      description: "Get available meeting slots from a Cal.com URL",
+      description: "Get available slots from a Cal.com URL.",
       parameters: {
         type: "object",
         properties: {
-          // calUrl: {
-          //   type: "string",
-          //   description: "The Cal.com URL to fetch available slots from",
-          // },
+          calUrl: {
+            type: "string",
+            description: "The Cal.com URL to fetch available slots from"
+          },
           dateFrom: {
             type: "string",
-            description: "Start date/time for fetching slots in ISO 8601 format",
+            description: "Start date/time in ISO 8601 format"
           },
           dateTo: {
             type: "string",
-            description: "End date/time for fetching slots in ISO 8601 format",
+            description: "End date/time in ISO 8601 format"
           },
         },
-        required: ["dateFrom", "dateTo"],
+        required: ["calUrl", "dateFrom", "dateTo"],
       },
     },
   },
@@ -143,10 +143,8 @@ export async function POST(req: NextRequest) {
     const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
     const chatbot = await Chatbot.findOne({ chatbotId });
     const dataset = await Dataset.findOne({ chatbotId });
-    const actions = await ChatbotAction.find({ chatbotId, enabled: true });
+    const enabledActions = await ChatbotAction.find({ chatbotId, enabled: true });
     const conversation = await ChatbotConversation.findById(conversationId);
-
-    console.log(actions)
 
     console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
 
@@ -257,22 +255,26 @@ export async function POST(req: NextRequest) {
     // const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in italian language only.`;
     let systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;
 
+    if (enabledActions?.length > 0) {
+      const calComActions = enabledActions.filter(action => action.type == 'calcom')
+      if (calComActions.length > 0) {
+        const calComActionsPrompt = `
+        When a user asks for available slots, use the "getAvailableSlots" function.
+        Choose the correct "calUrl" from the available actions list:
+          Meeting Actions List:
+          ${calComActions.map((action, index) => `  ${index + 1}. "${action.url}" for '${action.instructions}'`).join('\n')}
+        Match the user's request to the correct "calUrl" before calling the function.
+        `
+        systemPrompt += calComActionsPrompt
+      }
+    }
+
     const confidencePrompt = "\nFor your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value at the very end of your response, formatted as ':::100' with no extra text following it.";
-    const todayData = "\n today is " + Date().toString();
-    systemPrompt += confidencePrompt + todayData;
+    const todayData = "\nToday is " + Date().toString();
+
+    systemPrompt += todayData + confidencePrompt;
 
     console.log("systemPrompt", systemPrompt)
-    // Add detailed logging
-    // console.log('Chat Request Details:', {
-    //   selectedModel: internalModel,
-    //   mappedModel: MODEL_MAPPING[internalModel],
-    //   provider: internalModel.startsWith('claude-') ? 'Anthropic' :
-    //     internalModel.startsWith('gemini-') ? 'Gemini' : 'OpenAI',
-    //   temperature,
-    //   maxTokens,
-    //   language,
-    //   systemPrompt
-    // });
 
     const encoder = new TextEncoder();
 
@@ -634,7 +636,7 @@ export async function POST(req: NextRequest) {
         ...modelParams,
         messages: formattedMessages,
         tools,
-        tool_choice: "auto",
+        // tool_choice: "auto",
         stream: true,
       });
 
@@ -674,16 +676,17 @@ export async function POST(req: NextRequest) {
 
             if (functionCallData) {
               const args = JSON.parse(functionCallData.arguments);
+              console.log(functionCallData.name, args)
 
               if (functionCallData.name === "getAvailableSlots") {
-                const meetingUrl = "https://cal.com/nature-0411-szdryi/30min";
-                const [username, eventType] = meetingUrl.replace("https://cal.com/", "").split("/");
                 const formatDateHour = (isoString: string) => isoString.slice(0, 13);
 
                 const dateFromFormatted = formatDateHour(args.dateFrom);
                 const dateToFormatted = formatDateHour(args.dateTo);
+                const meetingUrl = args.calUrl;
+                const [username, eventType] = meetingUrl.replace("https://cal.com/", "").split("/");
+                console.log(meetingUrl, dateFromFormatted, dateToFormatted)
                 const slotsResponse = await getAvailableSlots(username, eventType, dateFromFormatted, dateToFormatted);
-                console.log(slotsResponse)
 
                 const hasSlots = slotsResponse && Object.keys(slotsResponse).some(date => slotsResponse[date].length > 0);
                 const slotsMessage = hasSlots
