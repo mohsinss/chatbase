@@ -6,8 +6,6 @@ import DashboardNav from '@/components/DashboardNav';
 import AdminMetrics from '@/components/AdminMetrics';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ChevronDown, Settings, Database, Brush, Users, ExternalLink, MessageSquare, BookOpen, Code, Share2 } from 'lucide-react';
 
 interface ChatbotType {
   chatbotId: string;
@@ -312,41 +310,9 @@ export default function AdminDashboard() {
     }
   };
   
-  const handleChatbotAccess = (teamId: string, chatbotId: string, page: string) => {
-    switch(page) {
-      case 'chat':
-        navigateToChatbotPage(teamId, chatbotId, '');
-        break;
-      case 'sources':
-        navigateToChatbotPage(teamId, chatbotId, '/sources');
-        break;
-      case 'settings':
-        navigateToChatbotPage(teamId, chatbotId, '/settings');
-        break;
-      case 'chat-interface':
-        navigateToChatbotPage(teamId, chatbotId, '/settings/chat-interface');
-        break;
-      case 'users':
-        navigateToChatbotPage(teamId, chatbotId, '/settings/users');
-        break;
-      case 'usage':
-        navigateToChatbotPage(teamId, chatbotId, '/settings/usage');
-        break;
-      case 'training':
-        navigateToChatbotPage(teamId, chatbotId, '/training');
-        break;
-      case 'embed':
-        navigateToChatbotPage(teamId, chatbotId, '/settings/embed');
-        break;
-      case 'api':
-        navigateToChatbotPage(teamId, chatbotId, '/settings/api');
-        break;
-      case 'team-settings':
-        navigateToTeamPage(teamId);
-        break;
-      default:
-        navigateToChatbotPage(teamId, chatbotId);
-    }
+  const handleChatbotAccess = (teamId: string, chatbotId: string) => {
+    // Always navigate to the chat interface settings
+    navigateToChatbotPage(teamId, chatbotId, '/settings/chat-interface');
   };
 
   const navigateToTeamPage = (teamId: string) => {
@@ -524,91 +490,12 @@ export default function AdminDashboard() {
                                 >
                                   Preview Chatbot
                                 </button>
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <button
-                                      className="px-3 py-1 text-sm text-purple-500 bg-white border-2 border-purple-500 rounded hover:bg-purple-50 transition-all flex items-center gap-1"
-                                    >
-                                      <span>Admin Access</span>
-                                      <ChevronDown className="h-4 w-4" />
-                                    </button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-56 p-0">
-                                    <div className="space-y-1 p-2">
-                                      <p className="text-xs font-medium text-gray-500 p-2 border-b">
-                                        Access as User
-                                      </p>
-                                      <button 
-                                        onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'chat')}
-                                        className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
-                                      >
-                                        <MessageSquare className="h-4 w-4" />
-                                        <span>Chat Interface</span>
-                                      </button>
-                                      <button 
-                                        onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'sources')}
-                                        className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
-                                      >
-                                        <Database className="h-4 w-4" />
-                                        <span>Manage Sources</span>
-                                      </button>
-                                      <button 
-                                        onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'training')}
-                                        className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
-                                      >
-                                        <BookOpen className="h-4 w-4" />
-                                        <span>Training</span>
-                                      </button>
-                                      <div className="border-t pt-1">
-                                        <p className="text-xs font-medium text-gray-500 p-2">
-                                          Settings
-                                        </p>
-                                        <button 
-                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'settings')}
-                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
-                                        >
-                                          <Settings className="h-4 w-4" />
-                                          <span>General Settings</span>
-                                        </button>
-                                        <button 
-                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'chat-interface')}
-                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
-                                        >
-                                          <Brush className="h-4 w-4" />
-                                          <span>Chat Interface</span>
-                                        </button>
-                                        <button 
-                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'users')}
-                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
-                                        >
-                                          <Users className="h-4 w-4" />
-                                          <span>Users & Access</span>
-                                        </button>
-                                        <button 
-                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'usage')}
-                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
-                                        >
-                                          <ExternalLink className="h-4 w-4" />
-                                          <span>Usage & Analytics</span>
-                                        </button>
-                                        <button 
-                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'embed')}
-                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
-                                        >
-                                          <Code className="h-4 w-4" />
-                                          <span>Embed Settings</span>
-                                        </button>
-                                        <button 
-                                          onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId, 'api')}
-                                          className="w-full flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
-                                        >
-                                          <Share2 className="h-4 w-4" />
-                                          <span>API Access</span>
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </PopoverContent>
-                                </Popover>
+                                <button
+                                  onClick={() => handleChatbotAccess(team.teamId, chatbot.chatbotId)}
+                                  className="px-3 py-1 text-sm text-purple-500 bg-white border-2 border-purple-500 rounded hover:bg-purple-50 transition-all"
+                                >
+                                  Admin Access
+                                </button>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
