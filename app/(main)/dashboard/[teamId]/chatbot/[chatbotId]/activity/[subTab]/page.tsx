@@ -42,7 +42,7 @@ export default async function ActivityPage({
     <>
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
-      <main className="min-h-screen">
+      <main className="">
         <Activity chatbot={serializedChatbot} teamId={params.teamId} chatbotId={params.chatbotId} />
       </main>
     </>

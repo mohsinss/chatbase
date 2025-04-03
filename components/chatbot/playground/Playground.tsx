@@ -1385,7 +1385,7 @@ const Playground = ({
           <div className="flex items-center gap-2">
             <Link href={window.location + '/compare'} className="px-4 py-1.5 border rounded-lg text-sm">Compare</Link>
             <button className="w-8 h-8 flex items-center justify-center border rounded-lg">
-              <span className="w-4 h-4">💡</span>
+              <span className="w-4 h-4 mt-[-9px]">💡</span>
             </button>
           </div>
         </div>
