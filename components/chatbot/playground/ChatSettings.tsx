@@ -41,13 +41,15 @@ export const ChatSettings = ({
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [tooltips, setTooltips] = useState({
     model: false,
+    modelProvider: false,
     temperature: false,
     maxTokens: false,
     language: false,
   });
 
   const tooltipContent = {
-    model: "Choose the AI model that powers your chatbot. Each model has different capabilities and pricing.",
+    model: "Choose the AI model Provider that powers your chatbot.",
+    modelProvider: "Choose the AI model. Each model has different capabilities and pricing.",
     temperature: "Adjust the creativity level of responses. Lower values give consistent outputs.",
     maxTokens: "Set the maximum length of responses. One token is roughly 4 characters.",
     language: "Select the language for AI responses. This will affect how the AI communicates."
@@ -153,12 +155,12 @@ export const ChatSettings = ({
               <div className="relative">
                 <button
                   className="text-gray-400 text-lg"
-                  onMouseEnter={() => setTooltips(prev => ({ ...prev, model: true }))}
-                  onMouseLeave={() => setTooltips(prev => ({ ...prev, model: false }))}
+                  onMouseEnter={() => setTooltips(prev => ({ ...prev, modelProvider: true }))}
+                  onMouseLeave={() => setTooltips(prev => ({ ...prev, modelProvider: false }))}
                 >
                   ⓘ
                 </button>
-                {tooltips.model && <InfoTooltip content={tooltipContent.model} />}
+                {tooltips.modelProvider && <InfoTooltip content={tooltipContent.modelProvider} />}
               </div>
             </div>
             <select

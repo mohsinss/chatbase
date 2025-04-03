@@ -8,9 +8,11 @@ import Chatbot from '@/models/Chatbot';
 import Dataset from "@/models/Dataset";
 import Team from '@/models/Team';
 import ChatbotConversation from '@/models/ChatbotConversation';
+import ChatbotAction from '@/models/ChatbotAction';
 import config from '@/config';
 import { MODEL_MAPPING } from '@/types';
 import { sampleFlow } from '@/types';
+import { getAvailableSlots } from '@/lib/calcom';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -31,21 +33,21 @@ const tools = [
     type: "function" as const,
     function: {
       name: "getAvailableSlots",
-      description: "Get available meeting slots from a Cal.com URL",
+      description: "Get available slots from a Cal.com URL.",
       parameters: {
         type: "object",
         properties: {
           calUrl: {
             type: "string",
-            description: "The Cal.com URL to fetch available slots from",
+            description: "The Cal.com URL to fetch available slots from"
           },
           dateFrom: {
             type: "string",
-            description: "Start date/time for fetching slots in ISO 8601 format",
+            description: "Start date/time in ISO 8601 format"
           },
           dateTo: {
             type: "string",
-            description: "End date/time for fetching slots in ISO 8601 format",
+            description: "End date/time in ISO 8601 format"
           },
         },
         required: ["calUrl", "dateFrom", "dateTo"],
@@ -120,7 +122,7 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, selectedOption, optionIndex, nodeId, chatbotId, conversationId } = await req.json();
+    const { messages, selectedOption, optionIndex, nodeId, chatbotId, conversationId, mocking, mockingdata } = await req.json();
 
     await connectMongo();
 
@@ -141,6 +143,7 @@ export async function POST(req: NextRequest) {
     const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
     const chatbot = await Chatbot.findOne({ chatbotId });
     const dataset = await Dataset.findOne({ chatbotId });
+    const enabledActions = await ChatbotAction.find({ chatbotId, enabled: true });
     const conversation = await ChatbotConversation.findById(conversationId);
 
     console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
@@ -244,7 +247,7 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < chunk_response_data.chunks.length; i++) {
       relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
     }
-
+    relevant_chunk = "";
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
@@ -252,21 +255,26 @@ export async function POST(req: NextRequest) {
     // const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in italian language only.`;
     let systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;
 
+    if (enabledActions?.length > 0) {
+      const calComActions = enabledActions.filter(action => action.type == 'calcom')
+      if (calComActions.length > 0) {
+        const calComActionsPrompt = `
+        When a user asks for available slots, use the "getAvailableSlots" function.
+        Choose the correct "calUrl" from the available actions list:
+          Meeting Actions List:
+          ${calComActions.map((action, index) => `  ${index + 1}. "${action.url}" for '${action.instructions}'`).join('\n')}
+        Match the user's request to the correct "calUrl" before calling the function.
+        `
+        systemPrompt += calComActionsPrompt
+      }
+    }
+
     const confidencePrompt = "\nFor your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value at the very end of your response, formatted as ':::100' with no extra text following it.";
-    systemPrompt += confidencePrompt;
+    const todayData = "\nToday is " + Date().toString();
+
+    systemPrompt += todayData + confidencePrompt;
 
     console.log("systemPrompt", systemPrompt)
-    // Add detailed logging
-    // console.log('Chat Request Details:', {
-    //   selectedModel: internalModel,
-    //   mappedModel: MODEL_MAPPING[internalModel],
-    //   provider: internalModel.startsWith('claude-') ? 'Anthropic' :
-    //     internalModel.startsWith('gemini-') ? 'Gemini' : 'OpenAI',
-    //   temperature,
-    //   maxTokens,
-    //   language,
-    //   systemPrompt
-    // });
 
     const encoder = new TextEncoder();
 
@@ -511,79 +519,79 @@ export async function POST(req: NextRequest) {
         },
       }));
     } else {
-      let assistantId = conversation?.metadata?.openaiAssistantId;
-      let threadId = conversation?.metadata?.openaiThreadId;
+      // let assistantId = conversation?.metadata?.openaiAssistantId;
+      // let threadId = conversation?.metadata?.openaiThreadId;
 
-      // Validate existing assistant and thread IDs
-      let validAssistantId = assistantId;
-      let validThreadId = threadId;
+      // // Validate existing assistant and thread IDs
+      // let validAssistantId = assistantId;
+      // let validThreadId = threadId;
 
-      // Verify assistant ID exists and is valid
-      if (assistantId) {
-        try {
-          await openai.beta.assistants.retrieve(assistantId);
-        } catch (error) {
-          console.log('Invalid assistant ID, creating new assistant');
-          const newAssistant = await openai.beta.assistants.create({
-            name: `${dataset.name || 'Chatbot'} Assistant`,
-            instructions: aiSettings?.systemPrompt || 'You are a helpful AI assistant.',
-            model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
-            // tools: [{ type: "retrieval" }],
-            // file_ids: dataset.fileIds || []
-          });
-          validAssistantId = newAssistant.id;
-        }
-      } else {
-        // Create new assistant if none exists
-        const newAssistant = await openai.beta.assistants.create({
-          name: `${dataset.name || 'Chatbot'} Assistant`,
-          instructions: aiSettings?.systemPrompt || 'You are a helpful AI assistant.',
-          model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
-          // tools: [{ type: "retrieval" }],
-          // file_ids: dataset.fileIds || []
-        });
-        validAssistantId = newAssistant.id;
-      }
+      // // Verify assistant ID exists and is valid
+      // if (assistantId) {
+      //   try {
+      //     await openai.beta.assistants.retrieve(assistantId);
+      //   } catch (error) {
+      //     console.log('Invalid assistant ID, creating new assistant');
+      //     const newAssistant = await openai.beta.assistants.create({
+      //       name: `${dataset.name || 'Chatbot'} Assistant`,
+      //       instructions: aiSettings?.systemPrompt || 'You are a helpful AI assistant.',
+      //       model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
+      //       // tools: [{ type: "retrieval" }],
+      //       // file_ids: dataset.fileIds || []
+      //     });
+      //     validAssistantId = newAssistant.id;
+      //   }
+      // } else {
+      //   // Create new assistant if none exists
+      //   const newAssistant = await openai.beta.assistants.create({
+      //     name: `${dataset.name || 'Chatbot'} Assistant`,
+      //     instructions: aiSettings?.systemPrompt || 'You are a helpful AI assistant.',
+      //     model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
+      //     // tools: [{ type: "retrieval" }],
+      //     // file_ids: dataset.fileIds || []
+      //   });
+      //   validAssistantId = newAssistant.id;
+      // }
 
-      // Verify thread ID exists and is valid
-      if (threadId) {
-        try {
-          await openai.beta.threads.retrieve(threadId);
-        } catch (error) {
-          console.log('Invalid thread ID, creating new thread');
-          const newThread = await openai.beta.threads.create();
-          validThreadId = newThread.id;
-        }
-      } else {
-        const newThread = await openai.beta.threads.create();
-        validThreadId = newThread.id;
-      }
+      // // Verify thread ID exists and is valid
+      // if (threadId) {
+      //   try {
+      //     await openai.beta.threads.retrieve(threadId);
+      //   } catch (error) {
+      //     console.log('Invalid thread ID, creating new thread');
+      //     const newThread = await openai.beta.threads.create();
+      //     validThreadId = newThread.id;
+      //   }
+      // } else {
+      //   const newThread = await openai.beta.threads.create();
+      //   validThreadId = newThread.id;
+      // }
 
       // Update conversation with valid IDs if needed
-      if (conversation && (!assistantId || !threadId || assistantId !== validAssistantId || threadId !== validThreadId)) {
-        await ChatbotConversation.findByIdAndUpdate(
-          conversation._id,
-          {
-            metadata: {
-              ...conversation.metadata,
-              openaiAssistantId: validAssistantId,
-              openaiThreadId: validThreadId
-            }
-          },
-          { new: true }
-        );
-      }
+      // if (conversation && (!assistantId || !threadId || assistantId !== validAssistantId || threadId !== validThreadId)) {
+      //   await ChatbotConversation.findByIdAndUpdate(
+      //     conversation._id,
+      //     {
+      //       metadata: {
+      //         ...conversation.metadata,
+      //         openaiAssistantId: validAssistantId,
+      //         openaiThreadId: validThreadId
+      //       }
+      //     },
+      //     { new: true }
+      //   );
+      // }
 
-      // Add the user's message to the thread
-      await openai.beta.threads.messages.create(validThreadId, {
-        role: "user",
-        content: messages[messages.length - 1].content,
-      });
+      // // Add the user's message to the thread
+      // await openai.beta.threads.messages.create(validThreadId, {
+      //   role: "user",
+      //   content: messages[messages.length - 1].content,
+      // });
 
-      // Run the assistant
-      const run = await openai.beta.threads.runs.create(validThreadId, {
-        assistant_id: validAssistantId,
-      });
+      // // Run the assistant
+      // const run = await openai.beta.threads.runs.create(validThreadId, {
+      //   assistant_id: validAssistantId,
+      // });
 
 
       console.log('Using OpenAI Model:', MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo');
@@ -628,7 +636,7 @@ export async function POST(req: NextRequest) {
         ...modelParams,
         messages: formattedMessages,
         tools,
-        tool_choice: "auto",
+        // tool_choice: "auto",
         stream: true,
       });
 
@@ -653,6 +661,7 @@ export async function POST(req: NextRequest) {
                 if (toolCall.function.arguments) {
                   functionCallData.arguments += toolCall.function.arguments;
                 }
+
               } else if (choice.delta.content) {
                 assistantMessage += choice.delta.content;
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: choice.delta.content })}\n\n`));
@@ -667,16 +676,24 @@ export async function POST(req: NextRequest) {
 
             if (functionCallData) {
               const args = JSON.parse(functionCallData.arguments);
-      
+              console.log(functionCallData.name, args)
+
               if (functionCallData.name === "getAvailableSlots") {
-                const slotsResponse = await fetch(`${args.calUrl}?start=${encodeURIComponent(args.dateFrom)}&end=${encodeURIComponent(args.dateTo)}`, {
-                  method: 'GET',
-                  headers: { 'Content-Type': 'application/json' },
-                });
-        
-                const slotsResult = await slotsResponse.json();
-        
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ slots: slotsResult })}\n\n`));
+                const formatDateHour = (isoString: string) => isoString.slice(0, 13);
+
+                const dateFromFormatted = formatDateHour(args.dateFrom);
+                const dateToFormatted = formatDateHour(args.dateTo);
+                const meetingUrl = args.calUrl;
+                const [username, eventType] = meetingUrl.replace("https://cal.com/", "").split("/");
+                console.log(meetingUrl, dateFromFormatted, dateToFormatted)
+                const slotsResponse = await getAvailableSlots(username, eventType, dateFromFormatted, dateToFormatted);
+
+                const hasSlots = slotsResponse && Object.keys(slotsResponse).some(date => slotsResponse[date].length > 0);
+                const slotsMessage = hasSlots
+                  ? `I have found available slots between ${dateFromFormatted} and ${dateToFormatted}.`
+                  : `I have not found available slots between ${dateFromFormatted} and ${dateToFormatted}.`;
+
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: slotsMessage, slots: hasSlots ? slotsResponse : {}, meetingUrl })}\n\n`));
               }
             }
 
