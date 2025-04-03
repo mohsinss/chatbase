@@ -78,7 +78,7 @@ export const authOptions: NextAuthOptionsExtended = {
     CredentialsProvider({
       name: "Test User",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Email", type: "email", value: "test@test.com" }, // default value added here
       },
       //@ts-ignore
       async authorize(credentials) {
