@@ -20,47 +20,47 @@ export const authOptions: NextAuthOptionsExtended = {
   // Set any random key in .env.local
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
-    EmailProvider({
-      // server: {
-      //   host: 'smtp.sendgrid.net',
-      //   port: 587,
-      //   auth: {
-      //     user: 'apikey', // This is the username SendGrid expects
-      //     pass: process.env.SENDGRID_API_KEY, // Your SendGrid API Key
-      //   },
-      // },
-      from: process.env.EMAIL_FROM,
-      //@ts-ignore
-      sendVerificationRequest: async ({ identifier: email, url, token, baseUrl, provider }) => {
-        const { server, from } = provider;
-        // Initialize SendGrid
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-        // Create email data
-        const msg = {
-          to: email,
-          from,
-          subject: `Sign in link for Chatsa`,
-          text: `Use the link below to sign in:\n\n${url}\n\n`,
-          html: `
-  <p>Use the button below to sign in:</p>
-  <a href="${url}" style="
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #0070f3;
-    color: #ffffff;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-  ">
-    Sign In
-  </a>
-`,
-        }
+//     EmailProvider({
+//       // server: {
+//       //   host: 'smtp.sendgrid.net',
+//       //   port: 587,
+//       //   auth: {
+//       //     user: 'apikey', // This is the username SendGrid expects
+//       //     pass: process.env.SENDGRID_API_KEY, // Your SendGrid API Key
+//       //   },
+//       // },
+//       from: process.env.EMAIL_FROM,
+//       //@ts-ignore
+//       sendVerificationRequest: async ({ identifier: email, url, token, baseUrl, provider }) => {
+//         const { server, from } = provider;
+//         // Initialize SendGrid
+//         sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+//         // Create email data
+//         const msg = {
+//           to: email,
+//           from,
+//           subject: `Sign in link for Chatsa`,
+//           text: `Use the link below to sign in:\n\n${url}\n\n`,
+//           html: `
+//   <p>Use the button below to sign in:</p>
+//   <a href="${url}" style="
+//     display: inline-block;
+//     padding: 10px 20px;
+//     background-color: #0070f3;
+//     color: #ffffff;
+//     text-decoration: none;
+//     border-radius: 5px;
+//     font-weight: bold;
+//   ">
+//     Sign In
+//   </a>
+// `,
+//         }
 
-        // Send email
-        await sgMail.send(msg);
-      },
-    }),
+//         // Send email
+//         await sgMail.send(msg);
+//       },
+//     }),
     GoogleProvider({
       // Follow the "Login with Google" tutorial to get your credentials
       clientId: process.env.GOOGLE_ID,

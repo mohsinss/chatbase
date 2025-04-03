@@ -160,6 +160,11 @@ const ChatContainer = ({
   const [showLead, setShowLead] = useState(true);
   const { settings: globalSettings, updateSettings: updateGlobalSettings } = useAISettingsProvider();
   const isMobile = /iPhone|iPad|iPod|Android/i.test(window?.navigator?.userAgent);
+  const [disableInput, setDisableInput] = useState(false);
+
+  useEffect(() => {
+    setDisableInput(isLoading || !!currentNodeId || showCalendar);
+  }, [isLoading, !!currentNodeId, showCalendar])
 
   const fetchDataset = async () => {
     try {
@@ -631,6 +636,7 @@ const ChatContainer = ({
                     setInput(message);
                     handleSendMessage(message);
                   }}
+                  disabled={disableInput}
                 >
                   {message}
                 </button>
@@ -656,7 +662,7 @@ const ChatContainer = ({
                   placeholder={config.messagePlaceholder}
                   className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
                     } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
-                  disabled={isLoading || !!currentNodeId}
+                  disabled={disableInput}
                 />
                 <button
                   type="submit"
