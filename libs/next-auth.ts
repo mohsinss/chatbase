@@ -82,15 +82,25 @@ export const authOptions: NextAuthOptionsExtended = {
       },
       //@ts-ignore
       async authorize(credentials) {
-        if (credentials.email === "test@test.com") {
+        const testUsers = [
+          "test@test.com",
+          "test2@test.com",
+          "test3@test.com", 
+          "test4@test.com",
+          "test5@test.com",
+          "test6@test.com"
+        ];
+        
+        if (credentials && credentials.email && testUsers.includes(credentials.email)) {
           await connectMongo1();
 
-          let user = await User.findOne({ email: "test@test.com" });
+          let user = await User.findOne({ email: credentials.email });
 
           if (!user) {
+            const username = credentials.email.split('@')[0];
             user = await User.create({
-              email: "test@test.com",
-              name: "Test User",
+              email: credentials.email,
+              name: username.charAt(0).toUpperCase() + username.slice(1) + " User",
               createdAt: new Date(),
             });
           }
@@ -122,59 +132,67 @@ export const authOptions: NextAuthOptionsExtended = {
     },
     async signIn({ user, account, profile }) {
       // console.log("signIn Callback:", { account, user, profile });
-      if (account.provider === 'google' && user.email) {
-        await connectMongo1();
-        const existingUser = await User.findOne({ email: user.email });
+      if (account?.provider === 'google' && user?.email) {
+        try {
+          await connectMongo1();
+          const existingUser = await User.findOne({ email: user.email });
 
-        if (existingUser) {
-          // If the user already exists, link the Google account to the existing user
-          const existingAccount = await Account.findOne({
-            provider: 'google',
-            providerAccountId: profile?.sub,
-          });
-
-          if (!existingAccount) {
-            // Create a new account linked to the existing user
-            const newAccount = new Account({
-              userId: existingUser._id,
-              type: 'oauth',
+          if (existingUser) {
+            // If the user already exists, link the Google account to the existing user
+            const existingAccount = await Account.findOne({
               provider: 'google',
               providerAccountId: profile?.sub,
-              access_token: account.access_token,
-              expires_at: account.expires_at,
-              token_type: account.token_type,
-              scope: account.scope,
             });
 
-            await newAccount.save();
+            if (!existingAccount && profile?.sub) {
+              // Create a new account linked to the existing user
+              const newAccount = new Account({
+                userId: existingUser._id,
+                type: 'oauth',
+                provider: 'google',
+                providerAccountId: profile.sub,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+              });
+
+              await newAccount.save();
+            }
+
+            return true; // Allow sign-in
+          } else {
+            // If the user doesn't exist, create a new user with the Google account
+            const newUser = new User({
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              createdAt: new Date(),
+            });
+            await newUser.save();
+
+            if (profile?.sub) {
+              const newAccount = new Account({
+                userId: newUser._id,
+                type: 'oauth',
+                provider: 'google',
+                providerAccountId: profile.sub,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                id_token: account.id_token,
+                scope: account.scope,
+              });
+
+              await newAccount.save();
+            }
+
+            return true; // Allow sign-in
           }
-
-          return true; // Allow sign-inp
-        } else {
-          // If the user doesn't exist, create a new user with the Google account
-          const newUser = new User({
-            email: user.email,
-            name: user.name,
-            image: user.image,
-            createdAt: new Date(),
-          });
-          await newUser.save();
-
-          const newAccount = new Account({
-            userId: newUser._id,
-            type: 'oauth',
-            provider: 'google',
-            providerAccountId: profile?.sub,
-            access_token: account.access_token,
-            expires_at: account.expires_at,
-            token_type: account.token_type,
-            id_token: account.id_token,
-            scope: account.scope,
-          });
-
-          await newAccount.save();
-
-          return true; // Allow sign-in
+        } catch (error) {
+          console.error("SignIn error:", error);
+          // Still allow sign-in even if there was an error with our custom logic
+          return true;
         }
       }
       return true; // Allow sign-in for other providers
