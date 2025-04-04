@@ -57,8 +57,6 @@ export async function POST(request: Request) {
             const currentTimestamp = (new Date().getTime()) / 1000;
             const text = data?.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
 
-            let messages = [{ role: 'user', content: text }];
-
             // Fetch the existing WhatsAppNumber model
             const whatsappNumber = await WhatsAppNumber.findOne({ phoneNumberId: phone_number_id });
             if (!whatsappNumber) {
@@ -215,6 +213,14 @@ export async function POST(request: Request) {
                 await conversation.save();
               }
             } else {
+              const oneHourAgo = Date.now() - (60 * 60 * 1000);
+              //@ts-ignore
+              let messages = conversation.messages.filter(msg => new Date(msg.timestamp).getTime() >= oneHourAgo);
+      
+              // Ensure at least the current message is included if no recent messages exist
+              if (messages.length === 0) {
+                messages = [{ role: 'user', content: text }];
+              }
               const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
 
               // send text msg to from number

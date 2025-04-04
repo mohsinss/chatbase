@@ -59,8 +59,6 @@ export async function POST(request: Request) {
           const mid = data?.entry[0]?.messaging[0].message.mid;
           const currentTimestamp = (new Date().getTime()) / 1000;
 
-          let messages = [{ role: 'user', content: text }];
-
           // Fetch the existing InstagramPage model
           const instagramPage = await InstagramPage.findOne({ instagram_business_account: instagram_account_id });
           if (!instagramPage) {
@@ -248,6 +246,15 @@ export async function POST(request: Request) {
               await conversation.save();
             }
           } else {
+            const oneHourAgo = Date.now() - (60 * 60 * 1000);
+            //@ts-ignore
+            let messages = conversation.messages.filter(msg => new Date(msg.timestamp).getTime() >= oneHourAgo);
+    
+            // Ensure at least the current message is included if no recent messages exist
+            if (messages.length === 0) {
+              messages = [{ role: 'user', content: text }];
+            }
+
             const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
 
             await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
@@ -463,7 +470,14 @@ export async function POST(request: Request) {
           return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
         }
 
-        let messages = [{ role: 'user', content: message }];
+        const oneHourAgo = Date.now() - (60 * 60 * 1000);
+        //@ts-ignore
+        let messages = conversation.messages.filter(msg => new Date(msg.timestamp).getTime() >= oneHourAgo);
+
+        // Ensure at least the current message is included if no recent messages exist
+        if (messages.length === 0) {
+          messages = [{ role: 'user', content: message }];
+        }
 
         const response_text = await getAIResponse(chatbotId, messages, message, updatedPrompt);
 
