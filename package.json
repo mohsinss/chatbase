@@ -7,6 +7,8 @@
     "postbuild": "next-sitemap",
     "lint": "next lint",
     "dev": "next dev",
+    "dev-ssl": "next dev -p 3001",
+    "proxy": "local-ssl-proxy --source 3000 --target 3001",
     "build": "next build",
     "build1": "next build --experimental-debug-memory-usage",
     "start": "next start"
@@ -52,6 +54,7 @@
     "form-data": "^4.0.0",
     "http": "^0.0.1-security",
     "icons-react": "^3.7.1",
+    "local-ssl-proxy": "^2.0.5",
     "lucide-react": "^0.469.0",
     "mongo-baileys": "^1.0.1",
     "mongodb": "^6.4.0",

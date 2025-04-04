@@ -296,6 +296,12 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
     } else if (platform === "Zapier") {
       window.open("https://zapier.com/apps/chatsa/integrations", "_blank");
       setConnectingTitle('');
+    } else if (platform === "Snapchat") {
+      // Implementation for Snapchat connection
+      setConnectingTitle('');
+    } else if (platform === "TikTok") {
+      // Implementation for TikTok connection
+      setConnectingTitle('');
     } else {
       setConnectingTitle('');
     }
@@ -383,6 +389,22 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
       description: "Add your chatbot to your Shopify store to help customers with their questions.",
       icon: "/integrations/shopify.svg",
       onClick: () => handleConnect("Shopify"),
+      commingSoon: true,
+    },
+    {
+      title: "Snapchat",
+      description: "Connect your chatbot to Snapchat and engage with your audience through Stories and Chat.",
+      icon: "/integrations/snapchat.png",
+      onClick: () => handleConnect("Snapchat"),
+      showDeviceIcon: false,
+      commingSoon: true,
+    },
+    {
+      title: "TikTok",
+      description: "Connect your chatbot to TikTok and interact with your followers through comments and messages.",
+      icon: "/integrations/tiktok.png",
+      onClick: () => handleConnect("TikTok"),
+      showDeviceIcon: false,
       commingSoon: true,
     }
   ];
