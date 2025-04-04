@@ -99,6 +99,10 @@ async function checkInstagramMessage(chatbotId: string, mid: string) {
 
 async function fetchInstagramMessages(instagram_business_account: string, from: string) {
     const instagramPage = await InstagramPage.findOne({ instagram_business_account });
+    if(!instagramPage){
+        return []
+    };
+    
     const access_token = instagramPage.access_token;
 
     let conversationId = '';
