@@ -35,18 +35,20 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
     const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
     const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
     const [isFetchingSettings, setIsFetchingSettings] = useState(false);
-    const [settingsData, setSettingsData] = useState<{ 
-        prompt?: string; 
-        delay?: number; 
-        prompt1?: string; 
+    const [settingsData, setSettingsData] = useState<{
+        prompt?: string;
+        delay?: number;
+        prompt1?: string;
         delay1?: number;
         commentDmEnabled?: boolean;
         welcomeDmEnabled?: boolean;
         welcomeDmPrompt?: string;
+        welcomeDmDelay?: number;
         replyDmEnabled?: boolean;
         replyDmPrompt?: string;
+        replyDmDelay?: number;
         keywordDmEnabled?: boolean;
-        keywordTriggers?: Array<{ keyword: string; prompt: string }>;
+        keywordTriggers?: Array<{ keyword: string; prompt: string; delay?: number }>;
     } | null>(null);
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const router = useRouter();
@@ -495,6 +497,16 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                                                             onChange={(e) => setSettingsData({ ...settingsData, welcomeDmPrompt: e.target.value })}
                                                             disabled={!settingsData.commentDmEnabled}
                                                         />
+                                                        <div className="mt-2">
+                                                            <label className={`block text-sm font-medium ${settingsData.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
+                                                            <input
+                                                                type="number"
+                                                                className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData.commentDmEnabled ? 'bg-gray-50' : ''}`}
+                                                                value={settingsData.welcomeDmDelay || 0}
+                                                                onChange={(e) => setSettingsData({ ...settingsData, welcomeDmDelay: Number(e.target.value) })}
+                                                                disabled={!settingsData.commentDmEnabled}
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -517,6 +529,16 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                                                             onChange={(e) => setSettingsData({ ...settingsData, replyDmPrompt: e.target.value })}
                                                             disabled={!settingsData.commentDmEnabled}
                                                         />
+                                                        <div className="mt-2">
+                                                            <label className={`block text-sm font-medium ${settingsData.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
+                                                            <input
+                                                                type="number"
+                                                                className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData.commentDmEnabled ? 'bg-gray-50' : ''}`}
+                                                                value={settingsData.replyDmDelay || 0}
+                                                                onChange={(e) => setSettingsData({ ...settingsData, replyDmDelay: Number(e.target.value) })}
+                                                                disabled={!settingsData.commentDmEnabled}
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -549,8 +571,8 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                                                                         disabled={!settingsData.commentDmEnabled}
                                                                     />
                                                                     <textarea
-                                                                        className={`mt-1 block w-2/3 border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData.commentDmEnabled ? 'bg-gray-50' : ''}`}
-                                                                        placeholder="DM Template"
+                                                                        className={`mt-1 block w-1/3 border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData.commentDmEnabled ? 'bg-gray-50' : ''}`}
+                                                                        placeholder="DM Prompt"
                                                                         value={trigger.prompt}
                                                                         onChange={(e) => {
                                                                             const newTriggers = [...(settingsData.keywordTriggers || [])];
@@ -559,6 +581,20 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                                                                         }}
                                                                         disabled={!settingsData.commentDmEnabled}
                                                                     />
+                                                                    <div className="flex flex-col w-1/6">
+                                                                        <label className={`block text-sm font-medium ${settingsData.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
+                                                                        <input
+                                                                            type="number"
+                                                                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData.commentDmEnabled ? 'bg-gray-50' : ''}`}
+                                                                            value={trigger.delay || 0}
+                                                                            onChange={(e) => {
+                                                                                const newTriggers = [...(settingsData.keywordTriggers || [])];
+                                                                                newTriggers[index].delay = Number(e.target.value);
+                                                                                setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
+                                                                            }}
+                                                                            disabled={!settingsData.commentDmEnabled}
+                                                                        />
+                                                                    </div>
                                                                     <button
                                                                         onClick={() => {
                                                                             const newTriggers = [...(settingsData.keywordTriggers || [])];
@@ -574,7 +610,7 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                                                             ))}
                                                             <button
                                                                 onClick={() => {
-                                                                    const newTriggers = [...(settingsData.keywordTriggers || []), { keyword: '', prompt: '' }];
+                                                                    const newTriggers = [...(settingsData.keywordTriggers || []), { keyword: '', prompt: '', delay: 0 }];
                                                                     setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
                                                                 }}
                                                                 className={`text-sm font-medium ${settingsData.commentDmEnabled ? 'text-blue-500 hover:text-blue-700' : 'text-gray-400'}`}
