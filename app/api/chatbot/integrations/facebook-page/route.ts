@@ -78,6 +78,21 @@ export async function GET(req: Request) {
 
   await connectMongo();
   const facebookPages = await FacebookPage.find({ chatbotId });
+
+  if (facebookPages.length === 0) {
+    // Find the Chatbot with chatbotId and update integrations.whatsapp to false
+    const chatbot = await Chatbot.findOneAndUpdate(
+      { chatbotId }, // find a document with chatbotId
+      {
+        // update the integrations field
+        $set: { "integrations.messenger": false }
+      },
+      {
+        new: true, // return the new Chatbot instead of the old one
+      }
+    );
+  }
+
   return NextResponse.json(facebookPages);
 
 }
