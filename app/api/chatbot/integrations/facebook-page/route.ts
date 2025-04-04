@@ -47,8 +47,8 @@ export async function DELETE(req: Request) {
 
     if (result.deletedCount > 0) {
       // Check if there are any more numbers for this chatbotId
-      const remainingNumbers = await FacebookPage.find({ chatbotId });
-      if (remainingNumbers.length === 0) {
+      const remainingPages = await FacebookPage.find({ chatbotId });
+      if (remainingPages.length === 0) {
         // Find the Chatbot with chatbotId and update integrations.whatsapp to false
         const chatbot = await Chatbot.findOneAndUpdate(
           { chatbotId }, // find a document with chatbotId

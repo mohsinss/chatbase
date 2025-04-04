@@ -60,6 +60,13 @@ export async function POST(req: Request) {
             if (!response2.data.success) {
                 return NextResponse.json({ success: false, message: response2.data.error?.message || 'Page Subscription failed.' });
             }
+            
+            const existingFBPage = await FacebookPage.findOne({ pageId });
+            let existingChatbotId = null;
+
+            if (existingFBPage) {
+                existingChatbotId = existingFBPage.chatbotId;
+            }
 
             // Find FacebookPage with pageId and update it
             const facebookPage = await FacebookPage.findOneAndUpdate(
@@ -75,6 +82,23 @@ export async function POST(req: Request) {
                     upsert: true, // make this update into an upsert
                 }
             );
+
+            if (existingChatbotId) {
+                const remainingPages = await FacebookPage.find({ chatbotId: existingChatbotId });
+                if (remainingPages.length === 0) {
+                    // Find the Chatbot with chatbotId and update integrations.whatsapp to false
+                    const chatbot = await Chatbot.findOneAndUpdate(
+                        { chatbotId: existingChatbotId }, // find a document with chatbotId
+                        {
+                            // update the integrations field
+                            $set: { "integrations.messenger": false }
+                        },
+                        {
+                            new: true, // return the new Chatbot instead of the old one
+                        }
+                    );
+                }
+            }
         }
 
         if (data.data.length > 0) {
