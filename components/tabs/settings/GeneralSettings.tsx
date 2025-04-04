@@ -18,6 +18,8 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
     url: ""
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [chatbots, setChatbots] = useState<{chatbotId: string}[]>([]);
 
   useEffect(() => {
     const fetchTeamData = async () => {
@@ -34,7 +36,19 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
       }
     };
 
+    const fetchChatbots = async () => {
+      try {
+        const response = await fetch(`/api/chatbot/list?teamId=${teamId}`);
+        if (!response.ok) throw new Error('Failed to fetch chatbots');
+        const data = await response.json();
+        setChatbots(data.chatbots || []);
+      } catch (error) {
+        console.error("Error fetching chatbots:", error);
+      }
+    };
+
     fetchTeamData();
+    fetchChatbots();
   }, [teamId]);
 
   const handleSave = async () => {
@@ -62,6 +76,45 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
       console.error("Error updating team data:", error);
     }
     setIsSaving(false);
+  };
+
+  const handleDeleteTeam = async () => {
+    if (!confirm('Are you sure you want to delete this team? All chatbots and data will be permanently deleted. This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // Fetch latest chatbot list before deletion
+      const chatbotsResponse = await fetch(`/api/chatbot/list?teamId=${teamId}`);
+      if (!chatbotsResponse.ok) throw new Error('Failed to fetch latest chatbot list');
+      const chatbotsData = await chatbotsResponse.json();
+      const latestChatbotIds = (chatbotsData.chatbots || []).map((c: any) => c.chatbotId);
+
+      const response = await fetch('/api/team/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          teamId,
+          chatbotIds: latestChatbotIds
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete team');
+      }
+
+      toast.success('Team deleted successfully');
+      window.location.href = '/dashboard';
+    } catch (error: any) {
+      console.error('Error deleting team:', error);
+      toast.error(error.message || 'Failed to delete team');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -114,8 +167,12 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
           All your uploaded data and trained chatbots will be deleted. <span className="font-bold">This action is not reversible</span>
         </p>
         <div className="mt-6 flex justify-end">
-          <button className="rounded-lg bg-red-500 px-6 py-2 text-white">
-            Delete My team
+          <button 
+            onClick={handleDeleteTeam}
+            className="rounded-lg bg-red-500 px-6 py-2 text-white"
+            disabled={isDeleting}
+          >
+            {isDeleting ? <span className="loading loading-spinner loading-xs"></span> : 'Delete My Team'}
           </button>
         </div>
       </div>
