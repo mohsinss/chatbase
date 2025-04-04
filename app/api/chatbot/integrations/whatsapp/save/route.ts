@@ -59,6 +59,13 @@ export async function POST(req: Request) {
     });
     const data = response3.data;
 
+    const existingWhatsappNumber = await WhatsAppNumber.findOne({ phoneNumberId });
+    let existingChatbotId = null;
+
+    if (existingWhatsappNumber) {
+      existingChatbotId = existingWhatsappNumber.chatbotId;
+    }
+
     // Find WhatsAppNumber with phoneNumberId and update it
     const whatsappNumber = await WhatsAppNumber.findOneAndUpdate(
       { phoneNumberId }, // find a document with phoneNumberId
@@ -91,6 +98,23 @@ export async function POST(req: Request) {
         new: true, // return the new Chatbot instead of the old one
       }
     );
+
+    if (existingChatbotId) {
+      const remainingNumbers = await WhatsAppNumber.find({ chatbotId: existingChatbotId });
+      if (remainingNumbers.length === 0) {
+        // Find the Chatbot with chatbotId and update integrations.whatsapp to false
+        const chatbot = await Chatbot.findOneAndUpdate(
+          { chatbotId: existingChatbotId }, // find a document with chatbotId
+          {
+            // update the integrations field
+            $set: { "integrations.whatsapp": false }
+          },
+          {
+            new: true, // return the new Chatbot instead of the old one
+          }
+        );
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
