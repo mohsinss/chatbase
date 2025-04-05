@@ -15,6 +15,7 @@ interface ConfigPanelProps {
 const ConfigPanel = ({ onClose, teamId, onSuccess }: ConfigPanelProps) => {
   const router = useRouter();
   const [chatbotName, setChatbotName] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateChatbot = async () => {
     if (!chatbotName.trim()) {
@@ -22,7 +23,11 @@ const ConfigPanel = ({ onClose, teamId, onSuccess }: ConfigPanelProps) => {
       return;
     }
 
+    if (isCreating) return;
+
     try {
+      setIsCreating(true);
+      toast.loading("Creating chatbot...");
       const response = await fetch("/api/chatbot/create", {
         method: "POST",
         headers: {
@@ -60,6 +65,7 @@ const ConfigPanel = ({ onClose, teamId, onSuccess }: ConfigPanelProps) => {
     } catch (error: any) {
       console.error('Failed to create chatbot:', error);
       toast.error(error.message || "Failed to create chatbot");
+      setIsCreating(false);
     }
   };
 
@@ -100,9 +106,10 @@ const ConfigPanel = ({ onClose, teamId, onSuccess }: ConfigPanelProps) => {
 
           <Button 
             onClick={handleCreateChatbot}
+            disabled={isCreating}
             className="w-full bg-black text-white hover:bg-black/90 h-12 text-base rounded-md"
           >
-            Create Chatbot
+            {isCreating ? "Creating..." : "Create Chatbot"}
           </Button>
         </div>
       </Card>

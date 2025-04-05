@@ -1,6 +1,8 @@
 "use client";
 
 import { IconPlus } from "@tabler/icons-react";
+import { useState } from "react";
+import { toast } from "react-hot-toast";
 
 // Separate non-interactive content
 const TeamButtonContent = () => (
@@ -21,8 +23,16 @@ const TeamButtonContent = () => (
 
 // Interactive button wrapper
 export default function ButtonCreateTeam() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
   const handleCreateTeam = async () => {
+    if (isLoading || isCreating) return;
+    
+    setIsLoading(true);
+    setIsCreating(true);
     try {
+      toast.loading("Creating team...");
       const response = await fetch("/api/team/create", {
         method: "POST",
         headers: {
@@ -35,16 +45,20 @@ export default function ButtonCreateTeam() {
       const data = await response.json();
       if (!data.teamId) throw new Error("No team ID returned");
 
+      toast.success("Team created successfully!");
       window.location.href = `/dashboard/${data.teamId}`;
     } catch (error) {
       console.error(error);
+      toast.error("Failed to create team");
+      setIsLoading(false);
+      setIsCreating(false);
     }
   };
 
   return (
     <div 
       onClick={handleCreateTeam}
-      className="card bg-base-100 hover:bg-base-200 transition-colors border border-base-200 border-dashed cursor-pointer"
+      className={`card bg-base-100 hover:bg-base-200 transition-colors border border-base-200 border-dashed cursor-pointer ${(isLoading || isCreating) ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <TeamButtonContent />
     </div>
