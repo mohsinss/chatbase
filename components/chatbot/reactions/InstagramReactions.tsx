@@ -4,9 +4,21 @@ import { useState, useEffect } from "react";
 import { Switch } from "@headlessui/react";
 import { IconInfoCircle } from "@tabler/icons-react";
 import Spinner from "@/components/Spinner";
+import { useRouter } from "next/navigation";
 
-const InstagramReactions = () => {
+interface InstagramReactionsProps {
+  chatbot: {
+    integrations: {
+      [key: string]: boolean;
+    };
+  };
+}
+
+const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
   const [isFetchingSettings, setIsFetchingSettings] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const router = useRouter();
   const [settingsData, setSettingsData] = useState({
     prompt: "",
     delay: 0,
@@ -28,10 +40,37 @@ const InstagramReactions = () => {
     likeDmSpecificPosts: []
   });
 
+  useEffect(() => {
+    if (chatbot?.integrations) {
+      setIsConnected(!!chatbot.integrations['instagram']);
+      console.log('Instagram integration status:', chatbot.integrations['instagram']);
+    }
+  }, [chatbot]);
+
+  const handleConnect = () => {
+    setIsConnecting(true);
+    router.push(`${window.location.pathname}/../../connect/integrations`);
+  };
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Instagram Reactions</h1>
-      <p className="mt-2 text-gray-600">Manage your Instagram chatbot reactions and settings.</p>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Instagram Reactions</h1>
+          <p className="mt-2 text-gray-600">Manage your Instagram chatbot reactions and settings.</p>
+        </div>
+        <button
+          onClick={handleConnect}
+          disabled={isConnecting}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            isConnected
+              ? "bg-gradient-to-r from-green-400 via-green-500 to-purple-400 text-white border border-green-200"
+              : "bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white hover:opacity-90"
+          }`}
+        >
+          {isConnected ? "Connected to Instagram" : isConnecting ? "Connecting..." : "Connect to Instagram"}
+        </button>
+      </div>
       
       <div className="flex flex-col gap-6 mt-6">
         <div className="bg-gray-50 p-6 rounded-lg">
