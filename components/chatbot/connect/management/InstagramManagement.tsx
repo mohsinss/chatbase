@@ -29,10 +29,10 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
     const [isFetchingSettings, setIsFetchingSettings] = useState(false);
-    const [settingsData, setSettingsData] = useState<{ 
-        prompt?: string; 
-        delay?: number; 
-        prompt1?: string; 
+    const [settingsData, setSettingsData] = useState<{
+        prompt?: string;
+        delay?: number;
+        prompt1?: string;
         delay1?: number;
         commentDmEnabled?: boolean;
         welcomeDmEnabled?: boolean;
@@ -97,8 +97,7 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    prompt: settingsData?.prompt,
-                    delay: settingsData?.delay,
+                    ...settingsData,
                 }),
             });
 
@@ -484,7 +483,9 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                                                                 checked={settingsData.welcomeDmEnabled}
                                                                 onChange={(enabled) => setSettingsData({ ...settingsData, welcomeDmEnabled: enabled })}
                                                                 className={`${settingsData.welcomeDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                                                            />
+                                                            >
+                                                                <span className={`${settingsData.welcomeDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                                                            </Switch>
                                                             <span className={`text-sm font-medium ${settingsData.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Send Welcome DM to New Users</span>
                                                         </div>
                                                     </div>
@@ -516,7 +517,9 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                                                                 checked={settingsData.replyDmEnabled}
                                                                 onChange={(enabled) => setSettingsData({ ...settingsData, replyDmEnabled: enabled })}
                                                                 className={`${settingsData.replyDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                                                            />
+                                                            >
+                                                                <span className={`${settingsData.replyDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                                                            </Switch>
                                                             <span className={`text-sm font-medium ${settingsData.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Send DM to Comment Authors</span>
                                                         </div>
                                                     </div>
@@ -548,7 +551,9 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                                                                 checked={settingsData.keywordDmEnabled}
                                                                 onChange={(enabled) => setSettingsData({ ...settingsData, keywordDmEnabled: enabled })}
                                                                 className={`${settingsData.keywordDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                                                            />
+                                                            >
+                                                                <span className={`${settingsData.keywordDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                                                            </Switch>
                                                             <span className={`text-sm font-medium ${settingsData.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Keyword-Triggered DMs</span>
                                                         </div>
                                                     </div>
@@ -648,7 +653,9 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                                                                 checked={settingsData.likeDmFirstOnly}
                                                                 onChange={(enabled) => setSettingsData({ ...settingsData, likeDmFirstOnly: enabled })}
                                                                 className={`${settingsData.likeDmFirstOnly ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                                                            />
+                                                            >
+                                                                <span className={`${settingsData.likeDmFirstOnly ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                                                            </Switch>
                                                             <span className="text-sm font-medium text-gray-700">Send DM Only on First Like</span>
                                                         </div>
                                                     </div>
