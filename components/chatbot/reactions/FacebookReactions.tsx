@@ -4,9 +4,21 @@ import { useState, useEffect } from "react";
 import { Switch } from "@headlessui/react";
 import { IconInfoCircle } from "@tabler/icons-react";
 import Spinner from "@/components/Spinner";
+import { useRouter } from "next/navigation";
 
-const FacebookReactions = () => {
+interface FacebookReactionsProps {
+  chatbot: {
+    integrations: {
+      [key: string]: boolean;
+    };
+  };
+}
+
+const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
   const [isFetchingSettings, setIsFetchingSettings] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const router = useRouter();
   const [settingsData, setSettingsData] = useState({
     prompt: "",
     delay: 0,
@@ -28,9 +40,31 @@ const FacebookReactions = () => {
     likeDmSpecificPosts: []
   });
 
+  useEffect(() => {
+    setIsConnected(!!chatbot?.integrations?.['messenger']);
+  }, [chatbot]);
+
+  const handleConnect = () => {
+    setIsConnecting(true);
+    router.push('/dashboard/chatbot/connect/integrations');
+  };
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Facebook Reactions</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Facebook Reactions</h1>
+        <button
+          onClick={handleConnect}
+          className={`px-4 py-2 rounded-lg font-medium ${
+            isConnected 
+              ? 'bg-green-100 text-green-800 border border-green-200' 
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
+          disabled={isConnecting}
+        >
+          {isConnected ? "Connected to Facebook" : isConnecting ? "Connecting..." : "Connect to Facebook"}
+        </button>
+      </div>
       <p className="mt-2 text-gray-600">Manage your Facebook chatbot reactions and settings.</p>
       
       <div className="flex flex-col gap-6 mt-6">

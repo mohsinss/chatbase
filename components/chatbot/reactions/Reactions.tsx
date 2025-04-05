@@ -18,6 +18,9 @@ interface ReactionsProps {
   chatbot: {
     id: string;
     name: string;
+    integrations: {
+      [key: string]: boolean;
+    };
   };
   teamId: string;
   chatbotId: string;
@@ -96,7 +99,7 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
       case "whatsapp":
         return <WhatsAppReactions />;
       case "facebook":
-        return <FacebookReactions />;
+        return <FacebookReactions chatbot={chatbot} />;
       case "instagram":
         return <InstagramReactions />;
       case "twitter":

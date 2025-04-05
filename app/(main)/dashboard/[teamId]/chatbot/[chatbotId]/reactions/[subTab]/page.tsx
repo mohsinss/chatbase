@@ -11,6 +11,9 @@ import Reactions from "@/components/chatbot/reactions/Reactions";
 interface ChatbotData {
   id: string;
   name: string;
+  integrations: {
+    [key: string]: boolean;
+  };
 }
 
 export default async function ReactionsPage({ 
@@ -36,6 +39,7 @@ export default async function ReactionsPage({
   const serializedChatbot: ChatbotData = {
     id: chatbot.chatbotId,
     name: chatbot.name,
+    integrations: chatbot.integrations || {},
   };
 
   return (
