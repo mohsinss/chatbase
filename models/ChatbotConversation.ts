@@ -34,6 +34,13 @@ const ChatbotConversationSchema = new mongoose.Schema(
         type: String,
         default: "Bot"
       },
+      mid: {
+        type: String
+      },
+      deleted: {
+        type: Boolean,
+        default: false,
+      },
       timestamp: {
         type: Date,
         default: Date.now

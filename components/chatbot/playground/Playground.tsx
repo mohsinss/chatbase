@@ -443,6 +443,7 @@ const ChatContainer = ({
                   ? 'hover:bg-white/10 text-white'
                   : 'hover:bg-gray-100'
                   }`}
+                  disabled={disableInput}
               >
                 <IconRefresh className="w-4 h-4" />
               </button>

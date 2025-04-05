@@ -80,7 +80,7 @@ export async function POST(request: Request) {
           }
 
           // Find existing conversation or create a new one
-          let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "instagram", "metadata.from": sender, "metadata.to": instagramPage.name });
+          let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "instagram", "metadata.from": sender, "metadata.to": instagram_account_id });
 
           const dataset = await Dataset.findOne({ chatbotId });
           const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
@@ -104,15 +104,19 @@ export async function POST(request: Request) {
             if (!isAiResponseEnabled) {
               triggerQF = true;
             }
-            conversation.messages.push({ role: "user", content: text });
+            conversation.messages.push({ role: "user", content: text, mid });
           } else {
             // Create new conversation
             conversation = new ChatbotConversation({
               chatbotId,
               platform: "instagram",
               disable_auto_reply: false,
-              metadata: { from: sender, to: instagramPage.name },
-              messages: [{ role: "user", content: text },]
+              metadata: { 
+                from: sender, 
+                to: instagram_account_id,
+                to_name: instagramPage.name 
+              },
+              messages: [{ role: "user", content: text, mid },]
             });
             triggerQF = true;
           }
@@ -230,7 +234,7 @@ export async function POST(request: Request) {
                   role: "assistant",
                   content: JSON.stringify({
                     type: "image",
-                    image: nodeImage
+                    image: nodeImage,
                   })
                 });
               }
@@ -277,6 +281,7 @@ export async function POST(request: Request) {
           const sender = messagingEvent.sender.id;
           const recipient = messagingEvent.recipient.id;
           const button_id = messagingEvent.postback.payload;
+          const mid = messagingEvent.postback.mid;
           const text = messagingEvent.postback.title;
 
           const node_id = button_id.split('-')[0];
@@ -347,9 +352,10 @@ export async function POST(request: Request) {
                 },
                 body: JSON.stringify(image_payload),
               });
+              
               const response_image_data = await response_image.json();
-              console.log(response_image_data)
               await sleep(2000)
+
               conversation.messages.push({
                 role: "assistant",
                 content: JSON.stringify({
@@ -404,7 +410,7 @@ export async function POST(request: Request) {
                 }
               });
 
-              conversation.messages.push({ role: "user", content: text });
+              conversation.messages.push({ role: "user", content: text, mid });
               conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
               await conversation.save();
             }
