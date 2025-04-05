@@ -2,12 +2,17 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { IconSettings, IconMessageCircle, IconBrandWhatsapp, IconBrandFacebook, IconBrandInstagram, IconBrandTwitter, IconBrandLinkedin } from "@tabler/icons-react";
+import { IconSettings, IconMessageCircle, IconBrandWhatsapp, IconBrandFacebook, IconBrandInstagram, IconBrandTwitter, IconBrandLinkedin, IconBrandSlack, IconBrandWordpress, IconBrandSpotify, IconBrandSnapchat, IconBrandTiktok } from "@tabler/icons-react";
 import WhatsAppReactions from "./WhatsAppReactions";
 import FacebookReactions from "./FacebookReactions";
 import InstagramReactions from "./InstagramReactions";
 import TwitterReactions from "./TwitterReactions";
 import LinkedInReactions from "./LinkedInReactions";
+import SlackReactions from "./SlackReactions";
+import WordPressReactions from "./WordPressReactions";
+import ShopifyReactions from "./ShopifyReactions";
+import SnapchatReactions from "./SnapchatReactions";
+import TikTokReactions from "./TikTokReactions";
 
 interface ReactionsProps {
   chatbot: {
@@ -49,6 +54,36 @@ const SIDEBAR_ITEMS = [
     icon: IconBrandLinkedin,
     color: "text-blue-600",
   },
+  {
+    id: "slack",
+    label: "Slack",
+    icon: IconBrandSlack,
+    color: "text-purple-500",
+  },
+  {
+    id: "wordpress",
+    label: "WordPress",
+    icon: IconBrandWordpress,
+    color: "text-gray-600",
+  },
+  {
+    id: "shopify",
+    label: "Shopify",
+    icon: IconBrandSpotify,
+    color: "text-green-600",
+  },
+  {
+    id: "snapchat",
+    label: "Snapchat",
+    icon: IconBrandSnapchat,
+    color: "text-yellow-500",
+  },
+  {
+    id: "tiktok",
+    label: "TikTok",
+    icon: IconBrandTiktok,
+    color: "text-black",
+  },
 ];
 
 const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
@@ -68,6 +103,16 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
         return <TwitterReactions />;
       case "linkedin":
         return <LinkedInReactions />;
+      case "slack":
+        return <SlackReactions />;
+      case "wordpress":
+        return <WordPressReactions />;
+      case "shopify":
+        return <ShopifyReactions />;
+      case "snapchat":
+        return <SnapchatReactions />;
+      case "tiktok":
+        return <TikTokReactions />;
       default:
         return <WhatsAppReactions />;
     }
