@@ -44,6 +44,18 @@ const TABS: ReadonlyArray<Tab> = [
     defaultSubRoute: "chat-logs",
   },
   { 
+    id: "reactions", 
+    label: "Reactions",
+    subRoutes: [
+      { id: "whatsapp", label: "WhatsApp" },
+      { id: "facebook", label: "Facebook" },
+      { id: "instagram", label: "Instagram" },
+      { id: "twitter", label: "Twitter" },
+      { id: "linkedin", label: "LinkedIn" }
+    ],
+    defaultSubRoute: "whatsapp",
+  },
+  { 
     id: "analytics", 
     label: "Analytics",
     subRoutes: [
@@ -107,7 +119,7 @@ const ChatbotTabs = ({
   return (
     <div className="border-b">
       <div className="max-w-6xl mx-auto px-8">
-        <div className="flex justify-center space-x-1">
+        <div className="flex justify-center space-x-1 overflow-x-auto scrollbar-hide">
           {TABS.map((tab) => (
             <Link
               key={tab.id}
