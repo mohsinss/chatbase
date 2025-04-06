@@ -163,7 +163,7 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
       const response = await fetch(`/api/chatbot/integrations/auto-reply-status?_id=${selectedConversation._id}`);
       if (response.ok) {
         const data = await response.json();
-        setAutoReplyEnabled(!data?.disable_auto_reply);
+        setAutoReplyEnabled(data?.disable_auto_reply ?? true);
       } else {
         const errorData = await response.json();
         console.error('Failed to fetch auto-reply status:', errorData.error);
