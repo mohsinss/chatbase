@@ -14,6 +14,7 @@ interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
+  deleted?: boolean;
   from?: string;
 }
 
@@ -588,6 +589,9 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                             {new Date(message.timestamp).toLocaleString()}
                             {message.role === 'assistant' && ` by ${message?.from ?? 'Bot'}`}
                           </div>
+                          { message?.deleted && 
+                            <div>deleted</div>
+                          }
                         </div>
                       </div>
                     );
