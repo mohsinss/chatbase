@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useParams, usePathname } from "next/navigation";
-import { IconSettings, IconSparkles, IconMessages, IconShield, IconZeppelin, IconUsers, IconBell, IconWebhook, IconWorld } from "@tabler/icons-react";
+import { IconSettings, IconSparkles, IconMessages, IconShield, IconZeppelin, IconUsers, IconBell, IconWebhook, IconWorld, IconPalette } from "@tabler/icons-react";
 import GeneralSettings from "./GeneralSettings";
 import AISettings from "./AISettings";
 import ChatInterfaceSettings from "./ChatInterfaceSettings";
@@ -11,6 +11,7 @@ import NotificationsSettings from "./NotificationsSettings";
 import WebhooksSettings from "./WebhooksSettings";
 import CustomDomainsSettings from "./CustomDomainsSettings";
 import ZapierSettings from "./ZpierSettings";
+import BrandingSettings from "./BrandingSettings";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export default function Settings({ team, teamId, chatbotId }: SettingsProps) {
     { id: "general", name: "General", icon: <IconSettings className="w-5 h-5" /> },
     { id: "ai", name: "AI", icon: <IconSparkles className="w-5 h-5" /> },
     { id: "chat-interface", name: "Chat Interface", icon: <IconMessages className="w-5 h-5" /> },
+    { id: "branding", name: "Branding", icon: <IconPalette className="w-5 h-5" /> },
     { id: "security", name: "Security", icon: <IconShield className="w-5 h-5" /> },
     { id: "leads", name: "Leads", icon: <IconUsers className="w-5 h-5" /> },
     { id: "notifications", name: "Notifications", icon: <IconBell className="w-5 h-5" /> },
@@ -102,6 +104,7 @@ export default function Settings({ team, teamId, chatbotId }: SettingsProps) {
             {currentTab === "general" && <GeneralSettings chatbotId={chatbotId} teamId={teamId} />}
             {currentTab === "ai" && <AISettings team={team} chatbotId={chatbotId} />}
             {currentTab === "chat-interface" && <ChatInterfaceSettings chatbotId={chatbotId} />}
+            {currentTab === "branding" && <BrandingSettings chatbotId={chatbotId} />}
             {currentTab === "security" && <SecuritySettings chatbotId={chatbotId} />}
             {currentTab === "leads" && <LeadsSettings chatbotId={chatbotId} />}
             {currentTab === "notifications" && <NotificationsSettings chatbotId={chatbotId} />}

@@ -151,7 +151,7 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
       </div>
 
       {/* Main Content - With offset for fixed sidebar */}
-      <div className="ml-[70px] md:ml-48 flex-1 overflow-auto pt-[120px]">
+      <div className="ml-[70px] md:ml-48 flex-1 overflow-auto pt-[20px]">
         {renderContent()}
       </div>
     </div>
