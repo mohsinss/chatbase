@@ -21,7 +21,8 @@ const nextConfig = {
       
       // Local development
       "localhost",
-      "127.0.0.1"
+      "127.0.0.1",
+      "webengage.com"
     ],
   },
   async headers() {
