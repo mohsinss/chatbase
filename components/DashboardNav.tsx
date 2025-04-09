@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 import config from "@/config";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PlansSettings } from "@/components/tabs/settings/PlansSettings";
+import { ChatbotBrandingSettings } from '@/models/ChatbotBrandingSettings'
 
 interface Chatbot {
   chatbotId: string;
@@ -70,6 +71,17 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
   const [teamSearchQuery, setTeamSearchQuery] = useState("");
   const [isUpgradePlanModalOpen, setIsUpgradePlanModalOpen] = useState(false);
   const [currentChatbotLimit, setCurrentChatbotLimit] = useState(0);
+  const [brandingSettings, setBrandingSettings] = useState<ChatbotBrandingSettings>({ logoUrl: "" });
+
+  // Extract chatbotId from URL path - handle both /chatbot/ and /settings/branding paths
+  const currentChatbotId = pathname.includes('/chatbot/') 
+    ? pathname.split('/chatbot/')[1]?.split('/')[0] 
+    : pathname.includes('/settings/branding') 
+      ? pathname.split('/settings/branding')[0]?.split('/').pop() 
+      : null;
+
+  console.log('Current pathname:', pathname); // Debug log
+  console.log('Extracted chatbotId:', currentChatbotId); // Debug log
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" });
@@ -116,6 +128,35 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
     fetchTeams();
   }, []);
 
+  // Fetch branding settings when component mounts
+  useEffect(() => {
+    const fetchBrandingSettings = async () => {
+      try {
+        // If we have a chatbotId, fetch its branding settings
+        if (currentChatbotId) {
+          const response = await fetch(`/api/chatbot/branding-settings?chatbotId=${currentChatbotId}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch branding settings');
+          }
+          const data = await response.json();
+          console.log('Fetched branding settings:', data); // Debug log
+          if (data.logoUrl) {
+            setBrandingSettings(data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch branding settings:", error);
+      }
+    };
+
+    fetchBrandingSettings();
+  }, [currentChatbotId]);
+
+  // Debug log for current branding settings
+  useEffect(() => {
+    console.log('Current branding settings:', brandingSettings);
+  }, [brandingSettings]);
+
   const handleCreateTeam = async () => {
     try {
       const response = await fetch("/api/team/create", {
@@ -147,10 +188,6 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
     chatbot.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const currentChatbotId = pathname.includes('/chatbot/')
-    ? pathname.split('/chatbot/')[1]
-    : null;
-
   const isRootDashboard = pathname === "/dashboard";
 
   // Filter teams based on search query
@@ -163,19 +200,57 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
     setIsUpgradePlanModalOpen(false);
   };
 
+  // Create dynamic styles based on branding settings
+  const dynamicStyles = {
+    container: {
+      backgroundColor: brandingSettings.backgroundColor || 'var(--base-100)',
+      color: brandingSettings.textColor
+    },
+    headerImage: brandingSettings.headerUrl ? {
+      backgroundImage: `url(${brandingSettings.headerUrl})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      zIndex: -1
+    } : undefined,
+    button: {
+      backgroundColor: 'transparent',
+      '&:hover': {
+        backgroundColor: brandingSettings.secondaryColor || 'var(--base-200)'
+      }
+    },
+    dropdown: {
+      backgroundColor: brandingSettings.backgroundColor || 'var(--base-100)',
+      borderColor: brandingSettings.accentColor
+    }
+  };
+
   return (
-    <div className="border-b bg-base-100 z-50 relative">
+    <div 
+      className="border-b z-50 relative"
+      style={dynamicStyles.container}
+    >
+      {/* Header Image Background */}
+      {brandingSettings.headerUrl && (
+        <div 
+          className="absolute inset-0 w-full h-full opacity-10"
+          style={dynamicStyles.headerImage}
+        />
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left section */}
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="flex-shrink-0">
               <Image
-                src="/icon.png"
+                src={brandingSettings.logoUrl || "/icon.png"}
                 alt="Logo"
                 width={32}
                 height={32}
                 className="rounded-lg"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/icon.png";
+                }}
               />
             </Link>
 
@@ -190,7 +265,14 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
                       setIsTeamMenuOpen(!isTeamMenuOpen);
                       setIsChatbotMenuOpen(false);
                     }}
-                    className="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md hover:bg-base-200"
+                    className={`flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
+                      brandingSettings.secondaryColor 
+                        ? 'hover:bg-opacity-10' 
+                        : 'hover:bg-base-200'
+                    }`}
+                    style={{
+                      backgroundColor: isTeamMenuOpen ? (brandingSettings.secondaryColor || 'var(--base-200)') : 'transparent'
+                    }}
                   >
                     My Team
                     <svg
@@ -208,7 +290,10 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
                     </svg>
                   </button>
                   {isTeamMenuOpen && (
-                    <div className="absolute z-10 mt-2 w-72 rounded-lg shadow-lg bg-base-100 ring-1 ring-black ring-opacity-5">
+                    <div 
+                      className="absolute z-10 mt-2 w-72 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5"
+                      style={dynamicStyles.dropdown}
+                    >
                       {/* Search */}
                       <div className="p-2">
                         <div className="relative">

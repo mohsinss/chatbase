@@ -3,13 +3,25 @@ const nextConfig = {
   reactStrictMode: false,
   images: {
     domains: [
-      "lh3.googleusercontent.com",
-      "pbs.twimg.com",
+      // Auth providers
+      "lh3.googleusercontent.com", // Google
+      "pbs.twimg.com", // Twitter/X
+      "avatars.githubusercontent.com", // GitHub
+      
+      // Storage and CDNs
+      "chatbase-images.s3.eu-west-1.amazonaws.com", // AWS S3
+      "chatbase-images.s3.amazonaws.com", // AWS S3 alternate
+      
+      // Demo/Sample content
       "images.unsplash.com",
       "logos-world.net",
       "randomuser.me",
       "upload.wikimedia.org",
-      "pps.whatsapp.net"
+      "pps.whatsapp.net",
+      
+      // Local development
+      "localhost",
+      "127.0.0.1"
     ],
   },
   async headers() {
