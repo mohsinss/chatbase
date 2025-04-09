@@ -80,33 +80,62 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
 
   const handleSave = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       
+      // Prepare the request payload
+      const requestPayload = {
+        chatbotId,
+        logoUrl: logo,
+        headerUrl: header,
+        logoLink: config.logoLink,
+        primaryColor: config.primaryColor,
+        secondaryColor: config.secondaryColor,
+        accentColor: config.accentColor,
+        textColor: config.textColor,
+        backgroundColor: config.backgroundColor
+      };
+      
+      console.log('Request payload:', JSON.stringify(requestPayload));
+
       const response = await fetch('/api/chatbot/branding-settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          chatbotId,
-          ...config,
-          logoUrl: logo,
-          headerUrl: header
-        }),
-      })
+        body: JSON.stringify(requestPayload),
+      });
+
+      const savedData = await response.json();
 
       if (!response.ok) {
-        throw new Error('Failed to save settings')
+        console.error('Server returned error:', response.status);
+        console.error('Error response data:', savedData);
+        throw new Error(savedData.error || savedData.details || 'Failed to save settings');
       }
 
+      console.log('After save - Server response:', savedData);
+
+      // Verify the save worked
+      const verifyResponse = await fetch(`/api/chatbot/branding-settings?chatbotId=${chatbotId}`);
+      const verifyData = await verifyResponse.json();
+      console.log('Verification fetch - Full data:', verifyData);
+
+      // Update local state
+      setConfig(prev => ({
+        ...prev,
+        ...savedData
+      }));
+      
       toast.success('Settings saved successfully.')
     } catch (error) {
-      console.error('Save error:', error)
-      toast.error("Failed to save settings.")
+      console.error('Save error:', error);
+      console.error('Error details:', error instanceof Error ? error.message : String(error));
+      
+      toast.error(error instanceof Error ? error.message : "Failed to save settings.")
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleConfigChange = (key: keyof BrandingConfig, value: any) => {
     setConfig(prev => ({
@@ -207,7 +236,7 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Branding</h1>
+        <h1 className="text-2xl font-bold">xx Branding</h1>
         <Button 
           className="w-[200px]" 
           size="lg" 
