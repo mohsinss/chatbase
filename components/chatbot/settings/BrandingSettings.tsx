@@ -8,35 +8,14 @@ import { HexColorPicker } from "react-colorful"
 import { Input } from "@/components/ui/input"
 import toast from 'react-hot-toast'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-interface BrandingConfig {
-  logoUrl: string
-  headerUrl: string
-  logoLink: string
-  primaryColor: string
-  secondaryColor: string
-  accentColor: string
-  textColor: string
-  backgroundColor: string
-}
+import { ChatbotBrandingSettings, defaultBrandingSettings } from '@/models/ChatbotBrandingSettings'
 
 interface BrandingSettingsProps {
   chatbotId: string;
 }
 
-const defaultConfig: BrandingConfig = {
-  logoUrl: "",
-  headerUrl: "",
-  logoLink: "",
-  primaryColor: "#4285f4",
-  secondaryColor: "#34a853",
-  accentColor: "#fbbc05",
-  textColor: "#202124",
-  backgroundColor: "#ffffff"
-}
-
 export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
-  const [config, setConfig] = useState<BrandingConfig>(defaultConfig)
+  const [config, setConfig] = useState<ChatbotBrandingSettings>(defaultBrandingSettings)
   const [loading, setLoading] = useState(false)
   const [logo, setLogo] = useState<string>("")
   const [header, setHeader] = useState<string>("")
@@ -64,7 +43,7 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
       
       if (response.ok) {
         setConfig({
-          ...defaultConfig,
+          ...defaultBrandingSettings,
           ...data
         })
         setLogo(data.logoUrl || "")
@@ -82,17 +61,11 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
     try {
       setLoading(true);
       
-      // Prepare the request payload
       const requestPayload = {
         chatbotId,
+        ...config,
         logoUrl: logo,
-        headerUrl: header,
-        logoLink: config.logoLink,
-        primaryColor: config.primaryColor,
-        secondaryColor: config.secondaryColor,
-        accentColor: config.accentColor,
-        textColor: config.textColor,
-        backgroundColor: config.backgroundColor
+        headerUrl: header
       };
       
       console.log('Request payload:', JSON.stringify(requestPayload));
@@ -137,7 +110,7 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
     }
   };
 
-  const handleConfigChange = (key: keyof BrandingConfig, value: any) => {
+  const handleConfigChange = (key: keyof ChatbotBrandingSettings, value: any) => {
     setConfig(prev => ({
       ...prev,
       [key]: value
@@ -195,16 +168,9 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
     }
   }
 
-  const handleReset = (field: keyof BrandingConfig) => {
-    const defaults: Partial<BrandingConfig> = {
-      primaryColor: "#4285f4",
-      secondaryColor: "#34a853",
-      accentColor: "#fbbc05",
-      textColor: "#202124",
-      backgroundColor: "#ffffff"
-    }
-    if (field in defaults) {
-      handleConfigChange(field, defaults[field])
+  const handleReset = (field: keyof ChatbotBrandingSettings) => {
+    if (field in defaultBrandingSettings) {
+      handleConfigChange(field, defaultBrandingSettings[field])
     }
   }
 
@@ -236,7 +202,7 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">xx Branding</h1>
+        <h1 className="text-2xl font-bold">Branding</h1>
         <Button 
           className="w-[200px]" 
           size="lg" 
