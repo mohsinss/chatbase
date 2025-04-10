@@ -2,6 +2,16 @@
 const nextConfig = {
   reactStrictMode: false,
   images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      }
+    ],
     domains: [
       // Auth providers
       "lh3.googleusercontent.com", // Google
@@ -18,6 +28,7 @@ const nextConfig = {
       "randomuser.me",
       "upload.wikimedia.org",
       "pps.whatsapp.net",
+      "files.onegiantleap.com",
       
       // Local development
       "localhost",
