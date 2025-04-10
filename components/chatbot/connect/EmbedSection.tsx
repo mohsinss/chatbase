@@ -47,7 +47,11 @@ const EmbedSection = ({ chatbotId, domain }: { chatbotId: string, domain: string
   const chatBubbleCode = `<script>
   window.embeddedChatbotConfig = {
     chatbotId: "${chatbotId}",
-    domain: "${domain}"
+    domain: "${domain}",
+    mobileConfig: {
+      preventFocusLoss: true,
+      handleKeyboard: true
+    }
   }
 </script>
 <script src="https://${domain}/embed.min.js" defer></script>`;
