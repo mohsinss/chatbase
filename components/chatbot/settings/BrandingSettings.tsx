@@ -3,12 +3,13 @@
 import { useState, type ChangeEvent, useEffect, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { RefreshCcw, Send } from 'lucide-react'
+import { RefreshCcw, Send, X, Download } from 'lucide-react'
 import { HexColorPicker } from "react-colorful"
 import { Input } from "@/components/ui/input"
 import toast from 'react-hot-toast'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChatbotBrandingSettings, defaultBrandingSettings } from '@/models/ChatbotBrandingSettings'
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 interface BrandingSettingsProps {
   chatbotId: string;
@@ -19,6 +20,8 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
   const [loading, setLoading] = useState(false)
   const [logo, setLogo] = useState<string>("")
   const [header, setHeader] = useState<string>("")
+  const [enlargedImage, setEnlargedImage] = useState<string>("")
+  const [showEnlargedImage, setShowEnlargedImage] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
   const headerInputRef = useRef<HTMLInputElement>(null)
   const [selectedStyle, setSelectedStyle] = useState<string>("default")
@@ -218,6 +221,24 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
     }))
   }
 
+  const handleImageClick = (imageUrl: string) => {
+    if (imageUrl) {
+      setEnlargedImage(imageUrl)
+      setShowEnlargedImage(true)
+    }
+  }
+
+  const handleDownload = () => {
+    if (enlargedImage) {
+      const link = document.createElement('a')
+      link.href = enlargedImage
+      link.download = 'image'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
@@ -249,13 +270,14 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
                   </label>
                   <div className="space-y-4">
                     <div 
-                      className="h-32 w-32 rounded-lg bg-gray-200 overflow-hidden"
+                      className="h-32 w-32 rounded-lg bg-gray-200 overflow-hidden cursor-pointer"
                       style={{
                         backgroundImage: logo ? `url(${logo})` : 'none',
                         backgroundSize: 'contain',
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat'
                       }}
+                      onClick={() => handleImageClick(logo)}
                     />
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center gap-4">
@@ -330,12 +352,13 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
                   </label>
                   <div className="space-y-4">
                     <div 
-                      className="h-48 w-full rounded-lg bg-gray-200 overflow-hidden"
+                      className="h-48 w-full rounded-lg bg-gray-200 overflow-hidden cursor-pointer"
                       style={{
                         backgroundImage: header ? `url(${header})` : 'none',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'
                       }}
+                      onClick={() => handleImageClick(header)}
                     />
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center gap-4">
@@ -483,6 +506,36 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={showEnlargedImage} onOpenChange={setShowEnlargedImage}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0">
+          <div className="relative flex flex-col h-full">
+            <div className="flex items-center justify-between p-4 border-b">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowEnlargedImage(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleDownload}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1 p-4 flex items-center justify-center overflow-auto">
+              <img 
+                src={enlargedImage} 
+                alt="Enlarged view" 
+                className="max-w-full max-h-full object-contain rounded-lg"
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 
