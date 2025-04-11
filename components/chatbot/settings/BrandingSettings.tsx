@@ -65,16 +65,39 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
     fetchSettings()
   }, [chatbotId])
 
-  // Ensure headerText is never undefined in the UI
+  // Ensure header properties are never undefined in the UI
   useEffect(() => {
+    const updatedConfig = {...config};
+    let needsUpdate = false;
+    
     if (config.headerText === undefined) {
       console.log("[FRONTEND] Fixing undefined headerText in config");
-      setConfig(prev => ({
-        ...prev,
-        headerText: ""
-      }));
+      updatedConfig.headerText = "";
+      needsUpdate = true;
     }
-  }, [config.headerText]);
+    
+    if (config.headerTextColor === undefined) {
+      console.log("[FRONTEND] Fixing undefined headerTextColor in config");
+      updatedConfig.headerTextColor = "#ffffff";
+      needsUpdate = true;
+    }
+    
+    if (config.headerFontSize === undefined) {
+      console.log("[FRONTEND] Fixing undefined headerFontSize in config");
+      updatedConfig.headerFontSize = "3rem";
+      needsUpdate = true;
+    }
+    
+    if (config.headerFontFamily === undefined) {
+      console.log("[FRONTEND] Fixing undefined headerFontFamily in config");
+      updatedConfig.headerFontFamily = "Inter, sans-serif";
+      needsUpdate = true;
+    }
+    
+    if (needsUpdate) {
+      setConfig(updatedConfig);
+    }
+  }, [config.headerText, config.headerTextColor, config.headerFontSize, config.headerFontFamily]);
 
   const fetchSettings = async () => {
     try {
@@ -84,6 +107,9 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
       if (response.ok) {
         console.log("[Frontend GET] Fetched branding settings:", data)
         console.log("[Frontend GET] headerText in response:", data.headerText)
+        console.log("[Frontend GET] headerTextColor in response:", data.headerTextColor)
+        console.log("[Frontend GET] headerFontSize in response:", data.headerFontSize)
+        console.log("[Frontend GET] headerFontFamily in response:", data.headerFontFamily)
         
         setConfig({
           ...defaultBrandingSettings,
@@ -95,6 +121,9 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
           ...data
         })
         console.log("[Frontend GET] headerText in config:", data.headerText)
+        console.log("[Frontend GET] headerTextColor in config:", data.headerTextColor)
+        console.log("[Frontend GET] headerFontSize in config:", data.headerFontSize)
+        console.log("[Frontend GET] headerFontFamily in config:", data.headerFontFamily)
         
         setLogo(data.logoUrl || "")
         setHeader(data.headerUrl || "")
@@ -130,6 +159,9 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
       
       console.log("[Frontend SAVE] Current config before save:", config);
       console.log("[Frontend SAVE] headerText in config:", config.headerText);
+      console.log("[Frontend SAVE] headerTextColor in config:", config.headerTextColor);
+      console.log("[Frontend SAVE] headerFontSize in config:", config.headerFontSize);
+      console.log("[Frontend SAVE] headerFontFamily in config:", config.headerFontFamily);
       
       const requestPayload = {
         chatbotId,
@@ -137,6 +169,9 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
         headerUrl: header,
         logoLink: config.logoLink,
         headerText: config.headerText,
+        headerTextColor: config.headerTextColor,
+        headerFontSize: config.headerFontSize,
+        headerFontFamily: config.headerFontFamily,
         primaryColor: config.primaryColor,
         secondaryColor: config.secondaryColor,
         accentColor: config.accentColor,
@@ -146,6 +181,9 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
       
       console.log("[Frontend SAVE] Payload being sent:", requestPayload);
       console.log("[Frontend SAVE] headerText in payload:", requestPayload.headerText);
+      console.log("[Frontend SAVE] headerTextColor in payload:", requestPayload.headerTextColor);
+      console.log("[Frontend SAVE] headerFontSize in payload:", requestPayload.headerFontSize);
+      console.log("[Frontend SAVE] headerFontFamily in payload:", requestPayload.headerFontFamily);
       
       const response = await fetch('/api/chatbot/branding-settings', {
         method: 'POST',
@@ -158,6 +196,9 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
       const savedData = await response.json();
       console.log("[Frontend SAVE] Response from API:", savedData);
       console.log("[Frontend SAVE] headerText in response:", savedData.headerText);
+      console.log("[Frontend SAVE] headerTextColor in response:", savedData.headerTextColor);
+      console.log("[Frontend SAVE] headerFontSize in response:", savedData.headerFontSize);
+      console.log("[Frontend SAVE] headerFontFamily in response:", savedData.headerFontFamily);
 
       if (!response.ok) {
         throw new Error(savedData.error || savedData.details || 'Failed to save settings');
@@ -171,6 +212,9 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
         };
         console.log("[Frontend SAVE] Updated config:", newConfig);
         console.log("[Frontend SAVE] headerText in updated config:", newConfig.headerText);
+        console.log("[Frontend SAVE] headerTextColor in updated config:", newConfig.headerTextColor);
+        console.log("[Frontend SAVE] headerFontSize in updated config:", newConfig.headerFontSize);
+        console.log("[Frontend SAVE] headerFontFamily in updated config:", newConfig.headerFontFamily);
         return newConfig;
       });
       
@@ -413,9 +457,12 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
                     >
                       {config.headerText && (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <h2 className="text-3xl font-bold text-white drop-shadow-lg p-4 text-center"
+                          <h2 className="font-bold drop-shadow-lg p-4 text-center"
                               style={{
-                                textShadow: "0px 2px 4px rgba(0, 0, 0, 0.5)"
+                                textShadow: "0px 2px 4px rgba(0, 0, 0, 0.5)",
+                                color: config.headerTextColor || defaultBrandingSettings.headerTextColor,
+                                fontSize: config.headerFontSize || defaultBrandingSettings.headerFontSize,
+                                fontFamily: config.headerFontFamily || defaultBrandingSettings.headerFontFamily
                               }}>
                             {config.headerText}
                           </h2>
@@ -481,6 +528,97 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
                     </Button>
                   </div>
                   <p className="text-sm text-gray-500">Text will be displayed centered on the header image</p>
+                </div>
+
+                {/* Header Text Color */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Header Text Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-8 h-8 rounded-full border cursor-pointer"
+                      style={{ backgroundColor: config.headerTextColor || defaultBrandingSettings.headerTextColor }}
+                      onClick={() => {
+                        const colorPicker = document.createElement('input');
+                        colorPicker.type = 'color';
+                        colorPicker.value = config.headerTextColor || defaultBrandingSettings.headerTextColor;
+                        colorPicker.addEventListener('input', (e) => {
+                          const target = e.target as HTMLInputElement;
+                          handleConfigChange('headerTextColor', target.value);
+                        });
+                        colorPicker.click();
+                      }}
+                    />
+                    <Input
+                      type="text"
+                      placeholder="#ffffff"
+                      value={config.headerTextColor || defaultBrandingSettings.headerTextColor}
+                      onChange={(e) => handleConfigChange('headerTextColor', e.target.value)}
+                      className="w-24"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleConfigChange('headerTextColor', defaultBrandingSettings.headerTextColor)}
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Header Font Size */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Header Font Size
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={config.headerFontSize || defaultBrandingSettings.headerFontSize}
+                      onChange={(e) => handleConfigChange('headerFontSize', e.target.value)}
+                      className="select select-bordered flex-1"
+                    >
+                      <option value="1.5rem">Small</option>
+                      <option value="2rem">Medium</option>
+                      <option value="3rem">Large</option>
+                      <option value="4rem">Extra Large</option>
+                    </select>
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleConfigChange('headerFontSize', defaultBrandingSettings.headerFontSize)}
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Header Font Family */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Header Font Family
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={config.headerFontFamily || defaultBrandingSettings.headerFontFamily}
+                      onChange={(e) => handleConfigChange('headerFontFamily', e.target.value)}
+                      className="select select-bordered flex-1"
+                      style={{ fontFamily: config.headerFontFamily || defaultBrandingSettings.headerFontFamily }}
+                    >
+                      <option value="Inter, sans-serif" style={{ fontFamily: "Inter, sans-serif" }}>Inter</option>
+                      <option value="Arial, sans-serif" style={{ fontFamily: "Arial, sans-serif" }}>Arial</option>
+                      <option value="'Times New Roman', serif" style={{ fontFamily: "'Times New Roman', serif" }}>Times New Roman</option>
+                      <option value="Georgia, serif" style={{ fontFamily: "Georgia, serif" }}>Georgia</option>
+                      <option value="'Courier New', monospace" style={{ fontFamily: "'Courier New', monospace" }}>Courier New</option>
+                      <option value="'Trebuchet MS', sans-serif" style={{ fontFamily: "'Trebuchet MS', sans-serif" }}>Trebuchet MS</option>
+                      <option value="Verdana, sans-serif" style={{ fontFamily: "Verdana, sans-serif" }}>Verdana</option>
+                    </select>
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleConfigChange('headerFontFamily', defaultBrandingSettings.headerFontFamily)}
+                    >
+                      Reset
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -619,9 +757,12 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
                 />
                 {config.headerText && enlargedImage === header && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <h2 className="text-3xl font-bold text-white drop-shadow-lg p-4 text-center"
+                    <h2 className="font-bold drop-shadow-lg p-4 text-center"
                         style={{
-                          textShadow: "0px 2px 4px rgba(0, 0, 0, 0.5)"
+                          textShadow: "0px 2px 4px rgba(0, 0, 0, 0.5)",
+                          color: config.headerTextColor || defaultBrandingSettings.headerTextColor,
+                          fontSize: config.headerFontSize || defaultBrandingSettings.headerFontSize,
+                          fontFamily: config.headerFontFamily || defaultBrandingSettings.headerFontFamily
                         }}>
                       {config.headerText}
                     </h2>

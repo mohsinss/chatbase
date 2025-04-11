@@ -6,6 +6,9 @@ export const ChatbotBrandingSettingsSchema = z.object({
   logoUrl: z.string().optional(),
   headerUrl: z.string().optional(),
   headerText: z.string().optional(),
+  headerTextColor: z.string().optional(),
+  headerFontSize: z.string().optional(),
+  headerFontFamily: z.string().optional(),
   logoLink: z.string().optional(),
   primaryColor: z.string().optional(),
   secondaryColor: z.string().optional(),
@@ -20,6 +23,9 @@ export const defaultBrandingSettings: ChatbotBrandingSettings = {
   logoUrl: "",
   headerUrl: "",
   headerText: "",
+  headerTextColor: "#ffffff",
+  headerFontSize: "3rem",
+  headerFontFamily: "Inter, sans-serif",
   logoLink: "",
   primaryColor: "#4285f4",
   secondaryColor: "#34a853",
@@ -34,6 +40,9 @@ interface IBrandingSettings extends mongoose.Document {
   logoUrl: string;
   headerUrl: string;
   headerText: string;
+  headerTextColor: string;
+  headerFontSize: string;
+  headerFontFamily: string;
   logoLink: string;
   primaryColor: string;
   secondaryColor: string;
@@ -50,6 +59,9 @@ const brandingSettingsSchema = new mongoose.Schema({
   logoUrl: { type: String, default: "" },
   headerUrl: { type: String, default: "" },
   headerText: { type: String, default: "", required: false },
+  headerTextColor: { type: String, default: "#ffffff" },
+  headerFontSize: { type: String, default: "3rem" },
+  headerFontFamily: { type: String, default: "Inter, sans-serif" },
   logoLink: { type: String, default: "" },
   primaryColor: { type: String, default: "#4285f4" },
   secondaryColor: { type: String, default: "#34a853" },
@@ -61,11 +73,24 @@ const brandingSettingsSchema = new mongoose.Schema({
   strict: false
 });
 
-// Pre-save hook to ensure headerText is never undefined or null
+// Pre-save hook to ensure header fields are never undefined or null
 brandingSettingsSchema.pre('save', function(next) {
   if (this.headerText === undefined || this.headerText === null) {
     this.headerText = "";
   }
+  
+  if (this.headerTextColor === undefined || this.headerTextColor === null) {
+    this.headerTextColor = "#ffffff";
+  }
+  
+  if (this.headerFontSize === undefined || this.headerFontSize === null) {
+    this.headerFontSize = "3rem";
+  }
+  
+  if (this.headerFontFamily === undefined || this.headerFontFamily === null) {
+    this.headerFontFamily = "Inter, sans-serif";
+  }
+  
   next();
 });
 

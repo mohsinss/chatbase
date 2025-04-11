@@ -238,10 +238,12 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
       {/* Header Text centered over the header image */}
       {brandingSettings.headerText && brandingSettings.headerUrl && (
         <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none">
-          <h2 className="text-3xl font-bold drop-shadow-lg p-4 text-center"
+          <h2 className="font-bold drop-shadow-lg p-4 text-center"
               style={{
                 textShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
-                color: brandingSettings.textColor || "inherit"
+                color: brandingSettings.headerTextColor || "#ffffff",
+                fontSize: brandingSettings.headerFontSize || "3rem",
+                fontFamily: brandingSettings.headerFontFamily || "Inter, sans-serif"
               }}>
             {brandingSettings.headerText}
           </h2>
