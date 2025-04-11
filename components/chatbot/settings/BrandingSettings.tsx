@@ -27,8 +27,10 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
   const [selectedStyle, setSelectedStyle] = useState<string>("default")
   const [showTextColorPicker, setShowTextColorPicker] = useState(false)
   const [showBackgroundColorPicker, setShowBackgroundColorPicker] = useState(false)
+  const [showHeaderTextColorPicker, setShowHeaderTextColorPicker] = useState(false)
   const textColorPickerRef = useRef<HTMLDivElement>(null)
   const backgroundColorPickerRef = useRef<HTMLDivElement>(null)
+  const headerTextColorPickerRef = useRef<HTMLDivElement>(null)
 
   const stylePresets = {
     default: {
@@ -98,6 +100,34 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
       setConfig(updatedConfig);
     }
   }, [config.headerText, config.headerTextColor, config.headerFontSize, config.headerFontFamily]);
+
+  // Handle clicking outside color pickers
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      // Close text color picker when clicking outside
+      if (textColorPickerRef.current && !textColorPickerRef.current.contains(event.target as Node)) {
+        setShowTextColorPicker(false);
+      }
+      
+      // Close background color picker when clicking outside
+      if (backgroundColorPickerRef.current && !backgroundColorPickerRef.current.contains(event.target as Node)) {
+        setShowBackgroundColorPicker(false);
+      }
+      
+      // Close header text color picker when clicking outside
+      if (headerTextColorPickerRef.current && !headerTextColorPickerRef.current.contains(event.target as Node)) {
+        setShowHeaderTextColorPicker(false);
+      }
+    }
+    
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const fetchSettings = async () => {
     try {
@@ -536,20 +566,21 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
                     Header Text Color
                   </label>
                   <div className="flex items-center gap-2">
-                    <div 
-                      className="w-8 h-8 rounded-full border cursor-pointer"
-                      style={{ backgroundColor: config.headerTextColor || defaultBrandingSettings.headerTextColor }}
-                      onClick={() => {
-                        const colorPicker = document.createElement('input');
-                        colorPicker.type = 'color';
-                        colorPicker.value = config.headerTextColor || defaultBrandingSettings.headerTextColor;
-                        colorPicker.addEventListener('input', (e) => {
-                          const target = e.target as HTMLInputElement;
-                          handleConfigChange('headerTextColor', target.value);
-                        });
-                        colorPicker.click();
-                      }}
-                    />
+                    <div className="relative" ref={headerTextColorPickerRef}>
+                      <div 
+                        className="w-8 h-8 rounded-full border cursor-pointer"
+                        style={{ backgroundColor: config.headerTextColor || defaultBrandingSettings.headerTextColor }}
+                        onClick={() => setShowHeaderTextColorPicker(!showHeaderTextColorPicker)}
+                      />
+                      {showHeaderTextColorPicker && (
+                        <div className="absolute top-full left-0 mt-1 z-50 border border-gray-300 rounded-md shadow-lg bg-white p-2">
+                          <HexColorPicker 
+                            color={config.headerTextColor || defaultBrandingSettings.headerTextColor} 
+                            onChange={(color) => handleConfigChange('headerTextColor', color)} 
+                          />
+                        </div>
+                      )}
+                    </div>
                     <Input
                       type="text"
                       placeholder="#ffffff"
@@ -682,7 +713,7 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
                             onClick={() => setShowTextColorPicker(!showTextColorPicker)}
                           />
                           {showTextColorPicker && (
-                            <div className="absolute top-full mt-2 z-10">
+                            <div className="absolute top-full left-0 mt-1 z-50 border border-gray-300 rounded-md shadow-lg bg-white p-2">
                               <HexColorPicker 
                                 color={config.textColor} 
                                 onChange={(color) => handleConfigChange('textColor', color)} 
@@ -708,7 +739,7 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
                             onClick={() => setShowBackgroundColorPicker(!showBackgroundColorPicker)}
                           />
                           {showBackgroundColorPicker && (
-                            <div className="absolute top-full mt-2 z-10">
+                            <div className="absolute top-full left-0 mt-1 z-50 border border-gray-300 rounded-md shadow-lg bg-white p-2">
                               <HexColorPicker 
                                 color={config.backgroundColor} 
                                 onChange={(color) => handleConfigChange('backgroundColor', color)} 
