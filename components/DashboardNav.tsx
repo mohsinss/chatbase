@@ -140,9 +140,7 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
           }
           const data = await response.json();
           console.log('Fetched branding settings:', data); // Debug log
-          if (data.logoUrl) {
-            setBrandingSettings(data);
-          }
+          setBrandingSettings(data); // Set all branding data, not just logoUrl
         }
       } catch (error) {
         console.error("Failed to fetch branding settings:", error);
@@ -235,6 +233,19 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
           className="absolute inset-0 w-full h-full opacity-10"
           style={dynamicStyles.headerImage}
         />
+      )}
+      
+      {/* Header Text centered over the header image */}
+      {brandingSettings.headerText && brandingSettings.headerUrl && (
+        <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none">
+          <h2 className="text-3xl font-bold drop-shadow-lg p-4 text-center"
+              style={{
+                textShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
+                color: brandingSettings.textColor || "inherit"
+              }}>
+            {brandingSettings.headerText}
+          </h2>
+        </div>
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">

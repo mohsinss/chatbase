@@ -5,6 +5,7 @@ import mongoose, { Model } from "mongoose";
 export const ChatbotBrandingSettingsSchema = z.object({
   logoUrl: z.string().optional(),
   headerUrl: z.string().optional(),
+  headerText: z.string().optional(),
   logoLink: z.string().optional(),
   primaryColor: z.string().optional(),
   secondaryColor: z.string().optional(),
@@ -18,6 +19,7 @@ export type ChatbotBrandingSettings = z.infer<typeof ChatbotBrandingSettingsSche
 export const defaultBrandingSettings: ChatbotBrandingSettings = {
   logoUrl: "",
   headerUrl: "",
+  headerText: "",
   logoLink: "",
   primaryColor: "#4285f4",
   secondaryColor: "#34a853",
@@ -31,6 +33,7 @@ interface IBrandingSettings extends mongoose.Document {
   chatbotId: string;
   logoUrl: string;
   headerUrl: string;
+  headerText: string;
   logoLink: string;
   primaryColor: string;
   secondaryColor: string;
@@ -46,6 +49,7 @@ const brandingSettingsSchema = new mongoose.Schema({
   chatbotId: { type: String, required: true, unique: true },
   logoUrl: { type: String, default: "" },
   headerUrl: { type: String, default: "" },
+  headerText: { type: String, default: "", required: false },
   logoLink: { type: String, default: "" },
   primaryColor: { type: String, default: "#4285f4" },
   secondaryColor: { type: String, default: "#34a853" },
@@ -53,7 +57,16 @@ const brandingSettingsSchema = new mongoose.Schema({
   textColor: { type: String, default: "#202124" },
   backgroundColor: { type: String, default: "#ffffff" }
 }, {
-  timestamps: true
+  timestamps: true,
+  strict: false
+});
+
+// Pre-save hook to ensure headerText is never undefined or null
+brandingSettingsSchema.pre('save', function(next) {
+  if (this.headerText === undefined || this.headerText === null) {
+    this.headerText = "";
+  }
+  next();
 });
 
 // Fix for Next.js hot reloading

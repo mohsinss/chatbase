@@ -65,16 +65,37 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
     fetchSettings()
   }, [chatbotId])
 
+  // Ensure headerText is never undefined in the UI
+  useEffect(() => {
+    if (config.headerText === undefined) {
+      console.log("[FRONTEND] Fixing undefined headerText in config");
+      setConfig(prev => ({
+        ...prev,
+        headerText: ""
+      }));
+    }
+  }, [config.headerText]);
+
   const fetchSettings = async () => {
     try {
       const response = await fetch(`/api/chatbot/branding-settings?chatbotId=${chatbotId}`)
       const data = await response.json()
       
       if (response.ok) {
+        console.log("[Frontend GET] Fetched branding settings:", data)
+        console.log("[Frontend GET] headerText in response:", data.headerText)
+        
         setConfig({
           ...defaultBrandingSettings,
           ...data
         })
+        
+        console.log("[Frontend GET] Config after update:", {
+          ...defaultBrandingSettings,
+          ...data
+        })
+        console.log("[Frontend GET] headerText in config:", data.headerText)
+        
         setLogo(data.logoUrl || "")
         setHeader(data.headerUrl || "")
         
@@ -107,13 +128,24 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
     try {
       setLoading(true);
       
+      console.log("[Frontend SAVE] Current config before save:", config);
+      console.log("[Frontend SAVE] headerText in config:", config.headerText);
+      
       const requestPayload = {
         chatbotId,
-        ...config,
         logoUrl: logo,
         headerUrl: header,
-        selectedStyle // Include the selected style in the payload
+        logoLink: config.logoLink,
+        headerText: config.headerText,
+        primaryColor: config.primaryColor,
+        secondaryColor: config.secondaryColor,
+        accentColor: config.accentColor,
+        textColor: config.textColor,
+        backgroundColor: config.backgroundColor,
       };
+      
+      console.log("[Frontend SAVE] Payload being sent:", requestPayload);
+      console.log("[Frontend SAVE] headerText in payload:", requestPayload.headerText);
       
       const response = await fetch('/api/chatbot/branding-settings', {
         method: 'POST',
@@ -124,16 +156,23 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
       });
 
       const savedData = await response.json();
+      console.log("[Frontend SAVE] Response from API:", savedData);
+      console.log("[Frontend SAVE] headerText in response:", savedData.headerText);
 
       if (!response.ok) {
         throw new Error(savedData.error || savedData.details || 'Failed to save settings');
       }
 
       // Update local state with saved data
-      setConfig(prev => ({
-        ...prev,
-        ...savedData
-      }));
+      setConfig(prev => {
+        const newConfig = {
+          ...prev,
+          ...savedData
+        };
+        console.log("[Frontend SAVE] Updated config:", newConfig);
+        console.log("[Frontend SAVE] headerText in updated config:", newConfig.headerText);
+        return newConfig;
+      });
       
       toast.success('Settings saved successfully.')
     } catch (error) {
@@ -145,10 +184,22 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
   };
 
   const handleConfigChange = (key: keyof ChatbotBrandingSettings, value: any) => {
-    setConfig(prev => ({
-      ...prev,
-      [key]: value
-    }))
+    if (key === 'headerText') {
+      console.log(`[Frontend CHANGE] Setting headerText to: "${value}"`);
+    }
+    
+    setConfig(prev => {
+      const updated = {
+        ...prev,
+        [key]: value
+      };
+      
+      if (key === 'headerText') {
+        console.log(`[Frontend CHANGE] Updated config headerText: "${updated.headerText}"`);
+      }
+      
+      return updated;
+    });
   }
 
   const handleImageUpload = async (type: 'logo' | 'header') => {
@@ -352,14 +403,25 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
                   </label>
                   <div className="space-y-4">
                     <div 
-                      className="h-48 w-full rounded-lg bg-gray-200 overflow-hidden cursor-pointer"
+                      className="h-48 w-full rounded-lg bg-gray-200 overflow-hidden cursor-pointer relative"
                       style={{
                         backgroundImage: header ? `url(${header})` : 'none',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'
                       }}
                       onClick={() => handleImageClick(header)}
-                    />
+                    >
+                      {config.headerText && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <h2 className="text-3xl font-bold text-white drop-shadow-lg p-4 text-center"
+                              style={{
+                                textShadow: "0px 2px 4px rgba(0, 0, 0, 0.5)"
+                              }}>
+                            {config.headerText}
+                          </h2>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center gap-4">
                         <input
@@ -397,6 +459,28 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
                     </div>
                     <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Header Text
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Enter text to display on header..."
+                      value={config.headerText}
+                      onChange={(e) => handleConfigChange('headerText', e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleConfigChange('headerText', "")}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500">Text will be displayed centered on the header image</p>
                 </div>
               </div>
             </Card>
@@ -527,11 +611,23 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
               </Button>
             </div>
             <div className="flex-1 p-4 flex items-center justify-center overflow-auto">
-              <img 
-                src={enlargedImage} 
-                alt="Enlarged view" 
-                className="max-w-full max-h-full object-contain rounded-lg"
-              />
+              <div className="relative">
+                <img 
+                  src={enlargedImage} 
+                  alt="Enlarged view" 
+                  className="max-w-full max-h-full object-contain rounded-lg"
+                />
+                {config.headerText && enlargedImage === header && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <h2 className="text-3xl font-bold text-white drop-shadow-lg p-4 text-center"
+                        style={{
+                          textShadow: "0px 2px 4px rgba(0, 0, 0, 0.5)"
+                        }}>
+                      {config.headerText}
+                    </h2>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </DialogContent>
