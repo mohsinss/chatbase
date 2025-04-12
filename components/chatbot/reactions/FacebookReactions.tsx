@@ -62,7 +62,7 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
           }`}
           disabled={isConnecting}
         >
-          {isConnected ? "Connected to Facebook" : isConnecting ? "Connecting..." : "Connect to Facebook"}
+          {isConnected ? "Already Connected to Facebook" : isConnecting ? "Connecting..." : "Connect to Facebook"}
         </button>
       </div>
       <p className="mt-2 text-gray-600">Manage your Facebook chatbot reactions and settings.</p>

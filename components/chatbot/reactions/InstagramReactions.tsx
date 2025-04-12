@@ -68,7 +68,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
               : "bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white hover:opacity-90"
           }`}
         >
-          {isConnected ? "Connected to Instagram" : isConnecting ? "Connecting..." : "Connect to Instagram"}
+          {isConnected ? "Already Connected to Instagram" : isConnecting ? "Connecting..." : "Connect to Instagram"}
         </button>
       </div>
       
