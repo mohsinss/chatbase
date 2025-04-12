@@ -14,6 +14,7 @@ import config from "@/config";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PlansSettings } from "@/components/tabs/settings/PlansSettings";
 import { ChatbotBrandingSettings } from '@/models/ChatbotBrandingSettings'
+import { BRANDING_UPDATED_EVENT } from "@/components/chatbot/settings/BrandingSettings";
 
 interface Chatbot {
   chatbotId: string;
@@ -148,6 +149,33 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
     };
 
     fetchBrandingSettings();
+  }, [currentChatbotId]);
+
+  // Listen for branding settings update events
+  useEffect(() => {
+    // Handler for branding settings updates
+    const handleBrandingUpdate = (event: CustomEvent<any>) => {
+      console.log('Received branding update event:', event.detail);
+      
+      // Only update if it's for the current chatbot
+      if (event.detail.chatbotId === currentChatbotId) {
+        setBrandingSettings(event.detail);
+      }
+    };
+
+    // Add event listener
+    window.addEventListener(
+      BRANDING_UPDATED_EVENT, 
+      handleBrandingUpdate as EventListener
+    );
+
+    // Cleanup
+    return () => {
+      window.removeEventListener(
+        BRANDING_UPDATED_EVENT, 
+        handleBrandingUpdate as EventListener
+      );
+    };
   }, [currentChatbotId]);
 
   // Debug log for current branding settings

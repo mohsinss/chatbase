@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChatbotBrandingSettings, defaultBrandingSettings } from '@/models/ChatbotBrandingSettings'
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 
+// Custom event for branding settings updates
+export const BRANDING_UPDATED_EVENT = 'brandingSettingsUpdated';
+
 interface BrandingSettingsProps {
   chatbotId: string;
 }
@@ -247,6 +250,15 @@ export default function BrandingSettings({ chatbotId }: BrandingSettingsProps) {
         console.log("[Frontend SAVE] headerFontFamily in updated config:", newConfig.headerFontFamily);
         return newConfig;
       });
+      
+      // Dispatch custom event with updated branding settings to notify DashboardNav
+      const brandingUpdatedEvent = new CustomEvent(BRANDING_UPDATED_EVENT, { 
+        detail: {
+          ...requestPayload,
+          chatbotId
+        }
+      });
+      window.dispatchEvent(brandingUpdatedEvent);
       
       toast.success('Settings saved successfully.')
     } catch (error) {
