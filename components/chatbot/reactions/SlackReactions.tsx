@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Switch } from "@headlessui/react";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconInfoCircle, IconBrandSlack } from "@tabler/icons-react";
 import Spinner from "@/components/Spinner";
 
 const SlackReactions = () => {
   const [isFetchingSettings, setIsFetchingSettings] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [settingsData, setSettingsData] = useState({
     prompt: "",
     delay: 0,
@@ -23,12 +25,49 @@ const SlackReactions = () => {
     keywordSettings: []
   });
 
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    try {
+      // TODO: Implement actual Slack connection logic
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
+      setIsConnected(true);
+    } catch (error) {
+      console.error('Failed to connect to Slack:', error);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Slack Reactions</h1>
-      <p className="mt-2 text-gray-600">Manage your Slack chatbot reactions and settings.</p>
+    <div className="p-0 h-full">
+      {/* Fixed Slack header */}
+      <div className="fixed top-[120px] left-[70px] md:left-48 right-0 z-10">
+        <div className="bg-[#4A154B] text-white p-6">
+          <div className="flex items-center gap-3">
+            <IconBrandSlack className="w-8 h-8 text-white" />
+            <div>
+              <h1 className="text-2xl font-semibold">Slack Reactions</h1>
+              <p className="mt-1 text-white/80">Manage your Slack chatbot reactions and settings.</p>
+            </div>
+          </div>
+        </div>
+      </div>
       
-      <div className="flex flex-col gap-6 mt-6">
+      {/* Scrollable content with top padding for fixed header */}
+      <div className="flex flex-col gap-6 p-6 bg-[#F7F9F9] mt-[120px]">
+        <div className="flex justify-end">
+          <button
+            onClick={handleConnect}
+            disabled={isConnecting}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              isConnected
+                ? "bg-gradient-to-r from-green-400 via-green-500 to-purple-400 text-white border border-green-200"
+                : "bg-[#4A154B] text-white hover:opacity-90"
+            }`}
+          >
+            {isConnected ? "Already Connected to Slack" : isConnecting ? "Connecting..." : "Connect to Slack"}
+          </button>
+        </div>
         <div className="bg-gray-50 p-6 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Channel Message Settings</h3>
           <div className="space-y-6">
