@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     );
 
     if (!updatedFacebookPage) {
-        return NextResponse.json({ success: false, message: "Update failed: Document not found." }, { status: 404 });
+        return NextResponse.json({ success: false, message: "Update failed: FB page not found." }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, settings: updatedFacebookPage.settings });

@@ -49,7 +49,11 @@ const ChatbotSchema = new mongoose.Schema(
     integrations: {
       type: mongoose.Schema.Types.Mixed,
       default: {}
-    }
+    },
+    settings: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
   },
   {
     timestamps: true,
