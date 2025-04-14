@@ -55,10 +55,10 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
   };
 
   return (
-    <div className="p-0 h-full">
+    <div className="p-0 h-screen overflow-hidden flex flex-col">
       {/* Fixed Facebook header */}
-      <div className="fixed top-[120px] left-[70px] md:left-48 right-0 z-10">
-        <div className="bg-[#1877F2] text-white p-6">
+      <div className="">
+        <div className="bg-[#1877F2] text-white p-6 flex justify-between">
           <div className="flex items-center gap-3">
             <IconBrandFacebook className="w-8 h-8 text-white" />
             <div>
@@ -66,24 +66,23 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
               <p className="mt-1 text-white/80">Manage your Facebook chatbot reactions and settings.</p>
             </div>
           </div>
+          <div className="flex justify-end items-center">
+            <button
+              onClick={handleConnect}
+              disabled={isConnecting}
+              className={`px-4 py-2 rounded-lg text-sm font-medium h-10 transition-colors ${isConnected
+                  ? "bg-[#42B72A] text-white border border-green-200"
+                  : "bg-[#1877F2] text-white hover:opacity-90"
+                }`}
+            >
+              {isConnected ? "Already Connected to Facebook" : isConnecting ? "Connecting..." : "Connect to Facebook"}
+            </button>
+          </div>
         </div>
       </div>
-      
+
       {/* Scrollable content with top padding for fixed header */}
-      <div className="flex flex-col gap-6 p-6 bg-[#F0F2F5] mt-[120px]">
-        <div className="flex justify-end">
-          <button
-            onClick={handleConnect}
-            disabled={isConnecting}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isConnected
-                ? "bg-[#42B72A] text-white border border-green-200"
-                : "bg-[#1877F2] text-white hover:opacity-90"
-            }`}
-          >
-            {isConnected ? "Already Connected to Facebook" : isConnecting ? "Connecting..." : "Connect to Facebook"}
-          </button>
-        </div>
+      <div className="flex flex-1 overflow-y-scroll flex-col *:gap-6 p-6 bg-[#F0F2F5] ">
 
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Post Settings</h3>

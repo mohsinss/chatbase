@@ -128,14 +128,14 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen flex-row">
       {/* Sidebar - Fixed */}
-      <div className="fixed top-[120px] left-0 h-[calc(100vh-120px)] w-[70px] md:w-48 bg-white border-r border-gray-200 transition-all duration-200">
+      <div className="w-[70px] md:w-48 bg-white border-r border-gray-200 transition-all duration-200">
         <div className="p-3 hidden md:block">
           <h2 className="text-base font-semibold text-gray-900">Reactions</h2>
           <p className="text-xs text-gray-500 mt-1">Manage your chatbot reactions</p>
         </div>
-        <nav className="mt-8 h-[calc(100vh-200px)] overflow-y-auto scrollbar-thin">
+        <nav className="overflow-y-auto scrollbar-thin">
           {SIDEBAR_ITEMS.map((item) => {
             const Icon = item.icon;
             return (
@@ -157,7 +157,7 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
       </div>
 
       {/* Main Content - With offset for fixed sidebar */}
-      <div className="ml-[70px] md:ml-48 flex-1 overflow-auto pt-[20px]">
+      <div className="flex-1 overflow-hidden h-screen p-0 flex flex-col">
         {renderContent()}
       </div>
     </div>
