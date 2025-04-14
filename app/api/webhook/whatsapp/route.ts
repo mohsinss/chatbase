@@ -65,8 +65,10 @@ export async function POST(request: Request) {
             }
 
             const chatbotId = whatsappNumber.chatbotId;
-            const updatedPrompt = whatsappNumber.settings?.prompt;
             const delay = whatsappNumber.settings?.delay;
+
+            const chatbot = await Chatbot.findOne({ chatbotId });
+            const updatedPrompt = chatbot.settings?.prompt;
 
             if (delay && delay > 0) {
               await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
@@ -264,14 +266,14 @@ export async function POST(request: Request) {
               }
 
               const chatbotId = whatsappNumber.chatbotId;
-              const updatedPrompt = whatsappNumber.settings?.prompt;
               const delay = whatsappNumber.settings?.delay;
+
+              const chatbot = await Chatbot.findOne({ chatbotId });
+              const updatedPrompt = chatbot.settings?.prompt;
 
               if (delay && delay > 0) {
                 await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
               }
-
-              const chatbot = await Chatbot.findOne({ chatbotId });
               const dataset = await Dataset.findOne({ chatbotId });
 
               // Find existing conversation or create a new one
