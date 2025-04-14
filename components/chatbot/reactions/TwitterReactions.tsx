@@ -33,18 +33,22 @@ const TwitterReactions = () => {
   });
 
   return (
-    <div className="p-0">
-      <div className="bg-[#1DA1F2] text-white p-6 rounded-t-lg">
-        <div className="flex items-center gap-3">
-          <IconBrandTwitter className="w-8 h-8 text-white" />
-          <div>
-            <h1 className="text-2xl font-semibold">Twitter Reactions</h1>
-            <p className="mt-1 text-white/80">Manage your Twitter chatbot reactions and settings.</p>
+    <div className="p-0 h-full">
+      {/* Fixed Twitter header */}
+      <div className="fixed top-[120px] left-[70px] md:left-48 right-0 z-10">
+        <div className="bg-[#1DA1F2] text-white p-6">
+          <div className="flex items-center gap-3">
+            <IconBrandTwitter className="w-8 h-8 text-white" />
+            <div>
+              <h1 className="text-2xl font-semibold">Twitter Reactions</h1>
+              <p className="mt-1 text-white/80">Manage your Twitter chatbot reactions and settings.</p>
+            </div>
           </div>
         </div>
       </div>
       
-      <div className="flex flex-col gap-6 p-6 bg-[#F7F9F9]">
+      {/* Scrollable content with top padding for fixed header */}
+      <div className="flex flex-col gap-6 p-6 bg-[#F7F9F9] mt-[120px]">
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Direct Message Settings</h3>
           <div className="space-y-4">
