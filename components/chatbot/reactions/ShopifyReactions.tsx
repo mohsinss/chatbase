@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Switch } from "@headlessui/react";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconInfoCircle, IconBrandSpotify } from "@tabler/icons-react";
 import Spinner from "@/components/Spinner";
 
 const ShopifyReactions = () => {
   const [isFetchingSettings, setIsFetchingSettings] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [settingsData, setSettingsData] = useState({
     prompt: "",
     delay: 0,
@@ -26,12 +28,36 @@ const ShopifyReactions = () => {
     productSpecificSettings: []
   });
 
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    try {
+      // TODO: Implement actual Shopify connection logic
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
+      setIsConnected(true);
+    } catch (error) {
+      console.error('Failed to connect to Shopify:', error);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Shopify Reactions</h1>
-      <p className="mt-2 text-gray-600">Manage your Shopify chatbot reactions and settings.</p>
+    <div className="p-0 h-full">
+      {/* Fixed Shopify header */}
+      <div className="fixed top-[120px] left-[70px] md:left-48 right-0 z-10">
+        <div className="bg-[#95BF47] text-white p-6">
+          <div className="flex items-center gap-3">
+            <IconBrandSpotify className="w-8 h-8 text-white" />
+            <div>
+              <h1 className="text-2xl font-semibold">Shopify Reactions</h1>
+              <p className="mt-1 text-white/80">Manage your Shopify chatbot reactions and settings.</p>
+            </div>
+          </div>
+        </div>
+      </div>
       
-      <div className="flex flex-col gap-6 mt-6">
+      {/* Scrollable content with top padding for fixed header */}
+      <div className="flex flex-col gap-6 p-6 bg-[#F7F9F9] mt-[120px]">
         <div className="bg-gray-50 p-6 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Product View Settings</h3>
           <div className="space-y-6">
