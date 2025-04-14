@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { IconSettings, IconMessageCircle, IconBrandWhatsapp, IconBrandFacebook, IconBrandInstagram, IconBrandTwitter, IconBrandLinkedin, IconBrandSlack, IconBrandWordpress, IconBrandSpotify, IconBrandSnapchat, IconBrandTiktok } from "@tabler/icons-react";
 import WhatsAppReactions from "./WhatsAppReactions";
 import FacebookReactions from "./FacebookReactions";
@@ -90,9 +90,15 @@ const SIDEBAR_ITEMS = [
 ];
 
 const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
+  const router = useRouter();
   const params = useParams();
   const { subTab } = params;
   const [activeTab, setActiveTab] = useState(subTab || "whatsapp");
+
+  const handleTabClick = (tabId: string) => {
+    setActiveTab(tabId);
+    router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/reactions/${tabId}`);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -135,7 +141,7 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleTabClick(item.id)}
                 className={`w-full flex items-center justify-center md:justify-start px-2 md:px-3 py-4 text-sm font-medium ${
                   activeTab === item.id
                     ? "bg-primary/10 text-primary"
