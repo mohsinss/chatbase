@@ -103,7 +103,7 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
   const renderContent = () => {
     switch (activeTab) {
       case "whatsapp":
-        return <WhatsAppReactions />;
+        return <WhatsAppReactions chatbot={chatbot}/>;
       case "facebook":
         return <FacebookReactions chatbot={chatbot} />;
       case "instagram":
@@ -123,7 +123,7 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
       case "tiktok":
         return <TikTokReactions />;
       default:
-        return <WhatsAppReactions />;
+        return <WhatsAppReactions chatbot={chatbot}/>;
     }
   };
 
