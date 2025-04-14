@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Switch } from "@headlessui/react";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconInfoCircle, IconBrandTwitter } from "@tabler/icons-react";
 import Spinner from "@/components/Spinner";
 
 const TwitterReactions = () => {
@@ -33,12 +33,19 @@ const TwitterReactions = () => {
   });
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Twitter Reactions</h1>
-      <p className="mt-2 text-gray-600">Manage your Twitter chatbot reactions and settings.</p>
+    <div className="p-0">
+      <div className="bg-[#1DA1F2] text-white p-6 rounded-t-lg">
+        <div className="flex items-center gap-3">
+          <IconBrandTwitter className="w-8 h-8 text-white" />
+          <div>
+            <h1 className="text-2xl font-semibold">Twitter Reactions</h1>
+            <p className="mt-1 text-white/80">Manage your Twitter chatbot reactions and settings.</p>
+          </div>
+        </div>
+      </div>
       
-      <div className="flex flex-col gap-6 mt-6">
-        <div className="bg-gray-50 p-6 rounded-lg">
+      <div className="flex flex-col gap-6 p-6 bg-[#F7F9F9]">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Direct Message Settings</h3>
           <div className="space-y-4">
             <div>
@@ -62,7 +69,7 @@ const TwitterReactions = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Reply Settings</h3>
           <div className="space-y-4">
             <div>
@@ -86,7 +93,7 @@ const TwitterReactions = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Reply-Triggered DMs</h3>
           <div className="space-y-6">
             <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
@@ -250,7 +257,7 @@ const TwitterReactions = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Like DMs</h3>
           <div className="space-y-6">
             <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
@@ -375,7 +382,7 @@ const TwitterReactions = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Retweet DMs</h3>
           <div className="space-y-6">
             <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
