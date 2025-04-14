@@ -111,13 +111,13 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
       case "twitter":
         return <TwitterReactions />;
       case "linkedin":
-        return <LinkedInReactions />;
+        return <LinkedInReactions chatbot={chatbot} />;
       case "slack":
-        return <SlackReactions />;
+        return <SlackReactions chatbot={chatbot} />;
       case "wordpress":
-        return <WordPressReactions />;
+        return <WordPressReactions chatbot={chatbot} />;
       case "shopify":
-        return <ShopifyReactions />;
+        return <ShopifyReactions chatbot={chatbot} />;
       case "snapchat":
         return <SnapchatReactions />;
       case "tiktok":

@@ -5,7 +5,15 @@ import { Switch } from "@headlessui/react";
 import { IconInfoCircle, IconBrandSpotify } from "@tabler/icons-react";
 import Spinner from "@/components/Spinner";
 
-const ShopifyReactions = () => {
+interface ShopifyReactionsProps {
+  chatbot: {
+    integrations: {
+      [key: string]: boolean;
+    };
+  };
+}
+
+const ShopifyReactions = ({ chatbot }: ShopifyReactionsProps) => {
   const [isFetchingSettings, setIsFetchingSettings] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
