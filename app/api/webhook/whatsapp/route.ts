@@ -68,7 +68,7 @@ export async function POST(request: Request) {
             const delay = whatsappNumber.settings?.delay;
 
             const chatbot = await Chatbot.findOne({ chatbotId });
-            const updatedPrompt = chatbot.settings?.prompt;
+            const updatedPrompt = chatbot.settings?.whatsapp?.prompt;
 
             if (delay && delay > 0) {
               await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
@@ -269,7 +269,7 @@ export async function POST(request: Request) {
               const delay = whatsappNumber.settings?.delay;
 
               const chatbot = await Chatbot.findOne({ chatbotId });
-              const updatedPrompt = chatbot.settings?.prompt;
+              const updatedPrompt = chatbot.settings?.whatsapp?.prompt;
 
               if (delay && delay > 0) {
                 await sleep(delay * 1000); // delay is in seconds, converting to milliseconds

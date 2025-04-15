@@ -8,6 +8,7 @@ import { getAIResponse } from '@/libs/utils-ai';
 import { sleep } from '@/libs/utils';
 import Dataset from '@/models/Dataset';
 import { sampleFlow } from '@/types';
+import Chatbot from '@/models/Chatbot';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -71,8 +72,10 @@ export async function POST(request: Request) {
           }
 
           const chatbotId = facebookPage.chatbotId;
-          const updatedPrompt = facebookPage?.settings?.prompt;
           const delay = facebookPage?.settings?.delay;
+
+          const chatbot = await Chatbot.findOne({ chatbotId });
+          const updatedPrompt = chatbot.settings?.facebook?.prompt;
 
           if (delay && delay > 0) {
             await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
@@ -324,8 +327,10 @@ export async function POST(request: Request) {
           }
 
           const chatbotId = facebookPage.chatbotId;
-          const updatedPrompt = facebookPage?.settings?.prompt;
           const delay = facebookPage?.settings?.delay;
+
+          const chatbot = await Chatbot.findOne({ chatbotId });
+          const updatedPrompt = chatbot.settings?.facebook?.prompt;
 
           if (delay && delay > 0) {
             await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
@@ -510,8 +515,10 @@ export async function POST(request: Request) {
         const { id, message, created_time, comment_count } = response.data;
 
         const chatbotId = facebookPage.chatbotId;
-        const updatedPrompt = facebookPage?.settings?.prompt1;
         const delay = facebookPage?.settings?.delay1;
+
+        const chatbot = await Chatbot.findOne({ chatbotId });
+        const updatedPrompt = chatbot.settings?.facebook?.prompt1;
 
         if (delay && delay > 0) {
           await sleep(delay * 1000); // delay is in seconds, converting to milliseconds

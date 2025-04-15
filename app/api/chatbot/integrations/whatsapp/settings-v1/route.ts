@@ -9,7 +9,7 @@ export async function GET(req: Request) {
 
     await connectMongo();
     const chatbot = await Chatbot.findOne({ chatbotId });
-    return NextResponse.json(chatbot?.settings ?? {});
+    return NextResponse.json(chatbot?.settings?.whatsapp ?? {});
 }
 
 export async function POST(req: Request) {
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     const updatedChatbot = await Chatbot.findOneAndUpdate(
         { chatbotId },
-        { settings },
+        { $set: { "settings.whatsapp": settings } },
         { new: true, upsert: true }
     );
 
@@ -29,5 +29,5 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, message: "Update failed: Document not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, settings: updatedChatbot.settings });
+    return NextResponse.json({ success: true, settings: updatedChatbot.settings?.whatsapp });
 }
