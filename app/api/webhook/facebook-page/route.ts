@@ -269,7 +269,7 @@ export async function POST(request: Request) {
             const oneHourAgo = Date.now() - (60 * 60 * 1000);
             //@ts-ignore
             let messages = conversation.messages.filter(msg => new Date(msg.timestamp).getTime() >= oneHourAgo);
-    
+
             // Ensure at least the current message is included if no recent messages exist
             if (messages.length === 0) {
               messages = [{ role: 'user', content: text }];
@@ -515,14 +515,11 @@ export async function POST(request: Request) {
         const { id, message, created_time, comment_count } = response.data;
 
         const chatbotId = facebookPage.chatbotId;
-        
-        const chatbot = await Chatbot.findOne({ chatbotId });
-        const updatedPrompt = chatbot.settings?.facebook?.prompt1;
-        const delay = chatbot.settings?.facebook?.delay1;
 
-        if (delay && delay > 0) {
-          await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
-        }
+        const chatbot = await Chatbot.findOne({ chatbotId });
+        const facebookSettings = chatbot.settings?.facebook;
+        const updatedPrompt = facebookSettings?.prompt1;
+        let delay = facebookSettings?.delay1;
 
         // Find existing conversation or create a new one
         let conversation = await ChatbotConversation.findOne({
@@ -531,6 +528,8 @@ export async function POST(request: Request) {
           "metadata.from": from,
           "metadata.to": post_id,
         });
+        let isNewCustomer = false;
+
         if (conversation) {
           // Update existing conversation
           conversation.messages.push({ role: "user", content: message });
@@ -544,6 +543,7 @@ export async function POST(request: Request) {
             metadata: { from: from, to: post_id, parent_id, from_name, page_id, comment_id },
             messages: [{ role: "user", content: message },]
           });
+          isNewCustomer = true;
         }
 
         await conversation.save();
@@ -561,7 +561,56 @@ export async function POST(request: Request) {
           messages = [{ role: 'user', content: message }];
         }
 
+        if (isNewCustomer && facebookSettings?.commentDmEnabled && facebookSettings?.welcomeDmEnabled) {
+          const response_text = facebookSettings?.welcomeDmPrompt;
+          delay = facebookSettings?.welcomeDmDelay;
+        
+          if (delay && delay > 0) {
+            await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
+          }
+        
+          // Find existing Messenger conversation or create a new one
+          let messengerConversation = await ChatbotConversation.findOne({
+            chatbotId,
+            platform: "facebook",
+            "metadata.from": from,
+            "metadata.to": facebookPage.name,
+          });
+        
+          if (!messengerConversation) {
+            messengerConversation = new ChatbotConversation({
+              chatbotId,
+              platform: "facebook",
+              disable_auto_reply: false,
+              metadata: { from: from, to: facebookPage.name },
+              messages: [],
+            });
+          }
+        
+          // Send Direct Message (DM) to the user via Messenger
+          await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+            recipient: {
+              id: from // user's Facebook ID
+            },
+            message: {
+              text: response_text
+            },
+            messaging_type: "RESPONSE",
+          }, {
+            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+          });
+        
+          messengerConversation.messages.push({ role: "assistant", content: response_text });
+          await messengerConversation.save();
+        
+          return NextResponse.json({ status: "Welcome DM sent." }, { status: 200 });
+        } 
+        
         const response_text = await getAIResponse(chatbotId, messages, message, updatedPrompt);
+
+        if (delay && delay > 0) {
+          await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
+        }
 
         // send msg
         const response2 = await axios.post(`https://graph.facebook.com/v22.0/${comment_id}/comments?access_token=${facebookPage.access_token}`, {
