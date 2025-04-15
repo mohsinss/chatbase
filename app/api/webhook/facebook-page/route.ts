@@ -506,17 +506,13 @@ export async function POST(request: Request) {
 
         const facebookPage = await FacebookPage.findOne({ pageId: page_id });
 
-        const response = await fetch(`https://graph.facebook.com/v22.0/${comment_id}?fields=id,message,from,created_time,comment_count&access_token=${facebookPage.access_token}`, {
-          headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-        });
-      
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(JSON.stringify(errorData));
-        }
+        const response = await axios.get(`https://graph.facebook.com/v22.0/${comment_id}?fields=id,message,from,created_time,comment_count&access_token=${facebookPage.access_token}`,
+          {
+            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+          });
 
         // Extract data from response
-        const { id, message, created_time, comment_count } = await response.json();
+        const { id, message, created_time, comment_count } = response.data;
 
         const chatbotId = facebookPage.chatbotId;
 
