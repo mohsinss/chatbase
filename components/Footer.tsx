@@ -1,61 +1,134 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useEffect } from "react";
+
+// Domain configuration
+const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
+const ARABIC_DOMAIN = process.env.NEXT_PUBLIC_ARABIC_DOMAIN || 'chat.sa';
+const DEFAULT_DOMAIN = process.env.NEXT_PUBLIC_DEFAULT_DOMAIN || 'chatsa.co';
+
+const footerContent = {
+  en: {
+    description: "ChatSa helps businesses create AI chatbots trained on their data to provide instant support, engage customers, and boost conversions.",
+    copyright: "All rights reserved.",
+    links: [
+      {
+        title: "Product",
+        links: [
+          { label: "Features", href: "#features" },
+          { label: "Pricing", href: "#pricing" },
+          { label: "Integrations", href: "/guide/category/integrations" },
+          { label: "Changelog", href: "/changelog" },
+          { label: "Roadmap", href: "/roadmap" }
+        ]
+      },
+      {
+        title: "Resources",
+        links: [
+          { label: "Documentation", href: "/guide" },
+          { label: "Tutorials", href: "/tutorials" },
+          { label: "Blog", href: "/blog" },
+          { label: "Support", href: "/support" },
+          { label: "API Reference", href: "/api" }
+        ]
+      },
+      {
+        title: "Company",
+        links: [
+          { label: "About", href: "/about" },
+          { label: "Careers", href: "/careers" },
+          { label: "Contact", href: "/contact" },
+          { label: "Partners", href: "/partners" },
+          { label: "Legal", href: "/legal" }
+        ]
+      }
+    ],
+    legal: [
+      { label: "Privacy Policy", href: "/privacy-policy" },
+      { label: "Terms of Service", href: "/tos" },
+      { label: "Cookie Policy", href: "/cookies" }
+    ]
+  },
+  ar: {
+    description: "يساعد ChatSa الشركات في إنشاء روبوتات محادثة مدعومة بالذكاء الاصطناعي مدربة على بياناتها لتقديم دعم فوري، وجذب العملاء، وزيادة التحويلات.",
+    copyright: "جميع الحقوق محفوظة.",
+    links: [
+      {
+        title: "المنتج",
+        links: [
+          { label: "المميزات", href: "#features" },
+          { label: "التسعير", href: "#pricing" },
+          { label: "التكاملات", href: "/guide/category/integrations" },
+          { label: "سجل التغييرات", href: "/changelog" },
+          { label: "خارطة الطريق", href: "/roadmap" }
+        ]
+      },
+      {
+        title: "الموارد",
+        links: [
+          { label: "التوثيق", href: "/guide" },
+          { label: "الدروس", href: "/tutorials" },
+          { label: "المدونة", href: "/blog" },
+          { label: "الدعم", href: "/support" },
+          { label: "مرجع API", href: "/api" }
+        ]
+      },
+      {
+        title: "الشركة",
+        links: [
+          { label: "عن الشركة", href: "/about" },
+          { label: "الوظائف", href: "/careers" },
+          { label: "اتصل بنا", href: "/contact" },
+          { label: "الشركاء", href: "/partners" },
+          { label: "القانونية", href: "/legal" }
+        ]
+      }
+    ],
+    legal: [
+      { label: "سياسة الخصوصية", href: "/privacy-policy" },
+      { label: "شروط الخدمة", href: "/tos" },
+      { label: "سياسة الكوكيز", href: "/cookies" }
+    ]
+  }
+};
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  
-  const footerLinks = [
-    {
-      title: "Product",
-      links: [
-        { label: "Features", href: "#features" },
-        { label: "Pricing", href: "#pricing" },
-        { label: "Integrations", href: "/guide/category/integrations" },
-        { label: "Changelog", href: "/changelog" },
-        { label: "Roadmap", href: "/roadmap" }
-      ]
-    },
-    {
-      title: "Resources",
-      links: [
-        { label: "Documentation", href: "/guide" },
-        { label: "Tutorials", href: "/tutorials" },
-        { label: "Blog", href: "/blog" },
-        { label: "Support", href: "/support" },
-        { label: "API Reference", href: "/api" }
-      ]
-    },
-    {
-      title: "Company",
-      links: [
-        { label: "About", href: "/about" },
-        { label: "Careers", href: "/careers" },
-        { label: "Contact", href: "/contact" },
-        { label: "Partners", href: "/partners" },
-        { label: "Legal", href: "/legal" }
-      ]
-    }
-  ];
+  const [isArabic, setIsArabic] = useState(false);
+
+  useEffect(() => {
+    const checkDomain = () => {
+      const hostname = window.location.hostname;
+      const isArabicDomain = hostname === ARABIC_DOMAIN;
+      setIsArabic(isArabicDomain);
+    };
+    
+    checkDomain();
+  }, []);
+
+  const content = isArabic ? footerContent.ar : footerContent.en;
 
   return (
-    <footer className="bg-gray-50 border-t border-gray-200">
+    <footer className="bg-gray-50 border-t border-gray-200" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center mb-4">
               <Image 
                 src="/chatbase-icon.png" 
-                alt="ChatSa Logo" 
+                alt={isArabic ? "شعار ChatSa" : "ChatSa Logo"} 
                 width={32} 
                 height={32} 
-                className="mr-2"
+                className={isArabic ? "ml-2" : "mr-2"}
               />
               <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
                 ChatSa
               </span>
             </Link>
             <p className="text-gray-600 mb-6 max-w-md">
-              ChatSa helps businesses create AI chatbots trained on their data to provide instant support, engage customers, and boost conversions.
+              {content.description}
             </p>
             <div className="flex space-x-4">
               <a href="https://twitter.com/chatsa" className="text-gray-400 hover:text-indigo-600">
@@ -79,7 +152,7 @@ export default function Footer() {
             </div>
           </div>
           
-          {footerLinks.map((column, i) => (
+          {content.links.map((column, i) => (
             <div key={i}>
               <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">
                 {column.title}
@@ -99,18 +172,14 @@ export default function Footer() {
         
         <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-500 text-sm">
-            © {currentYear} ChatSa. All rights reserved.
+            © {currentYear} ChatSa. {content.copyright}
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link href="/privacy-policy" className="text-sm text-gray-500 hover:text-indigo-600">
-              Privacy Policy
-            </Link>
-            <Link href="/tos" className="text-sm text-gray-500 hover:text-indigo-600">
-              Terms of Service
-            </Link>
-            <Link href="/cookies" className="text-sm text-gray-500 hover:text-indigo-600">
-              Cookie Policy
-            </Link>
+          <div className={`flex ${isArabic ? 'space-x-reverse' : 'space-x-6'} mt-4 md:mt-0`}>
+            {content.legal.map((link, i) => (
+              <Link key={i} href={link.href} className="text-sm text-gray-500 hover:text-indigo-600">
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

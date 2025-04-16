@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
-// <FAQ> component is a lsit of <Item> component
-// Just import the FAQ & add your FAQ content to the const faqList arrayy below.
+// Domain configuration
+const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
+const ARABIC_DOMAIN = process.env.NEXT_PUBLIC_ARABIC_DOMAIN || 'chat.sa';
+const DEFAULT_DOMAIN = process.env.NEXT_PUBLIC_DEFAULT_DOMAIN || 'chatsa.co';
 
-export default function FAQ() {
-  const faqs = [
+const faqs = {
+  en: [
     {
       question: "How does ChatSa train on my data?",
       answer: "ChatSa can train on your data in several ways. You can upload documents (PDF, DOCX, TXT), connect to your website for crawling, or directly input custom data. Our AI processes this information to create a knowledge base for your chatbot."
@@ -32,29 +34,75 @@ export default function FAQ() {
       question: "What languages does ChatSa support?",
       answer: "ChatSa supports over 95 languages, allowing your chatbot to communicate with users worldwide. You can configure primary and secondary languages or let the chatbot automatically detect and respond in the user's language."
     }
-  ];
+  ],
+  ar: [
+    {
+      question: "كيف يقوم ChatSa بالتدريب على بياناتي؟",
+      answer: "يمكن لـ ChatSa التدريب على بياناتك بعدة طرق. يمكنك تحميل المستندات (PDF، DOCX، TXT)، أو الاتصال بموقعك للزحف، أو إدخال بيانات مخصصة مباشرة. يقوم ذكاؤنا الاصطناعي بمعالجة هذه المعلومات لإنشاء قاعدة معرفة لروبوت المحادثة الخاص بك."
+    },
+    {
+      question: "هل أحتاج إلى معرفة بالبرمجة لاستخدام ChatSa؟",
+      answer: "لا، تم تصميم ChatSa ليكون سهل الاستخدام دون الحاجة إلى البرمجة. تتيح لك واجهتنا البديهية إنشاء وتخصيص ونشر روبوتات المحادثة من خلال واجهة بسيطة للسحب والإفلات وعملية إعداد موجهة."
+    },
+    {
+      question: "ما مدى دقة استجابات روبوت المحادثة؟",
+      answer: "يستخدم ChatSa نماذج ذكاء اصطناعي متقدمة لضمان دقة عالية. تعتمد جودة الاستجابات على بيانات التدريب المقدمة. مع بيانات جيدة الجودة، تحقق روبوتات المحادثة لدينا عادةً دقة تزيد عن 90% للأسئلة الخاصة بالمجال."
+    },
+    {
+      question: "هل يمكنني تخصيص مظهر روبوت المحادثة الخاص بي؟",
+      answer: "نعم، يقدم ChatSa خيارات تخصيص واسعة. يمكنك تغيير الألوان والخطوط وصور الصور الرمزية وأنماط فقاعات الدردشة والمزيد لتتناسب مع هوية علامتك التجارية. تقدم خطط Pro و Enterprise خيارات تخصيص أكثر تقدمًا."
+    },
+    {
+      question: "كيف يمكنني إضافة روبوت المحادثة إلى موقعي؟",
+      answer: "بعد إنشاء روبوت المحادثة الخاص بك، ستحصل على مقتطف كود JavaScript بسيط. ما عليك سوى إضافته إلى HTML الخاص بموقعك، وسيظهر روبوت المحادثة. لا يلزم إعداد إضافي، على الرغم من أننا نقدم خيارات تكامل متقدمة للمطورين."
+    },
+    {
+      question: "ما هي اللغات التي يدعمها ChatSa؟",
+      answer: "يدعم ChatSa أكثر من 95 لغة، مما يسمح لروبوت المحادثة الخاص بك بالتواصل مع المستخدمين في جميع أنحاء العالم. يمكنك تكوين اللغات الأساسية والثانوية أو السماح لروبوت المحادثة باكتشاف والرد بلغة المستخدم تلقائيًا."
+    }
+  ]
+};
 
+export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [isArabic, setIsArabic] = useState(false);
+
+  useEffect(() => {
+    const checkDomain = () => {
+      const hostname = window.location.hostname;
+      const isArabicDomain = hostname === ARABIC_DOMAIN;
+      setIsArabic(isArabicDomain);
+    };
+    
+    checkDomain();
+  }, []);
+
+  const currentFaqs = isArabic ? faqs.ar : faqs.en;
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
   return (
-    <section id="faq" className="py-20 bg-white">
+    <section id="faq" className="py-20 bg-white" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Frequently Asked Questions</span>
+            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+              {isArabic ? "الأسئلة الشائعة" : "Frequently Asked Questions"}
+            </span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Find answers to common questions about ChatSa.
+            {isArabic 
+              ? "اعثر على إجابات للأسئلة الشائعة حول ChatSa."
+              : "Find answers to common questions about ChatSa."
+            }
           </p>
         </div>
         
         <div className="max-w-3xl mx-auto">
           <div className="space-y-4">
-            {faqs.map((faq, index) => (
+            {currentFaqs.map((faq, index) => (
               <div 
                 key={index} 
                 className="border border-gray-200 rounded-lg overflow-hidden"
@@ -65,9 +113,9 @@ export default function FAQ() {
                 >
                   <span className="text-lg font-medium">{faq.question}</span>
                   {openIndex === index ? (
-                    <ChevronUp className="h-5 w-5 text-indigo-600" />
+                    <ChevronUp className={`h-5 w-5 text-indigo-600 ${isArabic ? 'ml-4' : 'mr-4'}`} />
                   ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                    <ChevronDown className={`h-5 w-5 text-gray-500 ${isArabic ? 'ml-4' : 'mr-4'}`} />
                   )}
                 </button>
                 {openIndex === index && (
