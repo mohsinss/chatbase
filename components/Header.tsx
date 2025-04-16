@@ -173,30 +173,34 @@ const Header = () => {
         </div>
         
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          <a href="#features" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-            {isArabic ? "المميزات" : "Features"}
-          </a>
-          <Link href="/guide" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-            {isArabic ? "الدليل" : "Guide"}
-          </Link>
-          <a href="#pricing" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-            {isArabic ? "الأسعار" : "Pricing"}
-          </a>
-          <a href="#faq" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-            {isArabic ? "الأسئلة الشائعة" : "FAQ"}
-          </a>
-          <div className="flex items-center space-x-4">
-            <ButtonSignin 
-              text={isArabic ? "تسجيل الدخول" : "Sign in"}
-              extraStyle="text-gray-700 hover:text-blue-600 bg-transparent hover:bg-transparent"
-            />
-            <ButtonSignin 
-              text={isArabic ? "ابدأ الآن" : "Get started"}
-              extraStyle="bg-blue-600 hover:bg-blue-700 text-white"
-            />
+        <nav className="hidden md:flex items-center justify-center flex-1 mx-8">
+          <div className="flex items-center justify-center gap-8">
+            <a href="#features" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
+              {isArabic ? "المميزات" : "Features"}
+            </a>
+            <Link href="/guide" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
+              {isArabic ? "الدليل" : "Guide"}
+            </Link>
+            <a href="#pricing" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
+              {isArabic ? "الأسعار" : "Pricing"}
+            </a>
+            <a href="#faq" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
+              {isArabic ? "الأسئلة الشائعة" : "FAQ"}
+            </a>
           </div>
         </nav>
+        
+        {/* Auth Buttons */}
+        <div className="hidden md:flex items-center gap-4">
+          <ButtonSignin 
+            text={isArabic ? "تسجيل الدخول" : "Sign in"}
+            extraStyle="text-gray-700 hover:text-blue-600 bg-transparent hover:bg-transparent whitespace-nowrap"
+          />
+          <ButtonSignin 
+            text={isArabic ? "ابدأ الآن" : "Get started"}
+            extraStyle="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap"
+          />
+        </div>
         
         {/* Mobile Menu Button */}
         <button 
