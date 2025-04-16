@@ -1,44 +1,124 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, ArrowRight } from "lucide-react";
 
-const steps = [
-  {
-    number: "01",
-    title: "Upload your data",
-    description: "Add documents, PDFs, or connect your website to train your AI chatbot on your specific content.",
-    image: "./landingPage/Uploadyourdata.png",
-  },
-  {
-    number: "02",
-    title: "Customize your chatbot",
-    description: "Personalize your bot's appearance, behavior, and responses to match your brand and requirements.",
-    image: "./landingPage/Customizeyourchatbot.png",
-  },
-  {
-    number: "03",
-    title: "Integrate with your website",
-    description: "Add a single line of code to your website to embed your AI chatbot and start engaging with visitors.",
-    image: "./landingPage/Integrate.png",
-  }
-];
+// Domain configuration
+const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
+const ARABIC_DOMAIN = process.env.NEXT_PUBLIC_ARABIC_DOMAIN || 'chat.sa';
+const DEFAULT_DOMAIN = process.env.NEXT_PUBLIC_DEFAULT_DOMAIN || 'chatsa.co';
+
+const steps = {
+  en: [
+    {
+      number: "01",
+      title: "Upload your data",
+      description: "Add documents, PDFs, or connect your website to train your AI chatbot on your specific content.",
+      image: "./landingPage/Uploadyourdata.png",
+      benefits: [
+        "No coding or technical skills needed",
+        "Works with all website platforms",
+        "Start engaging visitors in minutes"
+      ]
+    },
+    {
+      number: "02",
+      title: "Customize your chatbot",
+      description: "Personalize your bot's appearance, behavior, and responses to match your brand and requirements.",
+      image: "./landingPage/Customizeyourchatbot.png",
+      benefits: [
+        "No coding or technical skills needed",
+        "Works with all website platforms",
+        "Start engaging visitors in minutes"
+      ]
+    },
+    {
+      number: "03",
+      title: "Integrate with your website",
+      description: "Add a single line of code to your website to embed your AI chatbot and start engaging with visitors.",
+      image: "./landingPage/Integrate.png",
+      benefits: [
+        "No coding or technical skills needed",
+        "Works with all website platforms",
+        "Start engaging visitors in minutes"
+      ]
+    }
+  ],
+  ar: [
+    {
+      number: "01",
+      title: "تحميل بياناتك",
+      description: "أضف المستندات وملفات PDF أو قم بربط موقعك الإلكتروني لتدريب روبوت المحادثة الذكي على محتواك المحدد.",
+      image: "./landingPage/Uploadyourdata.png",
+      benefits: [
+        "لا حاجة لمهارات برمجة أو تقنية",
+        "يعمل مع جميع منصات المواقع",
+        "ابدأ في التفاعل مع الزوار في دقائق"
+      ]
+    },
+    {
+      number: "02",
+      title: "تخصيص روبوت المحادثة",
+      description: "قم بتخصيص مظهر وسلوك واستجابات الروبوت لتتناسب مع علامتك التجارية ومتطلباتك.",
+      image: "./landingPage/Customizeyourchatbot.png",
+      benefits: [
+        "لا حاجة لمهارات برمجة أو تقنية",
+        "يعمل مع جميع منصات المواقع",
+        "ابدأ في التفاعل مع الزوار في دقائق"
+      ]
+    },
+    {
+      number: "03",
+      title: "دمج مع موقعك",
+      description: "أضف سطرًا واحدًا من الكود إلى موقعك لتضمين روبوت المحادثة الذكي وبدء التفاعل مع الزوار.",
+      image: "./landingPage/Integrate.png",
+      benefits: [
+        "لا حاجة لمهارات برمجة أو تقنية",
+        "يعمل مع جميع منصات المواقع",
+        "ابدأ في التفاعل مع الزوار في دقائق"
+      ]
+    }
+  ]
+};
 
 const HowItWorks = () => {
+  const [isArabic, setIsArabic] = useState(false);
+
+  useEffect(() => {
+    const checkDomain = () => {
+      const hostname = window.location.hostname;
+      const isArabicDomain = hostname === ARABIC_DOMAIN;
+      setIsArabic(isArabicDomain);
+    };
+    
+    checkDomain();
+  }, []);
+
+  const currentSteps = isArabic ? steps.ar : steps.en;
+
   return (
-    <section id="how-it-works" className="py-8 px-4 bg-white">
+    <section id="how-it-works" className="py-8 px-4 bg-white" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-6">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            How ChatSa <span className="text-gradient">Works</span>
+            {isArabic 
+              ? "كيف يعمل شاتسا"
+              : "How ChatSa "
+            }
+            <span className="text-gradient">
+              {isArabic ? "يعمل" : "Works"}
+            </span>
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Get your AI chatbot up and running in minutes with these simple steps.
+            {isArabic 
+              ? "احصل على روبوت المحادثة الذكي الخاص بك جاهزًا للعمل في دقائق مع هذه الخطوات البسيطة."
+              : "Get your AI chatbot up and running in minutes with these simple steps."
+            }
           </p>
         </div>
         
         <div className="space-y-24">
-          {steps.map((step, index) => (
+          {currentSteps.map((step, index) => (
             <div 
               key={index} 
               className={`flex flex-col ${index % 2 === 1 ? 'md:flex-row-reverse' : 'md:flex-row'} gap-8 items-center`}
@@ -55,23 +135,17 @@ const HowItWorks = () => {
               
               <div className="w-full md:w-1/2 space-y-4">
                 <div className="inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
-                  Step {step.number}
+                  {isArabic ? "خطوة" : "Step"} {step.number}
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold">{step.title}</h3>
                 <p className="text-gray-600 text-lg">{step.description}</p>
                 <ul className="space-y-2">
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span className="text-gray-700">No coding or technical skills needed</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span className="text-gray-700">Works with all website platforms</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span className="text-gray-700">Start engaging visitors in minutes</span>
-                  </li>
+                  {step.benefits.map((benefit, benefitIndex) => (
+                    <li key={benefitIndex} className="flex items-start">
+                      <Check className={`h-5 w-5 text-green-500 ${isArabic ? 'ml-2' : 'mr-2'} mt-0.5`} />
+                      <span className="text-gray-700">{benefit}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
