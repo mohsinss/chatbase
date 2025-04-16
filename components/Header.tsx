@@ -8,6 +8,11 @@ import Announcement from "./Announcement";
 import ButtonSignin from "./ButtonSignin";
 import { Menu, X } from "lucide-react";
 
+// Domain configuration
+const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
+const ARABIC_DOMAIN = process.env.NEXT_PUBLIC_ARABIC_DOMAIN || 'chat.sa';
+const DEFAULT_DOMAIN = process.env.NEXT_PUBLIC_DEFAULT_DOMAIN || 'chatsa.co';
+
 const links = {
   en: [
     {
@@ -141,7 +146,9 @@ const Header = () => {
     };
     
     const checkDomain = () => {
-      setIsArabic(window.location.hostname === 'chat.sa');
+      const hostname = window.location.hostname;
+      const isArabicDomain = hostname === ARABIC_DOMAIN;
+      setIsArabic(isArabicDomain);
     };
     
     window.addEventListener('scroll', handleScroll);
@@ -164,17 +171,17 @@ const Header = () => {
         <div className="flex items-center">
           <Image 
             src="/chatbase-icon.png" 
-            alt="ChatSa Logo" 
+            alt={isArabic ? "شات اس ايه" : "ChatSa"} 
             width={40} 
             height={40} 
-            className="mr-2" 
+            className={isArabic ? "ml-2" : "mr-2"} 
           />
-          <span className="text-xl font-bold">ChatSa</span>
+          <span className="text-xl font-bold">{isArabic ? "شات اس ايه" : "ChatSa"}</span>
         </div>
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center justify-center flex-1 mx-8">
-          <div className="flex items-center justify-center gap-8">
+          <div className={`flex items-center justify-center gap-8 ${isArabic ? "flex-row-reverse" : ""}`}>
             <a href="#features" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
               {isArabic ? "المميزات" : "Features"}
             </a>
@@ -191,7 +198,7 @@ const Header = () => {
         </nav>
         
         {/* Auth Buttons */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className={`hidden md:flex items-center gap-4 ${isArabic ? "flex-row-reverse" : ""}`}>
           <ButtonSignin 
             text={isArabic ? "تسجيل الدخول" : "Sign in"}
             extraStyle="text-gray-700 hover:text-blue-600 bg-transparent hover:bg-transparent whitespace-nowrap"
@@ -218,7 +225,7 @@ const Header = () => {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-16 left-0 right-0 bg-white shadow-lg p-4 animate-fade-in">
-          <nav className="flex flex-col space-y-4">
+          <nav className={`flex flex-col space-y-4 ${isArabic ? "items-end" : ""}`}>
             <a 
               href="#features" 
               className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
@@ -247,7 +254,7 @@ const Header = () => {
             >
               {isArabic ? "الأسئلة الشائعة" : "FAQ"}
             </a>
-            <div className="flex flex-col space-y-2">
+            <div className={`flex flex-col space-y-2 ${isArabic ? "items-end" : ""}`}>
               <ButtonSignin 
                 text={isArabic ? "تسجيل الدخول" : "Sign in"}
                 extraStyle="w-full text-gray-700 hover:text-blue-600 bg-transparent hover:bg-transparent"

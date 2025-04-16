@@ -13,6 +13,11 @@ type MessageType = {
   isBot: boolean;
 };
 
+// Domain configuration
+const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
+const ARABIC_DOMAIN = process.env.NEXT_PUBLIC_ARABIC_DOMAIN || 'chat.sa';
+const DEFAULT_DOMAIN = process.env.NEXT_PUBLIC_DEFAULT_DOMAIN || 'chatsa.co';
+
 const Hero = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
@@ -39,9 +44,10 @@ const Hero = () => {
     };
     
     const checkDomain = () => {
-      setIsArabic(window.location.hostname === 'chat.sa');
-      // Set default language based on domain
-      setLanguage(window.location.hostname === 'chat.sa' ? 'arabic' : 'english');
+      const hostname = window.location.hostname;
+      const isArabicDomain = hostname === ARABIC_DOMAIN;
+      setIsArabic(isArabicDomain);
+      setLanguage(isArabicDomain ? 'arabic' : 'english');
     };
     
     const carousel = carouselRef.current;
