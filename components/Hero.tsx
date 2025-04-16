@@ -19,6 +19,7 @@ const Hero = () => {
   const [atEnd, setAtEnd] = useState(false);
   const [language, setLanguage] = useState<LanguageType>("english");
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [isArabic, setIsArabic] = useState(false);
   
   // Language options with flags
   const languages = [
@@ -37,12 +38,20 @@ const Hero = () => {
       setAtEnd(Math.abs(scrollWidth - clientWidth - scrollLeft) < 10);
     };
     
+    const checkDomain = () => {
+      setIsArabic(window.location.hostname === 'chat.sa');
+      // Set default language based on domain
+      setLanguage(window.location.hostname === 'chat.sa' ? 'arabic' : 'english');
+    };
+    
     const carousel = carouselRef.current;
     if (carousel) {
       carousel.addEventListener('scroll', handleScroll);
       // Initial check
       handleScroll();
     }
+    
+    checkDomain();
     
     return () => {
       if (carousel) {
@@ -227,32 +236,74 @@ const Hero = () => {
     return messages[platform][language] || messages[platform].english;
   };
 
+  // Content translations
+  const content = {
+    en: {
+      tagline: "The easiest way to create AI chatbots",
+      title: "Create AI Chatbots for",
+      titleSpan: "Your Website in Minutes",
+      description: "Build custom AI chatbots trained on a single unified knowledge base. Deploy consistent responses across all social media channels without coding. Connect to your website in 2 minutes.",
+      getStarted: "Get Started Free",
+      noCreditCard: "No credit card required",
+      uploadKnowledge: "Upload Knowledge Base",
+      whatShouldKnow: "What should your bot know about?",
+      knowledgeExample: "E.g., Our bot should answer questions about our gym's membership options, classes, and trainers...",
+      dragDrop: "Drag and drop your PDF file, or",
+      browse: "Browse Files",
+      supportedFormats: "Supported formats: PDF, DOCX, TXT (Max 10MB)",
+      or: "Or",
+      pasteText: "Paste your text",
+      pasteTextPlaceholder: "Paste your knowledge base content here...",
+      trainBot: "Train My Bot"
+    },
+    ar: {
+      tagline: "أسهل طريقة لإنشاء روبوتات المحادثة الذكية",
+      title: "أنشئ روبوتات محادثة ذكية",
+      titleSpan: "لموقعك في دقائق",
+      description: "قم ببناء روبوتات محادثة ذكية مخصصة مدربة على قاعدة معرفية موحدة. نشر ردود متناسقة عبر جميع قنوات التواصل الاجتماعي بدون برمجة. اتصل بموقعك في دقيقتين.",
+      getStarted: "ابدأ مجاناً",
+      noCreditCard: "لا تحتاج إلى بطاقة ائتمان",
+      uploadKnowledge: "رفع قاعدة المعرفة",
+      whatShouldKnow: "ماذا يجب أن يعرف الروبوت الخاص بك؟",
+      knowledgeExample: "مثال: يجب أن يجيب الروبوت الخاص بنا على الأسئلة المتعلقة بخيارات العضوية في صالتنا الرياضية والفصول والمدربين...",
+      dragDrop: "اسحب وأفلت ملف PDF الخاص بك، أو",
+      browse: "تصفح الملفات",
+      supportedFormats: "الصيغ المدعومة: PDF, DOCX, TXT (الحد الأقصى 10 ميجابايت)",
+      or: "أو",
+      pasteText: "الصق النص",
+      pasteTextPlaceholder: "الصق محتوى قاعدة المعرفة الخاصة بك هنا...",
+      trainBot: "تدريب الروبوت"
+    }
+  };
+
+  const currentContent = isArabic ? content.ar : content.en;
+
   return (
-    <section className="pt-32 pb-2 px-4 relative overflow-hidden">
+    <section className="pt-32 pb-2 px-4 relative overflow-hidden" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="absolute inset-0 bg-gradient-radial from-blue-50 to-transparent opacity-70"></div>
       
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-12">
           <div className="inline-block bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-sm font-medium mb-6 animate-fade-up">
             <Sparkles className="inline-block w-4 h-4 mr-2" />
-            The easiest way to create AI chatbots
+            {currentContent.tagline}
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 animate-fade-up stagger-1">
-            Create AI Chatbots for <br className="hidden md:block" />
-            <span className="text-gradient">Your Website in Minutes</span>
+            {currentContent.title} <br className="hidden md:block" />
+            <span className="text-gradient">{currentContent.titleSpan}</span>
           </h1>
           
           <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-10 animate-fade-up stagger-2">
-            Build custom AI chatbots trained on a single unified knowledge base. Deploy consistent responses across all social media channels without coding. Connect to your website in 2 minutes.
+            {currentContent.description}
           </p>
           
           <div className="flex flex-col items-center justify-center gap-4 animate-fade-up stagger-3 w-full mx-auto mb-6">
             <ButtonSignin 
-              text="Get Started Free"
+              text={currentContent.getStarted}
               extraStyle="bg-blue-600 hover:bg-blue-700 text-white px-8 h-16 hover-lift w-[70%] mx-auto text-center inline-flex items-center justify-center text-lg font-semibold tracking-wide shadow-xl transition-all duration-300 rounded-xl"
             />
-            <p className="text-sm text-gray-500">No credit card required</p>
+            <p className="text-sm text-gray-500">{currentContent.noCreditCard}</p>
           </div>
         </div>
         
@@ -446,8 +497,8 @@ const Hero = () => {
         {/* Custom Knowledge Base Section */}
         <div className="mt-1 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <h2 className="text-2xl font-bold">Try It Today: Add Your Custom Knowledge Base</h2>
-            <KnowledgeBaseUploader />
+            <h2 className="text-2xl font-bold">{isArabic ? "جربه اليوم: أضف قاعدة معرفتك المخصصة" : "Try It Today: Add Your Custom Knowledge Base"}</h2>
+            <KnowledgeBaseUploader isArabic={isArabic} content={currentContent} />
           </div>
         </div>
       </div>
@@ -456,7 +507,7 @@ const Hero = () => {
 };
 
 // Knowledge Base Uploader Component
-const KnowledgeBaseUploader = () => {
+const KnowledgeBaseUploader = ({ isArabic, content }: { isArabic: boolean; content: any }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   
@@ -486,17 +537,17 @@ const KnowledgeBaseUploader = () => {
         <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        Upload Knowledge Base
+        {content.uploadKnowledge}
       </Button>
       
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" dir={isArabic ? 'rtl' : 'ltr'}>
           <div 
             ref={modalRef}
             className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl mx-4"
           >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Upload Your Knowledge Base</h3>
+              <h3 className="text-xl font-bold">{content.uploadKnowledge}</h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -509,10 +560,10 @@ const KnowledgeBaseUploader = () => {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">What should your bot know about?</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{content.whatShouldKnow}</label>
                 <textarea 
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 h-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="E.g., Our bot should answer questions about our gym's membership options, classes, and trainers..."
+                  placeholder={content.knowledgeExample}
                 ></textarea>
               </div>
               
@@ -520,9 +571,9 @@ const KnowledgeBaseUploader = () => {
                 <svg className="w-6 h-6 mx-auto text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <p className="text-sm text-gray-500 mb-1">Drag and drop your PDF file, or</p>
-                <Button className="bg-blue-50 text-blue-600 hover:bg-blue-100">Browse Files</Button>
-                <p className="text-xs text-gray-400 mt-1">Supported formats: PDF, DOCX, TXT (Max 10MB)</p>
+                <p className="text-sm text-gray-500 mb-1">{content.dragDrop}</p>
+                <Button className="bg-blue-50 text-blue-600 hover:bg-blue-100">{content.browse}</Button>
+                <p className="text-xs text-gray-400 mt-1">{content.supportedFormats}</p>
               </div>
               
               <div className="relative">
@@ -530,20 +581,20 @@ const KnowledgeBaseUploader = () => {
                   <div className="w-full border-t border-gray-300"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or</span>
+                  <span className="px-2 bg-white text-gray-500">{content.or}</span>
                 </div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Paste your text</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{content.pasteText}</label>
                 <textarea 
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 h-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Paste your knowledge base content here..."
+                  placeholder={content.pasteTextPlaceholder}
                 ></textarea>
               </div>
               
               <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6">
-                Train My Bot
+                {content.trainBot}
               </Button>
             </div>
           </div>
