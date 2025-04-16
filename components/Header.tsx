@@ -160,6 +160,8 @@ const Header = () => {
   const currentLinks = isArabic ? links.ar : links.en;
   const currentResources = isArabic ? resourcesDropdown.ar : resourcesDropdown.en;
 
+  const brandName = isArabic ? "Chat.SA" : "ChatSa";
+
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 px-4 md:px-8 ${
@@ -171,12 +173,12 @@ const Header = () => {
         <div className="flex items-center">
           <Image 
             src="/chatbase-icon.png" 
-            alt={isArabic ? "شات اس ايه" : "ChatSa"} 
+            alt={brandName} 
             width={40} 
             height={40} 
             className={isArabic ? "ml-2" : "mr-2"} 
           />
-          <span className="text-xl font-bold">{isArabic ? "شات اس ايه" : "ChatSa"}</span>
+          <span className="text-xl font-bold">{brandName}</span>
         </div>
         
         {/* Desktop Navigation */}
