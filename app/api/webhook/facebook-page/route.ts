@@ -490,6 +490,7 @@ export async function POST(request: Request) {
         const parent_id = data?.entry[0]?.changes[0]?.value.parent_id;
         const item = data?.entry[0]?.changes[0]?.value.item;
         const verb = data?.entry[0]?.changes[0]?.value.verb;
+        const reaction_type = data?.entry[0]?.changes[0]?.value.reaction_type;
 
         // Handle different types of feed events
         if (item === "comment") {
@@ -688,7 +689,7 @@ export async function POST(request: Request) {
           await conversation.save();
         } 
         // Handle likes
-        else if (item === "reaction" && verb === "add") {
+        else if (item === "reaction" && verb === "add" && reaction_type=="like") {
           await connectMongo();
 
           const facebookPage = await FacebookPage.findOne({ pageId: page_id });
