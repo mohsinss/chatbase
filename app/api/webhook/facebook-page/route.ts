@@ -601,34 +601,8 @@ export async function POST(request: Request) {
               messengerConversation.messages.push({ role: "assistant", content: response_text });
               await messengerConversation.save();
             }
-            // Reply DM for all comment authors
-            else if (facebookSettings?.replyDmEnabled) {
-              const response_text = facebookSettings?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?";
-              const dmDelay = facebookSettings?.replyDmDelay || 0;
-
-              if (dmDelay > 0) {
-                await sleep(dmDelay * 1000);
-              }
-
-              // Send Direct Message (DM) to the user via Messenger
-              await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
-                recipient: {
-                  id: from
-                },
-                message: {
-                  text: response_text
-                },
-                messaging_type: "RESPONSE",
-              }, {
-                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-              });
-
-              messengerConversation.messages.push({ role: "assistant", content: response_text });
-              await messengerConversation.save();
-            }
-
             // Keyword-triggered DMs
-            if (facebookSettings?.keywordDmEnabled && facebookSettings?.keywordTriggers?.length > 0) {
+            else if (facebookSettings?.keywordDmEnabled && facebookSettings?.keywordTriggers?.length > 0) {
               // Check if message contains any of the keywords
               for (const trigger of facebookSettings.keywordTriggers) {
                 if (message.toLowerCase().includes(trigger.keyword.toLowerCase())) {
@@ -659,6 +633,31 @@ export async function POST(request: Request) {
                   break;
                 }
               }
+            }
+            // Reply DM for all comment authors
+            else if (facebookSettings?.replyDmEnabled) {
+              const response_text = facebookSettings?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?";
+              const dmDelay = facebookSettings?.replyDmDelay || 0;
+
+              if (dmDelay > 0) {
+                await sleep(dmDelay * 1000);
+              }
+
+              // Send Direct Message (DM) to the user via Messenger
+              await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                recipient: {
+                  id: from
+                },
+                message: {
+                  text: response_text
+                },
+                messaging_type: "RESPONSE",
+              }, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              });
+
+              messengerConversation.messages.push({ role: "assistant", content: response_text });
+              await messengerConversation.save();
             }
           }
 
