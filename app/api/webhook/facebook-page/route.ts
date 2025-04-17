@@ -601,13 +601,15 @@ export async function POST(request: Request) {
               messengerConversation.messages.push({ role: "assistant", content: response_text });
               await messengerConversation.save();
             }
+            let isKeywordTriggered = false;
             // Keyword-triggered DMs
-            else if (facebookSettings?.keywordDmEnabled && facebookSettings?.keywordTriggers?.length > 0) {
+            if (!isNewCustomer && facebookSettings?.keywordDmEnabled && facebookSettings?.keywordTriggers?.length > 0) {
               // Check if message contains any of the keywords
               for (const trigger of facebookSettings.keywordTriggers) {
                 if (message.toLowerCase().includes(trigger.keyword.toLowerCase())) {
                   const response_text = trigger.prompt || `You mentioned "${trigger.keyword}". How can I help you with that?`;
                   const dmDelay = trigger.delay || 0;
+                  isKeywordTriggered = true;
 
                   if (dmDelay > 0) {
                     await sleep(dmDelay * 1000);
@@ -635,7 +637,7 @@ export async function POST(request: Request) {
               }
             }
             // Reply DM for all comment authors
-            else if (facebookSettings?.replyDmEnabled) {
+            if (!isNewCustomer && !isKeywordTriggered && facebookSettings?.replyDmEnabled) {
               const response_text = facebookSettings?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?";
               const dmDelay = facebookSettings?.replyDmDelay || 0;
 
