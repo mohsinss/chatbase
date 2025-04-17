@@ -489,139 +489,290 @@ export async function POST(request: Request) {
         const comment_id = data?.entry[0]?.changes[0]?.value.comment_id;
         const parent_id = data?.entry[0]?.changes[0]?.value.parent_id;
         const item = data?.entry[0]?.changes[0]?.value.item;
+        const verb = data?.entry[0]?.changes[0]?.value.verb;
 
-        if (item !== "comment") {
-          return NextResponse.json({ status: `Skip for item ${item}.` }, { status: 200 });
-        }
+        // Handle different types of feed events
+        if (item === "comment") {
+          // Handle comments
+          if (page_id == from) {
+            return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
+          }
 
-        if (page_id == from) {
-          return NextResponse.json({ status: "Skip for same source." }, { status: 200 });
-        }
+          if (parent_id != post_id) {
+            return NextResponse.json({ status: "Skip for reply comments." }, { status: 200 });
+          }
 
-        if (parent_id != post_id) {
-          return NextResponse.json({ status: "Skip for reply comments." }, { status: 200 });
-        }
+          await connectMongo();
 
-        await connectMongo();
+          const facebookPage = await FacebookPage.findOne({ pageId: page_id });
+          if (!facebookPage) {
+            return NextResponse.json({ status: "FB page doesn't registered to the site." }, { status: 200 });
+          }
 
-        const facebookPage = await FacebookPage.findOne({ pageId: page_id });
+          const response = await axios.get(`https://graph.facebook.com/v22.0/${comment_id}?fields=id,message,from,created_time,comment_count&access_token=${facebookPage.access_token}`,
+            {
+              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+            });
 
-        const response = await axios.get(`https://graph.facebook.com/v22.0/${comment_id}?fields=id,message,from,created_time,comment_count&access_token=${facebookPage.access_token}`,
-          {
-            headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-          });
+          // Extract data from response
+          const { id, message, created_time, comment_count } = response.data;
 
-        // Extract data from response
-        const { id, message, created_time, comment_count } = response.data;
+          const chatbotId = facebookPage.chatbotId;
 
-        const chatbotId = facebookPage.chatbotId;
+          const chatbot = await Chatbot.findOne({ chatbotId });
+          const facebookSettings = chatbot.settings?.facebook;
+          const updatedPrompt = facebookSettings?.prompt1;
+          let delay = facebookSettings?.delay1;
 
-        const chatbot = await Chatbot.findOne({ chatbotId });
-        const facebookSettings = chatbot.settings?.facebook;
-        const updatedPrompt = facebookSettings?.prompt1;
-        let delay = facebookSettings?.delay1;
-
-        // Find existing conversation or create a new one
-        let conversation = await ChatbotConversation.findOne({
-          chatbotId,
-          platform: "facebook-comment",
-          "metadata.from": from,
-          "metadata.to": post_id,
-        });
-        let isNewCustomer = false;
-
-        if (conversation) {
-          // Update existing conversation
-          conversation.messages.push({ role: "user", content: message });
-          conversation.metadata.comment_id = comment_id;
-        } else {
-          // Create new conversation
-          conversation = new ChatbotConversation({
+          // Find existing conversation or create a new one
+          let conversation = await ChatbotConversation.findOne({
             chatbotId,
             platform: "facebook-comment",
-            disable_auto_reply: false,
-            metadata: { from: from, to: post_id, parent_id, from_name, page_id, comment_id },
-            messages: [{ role: "user", content: message },]
+            "metadata.from": from,
+            "metadata.to": post_id,
           });
-          isNewCustomer = true;
-        }
+          let isNewCustomer = false;
 
-        await conversation.save();
+          if (conversation) {
+            // Update existing conversation
+            conversation.messages.push({ role: "user", content: message });
+            conversation.metadata.comment_id = comment_id;
+          } else {
+            // Create new conversation
+            conversation = new ChatbotConversation({
+              chatbotId,
+              platform: "facebook-comment",
+              disable_auto_reply: false,
+              metadata: { from: from, to: post_id, parent_id, from_name, page_id, comment_id },
+              messages: [{ role: "user", content: message },]
+            });
+            isNewCustomer = true;
+          }
 
-        if (conversation?.disable_auto_reply == true) {
-          return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
-        }
+          await conversation.save();
 
-        const oneHourAgo = Date.now() - (60 * 60 * 1000);
-        //@ts-ignore
-        let messages = conversation.messages.filter(msg => new Date(msg.timestamp).getTime() >= oneHourAgo);
+          if (conversation?.disable_auto_reply == true) {
+            return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
+          }
 
-        // Ensure at least the current message is included if no recent messages exist
-        if (messages.length === 0) {
-          messages = [{ role: 'user', content: message }];
-        }
+          // Handle DM reactions based on comment
+          if (facebookSettings?.commentDmEnabled) {
+            // Find or create messenger conversation
+            let messengerConversation = await ChatbotConversation.findOne({
+              chatbotId,
+              platform: "facebook",
+              "metadata.from": from,
+              "metadata.to": facebookPage.name,
+            });
 
-        if (isNewCustomer && facebookSettings?.commentDmEnabled && facebookSettings?.welcomeDmEnabled) {
-          const response_text = facebookSettings?.welcomeDmPrompt;
-          delay = facebookSettings?.welcomeDmDelay;
-        
+            if (!messengerConversation) {
+              messengerConversation = new ChatbotConversation({
+                chatbotId,
+                platform: "facebook",
+                disable_auto_reply: false,
+                metadata: { from: from, to: facebookPage.name },
+                messages: [],
+              });
+            }
+
+            // Welcome DM for new customers
+            if (isNewCustomer && facebookSettings?.welcomeDmEnabled) {
+              const response_text = facebookSettings?.welcomeDmPrompt || "Welcome! Thanks for engaging with our page. How can I help you today?";
+              const dmDelay = facebookSettings?.welcomeDmDelay || 0;
+            
+              if (dmDelay > 0) {
+                await sleep(dmDelay * 1000);
+              }
+            
+              // Send Direct Message (DM) to the user via Messenger
+              await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                recipient: {
+                  id: from
+                },
+                message: {
+                  text: response_text
+                },
+                messaging_type: "RESPONSE",
+              }, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              });
+            
+              messengerConversation.messages.push({ role: "assistant", content: response_text });
+              await messengerConversation.save();
+            } 
+            // Reply DM for all comment authors
+            else if (facebookSettings?.replyDmEnabled) {
+              const response_text = facebookSettings?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?";
+              const dmDelay = facebookSettings?.replyDmDelay || 0;
+            
+              if (dmDelay > 0) {
+                await sleep(dmDelay * 1000);
+              }
+            
+              // Send Direct Message (DM) to the user via Messenger
+              await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                recipient: {
+                  id: from
+                },
+                message: {
+                  text: response_text
+                },
+                messaging_type: "RESPONSE",
+              }, {
+                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+              });
+            
+              messengerConversation.messages.push({ role: "assistant", content: response_text });
+              await messengerConversation.save();
+            }
+            
+            // Keyword-triggered DMs
+            if (facebookSettings?.keywordDmEnabled && facebookSettings?.keywordTriggers?.length > 0) {
+              // Check if message contains any of the keywords
+              for (const trigger of facebookSettings.keywordTriggers) {
+                if (message.toLowerCase().includes(trigger.keyword.toLowerCase())) {
+                  const response_text = trigger.prompt || `You mentioned "${trigger.keyword}". How can I help you with that?`;
+                  const dmDelay = trigger.delay || 0;
+                
+                  if (dmDelay > 0) {
+                    await sleep(dmDelay * 1000);
+                  }
+                
+                  // Send Direct Message (DM) to the user via Messenger
+                  await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+                    recipient: {
+                      id: from
+                    },
+                    message: {
+                      text: response_text
+                    },
+                    messaging_type: "RESPONSE",
+                  }, {
+                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+                  });
+                
+                  messengerConversation.messages.push({ role: "assistant", content: response_text });
+                  await messengerConversation.save();
+                  
+                  // Only trigger on the first matching keyword
+                  break;
+                }
+              }
+            }
+          }
+          
+          // Handle comment reply
+          const oneHourAgo = Date.now() - (60 * 60 * 1000);
+          //@ts-ignore
+          let messages = conversation.messages.filter(msg => new Date(msg.timestamp).getTime() >= oneHourAgo);
+
+          // Ensure at least the current message is included if no recent messages exist
+          if (messages.length === 0) {
+            messages = [{ role: 'user', content: message }];
+          }
+          
+          const response_text = await getAIResponse(chatbotId, messages, message, updatedPrompt);
+
           if (delay && delay > 0) {
             await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
           }
-        
-          // Find existing Messenger conversation or create a new one
-          let messengerConversation = await ChatbotConversation.findOne({
-            chatbotId,
-            platform: "facebook",
-            "metadata.from": from,
-            "metadata.to": facebookPage.name,
-          });
-        
-          if (!messengerConversation) {
-            messengerConversation = new ChatbotConversation({
-              chatbotId,
-              platform: "facebook",
-              disable_auto_reply: false,
-              metadata: { from: from, to: facebookPage.name },
-              messages: [],
-            });
-          }
-        
-          // Send Direct Message (DM) to the user via Messenger
-          await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
-            recipient: {
-              id: from // user's Facebook ID
-            },
-            message: {
-              text: response_text
-            },
-            messaging_type: "RESPONSE",
+
+          // send msg
+          const response2 = await axios.post(`https://graph.facebook.com/v22.0/${comment_id}/comments?access_token=${facebookPage.access_token}`, {
+            message: `@[${from}] ${response_text}`
           }, {
             headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
           });
-        
-          messengerConversation.messages.push({ role: "assistant", content: response_text });
-          await messengerConversation.save();
-        
-          return NextResponse.json({ status: "Welcome DM sent." }, { status: 200 });
+
+          conversation.messages.push({ role: "assistant", content: response_text });
+          await conversation.save();
         } 
-        
-        const response_text = await getAIResponse(chatbotId, messages, message, updatedPrompt);
+        // Handle likes
+        else if (item === "reaction" && verb === "add") {
+          await connectMongo();
 
-        if (delay && delay > 0) {
-          await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
+          const facebookPage = await FacebookPage.findOne({ pageId: page_id });
+          if (!facebookPage) {
+            return NextResponse.json({ status: "FB page doesn't registered to the site." }, { status: 200 });
+          }
+
+          const chatbotId = facebookPage.chatbotId;
+          const chatbot = await Chatbot.findOne({ chatbotId });
+          const facebookSettings = chatbot.settings?.facebook;
+
+          // Check if like DMs are enabled
+          if (facebookSettings?.likeDmEnabled) {
+            // Check if we should only send DM on first like
+            if (facebookSettings?.likeDmFirstOnly) {
+              // Check if we've already sent a DM to this user
+              const existingConversation = await ChatbotConversation.findOne({
+                chatbotId,
+                platform: "facebook",
+                "metadata.from": from,
+                "metadata.to": facebookPage.name,
+              });
+
+              if (existingConversation) {
+                return NextResponse.json({ status: "Skip DM for existing user (first-like-only mode)." }, { status: 200 });
+              }
+            }
+
+            // Check if this is a specific post with custom settings
+            let promptText = facebookSettings?.likeDmPrompt || "Thanks for liking our post! We're glad you enjoyed it. How can we help you today?";
+            let dmDelay = facebookSettings?.likeDmDelay || 0;
+
+            if (facebookSettings?.likeDmSpecificPosts?.length > 0) {
+              const specificPost = facebookSettings.likeDmSpecificPosts.find(
+                (post: { postUrl: string; prompt?: string; delay?: number }) => post.postUrl.includes(post_id)
+              );
+
+              if (specificPost) {
+                if (specificPost.prompt) promptText = specificPost.prompt;
+                if (specificPost.delay !== undefined) dmDelay = specificPost.delay;
+              }
+            }
+
+            if (dmDelay > 0) {
+              await sleep(dmDelay * 1000);
+            }
+
+            // Find or create messenger conversation
+            let messengerConversation = await ChatbotConversation.findOne({
+              chatbotId,
+              platform: "facebook",
+              "metadata.from": from,
+              "metadata.to": facebookPage.name,
+            });
+
+            if (!messengerConversation) {
+              messengerConversation = new ChatbotConversation({
+                chatbotId,
+                platform: "facebook",
+                disable_auto_reply: false,
+                metadata: { from: from, to: facebookPage.name },
+                messages: [],
+              });
+            }
+
+            // Send Direct Message (DM) to the user via Messenger
+            await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
+              recipient: {
+                id: from
+              },
+              message: {
+                text: promptText
+              },
+              messaging_type: "RESPONSE",
+            }, {
+              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
+            });
+
+            messengerConversation.messages.push({ role: "assistant", content: promptText });
+            await messengerConversation.save();
+
+            return NextResponse.json({ status: "Like DM sent." }, { status: 200 });
+          }
         }
-
-        // send msg
-        const response2 = await axios.post(`https://graph.facebook.com/v22.0/${comment_id}/comments?access_token=${facebookPage.access_token}`, {
-          message: `@[${from}] ${response_text}`
-        }, {
-          headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-        });
-
-        conversation.messages.push({ role: "assistant", content: response_text });
-
-        await conversation.save();
       }
     }
 
