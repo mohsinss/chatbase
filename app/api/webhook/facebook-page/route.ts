@@ -756,7 +756,7 @@ async function handleCommentDM(
     await conversation.save();
   }
   // Keyword-triggered DMs
-  else if (!isNewCustomer && facebookSettings?.keywordDmEnabled && facebookSettings?.keywordTriggers?.length > 0) {
+  if (!isNewCustomer && facebookSettings?.keywordDmEnabled && facebookSettings?.keywordTriggers?.length > 0) {
     // Check for keywords
     for (const trigger of facebookSettings.keywordTriggers) {
       if (message.toLowerCase().includes(trigger.keyword.trim().toLowerCase())) {
