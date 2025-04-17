@@ -580,11 +580,11 @@ export async function POST(request: Request) {
             if (isNewCustomer && facebookSettings?.welcomeDmEnabled) {
               const response_text = facebookSettings?.welcomeDmPrompt || "Welcome! Thanks for engaging with our page. How can I help you today?";
               const dmDelay = facebookSettings?.welcomeDmDelay || 0;
-            
+
               if (dmDelay > 0) {
                 await sleep(dmDelay * 1000);
               }
-            
+
               // Send Direct Message (DM) to the user via Messenger
               await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
                 recipient: {
@@ -597,19 +597,19 @@ export async function POST(request: Request) {
               }, {
                 headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
               });
-            
+
               messengerConversation.messages.push({ role: "assistant", content: response_text });
               await messengerConversation.save();
-            } 
+            }
             // Reply DM for all comment authors
             else if (facebookSettings?.replyDmEnabled) {
               const response_text = facebookSettings?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?";
               const dmDelay = facebookSettings?.replyDmDelay || 0;
-            
+
               if (dmDelay > 0) {
                 await sleep(dmDelay * 1000);
               }
-            
+
               // Send Direct Message (DM) to the user via Messenger
               await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
                 recipient: {
@@ -622,11 +622,11 @@ export async function POST(request: Request) {
               }, {
                 headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
               });
-            
+
               messengerConversation.messages.push({ role: "assistant", content: response_text });
               await messengerConversation.save();
             }
-            
+
             // Keyword-triggered DMs
             if (facebookSettings?.keywordDmEnabled && facebookSettings?.keywordTriggers?.length > 0) {
               // Check if message contains any of the keywords
@@ -634,11 +634,11 @@ export async function POST(request: Request) {
                 if (message.toLowerCase().includes(trigger.keyword.toLowerCase())) {
                   const response_text = trigger.prompt || `You mentioned "${trigger.keyword}". How can I help you with that?`;
                   const dmDelay = trigger.delay || 0;
-                
+
                   if (dmDelay > 0) {
                     await sleep(dmDelay * 1000);
                   }
-                
+
                   // Send Direct Message (DM) to the user via Messenger
                   await axios.post(`https://graph.facebook.com/v22.0/${facebookPage.pageId}/messages?access_token=${facebookPage.access_token}`, {
                     recipient: {
@@ -651,17 +651,17 @@ export async function POST(request: Request) {
                   }, {
                     headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                   });
-                
+
                   messengerConversation.messages.push({ role: "assistant", content: response_text });
                   await messengerConversation.save();
-                  
+
                   // Only trigger on the first matching keyword
                   break;
                 }
               }
             }
           }
-          
+
           // Handle comment reply
           const oneHourAgo = Date.now() - (60 * 60 * 1000);
           //@ts-ignore
@@ -671,7 +671,7 @@ export async function POST(request: Request) {
           if (messages.length === 0) {
             messages = [{ role: 'user', content: message }];
           }
-          
+
           const response_text = await getAIResponse(chatbotId, messages, message, updatedPrompt);
 
           if (delay && delay > 0) {
@@ -687,9 +687,9 @@ export async function POST(request: Request) {
 
           conversation.messages.push({ role: "assistant", content: response_text });
           await conversation.save();
-        } 
+        }
         // Handle likes
-        else if (item === "reaction" && verb === "add" && reaction_type=="like") {
+        else if (item === "reaction" && verb === "add" && reaction_type === "like") {
           await connectMongo();
 
           const facebookPage = await FacebookPage.findOne({ pageId: page_id });
