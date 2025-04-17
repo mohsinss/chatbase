@@ -795,7 +795,7 @@ async function handleCommentDM(
     }
   }
   // Reply DM for all comment authors
-  else if (!isNewCustomer && !isKeywordTriggered && facebookSettings?.replyDmEnabled) {
+  if (!isNewCustomer && !isKeywordTriggered && facebookSettings?.replyDmEnabled) {
     if (facebookSettings?.replyDmResponseType === "template") {
       // Use template response
       response_text = facebookSettings?.replyDmTemplate || "Thanks for your comment! How can I help you today?";
