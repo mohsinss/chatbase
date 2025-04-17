@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Switch } from "@headlessui/react";
-import { IconInfoCircle, IconBrandFacebook, IconLoader } from "@tabler/icons-react";
+import { IconInfoCircle, IconBrandFacebook, IconLoader, IconTrash } from "@tabler/icons-react";
 import Spinner from "@/components/Spinner";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -310,29 +310,33 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
                       <div className="space-y-3">
                         {(settingsData?.keywordTriggers || []).map((trigger, index) => (
                           <div key={index} className="flex gap-3 items-start">
-                            <input
-                              type="text"
-                              className={`mt-1 block w-1/3 border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                              placeholder="Keyword"
-                              value={trigger.keyword}
-                              onChange={(e) => {
-                                const newTriggers = [...(settingsData?.keywordTriggers || [])];
-                                newTriggers[index].keyword = e.target.value;
-                                setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
-                              }}
-                              disabled={!settingsData?.commentDmEnabled}
-                            />
-                            <textarea
-                              className={`mt-1 block w-1/3 border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                              placeholder="DM Prompt"
-                              value={trigger.prompt}
-                              onChange={(e) => {
-                                const newTriggers = [...(settingsData?.keywordTriggers || [])];
-                                newTriggers[index].prompt = e.target.value;
-                                setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
-                              }}
-                              disabled={!settingsData?.commentDmEnabled}
-                            />
+                            <div className="flex flex-col w-1/3">
+                              <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Keyword</label>
+                              <input
+                                type="text"
+                                className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                                value={trigger.keyword}
+                                onChange={(e) => {
+                                  const newTriggers = [...(settingsData?.keywordTriggers || [])];
+                                  newTriggers[index].keyword = e.target.value;
+                                  setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
+                                }}
+                                disabled={!settingsData?.commentDmEnabled}
+                              />
+                            </div>
+                            <div className="flex flex-col w-1/3">
+                              <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Response Message</label>
+                              <textarea
+                                className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                                value={trigger.prompt}
+                                onChange={(e) => {
+                                  const newTriggers = [...(settingsData?.keywordTriggers || [])];
+                                  newTriggers[index].prompt = e.target.value;
+                                  setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
+                                }}
+                                disabled={!settingsData?.commentDmEnabled}
+                              />
+                            </div>
                             <div className="flex flex-col w-1/6">
                               <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
                               <input
@@ -353,10 +357,11 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
                                 newTriggers.splice(index, 1);
                                 setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
                               }}
-                              className={`mt-1 ${settingsData?.commentDmEnabled ? 'text-red-500 hover:text-red-700' : 'text-gray-400'}`}
+                              className={`mt-4 p-1 rounded-full ${settingsData?.commentDmEnabled ? 'text-red-500 hover:text-white hover:bg-red-500' : 'text-gray-400'}`}
                               disabled={!settingsData?.commentDmEnabled}
+                              title="Delete trigger"
                             >
-                              Remove
+                              <IconTrash className="w-6 h-6 mx-auto" />
                             </button>
                           </div>
                         ))}
@@ -509,4 +514,4 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
   );
 };
 
-export default FacebookReactions; 
+export default FacebookReactions;
