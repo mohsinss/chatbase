@@ -42,7 +42,7 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
     likeDmDelay?: number;
     likeDmFirstOnly?: boolean;
     likeDmSpecificPosts?: Array<{ postUrl: string; prompt?: string; delay?: number }>;
-} | null>(null);
+  } | null>(null);
 
   useEffect(() => {
     fetchSettings(chatbot.id);
@@ -209,20 +209,19 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
             </div>
 
             <div className="bg-white p-6 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Comment-Triggered DMs</h3>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={settingsData?.commentDmEnabled}
-                      onChange={(enabled) => setSettingsData({ ...settingsData, commentDmEnabled: enabled })}
-                      className={`${settingsData?.commentDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                    >
-                      <span className={`${settingsData?.commentDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                    </Switch>
-                    <span className="text-sm font-medium text-gray-700">Enable Comment-Triggered DMs</span>
-                  </div>
+              <div className="flex items-center justify-between p-0 bg-white rounded-lg mb-4">
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={settingsData?.commentDmEnabled}
+                    onChange={(enabled) => setSettingsData({ ...settingsData, commentDmEnabled: enabled })}
+                    className={`${settingsData?.commentDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                  >
+                    <span className={`${settingsData?.commentDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                  </Switch>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-0">Comment-Triggered DMs</h3>
                 </div>
+              </div>
+              <div className="space-y-6">
 
                 <div className={`space-y-6 ${!settingsData?.commentDmEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
                   <div className="bg-white p-4 rounded-lg border border-gray-200">
@@ -379,20 +378,19 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
             </div>
 
             <div className="bg-white p-6 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Post Like DMs</h3>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={settingsData?.likeDmEnabled}
-                      onChange={(enabled) => setSettingsData({ ...settingsData, likeDmEnabled: enabled })}
-                      className={`${settingsData?.likeDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                    >
-                      <span className={`${settingsData?.likeDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                    </Switch>
-                    <span className="text-sm font-medium text-gray-700">Send DM After Post Like</span>
-                  </div>
+              <div className="flex items-center justify-between p-0 bg-white rounded-lg mb-4">
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={settingsData?.likeDmEnabled}
+                    onChange={(enabled) => setSettingsData({ ...settingsData, likeDmEnabled: enabled })}
+                    className={`${settingsData?.likeDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                  >
+                    <span className={`${settingsData?.likeDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                  </Switch>
+                  <h3 className="text-lg font-semibold text-gray-900">Post Like DMs</h3>
                 </div>
+              </div>
+              <div className="space-y-6">
 
                 <div className={`space-y-6 ${!settingsData?.likeDmEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
                   <div className="bg-white p-4 rounded-lg border border-gray-200">
