@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Switch } from "@headlessui/react";
-import { IconInfoCircle, IconBrandFacebook, IconLoader, IconTrash } from "@tabler/icons-react";
+import { IconBrandFacebook } from "@tabler/icons-react";
+import { IconLoader, IconTrash } from "@tabler/icons-react";
 import Spinner from "@/components/Spinner";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import {
+  useSocialReactions,
+  SocialReactionsProps,
+  SectionTitle,
+  ToggleSwitch,
+  ResponseTypeSelector,
+  TextAreaField,
+  NumberField
+} from "./SocialReactionsBase";
 
 interface FacebookReactionsProps {
   chatbot: {
@@ -18,187 +24,58 @@ interface FacebookReactionsProps {
 }
 
 const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
-  const [isFetchingSettings, setIsFetchingSettings] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const router = useRouter();
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
-  const [facebookPages, setFacebookPages] = useState<Array<{
-    _id: string;
-    pageId: string;
-    name: string;
-    access_token: string;
-  }>>([]);
-  const [selectedPageId, setSelectedPageId] = useState<string>("");
-  const [settingsData, setSettingsData] = useState<{
-    prompt?: string;
-    delay?: number;
-    prompt1?: string;
-    delay1?: number;
-    commentDmEnabled?: boolean;
-    welcomeDmEnabled?: boolean;
-    welcomeDmResponseType?: "template" | "prompt";
-    welcomeDmPrompt?: string;
-    welcomeDmTemplate?: string;
-    welcomeDmDelay?: number;
-    replyDmEnabled?: boolean;
-    replyDmResponseType?: "template" | "prompt";
-    replyDmPrompt?: string;
-    replyDmTemplate?: string;
-    replyDmDelay?: number;
-    keywordDmEnabled?: boolean;
-    keywordTriggers?: Array<{ 
-      keyword: string; 
-      responseType?: "template" | "prompt";
-      prompt?: string; 
-      template?: string;
-      delay?: number 
-    }>;
-    likeDmEnabled?: boolean;
-    likeDmPrompt?: string;
-    likeDmDelay?: number;
-    likeDmFirstOnly?: boolean;
-    likeDmSpecificPosts?: Array<{ postUrl: string; prompt?: string; delay?: number }>;
-  } | null>(null);
-
-  useEffect(() => {
-    fetchFacebookPages(chatbot.id);
-    setIsConnected(!!chatbot?.integrations?.['messenger']);
-  }, [chatbot]);
-
-  const fetchFacebookPages = async (chatbotId: string) => {
-    setIsFetchingSettings(true);
-    try {
-      const response = await fetch(`/api/chatbot/integrations/facebook-page?chatbotId=${chatbotId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch Facebook pages");
-      }
-
-      const pages = await response.json();
-      setFacebookPages(pages);
-      
-      // If there are pages, select the first one by default
-      if (pages.length > 0) {
-        setSelectedPageId(pages[0]._id);
-        await fetchSettings(pages[0]._id);
-      } else {
-        setIsFetchingSettings(false);
-      }
-    } catch (error) {
-      console.error("Error fetching Facebook pages:", error);
-      toast.error("Failed to fetch Facebook pages.");
-      setIsFetchingSettings(false);
-    }
+  // Configuration for Facebook
+  const config: SocialReactionsProps = {
+    chatbot,
+    platform: 'facebook',
+    apiBasePath: '/api/chatbot/integrations/facebook-page',
+    integrationKey: 'messenger',
+    primaryColor: 'bg-blue-600',
+    headerBgClass: 'bg-[#1877F2]',
+    headerIcon: <IconBrandFacebook className="w-8 h-8 text-white" />,
+    headerTitle: 'Facebook Reactions',
+    headerDescription: 'Manage your Facebook chatbot reactions and settings.'
   };
 
-  const fetchSettings = async (pageId: string) => {
-    setIsFetchingSettings(true);
-    try {
-      const response = await fetch(`/api/chatbot/integrations/facebook-page/settings?_id=${pageId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch settings");
-      }
-
-      const data = await response.json();
-      setSettingsData(data);
-    } catch (error) {
-      console.error("Error fetching settings:", error);
-      toast.error("Failed to fetch settings.");
-    }
-    setIsFetchingSettings(false);
-  };
-
-  const saveSettings = async () => {
-    if (!selectedPageId) {
-      toast.error("No Facebook page selected");
-      return;
-    }
-    
-    setIsSavingSettings(true);
-    try {
-      const response = await fetch(`/api/chatbot/integrations/facebook-page/settings?_id=${selectedPageId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(settingsData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Failed to save settings");
-      }
-
-      toast.success("Settings saved successfully!");
-    } catch (error) {
-      console.error(error.message);
-      toast.error(error.message);
-    }
-    setIsSavingSettings(false);
-  };
-
-  const handlePageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const pageId = e.target.value;
-    setSelectedPageId(pageId);
-    await fetchSettings(pageId);
-  };
-
-  useEffect(() => {
-    setIsConnected(!!chatbot?.integrations?.['messenger']);
-  }, [chatbot]);
-
-  const handleConnect = async () => {
-    setIsConnecting(true);
-    try {
-      // TODO: Implement actual Facebook connection logic
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
-      setIsConnected(true);
-    } catch (error) {
-      console.error('Failed to connect to Facebook:', error);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
+  // Use the shared hook for social reactions
+  const {
+    isFetchingSettings,
+    isSavingSettings,
+    pages: facebookPages,
+    selectedPageId,
+    settingsData,
+    setSettingsData,
+    saveSettings,
+    handlePageChange
+  } = useSocialReactions(config);
 
   return (
     <div className="flex flex-col h-full">
       {/* Fixed Facebook header */}
       <div className="sticky top-0 z-10">
-        <div className="bg-[#1877F2] text-white p-6">
+        <div className={config.headerBgClass + " text-white p-6"}>
           <div className="flex items-center gap-3">
-            <IconBrandFacebook className="w-8 h-8 text-white" />
+            {config.headerIcon}
             <div>
-              <h1 className="text-2xl font-semibold">Facebook Reactions</h1>
-              <p className="mt-1 text-white/80">Manage your Facebook chatbot reactions and settings.</p>
+              <h1 className="text-2xl font-semibold">{config.headerTitle}</h1>
+              <p className="mt-1 text-white/80">{config.headerDescription}</p>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-6 p-6 bg-[#F0F2F5]">
-          {isFetchingSettings && <div className="bg-white p-6 rounded-lg shadow-sm">
-            <IconLoader className="animate-spin w-8 h-8 mx-auto" />
-          </div>}
-          {!isFetchingSettings &&
+          {isFetchingSettings ? (
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <IconLoader className="animate-spin w-8 h-8 mx-auto" />
+            </div>
+          ) : (
             <div className="flex flex-col gap-6">
               {/* Page Selector */}
               <div className="bg-white p-6 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Facebook Page</h3>
+                <SectionTitle>Select Facebook Page</SectionTitle>
                 <div className="space-y-4">
                   {facebookPages.length === 0 ? (
                     <p className="text-gray-500">No Facebook pages connected. Please connect a Facebook page first.</p>
@@ -238,485 +115,424 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
                   )}
                 </div>
               </div>
-              <div className="bg-white p-6 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Messenger Settings</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Prompt</label>
-                    <textarea
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-                      value={settingsData?.prompt}
-                      onChange={(e) => setSettingsData({ ...settingsData, prompt: e.target.value })}
-                    />
+              {facebookPages.length !== 0 && (
+                <>
+                  {/* Messenger Settings */}
+                  <div className="bg-white p-6 rounded-lg">
+                    <SectionTitle>Messenger Settings</SectionTitle>
+                    <div className="space-y-4">
+                      <TextAreaField
+                        label="Prompt"
+                        value={settingsData?.prompt}
+                        onChange={(value) => setSettingsData({ ...settingsData, prompt: value })}
+                        primaryColor={config.primaryColor}
+                      />
+                      <NumberField
+                        label="Delay (seconds)"
+                        value={settingsData?.delay}
+                        onChange={(value) => setSettingsData({ ...settingsData, delay: value })}
+                        primaryColor={config.primaryColor}
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Delay (seconds)</label>
-                    <input
-                      type="number"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                      value={settingsData?.delay}
-                      onChange={(e) => setSettingsData({ ...settingsData, delay: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Comment Settings</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Prompt</label>
-                    <textarea
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-                      value={settingsData?.prompt1}
-                      onChange={(e) => setSettingsData({ ...settingsData, prompt1: e.target.value })}
-                    />
+                  {/* Comment Settings */}
+                  <div className="bg-white p-6 rounded-lg">
+                    <SectionTitle>Comment Settings</SectionTitle>
+                    <div className="space-y-4">
+                      <TextAreaField
+                        label="Prompt"
+                        value={settingsData?.prompt1}
+                        onChange={(value) => setSettingsData({ ...settingsData, prompt1: value })}
+                        primaryColor={config.primaryColor}
+                      />
+                      <NumberField
+                        label="Delay (seconds)"
+                        value={settingsData?.delay1}
+                        onChange={(value) => setSettingsData({ ...settingsData, delay1: value })}
+                        primaryColor={config.primaryColor}
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Delay (seconds)</label>
-                    <input
-                      type="number"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                      value={settingsData?.delay1}
-                      onChange={(e) => setSettingsData({ ...settingsData, delay1: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg">
-                <div className="flex items-center justify-between p-0 bg-white rounded-lg mb-4">
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={settingsData?.commentDmEnabled}
-                      onChange={(enabled) => setSettingsData({ ...settingsData, commentDmEnabled: enabled })}
-                      className={`${settingsData?.commentDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                    >
-                      <span className={`${settingsData?.commentDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                    </Switch>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-0">Comment-Triggered DMs</h3>
-                  </div>
-                </div>
-                <div className="space-y-6">
-
-                  <div className={`space-y-6 ${!settingsData?.commentDmEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <Switch
-                            checked={settingsData?.welcomeDmEnabled}
-                            onChange={(enabled) => setSettingsData({ ...settingsData, welcomeDmEnabled: enabled })}
-                            className={`${settingsData?.welcomeDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                          >
-                            <span className={`${settingsData?.welcomeDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                          </Switch>
-                          <span className={`text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Send Welcome DM to New Users</span>
-                        </div>
-                      </div>
-                    <div className="mt-4">
-                      <div className="mb-3">
-                        <label className={`block text-sm font-medium mb-2 ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Response Type</label>
-                        <div className="flex gap-4">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              className="form-radio h-4 w-4 text-blue-600"
-                              checked={settingsData?.welcomeDmResponseType !== "template"}
-                              onChange={() => setSettingsData({ ...settingsData, welcomeDmResponseType: "prompt" })}
-                              disabled={!settingsData?.commentDmEnabled}
-                            />
-                            <span className={`ml-2 text-sm ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              className="form-radio h-4 w-4 text-blue-600"
-                              checked={settingsData?.welcomeDmResponseType === "template"}
-                              onChange={() => setSettingsData({ ...settingsData, welcomeDmResponseType: "template" })}
-                              disabled={!settingsData?.commentDmEnabled}
-                            />
-                            <span className={`ml-2 text-sm ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template Response</span>
-                          </label>
-                        </div>
-                      </div>
-                      
-                      {settingsData?.welcomeDmResponseType !== "template" ? (
-                        <div>
-                          <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</label>
-                          <textarea
-                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                            value={settingsData?.welcomeDmPrompt || "Welcome! Thanks for engaging with our page. How can I help you today?"}
-                            onChange={(e) => setSettingsData({ ...settingsData, welcomeDmPrompt: e.target.value })}
-                            disabled={!settingsData?.commentDmEnabled}
-                            placeholder="Enter a prompt for the AI to generate a response"
-                          />
-                        </div>
-                      ) : (
-                        <div>
-                          <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template Response</label>
-                          <textarea
-                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                            value={settingsData?.welcomeDmTemplate || ""}
-                            onChange={(e) => setSettingsData({ ...settingsData, welcomeDmTemplate: e.target.value })}
-                            disabled={!settingsData?.commentDmEnabled}
-                            placeholder="Enter a fixed template response"
-                          />
-                        </div>
-                      )}
-                        <div className="mt-2">
-                          <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
-                          <input
-                            type="number"
-                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                            value={settingsData?.welcomeDmDelay || 0}
-                            onChange={(e) => setSettingsData({ ...settingsData, welcomeDmDelay: Number(e.target.value) })}
-                            disabled={!settingsData?.commentDmEnabled}
-                          />
-                        </div>
+                  {/* Comment-Triggered DMs */}
+                  <div className="bg-white p-6 rounded-lg">
+                    <div className="flex items-center justify-between p-0 bg-white rounded-lg mb-4">
+                      <div className="flex items-center gap-3">
+                        <ToggleSwitch
+                          checked={settingsData?.commentDmEnabled}
+                          onChange={(enabled) => setSettingsData({ ...settingsData, commentDmEnabled: enabled })}
+                          primaryColor={config.primaryColor}
+                        />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-0">Comment-Triggered DMs</h3>
                       </div>
                     </div>
-
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <Switch
-                            checked={settingsData?.replyDmEnabled}
-                            onChange={(enabled) => setSettingsData({ ...settingsData, replyDmEnabled: enabled })}
-                            className={`${settingsData?.replyDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                          >
-                            <span className={`${settingsData?.replyDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                          </Switch>
-                          <span className={`text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Send DM to Comment Authors</span>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <div className="mb-3">
-                          <label className={`block text-sm font-medium mb-2 ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Response Type</label>
-                          <div className="flex gap-4">
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                className="form-radio h-4 w-4 text-blue-600"
-                                checked={settingsData?.replyDmResponseType !== "template"}
-                                onChange={() => setSettingsData({ ...settingsData, replyDmResponseType: "prompt" })}
+                    <div className="space-y-6">
+                      <div className={`space-y-6 ${!settingsData?.commentDmEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                        {/* Welcome DM to New Users */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <ToggleSwitch
+                                checked={settingsData?.welcomeDmEnabled}
+                                onChange={(enabled) => setSettingsData({ ...settingsData, welcomeDmEnabled: enabled })}
+                                primaryColor={config.primaryColor}
                                 disabled={!settingsData?.commentDmEnabled}
                               />
-                              <span className={`ml-2 text-sm ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</span>
-                            </label>
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                className="form-radio h-4 w-4 text-blue-600"
-                                checked={settingsData?.replyDmResponseType === "template"}
-                                onChange={() => setSettingsData({ ...settingsData, replyDmResponseType: "template" })}
+                              <span className={`text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Send Welcome DM to New Users</span>
+                            </div>
+                          </div>
+                          <div className="mt-4">
+                            <ResponseTypeSelector
+                              responseType={settingsData?.welcomeDmResponseType}
+                              onChange={(type) => setSettingsData({ ...settingsData, welcomeDmResponseType: type })}
+                              disabled={!settingsData?.commentDmEnabled}
+                              primaryColor={config.primaryColor}
+                            />
+
+                            {settingsData?.welcomeDmResponseType !== "template" ? (
+                              <TextAreaField
+                                label="AI Prompt"
+                                value={settingsData?.welcomeDmPrompt || "Welcome! Thanks for engaging with our page. How can I help you today?"}
+                                onChange={(value) => setSettingsData({ ...settingsData, welcomeDmPrompt: value })}
+                                disabled={!settingsData?.commentDmEnabled}
+                                placeholder="Enter a prompt for the AI to generate a response"
+                                primaryColor={config.primaryColor}
+                              />
+                            ) : (
+                              <TextAreaField
+                                label="Template Response"
+                                value={settingsData?.welcomeDmTemplate || ""}
+                                onChange={(value) => setSettingsData({ ...settingsData, welcomeDmTemplate: value })}
+                                disabled={!settingsData?.commentDmEnabled}
+                                placeholder="Enter a fixed template response"
+                                primaryColor={config.primaryColor}
+                              />
+                            )}
+                            <div className="mt-2">
+                              <NumberField
+                                label="Delay (seconds)"
+                                value={settingsData?.welcomeDmDelay}
+                                onChange={(value) => setSettingsData({ ...settingsData, welcomeDmDelay: value })}
+                                disabled={!settingsData?.commentDmEnabled}
+                                primaryColor={config.primaryColor}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Send DM to Comment Authors */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <ToggleSwitch
+                                checked={settingsData?.replyDmEnabled}
+                                onChange={(enabled) => setSettingsData({ ...settingsData, replyDmEnabled: enabled })}
+                                primaryColor={config.primaryColor}
                                 disabled={!settingsData?.commentDmEnabled}
                               />
-                              <span className={`ml-2 text-sm ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template Response</span>
-                            </label>
+                              <span className={`text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Send DM to Comment Authors</span>
+                            </div>
                           </div>
-                        </div>
-                        
-                        {settingsData?.replyDmResponseType !== "template" ? (
-                          <div>
-                            <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</label>
-                            <textarea
-                              className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                              value={settingsData?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?"}
-                              onChange={(e) => setSettingsData({ ...settingsData, replyDmPrompt: e.target.value })}
+                          <div className="mt-4">
+                            <ResponseTypeSelector
+                              responseType={settingsData?.replyDmResponseType}
+                              onChange={(type) => setSettingsData({ ...settingsData, replyDmResponseType: type })}
                               disabled={!settingsData?.commentDmEnabled}
-                              placeholder="Enter a prompt for the AI to generate a response"
+                              primaryColor={config.primaryColor}
                             />
-                          </div>
-                        ) : (
-                          <div>
-                            <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template Response</label>
-                            <textarea
-                              className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                              value={settingsData?.replyDmTemplate || ""}
-                              onChange={(e) => setSettingsData({ ...settingsData, replyDmTemplate: e.target.value })}
-                              disabled={!settingsData?.commentDmEnabled}
-                              placeholder="Enter a fixed template response"
-                            />
-                          </div>
-                        )}
-                        <div className="mt-2">
-                          <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
-                          <input
-                            type="number"
-                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                            value={settingsData?.replyDmDelay || 0}
-                            onChange={(e) => setSettingsData({ ...settingsData, replyDmDelay: Number(e.target.value) })}
-                            disabled={!settingsData?.commentDmEnabled}
-                          />
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <Switch
-                            checked={settingsData?.keywordDmEnabled}
-                            onChange={(enabled) => setSettingsData({ ...settingsData, keywordDmEnabled: enabled })}
-                            className={`${settingsData?.keywordDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                          >
-                            <span className={`${settingsData?.keywordDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                          </Switch>
-                          <span className={`text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Keyword-Triggered DMs</span>
+                            {settingsData?.replyDmResponseType !== "template" ? (
+                              <TextAreaField
+                                label="AI Prompt"
+                                value={settingsData?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?"}
+                                onChange={(value) => setSettingsData({ ...settingsData, replyDmPrompt: value })}
+                                disabled={!settingsData?.commentDmEnabled}
+                                placeholder="Enter a prompt for the AI to generate a response"
+                                primaryColor={config.primaryColor}
+                              />
+                            ) : (
+                              <TextAreaField
+                                label="Template Response"
+                                value={settingsData?.replyDmTemplate || ""}
+                                onChange={(value) => setSettingsData({ ...settingsData, replyDmTemplate: value })}
+                                disabled={!settingsData?.commentDmEnabled}
+                                placeholder="Enter a fixed template response"
+                                primaryColor={config.primaryColor}
+                              />
+                            )}
+                            <div className="mt-2">
+                              <NumberField
+                                label="Delay (seconds)"
+                                value={settingsData?.replyDmDelay}
+                                onChange={(value) => setSettingsData({ ...settingsData, replyDmDelay: value })}
+                                disabled={!settingsData?.commentDmEnabled}
+                                primaryColor={config.primaryColor}
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="mt-4">
-                        <label className={`block text-sm font-medium mb-2 ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Keyword Triggers</label>
-                        <div className="space-y-3">
-                          {(settingsData?.keywordTriggers || []).map((trigger, index) => (
-                          <div key={index} className="flex gap-3 items-start">
-                              <div className="flex flex-col w-1/4">
-                                <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Keyword</label>
-                                <input
-                                  type="text"
-                                  className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                                  value={trigger.keyword}
-                                  onChange={(e) => {
-                                    const newTriggers = [...(settingsData?.keywordTriggers || [])];
-                                    newTriggers[index].keyword = e.target.value;
-                                    setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
-                                  }}
-                                  disabled={!settingsData?.commentDmEnabled}
-                                />
-                              </div>
-                              
-                              <div className="flex flex-col w-1/6">
-                                <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Type</label>
-                                <select
-                                  className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                                  value={trigger.responseType === "template" ? "template" : "prompt"}
-                                  onChange={(e) => {
-                                    const newTriggers = [...(settingsData?.keywordTriggers || [])];
-                                    newTriggers[index].responseType = e.target.value as "template" | "prompt";
-                                    setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
-                                  }}
-                                  disabled={!settingsData?.commentDmEnabled}
-                                >
-                                  <option value="prompt">AI Prompt</option>
-                                  <option value="template">Template</option>
-                                </select>
-                              </div>
-                              
-                            <div className="flex flex-col w-1/3">
-                              
-                              {trigger.responseType !== "template" ? (
-                                <div>
-                                  <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</label>
-                                  <div className="space-y-2">
-                                    <textarea
+
+                        {/* Keyword-Triggered DMs */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <ToggleSwitch
+                                checked={settingsData?.keywordDmEnabled}
+                                onChange={(enabled) => setSettingsData({ ...settingsData, keywordDmEnabled: enabled })}
+                                primaryColor={config.primaryColor}
+                                disabled={!settingsData?.commentDmEnabled}
+                              />
+                              <span className={`text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Keyword-Triggered DMs</span>
+                            </div>
+                          </div>
+                          <div className="mt-4">
+                            <label className={`block text-sm font-medium mb-2 ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Keyword Triggers</label>
+                            <div className="space-y-3">
+                              {(settingsData?.keywordTriggers || []).map((trigger, index) => (
+                                <div key={index} className="flex gap-3 items-start">
+                                  <div className="flex flex-col w-1/4">
+                                    <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Keyword</label>
+                                    <input
+                                      type="text"
                                       className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                                      value={trigger.prompt || ""}
+                                      value={trigger.keyword}
                                       onChange={(e) => {
                                         const newTriggers = [...(settingsData?.keywordTriggers || [])];
-                                        newTriggers[index].prompt = e.target.value;
+                                        newTriggers[index].keyword = e.target.value;
                                         setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
                                       }}
                                       disabled={!settingsData?.commentDmEnabled}
-                                      placeholder="Enter instructions for the AI to generate a response"
-                                      rows={3}
                                     />
-                                    <div className="text-xs text-gray-500 italic">
-                                      <p>Available variables: <span className="font-mono">{'{user}'}</span>, <span className="font-mono">{'{comment}'}</span>, <span className="font-mono">{'{keyword}'}</span></p>
-                                      <p>Example: "Respond to {'{user}'} who mentioned {'{keyword}'} in their comment: {'{comment}'}"</p>
-                                    </div>
                                   </div>
-                                </div>
-                              ) : (
-                                <div>
-                                  <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template</label>
-                                  <textarea
-                                    className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                                    value={trigger.template || ""}
-                                    onChange={(e) => {
+
+                                  <div className="flex flex-col w-1/6">
+                                    <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Type</label>
+                                    <select
+                                      className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                                      value={trigger.responseType === "template" ? "template" : "prompt"}
+                                      onChange={(e) => {
+                                        const newTriggers = [...(settingsData?.keywordTriggers || [])];
+                                        newTriggers[index].responseType = e.target.value as "template" | "prompt";
+                                        setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
+                                      }}
+                                      disabled={!settingsData?.commentDmEnabled}
+                                    >
+                                      <option value="prompt">AI Prompt</option>
+                                      <option value="template">Template</option>
+                                    </select>
+                                  </div>
+
+                                  <div className="flex flex-col w-1/3">
+                                    {trigger.responseType !== "template" ? (
+                                      <div>
+                                        <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</label>
+                                        <div className="space-y-2">
+                                          <textarea
+                                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                                            value={trigger.prompt || ""}
+                                            onChange={(e) => {
+                                              const newTriggers = [...(settingsData?.keywordTriggers || [])];
+                                              newTriggers[index].prompt = e.target.value;
+                                              setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
+                                            }}
+                                            disabled={!settingsData?.commentDmEnabled}
+                                            placeholder="Enter instructions for the AI to generate a response"
+                                            rows={3}
+                                          />
+                                          <div className="text-xs text-gray-500 italic">
+                                            <p>Available variables: <span className="font-mono">{'{user}'}</span>, <span className="font-mono">{'{comment}'}</span>, <span className="font-mono">{'{keyword}'}</span></p>
+                                            <p>Example: "Respond to {'{user}'} who mentioned {'{keyword}'} in their comment: {'{comment}'}"</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template</label>
+                                        <textarea
+                                          className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                                          value={trigger.template || ""}
+                                          onChange={(e) => {
+                                            const newTriggers = [...(settingsData?.keywordTriggers || [])];
+                                            newTriggers[index].template = e.target.value;
+                                            setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
+                                          }}
+                                          disabled={!settingsData?.commentDmEnabled}
+                                          placeholder="Enter a fixed response"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col w-1/6">
+                                    <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
+                                    <input
+                                      type="number"
+                                      className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                                      value={trigger.delay || 0}
+                                      onChange={(e) => {
+                                        const newTriggers = [...(settingsData?.keywordTriggers || [])];
+                                        newTriggers[index].delay = Number(e.target.value);
+                                        setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
+                                      }}
+                                      disabled={!settingsData?.commentDmEnabled}
+                                    />
+                                  </div>
+                                  <button
+                                    onClick={() => {
                                       const newTriggers = [...(settingsData?.keywordTriggers || [])];
-                                      newTriggers[index].template = e.target.value;
+                                      newTriggers.splice(index, 1);
                                       setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
                                     }}
+                                    className={`mt-4 p-1 rounded-full ${settingsData?.commentDmEnabled ? 'text-red-500 hover:text-white hover:bg-red-500' : 'text-gray-400'}`}
                                     disabled={!settingsData?.commentDmEnabled}
-                                    placeholder="Enter a fixed response"
-                                  />
+                                    title="Delete trigger"
+                                  >
+                                    <IconTrash className="w-6 h-6 mx-auto" />
+                                  </button>
                                 </div>
-                              )}
-                            </div>
-                              <div className="flex flex-col w-1/6">
-                                <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
-                                <input
-                                  type="number"
-                                  className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                                  value={trigger.delay || 0}
-                                  onChange={(e) => {
-                                    const newTriggers = [...(settingsData?.keywordTriggers || [])];
-                                    newTriggers[index].delay = Number(e.target.value);
-                                    setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
-                                  }}
-                                  disabled={!settingsData?.commentDmEnabled}
-                                />
-                              </div>
+                              ))}
                               <button
                                 onClick={() => {
-                                  const newTriggers = [...(settingsData?.keywordTriggers || [])];
-                                  newTriggers.splice(index, 1);
+                                  const newTriggers = [...(settingsData?.keywordTriggers || []), { keyword: '', prompt: '', delay: 0 }];
                                   setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
                                 }}
-                                className={`mt-4 p-1 rounded-full ${settingsData?.commentDmEnabled ? 'text-red-500 hover:text-white hover:bg-red-500' : 'text-gray-400'}`}
+                                className={`text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-blue-500 hover:text-blue-700' : 'text-gray-400'}`}
                                 disabled={!settingsData?.commentDmEnabled}
-                                title="Delete trigger"
                               >
-                                <IconTrash className="w-6 h-6 mx-auto" />
+                                + Add Keyword Trigger
                               </button>
                             </div>
-                          ))}
-                          <button
-                            onClick={() => {
-                              const newTriggers = [...(settingsData?.keywordTriggers || []), { keyword: '', prompt: '', delay: 0 }];
-                              setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
-                            }}
-                            className={`text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-blue-500 hover:text-blue-700' : 'text-gray-400'}`}
-                            disabled={!settingsData?.commentDmEnabled}
-                          >
-                            + Add Keyword Trigger
-                          </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="bg-white p-6 rounded-lg">
-                <div className="flex items-center justify-between p-0 bg-white rounded-lg mb-4">
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={settingsData?.likeDmEnabled}
-                      onChange={(enabled) => setSettingsData({ ...settingsData, likeDmEnabled: enabled })}
-                      className={`${settingsData?.likeDmEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                    >
-                      <span className={`${settingsData?.likeDmEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                    </Switch>
-                    <h3 className="text-lg font-semibold text-gray-900">Post Like DMs</h3>
-                  </div>
-                </div>
-                <div className="space-y-6">
-
-                  <div className={`space-y-6 ${!settingsData?.likeDmEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <Switch
-                            checked={settingsData?.likeDmFirstOnly}
-                            onChange={(enabled) => setSettingsData({ ...settingsData, likeDmFirstOnly: enabled })}
-                            className={`${settingsData?.likeDmFirstOnly ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                          >
-                            <span className={`${settingsData?.likeDmFirstOnly ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                          </Switch>
-                          <span className="text-sm font-medium text-gray-700">Send DM Only on First Like</span>
-                        </div>
+                  {/* Post Like DMs */}
+                  <div className="bg-white p-6 rounded-lg">
+                    <div className="flex items-center justify-between p-0 bg-white rounded-lg mb-4">
+                      <div className="flex items-center gap-3">
+                        <ToggleSwitch
+                          checked={settingsData?.likeDmEnabled}
+                          onChange={(enabled) => setSettingsData({ ...settingsData, likeDmEnabled: enabled })}
+                          primaryColor={config.primaryColor}
+                        />
+                        <h3 className="text-lg font-semibold text-gray-900">Post Like DMs</h3>
                       </div>
                     </div>
-
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Default Like DM Prompt</label>
-                          <textarea
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-                            value={settingsData?.likeDmPrompt || "Thanks for liking our post! We're glad you enjoyed it. How can we help you today?"}
-                            onChange={(e) => setSettingsData({ ...settingsData, likeDmPrompt: e.target.value })}
-                          />
+                    <div className="space-y-6">
+                      <div className={`space-y-6 ${!settingsData?.likeDmEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <ToggleSwitch
+                                checked={settingsData?.likeDmFirstOnly}
+                                onChange={(enabled) => setSettingsData({ ...settingsData, likeDmFirstOnly: enabled })}
+                                primaryColor={config.primaryColor}
+                                disabled={!settingsData?.likeDmEnabled}
+                              />
+                              <span className="text-sm font-medium text-gray-700">Send DM Only on First Like</span>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Default Delay (seconds)</label>
-                          <input
-                            type="number"
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                            value={settingsData?.likeDmDelay || 0}
-                            onChange={(e) => setSettingsData({ ...settingsData, likeDmDelay: Number(e.target.value) })}
-                          />
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <h4 className="text-sm font-medium text-gray-700 mb-4">Specific Post Settings</h4>
-                      <div className="space-y-4">
-                        {(settingsData?.likeDmSpecificPosts || []).map((post, index) => (
-                          <div key={index} className="flex flex-col gap-3 p-4 bg-white rounded-lg">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700">Post URL</label>
-                              <input
-                                type="text"
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="https://facebook.com/..."
-                                value={post.postUrl}
-                                onChange={(e) => {
-                                  const newPosts = [...(settingsData?.likeDmSpecificPosts || [])];
-                                  newPosts[index].postUrl = e.target.value;
-                                  setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
-                                }}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700">Custom Prompt (optional)</label>
-                              <textarea
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Leave empty to use default prompt"
-                                value={post.prompt}
-                                onChange={(e) => {
-                                  const newPosts = [...(settingsData?.likeDmSpecificPosts || [])];
-                                  newPosts[index].prompt = e.target.value;
-                                  setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
-                                }}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700">Custom Delay (seconds, optional)</label>
-                              <input
-                                type="number"
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Leave empty to use default delay"
-                                value={post.delay}
-                                onChange={(e) => {
-                                  const newPosts = [...(settingsData?.likeDmSpecificPosts || [])];
-                                  newPosts[index].delay = Number(e.target.value);
-                                  setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
-                                }}
-                              />
-                            </div>
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="space-y-4">
+                            <TextAreaField
+                              label="Default Like DM Prompt"
+                              value={settingsData?.likeDmPrompt || "Thanks for liking our post! We're glad you enjoyed it. How can we help you today?"}
+                              onChange={(value) => setSettingsData({ ...settingsData, likeDmPrompt: value })}
+                              disabled={!settingsData?.likeDmEnabled}
+                              primaryColor={config.primaryColor}
+                            />
+                            <NumberField
+                              label="Default Delay (seconds)"
+                              value={settingsData?.likeDmDelay}
+                              onChange={(value) => setSettingsData({ ...settingsData, likeDmDelay: value })}
+                              disabled={!settingsData?.likeDmEnabled}
+                              primaryColor={config.primaryColor}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-700 mb-4">Specific Post Settings</h4>
+                          <div className="space-y-4">
+                            {(settingsData?.likeDmSpecificPosts || []).map((post, index) => (
+                              <div key={index} className="flex flex-col gap-3 p-4 bg-white rounded-lg">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700">Post URL</label>
+                                  <input
+                                    type="text"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="https://facebook.com/..."
+                                    value={post.postUrl}
+                                    onChange={(e) => {
+                                      const newPosts = [...(settingsData?.likeDmSpecificPosts || [])];
+                                      newPosts[index].postUrl = e.target.value;
+                                      setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700">Custom Prompt (optional)</label>
+                                  <textarea
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Leave empty to use default prompt"
+                                    value={post.prompt}
+                                    onChange={(e) => {
+                                      const newPosts = [...(settingsData?.likeDmSpecificPosts || [])];
+                                      newPosts[index].prompt = e.target.value;
+                                      setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700">Custom Delay (seconds, optional)</label>
+                                  <input
+                                    type="number"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Leave empty to use default delay"
+                                    value={post.delay}
+                                    onChange={(e) => {
+                                      const newPosts = [...(settingsData?.likeDmSpecificPosts || [])];
+                                      newPosts[index].delay = Number(e.target.value);
+                                      setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
+                                    }}
+                                  />
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    const newPosts = [...(settingsData?.likeDmSpecificPosts || [])];
+                                    newPosts.splice(index, 1);
+                                    setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
+                                  }}
+                                  className="text-sm text-red-500 hover:text-red-700"
+                                >
+                                  Remove Post
+                                </button>
+                              </div>
+                            ))}
                             <button
                               onClick={() => {
-                                const newPosts = [...(settingsData?.likeDmSpecificPosts || [])];
-                                newPosts.splice(index, 1);
+                                const newPosts = [...(settingsData?.likeDmSpecificPosts || []), { postUrl: '', prompt: '', delay: undefined }];
                                 setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
                               }}
-                              className="text-sm text-red-500 hover:text-red-700"
+                              className="text-sm font-medium text-blue-500 hover:text-blue-700"
+                              disabled={!settingsData?.likeDmEnabled}
                             >
-                              Remove Post
+                              + Add Specific Post
                             </button>
                           </div>
-                        ))}
-                        <button
-                          onClick={() => {
-                            const newPosts = [...(settingsData?.likeDmSpecificPosts || []), { postUrl: '', prompt: '', delay: undefined }];
-                            setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
-                          }}
-                          className="text-sm font-medium text-blue-500 hover:text-blue-700"
-                        >
-                          + Add Specific Post
-                        </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )
+              }
             </div>
-          }
+          )}
         </div>
       </div>
     </div>
