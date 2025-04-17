@@ -420,17 +420,24 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
                               {trigger.responseType !== "template" ? (
                                 <div>
                                   <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</label>
-                                  <textarea
-                                    className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                                    value={trigger.prompt || ""}
-                                    onChange={(e) => {
-                                      const newTriggers = [...(settingsData?.keywordTriggers || [])];
-                                      newTriggers[index].prompt = e.target.value;
-                                      setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
-                                    }}
-                                    disabled={!settingsData?.commentDmEnabled}
-                                    placeholder="Enter a prompt for AI"
-                                  />
+                                  <div className="space-y-2">
+                                    <textarea
+                                      className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                                      value={trigger.prompt || ""}
+                                      onChange={(e) => {
+                                        const newTriggers = [...(settingsData?.keywordTriggers || [])];
+                                        newTriggers[index].prompt = e.target.value;
+                                        setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
+                                      }}
+                                      disabled={!settingsData?.commentDmEnabled}
+                                      placeholder="Enter instructions for the AI to generate a response"
+                                      rows={3}
+                                    />
+                                    <div className="text-xs text-gray-500 italic">
+                                      <p>Available variables: <span className="font-mono">{'{user}'}</span>, <span className="font-mono">{'{comment}'}</span>, <span className="font-mono">{'{keyword}'}</span></p>
+                                      <p>Example: "Respond to {'{user}'} who mentioned {'{keyword}'} in their comment: {'{comment}'}"</p>
+                                    </div>
+                                  </div>
                                 </div>
                               ) : (
                                 <div>

@@ -578,7 +578,25 @@ export async function POST(request: Request) {
 
             // Welcome DM for new customers
             if (isNewCustomer && facebookSettings?.welcomeDmEnabled) {
-              const response_text = facebookSettings?.welcomeDmPrompt || "Welcome! Thanks for engaging with our page. How can I help you today?";
+              let response_text;
+              
+              // Check if using template or AI prompt
+              if (facebookSettings?.welcomeDmResponseType === "template") {
+                // Use template response directly
+                response_text = facebookSettings?.welcomeDmTemplate || "Welcome to our page! How can I help you today?";
+              } else {
+                // Use AI prompt to generate a response
+                const promptText = facebookSettings?.welcomeDmPrompt || "Welcome! Thanks for engaging with our page. How can I help you today?";
+                
+                // Create a simple message history for the AI
+                const messages = [
+                  { role: "user", content: "New user has engaged with our page" }
+                ];
+                
+                // Generate AI response using the prompt
+                response_text = await getAIResponse(chatbotId, messages, "New user has engaged with our page", promptText);
+              }
+              
               const dmDelay = facebookSettings?.welcomeDmDelay || 0;
 
               if (dmDelay > 0) {
@@ -607,7 +625,31 @@ export async function POST(request: Request) {
               // Check if message contains any of the keywords
               for (const trigger of facebookSettings.keywordTriggers) {
                 if (message.toLowerCase().includes(trigger.keyword.trim().toLowerCase())) {
-                  const response_text = trigger.prompt || `You mentioned "${trigger.keyword}". How can I help you with that?`;
+                  let response_text;
+                  
+                  // Check if using template or AI prompt
+                  if (trigger.responseType === "template") {
+                    // Use template response directly
+                    response_text = trigger.template || `You mentioned "${trigger.keyword}". How can I help you with that?`;
+                  } else {
+                    // Use AI prompt to generate a response
+                    const promptText = trigger.prompt || `You mentioned "${trigger.keyword}". How can I help you with that?`;
+                    
+                    // Create a message history with the user's comment
+                    const messages = [
+                      { role: "user", content: message }
+                    ];
+                    
+                    // Replace variables in the prompt
+                    const processedPrompt = promptText
+                      .replace(/{user}/g, from_name)
+                      .replace(/{comment}/g, message)
+                      .replace(/{keyword}/g, trigger.keyword);
+                    
+                    // Generate AI response using the prompt
+                    response_text = await getAIResponse(chatbotId, messages, message, processedPrompt);
+                  }
+                  
                   const dmDelay = trigger.delay || 0;
                   isKeywordTriggered = true;
 
@@ -638,7 +680,30 @@ export async function POST(request: Request) {
             }
             // Reply DM for all comment authors
             if (!isNewCustomer && !isKeywordTriggered && facebookSettings?.replyDmEnabled) {
-              const response_text = facebookSettings?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?";
+              let response_text;
+              
+              // Check if using template or AI prompt
+              if (facebookSettings?.replyDmResponseType === "template") {
+                // Use template response directly
+                response_text = facebookSettings?.replyDmTemplate || "Thanks for your comment! How can I help you today?";
+              } else {
+                // Use AI prompt to generate a response
+                const promptText = facebookSettings?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?";
+                
+                // Create a message history with the user's comment
+                const messages = [
+                  { role: "user", content: message }
+                ];
+                
+                // Replace variables in the prompt if any
+                const processedPrompt = promptText
+                  .replace(/{user}/g, from_name)
+                  .replace(/{comment}/g, message);
+                
+                // Generate AI response using the prompt
+                response_text = await getAIResponse(chatbotId, messages, message, processedPrompt);
+              }
+              
               const dmDelay = facebookSettings?.replyDmDelay || 0;
 
               if (dmDelay > 0) {
