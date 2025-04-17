@@ -30,13 +30,23 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
     delay1?: number;
     commentDmEnabled?: boolean;
     welcomeDmEnabled?: boolean;
+    welcomeDmResponseType?: "template" | "prompt";
     welcomeDmPrompt?: string;
+    welcomeDmTemplate?: string;
     welcomeDmDelay?: number;
     replyDmEnabled?: boolean;
+    replyDmResponseType?: "template" | "prompt";
     replyDmPrompt?: string;
+    replyDmTemplate?: string;
     replyDmDelay?: number;
     keywordDmEnabled?: boolean;
-    keywordTriggers?: Array<{ keyword: string; prompt: string; delay?: number }>;
+    keywordTriggers?: Array<{ 
+      keyword: string; 
+      responseType?: "template" | "prompt";
+      prompt?: string; 
+      template?: string;
+      delay?: number 
+    }>;
     likeDmEnabled?: boolean;
     likeDmPrompt?: string;
     likeDmDelay?: number;
@@ -216,14 +226,56 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
                           <span className={`text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Send Welcome DM to New Users</span>
                         </div>
                       </div>
-                      <div className="mt-4">
-                        <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Welcome DM Template</label>
-                        <textarea
-                          className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                          value={settingsData?.welcomeDmPrompt || "Welcome! Thanks for engaging with our page. How can I help you today?"}
-                          onChange={(e) => setSettingsData({ ...settingsData, welcomeDmPrompt: e.target.value })}
-                          disabled={!settingsData?.commentDmEnabled}
-                        />
+                    <div className="mt-4">
+                      <div className="mb-3">
+                        <label className={`block text-sm font-medium mb-2 ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Response Type</label>
+                        <div className="flex gap-4">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              className="form-radio h-4 w-4 text-blue-600"
+                              checked={settingsData?.welcomeDmResponseType !== "template"}
+                              onChange={() => setSettingsData({ ...settingsData, welcomeDmResponseType: "prompt" })}
+                              disabled={!settingsData?.commentDmEnabled}
+                            />
+                            <span className={`ml-2 text-sm ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              className="form-radio h-4 w-4 text-blue-600"
+                              checked={settingsData?.welcomeDmResponseType === "template"}
+                              onChange={() => setSettingsData({ ...settingsData, welcomeDmResponseType: "template" })}
+                              disabled={!settingsData?.commentDmEnabled}
+                            />
+                            <span className={`ml-2 text-sm ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template Response</span>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      {settingsData?.welcomeDmResponseType !== "template" ? (
+                        <div>
+                          <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</label>
+                          <textarea
+                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                            value={settingsData?.welcomeDmPrompt || "Welcome! Thanks for engaging with our page. How can I help you today?"}
+                            onChange={(e) => setSettingsData({ ...settingsData, welcomeDmPrompt: e.target.value })}
+                            disabled={!settingsData?.commentDmEnabled}
+                            placeholder="Enter a prompt for the AI to generate a response"
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template Response</label>
+                          <textarea
+                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                            value={settingsData?.welcomeDmTemplate || ""}
+                            onChange={(e) => setSettingsData({ ...settingsData, welcomeDmTemplate: e.target.value })}
+                            disabled={!settingsData?.commentDmEnabled}
+                            placeholder="Enter a fixed template response"
+                          />
+                        </div>
+                      )}
                         <div className="mt-2">
                           <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
                           <input
@@ -251,13 +303,55 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
                         </div>
                       </div>
                       <div className="mt-4">
-                        <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Comment Reply DM Template</label>
-                        <textarea
-                          className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                          value={settingsData?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?"}
-                          onChange={(e) => setSettingsData({ ...settingsData, replyDmPrompt: e.target.value })}
-                          disabled={!settingsData?.commentDmEnabled}
-                        />
+                        <div className="mb-3">
+                          <label className={`block text-sm font-medium mb-2 ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Response Type</label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                className="form-radio h-4 w-4 text-blue-600"
+                                checked={settingsData?.replyDmResponseType !== "template"}
+                                onChange={() => setSettingsData({ ...settingsData, replyDmResponseType: "prompt" })}
+                                disabled={!settingsData?.commentDmEnabled}
+                              />
+                              <span className={`ml-2 text-sm ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</span>
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                className="form-radio h-4 w-4 text-blue-600"
+                                checked={settingsData?.replyDmResponseType === "template"}
+                                onChange={() => setSettingsData({ ...settingsData, replyDmResponseType: "template" })}
+                                disabled={!settingsData?.commentDmEnabled}
+                              />
+                              <span className={`ml-2 text-sm ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template Response</span>
+                            </label>
+                          </div>
+                        </div>
+                        
+                        {settingsData?.replyDmResponseType !== "template" ? (
+                          <div>
+                            <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</label>
+                            <textarea
+                              className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                              value={settingsData?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?"}
+                              onChange={(e) => setSettingsData({ ...settingsData, replyDmPrompt: e.target.value })}
+                              disabled={!settingsData?.commentDmEnabled}
+                              placeholder="Enter a prompt for the AI to generate a response"
+                            />
+                          </div>
+                        ) : (
+                          <div>
+                            <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template Response</label>
+                            <textarea
+                              className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                              value={settingsData?.replyDmTemplate || ""}
+                              onChange={(e) => setSettingsData({ ...settingsData, replyDmTemplate: e.target.value })}
+                              disabled={!settingsData?.commentDmEnabled}
+                              placeholder="Enter a fixed template response"
+                            />
+                          </div>
+                        )}
                         <div className="mt-2">
                           <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
                           <input
@@ -288,8 +382,8 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
                         <label className={`block text-sm font-medium mb-2 ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Keyword Triggers</label>
                         <div className="space-y-3">
                           {(settingsData?.keywordTriggers || []).map((trigger, index) => (
-                            <div key={index} className="flex gap-3 items-start">
-                              <div className="flex flex-col w-1/3">
+                          <div key={index} className="flex gap-3 items-start">
+                              <div className="flex flex-col w-1/4">
                                 <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Keyword</label>
                                 <input
                                   type="text"
@@ -303,19 +397,58 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
                                   disabled={!settingsData?.commentDmEnabled}
                                 />
                               </div>
-                              <div className="flex flex-col w-1/3">
-                                <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Response Message</label>
-                                <textarea
+                              
+                              <div className="flex flex-col w-1/6">
+                                <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Type</label>
+                                <select
                                   className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
-                                  value={trigger.prompt}
+                                  value={trigger.responseType === "template" ? "template" : "prompt"}
                                   onChange={(e) => {
                                     const newTriggers = [...(settingsData?.keywordTriggers || [])];
-                                    newTriggers[index].prompt = e.target.value;
+                                    newTriggers[index].responseType = e.target.value as "template" | "prompt";
                                     setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
                                   }}
                                   disabled={!settingsData?.commentDmEnabled}
-                                />
+                                >
+                                  <option value="prompt">AI Prompt</option>
+                                  <option value="template">Template</option>
+                                </select>
                               </div>
+                              
+                            <div className="flex flex-col w-1/3">
+                              
+                              {trigger.responseType !== "template" ? (
+                                <div>
+                                  <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>AI Prompt</label>
+                                  <textarea
+                                    className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                                    value={trigger.prompt || ""}
+                                    onChange={(e) => {
+                                      const newTriggers = [...(settingsData?.keywordTriggers || [])];
+                                      newTriggers[index].prompt = e.target.value;
+                                      setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
+                                    }}
+                                    disabled={!settingsData?.commentDmEnabled}
+                                    placeholder="Enter a prompt for AI"
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Template</label>
+                                  <textarea
+                                    className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 ${!settingsData?.commentDmEnabled ? 'bg-white' : ''}`}
+                                    value={trigger.template || ""}
+                                    onChange={(e) => {
+                                      const newTriggers = [...(settingsData?.keywordTriggers || [])];
+                                      newTriggers[index].template = e.target.value;
+                                      setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
+                                    }}
+                                    disabled={!settingsData?.commentDmEnabled}
+                                    placeholder="Enter a fixed response"
+                                  />
+                                </div>
+                              )}
+                            </div>
                               <div className="flex flex-col w-1/6">
                                 <label className={`block text-sm font-medium ${settingsData?.commentDmEnabled ? 'text-gray-700' : 'text-gray-400'}`}>Delay (seconds)</label>
                                 <input
