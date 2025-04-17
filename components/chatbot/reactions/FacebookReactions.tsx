@@ -23,6 +23,13 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const router = useRouter();
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [facebookPages, setFacebookPages] = useState<Array<{
+    _id: string;
+    pageId: string;
+    name: string;
+    access_token: string;
+  }>>([]);
+  const [selectedPageId, setSelectedPageId] = useState<string>("");
   const [settingsData, setSettingsData] = useState<{
     prompt?: string;
     delay?: number;
@@ -55,14 +62,45 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
   } | null>(null);
 
   useEffect(() => {
-    fetchSettings(chatbot.id);
+    fetchFacebookPages(chatbot.id);
     setIsConnected(!!chatbot?.integrations?.['messenger']);
   }, [chatbot]);
 
-  const fetchSettings = async (id: string) => {
+  const fetchFacebookPages = async (chatbotId: string) => {
     setIsFetchingSettings(true);
     try {
-      const response = await fetch(`/api/chatbot/integrations/facebook-page/settings-v1?chatbotId=${chatbot.id}`, {
+      const response = await fetch(`/api/chatbot/integrations/facebook-page?chatbotId=${chatbotId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch Facebook pages");
+      }
+
+      const pages = await response.json();
+      setFacebookPages(pages);
+      
+      // If there are pages, select the first one by default
+      if (pages.length > 0) {
+        setSelectedPageId(pages[0]._id);
+        await fetchSettings(pages[0]._id);
+      } else {
+        setIsFetchingSettings(false);
+      }
+    } catch (error) {
+      console.error("Error fetching Facebook pages:", error);
+      toast.error("Failed to fetch Facebook pages.");
+      setIsFetchingSettings(false);
+    }
+  };
+
+  const fetchSettings = async (pageId: string) => {
+    setIsFetchingSettings(true);
+    try {
+      const response = await fetch(`/api/chatbot/integrations/facebook-page/settings?_id=${pageId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -83,16 +121,19 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
   };
 
   const saveSettings = async () => {
+    if (!selectedPageId) {
+      toast.error("No Facebook page selected");
+      return;
+    }
+    
     setIsSavingSettings(true);
     try {
-      const response = await fetch(`/api/chatbot/integrations/facebook-page/settings-v1?chatbotId=${chatbot.id}`, {
+      const response = await fetch(`/api/chatbot/integrations/facebook-page/settings?_id=${selectedPageId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...settingsData
-        }),
+        body: JSON.stringify(settingsData),
       });
 
       const data = await response.json();
@@ -107,6 +148,12 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
       toast.error(error.message);
     }
     setIsSavingSettings(false);
+  };
+
+  const handlePageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const pageId = e.target.value;
+    setSelectedPageId(pageId);
+    await fetchSettings(pageId);
   };
 
   useEffect(() => {
@@ -149,6 +196,48 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
           </div>}
           {!isFetchingSettings &&
             <div className="flex flex-col gap-6">
+              {/* Page Selector */}
+              <div className="bg-white p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Facebook Page</h3>
+                <div className="space-y-4">
+                  {facebookPages.length === 0 ? (
+                    <p className="text-gray-500">No Facebook pages connected. Please connect a Facebook page first.</p>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Facebook Page</label>
+                        <select
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={selectedPageId}
+                          onChange={handlePageChange}
+                        >
+                          {facebookPages.map((page) => (
+                            <option key={page._id} value={page._id}>
+                              {page.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          onClick={saveSettings}
+                          disabled={isSavingSettings}
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          {isSavingSettings ? (
+                            <>
+                              <Spinner className="w-4 h-4 mr-2" />
+                              Saving...
+                            </>
+                          ) : (
+                            "Save Settings"
+                          )}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
               <div className="bg-white p-6 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Messenger Settings</h3>
                 <div className="space-y-4">
