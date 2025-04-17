@@ -606,7 +606,7 @@ export async function POST(request: Request) {
             if (!isNewCustomer && facebookSettings?.keywordDmEnabled && facebookSettings?.keywordTriggers?.length > 0) {
               // Check if message contains any of the keywords
               for (const trigger of facebookSettings.keywordTriggers) {
-                if (message.toLowerCase().includes(trigger.keyword.toLowerCase())) {
+                if (message.toLowerCase().includes(trigger.keyword.trim().toLowerCase())) {
                   const response_text = trigger.prompt || `You mentioned "${trigger.keyword}". How can I help you with that?`;
                   const dmDelay = trigger.delay || 0;
                   isKeywordTriggered = true;
