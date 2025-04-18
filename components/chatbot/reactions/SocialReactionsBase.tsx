@@ -174,19 +174,139 @@ export const useSocialReactions = (props: SocialReactionsProps) => {
     await fetchSettings(pageId);
   }, [fetchSettings]);
 
-  // Handle connect
+// Handle connect
   const handleConnect = useCallback(async () => {
     setIsConnecting(true);
-    try {
-      // TODO: Implement actual connection logic
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
-      setIsConnected(true);
-    } catch (error) {
-      console.error(`Failed to connect to ${platform}:`, error);
-    } finally {
-      setIsConnecting(false);
+    
+    // Different connection logic based on platform
+    if (platform === 'facebook') {
+      window.FB.login((response: any) => {
+        if (response.authResponse) {
+          const code = response.authResponse.code;
+          
+          fetch("/api/chatbot/integrations/facebook-page/save", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              code,
+              chatbotId: chatbot.id
+            }),
+          }).then((response) => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then((data) => {
+            setIsConnecting(false);
+            setIsConnected(true);
+            toast.success("Successfully connected to Messenger!");
+            window.location.reload(); // Refresh to show new pages
+          })
+          .catch((error) => {
+            setIsConnecting(false);
+            console.error("Error saving FB page credentials:", error);
+            toast.error("Failed to save FB page. Please check integration guide again.");
+          });
+        } else {
+          console.log(response);
+          toast.error("Something went wrong.");
+          setIsConnecting(false);
+        }
+      }, {
+        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE,
+        response_type: 'code',
+        override_default_response_type: true,
+        extras: {
+          setup: {},
+          featureType: '',
+          sessionInfoVersion: '2',
+        }
+      });
+    } else if (platform === 'instagram') {
+      window.FB.login((response: any) => {
+        if (response.authResponse) {
+          const accessToken = response.authResponse.accessToken;
+          
+          fetch("/api/chatbot/integrations/instagram-page/save", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user_access_token: accessToken,
+              chatbotId: chatbot.id
+            }),
+          }).then((response) => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then((data) => {
+            setIsConnecting(false);
+            setIsConnected(true);
+            toast.success("Successfully connected to Instagram!");
+            window.location.reload(); // Refresh to show new pages
+          })
+          .catch((error) => {
+            setIsConnecting(false);
+            console.error("Error saving Instagram credentials:", error);
+            toast.error("Failed to save Instagram page. Please check integration guide again.");
+          });
+        } else {
+          console.log(response);
+          toast.error("Something went wrong.");
+          setIsConnecting(false);
+        }
+      }, {
+        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_INSTAGRAM,
+        response_type: 'token,signed_request,graph_domain',
+        override_default_response_type: true,
+        extras: {
+          setup: {},
+          featureType: '',
+          sessionInfoVersion: '2',
+        }
+      });
+    } else if (platform === 'whatsapp') {
+      window.FB.login((response: any) => {
+        if (response.authResponse) {
+          const code = response.authResponse.code;
+          
+          // WhatsApp uses a different flow with embedded signup
+          // The actual saving happens in the message event listener in IntegrationsSection.tsx
+          // This just initiates the process
+          setIsConnecting(false);
+        } else {
+          console.log(response);
+          toast.error("Something went wrong.");
+          setIsConnecting(false);
+        }
+      }, {
+        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID,
+        response_type: 'code',
+        override_default_response_type: true,
+        extras: {
+          setup: {},
+          featureType: '',
+          sessionInfoVersion: '2',
+        }
+      });
+    } else {
+      // Default fallback for other platforms
+      try {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
+        setIsConnected(true);
+      } catch (error) {
+        console.error(`Failed to connect to ${platform}:`, error);
+      } finally {
+        setIsConnecting(false);
+      }
     }
-  }, [platform]);
+  }, [platform, chatbot.id]);
 
   // Initialize
   useEffect(() => {
