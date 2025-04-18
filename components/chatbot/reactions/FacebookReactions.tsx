@@ -340,7 +340,7 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
                                             placeholder="Enter instructions for the AI to generate a response"
                                             rows={3}
                                           />
-                                          <div className="text-xs text-gray-500 italic">
+                                          <div className="text-xs text-gray-500 italic hidden">
                                             <p>Available variables: <span className="font-mono">{'{user}'}</span>, <span className="font-mono">{'{comment}'}</span>, <span className="font-mono">{'{keyword}'}</span></p>
                                             <p>Example: "Respond to {'{user}'} who mentioned {'{keyword}'} in their comment: {'{comment}'}"</p>
                                           </div>
