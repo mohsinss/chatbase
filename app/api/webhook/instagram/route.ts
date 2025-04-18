@@ -330,7 +330,7 @@ async function handleMessengerMessage(instagramPage: any, chatbotId: string, sen
   }
 
   // Send typing indicator
-  await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
+  await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
 
   // Determine if we should use question flow
   let triggerQF = isNew;
@@ -393,8 +393,8 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
 
   // Send image if available
   if (nodeImage) {
-    await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
-    await sendImage(instagramPage.instagram_business_account, instagramPage.access_token, sender, nodeImage);
+    await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
+    await sendImage(instagramPage.pageId, instagramPage.access_token, sender, nodeImage);
     await sleep(2000);
 
     conversation.messages.push({
@@ -408,7 +408,7 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
 
   // Send buttons if available
   if (nodeOptions.length > 0) {
-    await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
+    await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
 
     // Create button payload for logging
     const buttonsPayloadForLogging = {
@@ -532,7 +532,7 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
       const nodeImage = nextNode.data.image || '';
 
       // Send typing indicator
-      await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
+      await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
 
       // Send message
       if (nodeMessage) {
@@ -542,8 +542,8 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
 
       // Send image if available
       if (nodeImage) {
-        await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
-        await sendImage(instagramPage.instagram_business_account, instagramPage.access_token, sender, nodeImage);
+        await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
+        await sendImage(instagramPage.pageId, instagramPage.access_token, sender, nodeImage);
         await sleep(2000);
 
         conversation.messages.push({
@@ -557,7 +557,7 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
 
       // Send buttons if available
       if (nodeOptions.length > 0) {
-        await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
+        await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
 
         // Create button payload for logging
         const buttonsPayloadForLogging = {
