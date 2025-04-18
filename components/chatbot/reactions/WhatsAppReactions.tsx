@@ -40,13 +40,15 @@ const WhatsAppReactions = ({ chatbot }: WhatsAppReactionsProps) => {
   // Use the shared hook for social reactions
   const {
     isFetchingSettings,
+    isConnecting,
     isSavingSettings,
     pages: whatsappNumbers,
     selectedPageId,
     settingsData,
     setSettingsData,
     saveSettings,
-    handlePageChange
+    handlePageChange,
+    handleConnect
   } = useSocialReactions(config);
 
   return (
@@ -54,11 +56,26 @@ const WhatsAppReactions = ({ chatbot }: WhatsAppReactionsProps) => {
       {/* Fixed WhatsApp header */}
       <div className="sticky top-0 z-10">
         <div className={config.headerBgClass + " text-white p-6"}>
-          <div className="flex items-center gap-3">
-            {config.headerIcon}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {config.headerIcon}
+              <div>
+                <h1 className="text-2xl font-semibold">{config.headerTitle}</h1>
+                <p className="mt-1 text-white/80">{config.headerDescription}</p>
+              </div>
+            </div>
             <div>
-              <h1 className="text-2xl font-semibold">{config.headerTitle}</h1>
-              <p className="mt-1 text-white/80">{config.headerDescription}</p>
+              <button
+                onClick={handleConnect}
+                disabled={isConnecting || whatsappNumbers.length !== 0}
+                className="px-4 py-2 bg-white text-green-600 rounded-md hover:bg-gray-100 transition-colors"
+              >
+                {whatsappNumbers.length !== 0 
+                  ? "Already Connected" 
+                  : isConnecting 
+                    ? "Connecting..." 
+                    : "Connect WhatsApp"}
+              </button>
             </div>
           </div>
         </div>
@@ -78,7 +95,16 @@ const WhatsAppReactions = ({ chatbot }: WhatsAppReactionsProps) => {
                 <SectionTitle>Select WhatsApp Number</SectionTitle>
                 <div className="space-y-4">
                   {whatsappNumbers.length === 0 ? (
-                    <p className="text-gray-500">No WhatsApp numbers connected. Please connect a WhatsApp number first.</p>
+                    <div className="space-y-4">
+                      <p className="text-gray-500">No WhatsApp numbers connected. Please connect a WhatsApp number first.</p>
+                      <button
+                        onClick={handleConnect}
+                        disabled={isConnecting}
+                        className="px-4 py-2 bg-[#25D366] text-white rounded-md hover:opacity-90 transition-colors"
+                      >
+                        {isConnecting ? "Connecting..." : "Connect WhatsApp Number"}
+                      </button>
+                    </div>
                   ) : (
                     <>
                       <div>
