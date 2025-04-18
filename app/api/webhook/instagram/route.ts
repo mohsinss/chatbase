@@ -31,15 +31,15 @@ function cleanupCache(): void {
     Array.from(cache.chatbots.entries()).forEach(([key, { timestamp }]) => {
       if (now - timestamp > CACHE_TTL) cache.chatbots.delete(key);
     });
-    
+
     Array.from(cache.datasets.entries()).forEach(([key, { timestamp }]) => {
       if (now - timestamp > CACHE_TTL) cache.datasets.delete(key);
     });
-    
+
     Array.from(cache.instagramPages.entries()).forEach(([key, { timestamp }]) => {
       if (now - timestamp > CACHE_TTL) cache.instagramPages.delete(key);
     });
-    
+
     cache.lastCleanup = now;
   }
 }
@@ -47,14 +47,14 @@ function cleanupCache(): void {
 // Helper function to get cached or fetch data
 async function getCachedOrFetch<T>(cacheMap: CacheMap<T>, key: string, fetchFn: () => Promise<T>): Promise<T> {
   cleanupCache();
-  
+
   if (cacheMap.has(key)) {
     const entry = cacheMap.get(key);
     if (entry && Date.now() - entry.timestamp < CACHE_TTL) {
       return entry.data;
     }
   }
-  
+
   const data = await fetchFn();
   cacheMap.set(key, { data, timestamp: Date.now() });
   return data;
@@ -150,22 +150,22 @@ async function sendImage(pageId: string, accessToken: string, recipientId: strin
 
 // Helper function to find or create conversation
 async function findOrCreateConversation(
-  chatbotId: string, 
-  platform: string, 
-  from: string, 
-  to: string, 
-  initialMessage: string | null = null, 
+  chatbotId: string,
+  platform: string,
+  from: string,
+  to: string,
+  initialMessage: string | null = null,
   metadata: Record<string, any> = {}
 ): Promise<{ conversation: any; isNew: boolean }> {
-  let conversation = await ChatbotConversation.findOne({ 
-    chatbotId, 
-    platform, 
-    "metadata.from": from, 
-    "metadata.to": to 
+  let conversation = await ChatbotConversation.findOne({
+    chatbotId,
+    platform,
+    "metadata.from": from,
+    "metadata.to": to
   });
-  
+
   let isNew = false;
-  
+
   if (!conversation) {
     isNew = true;
     conversation = new ChatbotConversation({
@@ -178,7 +178,7 @@ async function findOrCreateConversation(
   } else if (initialMessage) {
     conversation.messages.push({ role: "user", content: initialMessage });
   }
-  
+
   await conversation.save();
   return { conversation, isNew };
 }
@@ -209,7 +209,7 @@ export async function POST(request: Request) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
         });
-        
+
         if (!response.ok) {
           console.error(`Webhook logging error: ${response.status}`);
         }
@@ -225,23 +225,25 @@ export async function POST(request: Request) {
 
     await connectMongo();
 
+    let status = {};
+
     // Handle direct messages
     if (data.entry[0]?.messaging?.length > 0) {
-      await handleMessengerEvent(data);
+      status = await handleMessengerEvent(data);
     }
-    
+
     // Handle comments
     else if (data.entry[0]?.changes?.length > 0 && data.entry[0]?.changes[0]?.field == "comments") {
-      await handleCommentEvent(data);
+      status = await handleCommentEvent(data);
     }
-    
+
     // Handle likes
     else if (data.entry[0]?.changes?.length > 0 && data.entry[0]?.changes[0]?.field == "likes") {
-      await handleLikeEvent(data);
+      status = await handleLikeEvent(data);
     }
 
     // Respond with a 200 OK status
-    return NextResponse.json({ status: 'OK' }, { status: 200 });
+    return NextResponse.json(status, { status: 200 });
   } catch (error: any) {
     console.error('Error processing webhook event:', error);
 
@@ -256,7 +258,7 @@ export async function POST(request: Request) {
         console.error('Error logging webhook error:', logError);
       }
     }
-    
+
     // Always return 200 to Instagram to prevent retries
     return NextResponse.json({ error: error.message }, { status: 200 });
   }
@@ -268,20 +270,20 @@ async function handleMessengerEvent(data: any): Promise<any> {
   const page_id = data.entry[0].id;
   const sender = messaging.sender.id;
   const recipient = messaging.recipient.id;
-  
+
   // Skip if sender is the page itself
   if (page_id == sender) {
     return { status: "Skip for same source." };
   }
-  
+
   // Get Instagram page
   const instagramPage = await getInstagramPage(recipient);
   if (!instagramPage) {
     return { status: "Instagram page doesn't registered to the site." };
   }
-  
+
   const chatbotId = instagramPage.chatbotId;
-  
+
   // Handle text messages
   if (messaging.message?.text) {
     await handleMessengerMessage(instagramPage, chatbotId, sender, messaging);
@@ -297,46 +299,46 @@ async function handleMessengerMessage(instagramPage: any, chatbotId: string, sen
   const timestamp = messaging.timestamp;
   const text = messaging.message.text;
   const currentTimestamp = (new Date().getTime()) / 1000;
-  
+
   // Skip if message is too old
   if (timestamp + 60 < currentTimestamp) {
     return { status: 'Delivery denied due to long delay' };
   }
-  
+
   // Get settings and dataset
   const instagramSettings = await getSettings(instagramPage);
   const dataset = await getDataset(chatbotId);
-  
+
   // Apply delay if configured
   const delay = instagramSettings?.delay;
   if (delay && delay > 0) {
     await sleep(delay * 1000);
   }
-  
+
   // Find or create conversation
   const { conversation, isNew } = await findOrCreateConversation(
-    chatbotId, 
-    "instagram", 
-    sender, 
-    instagramPage.name, 
+    chatbotId,
+    "instagram",
+    sender,
+    instagramPage.name,
     text
   );
-  
+
   // Skip if auto-reply is disabled
   if (conversation?.disable_auto_reply) {
     return { status: "Auto response is disabled." };
   }
-  
+
   // Send typing indicator
   await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
-  
+
   // Determine if we should use question flow
   let triggerQF = isNew;
-  
+
   if (!isNew) {
     const { questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
     const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
-    
+
     // Check if last message was JSON (indicating a question flow)
     const lastMessageContent = conversation.messages[conversation.messages.length - 2]?.content;
     if (lastMessageContent) {
@@ -347,19 +349,19 @@ async function handleMessengerMessage(instagramPage: any, chatbotId: string, sen
         // Not JSON, continue
       }
     }
-    
+
     // Check if conversation is old enough to restart question flow
     const lastMessageTimestamp = conversation.updatedAt.getTime() / 1000;
     if (currentTimestamp - lastMessageTimestamp > restartQFTimeoutMins * 60) {
       triggerQF = true;
     }
-    
+
     // Force question flow if AI responses are disabled
     if (!isAiResponseEnabled) {
       triggerQF = true;
     }
   }
-  
+
   // Use question flow if enabled and triggered
   if (dataset.questionFlowEnable && dataset.questionFlow && triggerQF) {
     await handleQuestionFlow(instagramPage, sender, dataset.questionFlow, conversation);
@@ -371,30 +373,30 @@ async function handleMessengerMessage(instagramPage: any, chatbotId: string, sen
 // Handle question flow for Messenger
 async function handleQuestionFlow(instagramPage: any, sender: string, questionFlow: any, conversation: any): Promise<void> {
   const { nodes, edges } = questionFlow;
-  
+
   // Find the top parent node (node with no incoming edges)
   //@ts-ignore
   const childNodeIds = new Set(edges.map(edge => edge.target));
   //@ts-ignore
   const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
-  
+
   const nodeMessage = topParentNode.data.message || '';
   const nodeOptions = topParentNode.data.options || [];
   const nodeQuestion = topParentNode.data.question || '';
   const nodeImage = topParentNode.data.image || '';
-  
+
   // Send initial message
   if (nodeMessage) {
     await sendMessage(instagramPage.pageId, instagramPage.access_token, sender, nodeMessage);
     conversation.messages.push({ role: "assistant", content: nodeMessage });
   }
-  
+
   // Send image if available
   if (nodeImage) {
     await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
     await sendImage(instagramPage.pageId, instagramPage.access_token, sender, nodeImage);
     await sleep(2000);
-    
+
     conversation.messages.push({
       role: "assistant",
       content: JSON.stringify({
@@ -403,11 +405,11 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
       })
     });
   }
-  
+
   // Send buttons if available
   if (nodeOptions.length > 0) {
     await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
-    
+
     // Create button payload for logging
     const buttonsPayloadForLogging = {
       type: "interactive",
@@ -425,7 +427,7 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
         }
       }
     };
-    
+
     // Send buttons to Instagram
     await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
       recipient: { id: sender },
@@ -446,38 +448,38 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
     }, {
       headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
     });
-    
+
     conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
   }
-  
+
   await conversation.save();
 }
 
 // Handle AI response for Messenger
 async function handleAIResponse(
-  instagramPage: any, 
-  chatbotId: string, 
-  sender: string, 
-  text: string, 
-  conversation: any, 
+  instagramPage: any,
+  chatbotId: string,
+  sender: string,
+  text: string,
+  conversation: any,
   prompt: string
 ): Promise<void> {
   // Get recent messages (last hour)
   const oneHourAgo = Date.now() - (60 * 60 * 1000);
   //@ts-ignore
   let messages = conversation.messages.filter(msg => new Date(msg.timestamp).getTime() >= oneHourAgo);
-  
+
   // Ensure at least the current message is included
   if (messages.length === 0) {
     messages = [{ role: 'user', content: text }];
   }
-  
+
   // Get AI response
   const response_text = await getAIResponse(chatbotId, messages, text, prompt);
-  
+
   // Send response
   await sendMessage(instagramPage.pageId, instagramPage.access_token, sender, response_text);
-  
+
   // Update conversation
   conversation.messages.push({ role: "assistant", content: response_text });
   await conversation.save();
@@ -487,63 +489,63 @@ async function handleAIResponse(
 async function handleMessengerPostback(instagramPage: any, chatbotId: string, sender: string, messaging: any): Promise<void> {
   const text = messaging.postback.title;
   const button_id = messaging.postback.payload;
-  
+
   // Parse node ID and option index from payload
   const node_id = button_id.split('-')[0];
   const option_index = button_id.split('-').pop();
-  
+
   // Get settings and dataset
   const instagramSettings = await getSettings(instagramPage);
   const dataset = await getDataset(chatbotId);
-  
+
   // Apply delay if configured
   const delay = instagramSettings?.delay;
   if (delay && delay > 0) {
     await sleep(delay * 1000);
   }
-  
+
   // Find or create conversation
   const { conversation } = await findOrCreateConversation(
-    chatbotId, 
-    "instagram", 
-    sender, 
-    instagramPage.name, 
+    chatbotId,
+    "instagram",
+    sender,
+    instagramPage.name,
     text
   );
-  
+
   // Process question flow if enabled
   if (dataset.questionFlowEnable && dataset.questionFlow) {
-    const { nodes, edges } = (dataset.questionFlow && dataset.questionFlow.nodes && dataset.questionFlow.edges) 
-      ? dataset.questionFlow 
+    const { nodes, edges } = (dataset.questionFlow && dataset.questionFlow.nodes && dataset.questionFlow.edges)
+      ? dataset.questionFlow
       : sampleFlow;
-    
+
     // Find the next node based on the selected option
     //@ts-ignore
     const nextEdge = edges.find(edge => edge.source === node_id && edge.sourceHandle === option_index);
     //@ts-ignore
     const nextNode = nodes.find(node => node.id === nextEdge?.target);
-    
+
     if (nextNode) {
       const nodeMessage = nextNode.data.message || '';
       const nodeQuestion = nextNode.data.question || '';
       const nodeOptions = nextNode.data.options || [];
       const nodeImage = nextNode.data.image || '';
-      
+
       // Send typing indicator
       await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
-      
+
       // Send message
       if (nodeMessage) {
         await sendMessage(instagramPage.pageId, instagramPage.access_token, sender, nodeMessage);
         conversation.messages.push({ role: "assistant", content: nodeMessage });
       }
-      
+
       // Send image if available
       if (nodeImage) {
         await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
         await sendImage(instagramPage.pageId, instagramPage.access_token, sender, nodeImage);
         await sleep(2000);
-        
+
         conversation.messages.push({
           role: "assistant",
           content: JSON.stringify({
@@ -552,11 +554,11 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
           })
         });
       }
-      
+
       // Send buttons if available
       if (nodeOptions.length > 0) {
         await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
-        
+
         // Create button payload for logging
         const buttonsPayloadForLogging = {
           type: "interactive",
@@ -574,7 +576,7 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
             }
           }
         };
-        
+
         // Send buttons to Instagram
         await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
           recipient: { id: sender },
@@ -595,10 +597,10 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
         }, {
           headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
-        
+
         conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
       }
-      
+
       await conversation.save();
     }
   }
@@ -613,25 +615,25 @@ async function handleCommentEvent(data: any): Promise<any> {
   const comment_id = data.entry[0].changes[0].value.id;
   const parent_id = data.entry[0].changes[0].value.parent_id;
   const text = data.entry[0].changes[0].value.text;
-  
+
   // Skip if comment is from the page itself
   if (page_id == from) {
     return { status: "Skip for same source." };
   }
-  
+
   // Skip replies to comments
   if (parent_id) {
     return { status: "Skip for reply comments." };
   }
-  
+
   // Get Instagram page
   const instagramPage = await getInstagramPage(page_id);
   if (!instagramPage) {
     return { status: "Instagram page doesn't registered to the site." };
   }
-  
+
   const chatbotId = instagramPage.chatbotId;
-  
+
   // Find or create conversation
   const { conversation, isNew } = await findOrCreateConversation(
     chatbotId,
@@ -641,46 +643,46 @@ async function handleCommentEvent(data: any): Promise<any> {
     text,
     { from_name, page_id, comment_id }
   );
-  
+
   // Skip if auto-reply is disabled
   if (conversation?.disable_auto_reply) {
     return { status: "Auto response is disabled." };
   }
-  
+
   // Get settings
   const instagramSettings = await getSettings(instagramPage);
-  
+
   // Handle DM reactions based on comment
   if (instagramSettings?.commentDmEnabled) {
     await handleCommentDM(instagramPage, chatbotId, from, from_name, text, isNew, instagramSettings);
   }
-  
+
   // Handle comment reply
   const oneHourAgo = Date.now() - (60 * 60 * 1000);
   //@ts-ignore
   let messages = conversation.messages.filter(msg => new Date(msg.timestamp).getTime() >= oneHourAgo);
-  
+
   // Ensure at least the current message is included
   if (messages.length === 0) {
     messages = [{ role: 'user', content: text }];
   }
-  
+
   // Get AI response
   const response_text = await getAIResponse(chatbotId, messages, text, instagramSettings?.prompt1);
-  
+
   // Apply delay if configured
   const delay = instagramSettings?.delay1;
   if (delay && delay > 0) {
     await sleep(delay * 1000);
   }
-  
+
   // Reply to the comment
   await axios.post(`https://graph.facebook.com/v22.0/${comment_id}/replies?access_token=${instagramPage.access_token}`, {
     message: `@${from_name} ${response_text}`
   }, {
     headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
   });
-  
+
   // Update conversation
   conversation.messages.push({ role: "assistant", content: response_text });
   await conversation.save();
@@ -688,12 +690,12 @@ async function handleCommentEvent(data: any): Promise<any> {
 
 // Handle DM reactions to comments
 async function handleCommentDM(
-  instagramPage: any, 
-  chatbotId: string, 
-  from: string, 
-  from_name: string, 
-  message: string, 
-  isNewCustomer: boolean, 
+  instagramPage: any,
+  chatbotId: string,
+  from: string,
+  from_name: string,
+  message: string,
+  isNewCustomer: boolean,
   instagramSettings: any
 ): Promise<void> {
   // Find or create messenger conversation
@@ -703,10 +705,10 @@ async function handleCommentDM(
     from,
     instagramPage.name
   );
-  
+
   let isKeywordTriggered = false;
   let response_text = "";
-  
+
   // Welcome DM for new customers
   if (isNewCustomer && instagramSettings?.welcomeDmEnabled) {
     if (instagramSettings?.welcomeDmResponseType === "template") {
@@ -718,12 +720,12 @@ async function handleCommentDM(
       const messages = [{ role: "user", content: "New user has engaged with our page" }];
       response_text = await getAIResponse(chatbotId, messages, "New user has engaged with our page", promptText);
     }
-    
+
     const dmDelay = instagramSettings?.welcomeDmDelay || 0;
     if (dmDelay > 0) {
       await sleep(dmDelay * 1000);
     }
-    
+
     // Send DM
     await sendMessage(instagramPage.pageId, instagramPage.access_token, from, response_text);
     conversation.messages.push({ role: "assistant", content: response_text });
@@ -741,28 +743,28 @@ async function handleCommentDM(
           // Use AI prompt
           const promptText = trigger.prompt || `You mentioned "${trigger.keyword}". How can I help you with that?`;
           const messages = [{ role: "user", content: message }];
-          
+
           // Replace variables in prompt
           const processedPrompt = promptText
             .replace(/{user}/g, from_name)
             .replace(/{comment}/g, message)
             .replace(/{keyword}/g, trigger.keyword);
-          
+
           response_text = await getAIResponse(chatbotId, messages, message, processedPrompt);
         }
-        
+
         const dmDelay = trigger.delay || 0;
         isKeywordTriggered = true;
-        
+
         if (dmDelay > 0) {
           await sleep(dmDelay * 1000);
         }
-        
+
         // Send DM
         await sendMessage(instagramPage.pageId, instagramPage.access_token, from, response_text);
         conversation.messages.push({ role: "assistant", content: response_text });
         await conversation.save();
-        
+
         // Only trigger on first matching keyword
         break;
       }
@@ -777,20 +779,20 @@ async function handleCommentDM(
       // Use AI prompt
       const promptText = instagramSettings?.replyDmPrompt || "Thanks for your comment! I'd love to continue this conversation in DM. How can I assist you?";
       const messages = [{ role: "user", content: message }];
-      
+
       // Replace variables in prompt
       const processedPrompt = promptText
         .replace(/{user}/g, from_name)
         .replace(/{comment}/g, message);
-      
+
       response_text = await getAIResponse(chatbotId, messages, message, processedPrompt);
     }
-    
+
     const dmDelay = instagramSettings?.replyDmDelay || 0;
     if (dmDelay > 0) {
       await sleep(dmDelay * 1000);
     }
-    
+
     // Send DM
     await sendMessage(instagramPage.pageId, instagramPage.access_token, from, response_text);
     conversation.messages.push({ role: "assistant", content: response_text });
@@ -803,16 +805,16 @@ async function handleLikeEvent(data: any): Promise<any> {
   const page_id = data.entry[0].id;
   const from = data.entry[0].changes[0].value.user_id;
   const media_id = data.entry[0].changes[0].value.media_id;
-  
+
   // Get Instagram page
   const instagramPage = await getInstagramPage(page_id);
   if (!instagramPage) {
     return { status: "Instagram page doesn't registered to the site." };
   }
-  
+
   const chatbotId = instagramPage.chatbotId;
   const instagramSettings = await getSettings(instagramPage);
-  
+
   // Only process if like DMs are enabled
   if (instagramSettings?.likeDmEnabled) {
     // Check if we should only send DM on first like
@@ -871,6 +873,6 @@ async function handleLikeEvent(data: any): Promise<any> {
 
     return { status: "Like DM sent." };
   }
-  
+
   return { status: "Like DM not enabled." };
 }
