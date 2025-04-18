@@ -61,11 +61,11 @@ async function getCachedOrFetch<T>(cacheMap: CacheMap<T>, key: string, fetchFn: 
 }
 
 // Helper function to get Instagram page
-async function getInstagramPage(pageId: string): Promise<any> {
+async function getInstagramPage(instagram_business_account: string): Promise<any> {
   return getCachedOrFetch(
     cache.instagramPages,
-    pageId,
-    async () => await InstagramPage.findOne({ pageId })
+    instagram_business_account,
+    async () => await InstagramPage.findOne({ instagram_business_account })
   );
 }
 
@@ -93,9 +93,9 @@ async function getSettings(instagramPage: any): Promise<any> {
 }
 
 // Helper function to send typing indicator
-async function sendTypingIndicator(pageId: string, accessToken: string, recipientId: string): Promise<void> {
+async function sendTypingIndicator(instagram_business_account: string, accessToken: string, recipientId: string): Promise<void> {
   try {
-    await axios.post(`https://graph.facebook.com/v22.0/${pageId}/messages?access_token=${accessToken}`, {
+    await axios.post(`https://graph.facebook.com/v22.0/${instagram_business_account}/messages?access_token=${accessToken}`, {
       recipient: { id: recipientId },
       sender_action: "typing_on"
     }, {
@@ -108,9 +108,9 @@ async function sendTypingIndicator(pageId: string, accessToken: string, recipien
 }
 
 // Helper function to send message
-async function sendMessage(pageId: string, accessToken: string, recipientId: string, text: string): Promise<boolean> {
+async function sendMessage(instagram_business_account: string, accessToken: string, recipientId: string, text: string): Promise<boolean> {
   try {
-    await axios.post(`https://graph.facebook.com/v22.0/${pageId}/messages?access_token=${accessToken}`, {
+    await axios.post(`https://graph.facebook.com/v22.0/${instagram_business_account}/messages?access_token=${accessToken}`, {
       recipient: { id: recipientId },
       message: { text },
       messaging_type: "RESPONSE",
@@ -125,9 +125,9 @@ async function sendMessage(pageId: string, accessToken: string, recipientId: str
 }
 
 // Helper function to send image
-async function sendImage(pageId: string, accessToken: string, recipientId: string, imageUrl: string): Promise<boolean> {
+async function sendImage(instagram_business_account: string, accessToken: string, recipientId: string, imageUrl: string): Promise<boolean> {
   try {
-    await axios.post(`https://graph.facebook.com/v22.0/${pageId}/messages?access_token=${accessToken}`, {
+    await axios.post(`https://graph.facebook.com/v22.0/${instagram_business_account}/messages?access_token=${accessToken}`, {
       recipient: { id: recipientId },
       message: {
         attachment: {
@@ -267,12 +267,12 @@ export async function POST(request: Request) {
 // Handle Messenger events (messages and postbacks)
 async function handleMessengerEvent(data: any): Promise<any> {
   const messaging = data.entry[0].messaging[0];
-  const page_id = data.entry[0].id;
+  const instagram_business_account = data.entry[0].id;
   const sender = messaging.sender.id;
   const recipient = messaging.recipient.id;
 
   // Skip if sender is the page itself
-  if (page_id == sender) {
+  if (instagram_business_account == sender) {
     return { status: "Skip for same source." };
   }
 
@@ -330,7 +330,7 @@ async function handleMessengerMessage(instagramPage: any, chatbotId: string, sen
   }
 
   // Send typing indicator
-  await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
+  await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
 
   // Determine if we should use question flow
   let triggerQF = isNew;
@@ -387,14 +387,14 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
 
   // Send initial message
   if (nodeMessage) {
-    await sendMessage(instagramPage.pageId, instagramPage.access_token, sender, nodeMessage);
+    await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, sender, nodeMessage);
     conversation.messages.push({ role: "assistant", content: nodeMessage });
   }
 
   // Send image if available
   if (nodeImage) {
-    await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
-    await sendImage(instagramPage.pageId, instagramPage.access_token, sender, nodeImage);
+    await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
+    await sendImage(instagramPage.instagram_business_account, instagramPage.access_token, sender, nodeImage);
     await sleep(2000);
 
     conversation.messages.push({
@@ -408,7 +408,7 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
 
   // Send buttons if available
   if (nodeOptions.length > 0) {
-    await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
+    await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
 
     // Create button payload for logging
     const buttonsPayloadForLogging = {
@@ -429,7 +429,7 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
     };
 
     // Send buttons to Instagram
-    await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+    await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.instagram_business_account}/messages?access_token=${instagramPage.access_token}`, {
       recipient: { id: sender },
       message: {
         attachment: {
@@ -478,7 +478,7 @@ async function handleAIResponse(
   const response_text = await getAIResponse(chatbotId, messages, text, prompt);
 
   // Send response
-  await sendMessage(instagramPage.pageId, instagramPage.access_token, sender, response_text);
+  await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, sender, response_text);
 
   // Update conversation
   conversation.messages.push({ role: "assistant", content: response_text });
@@ -532,18 +532,18 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
       const nodeImage = nextNode.data.image || '';
 
       // Send typing indicator
-      await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
+      await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
 
       // Send message
       if (nodeMessage) {
-        await sendMessage(instagramPage.pageId, instagramPage.access_token, sender, nodeMessage);
+        await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, sender, nodeMessage);
         conversation.messages.push({ role: "assistant", content: nodeMessage });
       }
 
       // Send image if available
       if (nodeImage) {
-        await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
-        await sendImage(instagramPage.pageId, instagramPage.access_token, sender, nodeImage);
+        await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
+        await sendImage(instagramPage.instagram_business_account, instagramPage.access_token, sender, nodeImage);
         await sleep(2000);
 
         conversation.messages.push({
@@ -557,7 +557,7 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
 
       // Send buttons if available
       if (nodeOptions.length > 0) {
-        await sendTypingIndicator(instagramPage.pageId, instagramPage.access_token, sender);
+        await sendTypingIndicator(instagramPage.instagram_business_account, instagramPage.access_token, sender);
 
         // Create button payload for logging
         const buttonsPayloadForLogging = {
@@ -578,7 +578,7 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
         };
 
         // Send buttons to Instagram
-        await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
+        await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.instagram_business_account}/messages?access_token=${instagramPage.access_token}`, {
           recipient: { id: sender },
           message: {
             attachment: {
@@ -608,7 +608,7 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
 
 // Handle comment events
 async function handleCommentEvent(data: any): Promise<any> {
-  const page_id = data.entry[0].id;
+  const instagram_business_account = data.entry[0].id;
   const from = data.entry[0].changes[0].value.from.id;
   const from_name = data.entry[0].changes[0].value.from.username;
   const media_id = data.entry[0].changes[0].value.media_id;
@@ -617,7 +617,7 @@ async function handleCommentEvent(data: any): Promise<any> {
   const text = data.entry[0].changes[0].value.text;
 
   // Skip if comment is from the page itself
-  if (page_id == from) {
+  if (instagram_business_account == from) {
     return { status: "Skip for same source." };
   }
 
@@ -627,7 +627,7 @@ async function handleCommentEvent(data: any): Promise<any> {
   }
 
   // Get Instagram page
-  const instagramPage = await getInstagramPage(page_id);
+  const instagramPage = await getInstagramPage(instagram_business_account);
   if (!instagramPage) {
     return { status: "Instagram page doesn't registered to the site." };
   }
@@ -641,7 +641,7 @@ async function handleCommentEvent(data: any): Promise<any> {
     from,
     media_id,
     text,
-    { from_name, page_id, comment_id }
+    { from_name, instagram_business_account, comment_id }
   );
 
   // Skip if auto-reply is disabled
@@ -727,7 +727,7 @@ async function handleCommentDM(
     }
 
     // Send DM
-    await sendMessage(instagramPage.pageId, instagramPage.access_token, from, response_text);
+    await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, from, response_text);
     conversation.messages.push({ role: "assistant", content: response_text });
     await conversation.save();
   }
@@ -761,7 +761,7 @@ async function handleCommentDM(
         }
 
         // Send DM
-        await sendMessage(instagramPage.pageId, instagramPage.access_token, from, response_text);
+        await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, from, response_text);
         conversation.messages.push({ role: "assistant", content: response_text });
         await conversation.save();
 
@@ -794,7 +794,7 @@ async function handleCommentDM(
     }
 
     // Send DM
-    await sendMessage(instagramPage.pageId, instagramPage.access_token, from, response_text);
+    await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, from, response_text);
     conversation.messages.push({ role: "assistant", content: response_text });
     await conversation.save();
   }
@@ -802,12 +802,12 @@ async function handleCommentDM(
 
 // Handle like events
 async function handleLikeEvent(data: any): Promise<any> {
-  const page_id = data.entry[0].id;
+  const instagram_business_account = data.entry[0].id;
   const from = data.entry[0].changes[0].value.user_id;
   const media_id = data.entry[0].changes[0].value.media_id;
 
   // Get Instagram page
-  const instagramPage = await getInstagramPage(page_id);
+  const instagramPage = await getInstagramPage(instagram_business_account);
   if (!instagramPage) {
     return { status: "Instagram page doesn't registered to the site." };
   }
@@ -865,7 +865,7 @@ async function handleLikeEvent(data: any): Promise<any> {
     }
 
     // Send Direct Message (DM) to the user
-    await sendMessage(instagramPage.pageId, instagramPage.access_token, from, promptText);
+    await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, from, promptText);
 
     // Update conversation
     conversation.messages.push({ role: "assistant", content: promptText });
