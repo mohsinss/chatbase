@@ -287,23 +287,24 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
         fetchPhoneNumbers();
     };
 
-    const fbLoginCallback = (response: any) => {
-        if (response.authResponse) {
-            const code = response.authResponse.code;
-            console.log(code)
-        } else {
-            console.log(response)
-            setIsConnecting(false);
-        }
-    }
-
     const handleConnect = () => {
         setIsConnecting(true);
 
-        window.FB.login(fbLoginCallback, {
-            config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID, // configuration ID goes here
-            response_type: 'code', // must be set to 'code' for System User access token
-            override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
+        window.FB.login((response: any) => {
+            if (response.authResponse) {
+                const code = response.authResponse.code;
+                console.log(code);
+                // WhatsApp uses a different flow with embedded signup
+                // The actual saving happens in the message event listener
+            } else {
+                console.log(response);
+                toast.error("Something went wrong with the connection.");
+                setIsConnecting(false);
+            }
+        }, {
+            config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID,
+            response_type: 'code',
+            override_default_response_type: true,
             extras: {
                 setup: {},
                 featureType: '',
