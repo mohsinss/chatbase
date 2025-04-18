@@ -156,25 +156,28 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
         fetchPages();
     }, []);
 
-    const fbLoginCallbackForFB = (response: any) => {
-        if (response.authResponse) {
-            const code = response.authResponse.code;
+    const handleConnect = () => {
+        setIsConnecting(true);
 
-            fetch("/api/chatbot/integrations/facebook-page/save", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    code,
-                    chatbotId
-                }),
-            }).then((response) => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
+        window.FB.login((response: any) => {
+            if (response.authResponse) {
+                const code = response.authResponse.code;
+
+                fetch("/api/chatbot/integrations/facebook-page/save", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        code,
+                        chatbotId
+                    }),
+                }).then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then((data) => {
                     setIsConnecting(false);
                     fetchPages();
@@ -185,20 +188,15 @@ const MessengerManagement = ({ chatbotId, domain, teamId }:
                     console.error("Error saving FB page credentials:", error);
                     toast.error("Failed to save FB page. Please check integration guide again.");
                 });
-        } else {
-            console.log(response);
-            toast.error("Sth went wrong.");
-            setIsConnecting(false);
-        }
-    }
-
-    const handleConnect = () => {
-        setIsConnecting(true);
-
-        window.FB.login(fbLoginCallbackForFB, {
-            config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE, // configuration ID goes here
-            response_type: 'code', // must be set to 'code' for System User access token
-            override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
+            } else {
+                console.log(response);
+                toast.error("Something went wrong with the connection.");
+                setIsConnecting(false);
+            }
+        }, {
+            config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE,
+            response_type: 'code',
+            override_default_response_type: true,
             extras: {
                 setup: {},
                 featureType: '',
