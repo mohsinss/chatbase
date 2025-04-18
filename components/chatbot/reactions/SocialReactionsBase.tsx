@@ -10,6 +10,7 @@ export interface SocialPage {
   _id: string;
   pageId: string;
   name: string;
+  display_phone_number?: string;
   access_token: string;
 }
 
