@@ -66,9 +66,8 @@ export async function POST(request: Request) {
 
             const chatbotId = whatsappNumber.chatbotId;
 
-            const chatbot = await Chatbot.findOne({ chatbotId });
-            // Get WhatsApp reaction settings from chatbot
-            const whatsappSettings = chatbot.settings?.whatsapp || {};
+            // Get WhatsApp settings from WhatsAppNumber model instead of Chatbot model
+            const whatsappSettings = whatsappNumber.settings || {};
             const { prompt: updatedPrompt, delay } = whatsappSettings;
 
             // Apply delay if configured
@@ -217,13 +216,32 @@ export async function POST(request: Request) {
                 await conversation.save();
               }
             } else {
+              // Get all messages from the conversation for the last hour
+              // Use all messages if timestamp is not available
               const oneHourAgo = Date.now() - (60 * 60 * 1000);
-              //@ts-ignore
-              let messages = conversation.messages.filter(msg => new Date(msg.timestamp).getTime() >= oneHourAgo);
-      
-              // Ensure at least the current message is included if no recent messages exist
-              if (messages.length === 0) {
-                messages = [{ role: 'user', content: text }];
+              let messages = conversation.messages;
+              
+              // If there are too many messages, limit to the last hour or at least the last 10 messages
+              if (messages.length > 20) {
+                try {
+                  // Try to filter by timestamp if available
+                  const recentMessages = messages.filter((msg: any) => {
+                    // Try different timestamp fields that might exist
+                    const msgTime = msg.timestamp || msg.createdAt || null;
+                    return msgTime ? new Date(msgTime).getTime() >= oneHourAgo : true;
+                  });
+                  
+                  // If we have recent messages, use them, otherwise use the last 10 messages
+                  messages = recentMessages.length > 0 ? recentMessages : messages.slice(-10);
+                } catch (e) {
+                  // If any error occurs, fallback to the last 10 messages
+                  messages = messages.slice(-10);
+                }
+              }
+              
+              // Ensure the current message is included
+              if (!messages.some((msg: any) => msg.role === 'user' && msg.content === text)) {
+                messages.push({ role: 'user', content: text });
               }
               const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
 
@@ -269,9 +287,8 @@ export async function POST(request: Request) {
 
               const chatbotId = whatsappNumber.chatbotId;
 
-              const chatbot = await Chatbot.findOne({ chatbotId });
-              // Get WhatsApp reaction settings from chatbot
-              const whatsappSettings = chatbot.settings?.whatsapp || {};
+              // Get WhatsApp settings from WhatsAppNumber model instead of Chatbot model
+              const whatsappSettings = whatsappNumber.settings || {};
               const { prompt: updatedPrompt, delay } = whatsappSettings;
 
               // Apply delay if configured
