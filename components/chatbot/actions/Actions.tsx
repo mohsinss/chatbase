@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import Calcom from "./Calcom"
+import OrderManagement from "./OrderManagement"
 import {
   Dialog,
   DialogContent,
@@ -59,6 +60,15 @@ const actionsData = [
     icon: <div className="h-5 w-5 text-center text-2xl flex items-center justify-center" >C </div>,
     bgColor: "bg-black",
     textColor: "text-white",
+    active: true,
+  },
+  {
+    id: "ordermanagement",
+    title: "Order Management",
+    description: "Restaurant table ordering via WhatsApp QR codes",
+    icon: <LayoutGrid className="h-5 w-5" />,
+    bgColor: "bg-green-100",
+    textColor: "text-green-600",
     active: true,
   },
   {
@@ -231,6 +241,14 @@ const Actions = (
     return (
       <div>
         <Calcom teamId={params.teamId} chatbotId={params.chatbotId} chatbot={params.chatbot} />
+      </div>
+    )
+  }
+  
+  if (currentTab == "ordermanagement") {
+    return (
+      <div>
+        <OrderManagement teamId={params.teamId} chatbotId={params.chatbotId} chatbot={params.chatbot} />
       </div>
     )
   }
@@ -421,4 +439,3 @@ const Actions = (
 }
 
 export default Actions
-
