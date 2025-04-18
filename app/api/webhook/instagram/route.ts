@@ -231,12 +231,12 @@ export async function POST(request: Request) {
     }
     
     // Handle comments
-    if (data.entry[0]?.changes?.length > 0 && data.entry[0]?.changes[0]?.field == "comments") {
+    else if (data.entry[0]?.changes?.length > 0 && data.entry[0]?.changes[0]?.field == "comments") {
       await handleCommentEvent(data);
     }
     
     // Handle likes
-    if (data.entry[0]?.changes?.length > 0 && data.entry[0]?.changes[0]?.field == "likes") {
+    else if (data.entry[0]?.changes?.length > 0 && data.entry[0]?.changes[0]?.field == "likes") {
       await handleLikeEvent(data);
     }
 
