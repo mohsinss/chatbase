@@ -117,8 +117,6 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
     systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
   }
 
-  console.log("updatedPrompt", systemPrompt);
-
   const encoder = new TextEncoder();
   let response_text = '';
   let stream;
@@ -390,6 +388,8 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
       break;
     }
   }
+
+  console.log("updatedPrompt", systemPrompt, response_text);
 
   return response_text;
 }
