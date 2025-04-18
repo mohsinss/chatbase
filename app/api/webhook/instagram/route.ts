@@ -93,9 +93,9 @@ async function getSettings(instagramPage: any): Promise<any> {
 }
 
 // Helper function to send typing indicator
-async function sendTypingIndicator(instagram_business_account: string, accessToken: string, recipientId: string): Promise<void> {
+async function sendTypingIndicator(pageId: string, accessToken: string, recipientId: string): Promise<void> {
   try {
-    await axios.post(`https://graph.facebook.com/v22.0/${instagram_business_account}/messages?access_token=${accessToken}`, {
+    await axios.post(`https://graph.facebook.com/v22.0/${pageId}/messages?access_token=${accessToken}`, {
       recipient: { id: recipientId },
       sender_action: "typing_on"
     }, {
@@ -108,9 +108,9 @@ async function sendTypingIndicator(instagram_business_account: string, accessTok
 }
 
 // Helper function to send message
-async function sendMessage(instagram_business_account: string, accessToken: string, recipientId: string, text: string): Promise<boolean> {
+async function sendMessage(pageId: string, accessToken: string, recipientId: string, text: string): Promise<boolean> {
   try {
-    await axios.post(`https://graph.facebook.com/v22.0/${instagram_business_account}/messages?access_token=${accessToken}`, {
+    await axios.post(`https://graph.facebook.com/v22.0/${pageId}/messages?access_token=${accessToken}`, {
       recipient: { id: recipientId },
       message: { text },
       messaging_type: "RESPONSE",
@@ -125,9 +125,9 @@ async function sendMessage(instagram_business_account: string, accessToken: stri
 }
 
 // Helper function to send image
-async function sendImage(instagram_business_account: string, accessToken: string, recipientId: string, imageUrl: string): Promise<boolean> {
+async function sendImage(pageId: string, accessToken: string, recipientId: string, imageUrl: string): Promise<boolean> {
   try {
-    await axios.post(`https://graph.facebook.com/v22.0/${instagram_business_account}/messages?access_token=${accessToken}`, {
+    await axios.post(`https://graph.facebook.com/v22.0/${pageId}/messages?access_token=${accessToken}`, {
       recipient: { id: recipientId },
       message: {
         attachment: {
@@ -387,7 +387,7 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
 
   // Send initial message
   if (nodeMessage) {
-    await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, sender, nodeMessage);
+    await sendMessage(instagramPage.pageId, instagramPage.access_token, sender, nodeMessage);
     conversation.messages.push({ role: "assistant", content: nodeMessage });
   }
 
@@ -429,7 +429,7 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
     };
 
     // Send buttons to Instagram
-    await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.instagram_business_account}/messages?access_token=${instagramPage.access_token}`, {
+    await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
       recipient: { id: sender },
       message: {
         attachment: {
@@ -478,7 +478,7 @@ async function handleAIResponse(
   const response_text = await getAIResponse(chatbotId, messages, text, prompt);
 
   // Send response
-  await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, sender, response_text);
+  await sendMessage(instagramPage.pageId, instagramPage.access_token, sender, response_text);
 
   // Update conversation
   conversation.messages.push({ role: "assistant", content: response_text });
@@ -536,7 +536,7 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
 
       // Send message
       if (nodeMessage) {
-        await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, sender, nodeMessage);
+        await sendMessage(instagramPage.pageId, instagramPage.access_token, sender, nodeMessage);
         conversation.messages.push({ role: "assistant", content: nodeMessage });
       }
 
@@ -578,7 +578,7 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
         };
 
         // Send buttons to Instagram
-        await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.instagram_business_account}/messages?access_token=${instagramPage.access_token}`, {
+        await axios.post(`https://graph.facebook.com/v22.0/${instagramPage.pageId}/messages?access_token=${instagramPage.access_token}`, {
           recipient: { id: sender },
           message: {
             attachment: {
@@ -686,6 +686,8 @@ async function handleCommentEvent(data: any): Promise<any> {
   // Update conversation
   conversation.messages.push({ role: "assistant", content: response_text });
   await conversation.save();
+
+  return { status: "Ok." };
 }
 
 // Handle DM reactions to comments
@@ -727,7 +729,7 @@ async function handleCommentDM(
     }
 
     // Send DM
-    await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, from, response_text);
+    await sendMessage(instagramPage.pageId, instagramPage.access_token, from, response_text);
     conversation.messages.push({ role: "assistant", content: response_text });
     await conversation.save();
   }
@@ -761,7 +763,7 @@ async function handleCommentDM(
         }
 
         // Send DM
-        await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, from, response_text);
+        await sendMessage(instagramPage.pageId, instagramPage.access_token, from, response_text);
         conversation.messages.push({ role: "assistant", content: response_text });
         await conversation.save();
 
@@ -794,10 +796,11 @@ async function handleCommentDM(
     }
 
     // Send DM
-    await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, from, response_text);
+    await sendMessage(instagramPage.pageId, instagramPage.access_token, from, response_text);
     conversation.messages.push({ role: "assistant", content: response_text });
     await conversation.save();
   }
+  
 }
 
 // Handle like events
@@ -865,7 +868,7 @@ async function handleLikeEvent(data: any): Promise<any> {
     }
 
     // Send Direct Message (DM) to the user
-    await sendMessage(instagramPage.instagram_business_account, instagramPage.access_token, from, promptText);
+    await sendMessage(instagramPage.pageId, instagramPage.access_token, from, promptText);
 
     // Update conversation
     conversation.messages.push({ role: "assistant", content: promptText });
