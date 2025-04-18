@@ -95,6 +95,7 @@ async function getSettings(instagramPage: any): Promise<any> {
 // Helper function to send typing indicator
 async function sendTypingIndicator(pageId: string, accessToken: string, recipientId: string): Promise<void> {
   try {
+    return;
     await axios.post(`https://graph.facebook.com/v22.0/${pageId}/messages?access_token=${accessToken}`, {
       recipient: { id: recipientId },
       sender_action: "typing_on"
