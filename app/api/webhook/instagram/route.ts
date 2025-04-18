@@ -225,25 +225,25 @@ export async function POST(request: Request) {
 
     await connectMongo();
 
-    let status = {};
+    let result = {};
 
     // Handle direct messages
     if (data.entry[0]?.messaging?.length > 0) {
-      status = await handleMessengerEvent(data);
+      result = await handleMessengerEvent(data);
     }
 
     // Handle comments
     else if (data.entry[0]?.changes?.length > 0 && data.entry[0]?.changes[0]?.field == "comments") {
-      status = await handleCommentEvent(data);
+      result = await handleCommentEvent(data);
     }
 
     // Handle likes
     else if (data.entry[0]?.changes?.length > 0 && data.entry[0]?.changes[0]?.field == "likes") {
-      status = await handleLikeEvent(data);
+      result = await handleLikeEvent(data);
     }
 
-    // Respond with a 200 OK status
-    return NextResponse.json(status, { status: 200 });
+    // Respond with a 200 OK result
+    return NextResponse.json({ result }, { status: 200 });
   } catch (error: any) {
     console.error('Error processing webhook event:', error);
 
