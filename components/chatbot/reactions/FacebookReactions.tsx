@@ -40,13 +40,15 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
   // Use the shared hook for social reactions
   const {
     isFetchingSettings,
+    isConnecting,
     isSavingSettings,
     pages: facebookPages,
     selectedPageId,
     settingsData,
     setSettingsData,
     saveSettings,
-    handlePageChange
+    handlePageChange,
+    handleConnect
   } = useSocialReactions(config);
 
   return (
@@ -54,12 +56,26 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
       {/* Fixed Facebook header */}
       <div className="sticky top-0 z-10">
         <div className={config.headerBgClass + " text-white p-6"}>
-          <div className="flex items-center gap-3">
-            {config.headerIcon}
-            <div>
-              <h1 className="text-2xl font-semibold">{config.headerTitle}</h1>
-              <p className="mt-1 text-white/80">{config.headerDescription}</p>
+          <div className="flex items-center gap-3 justify-between">
+            <div className="flex gap-3">
+              {config.headerIcon}
+              <div>
+                <h1 className="text-2xl font-semibold">{config.headerTitle}</h1>
+                <p className="mt-1 text-white/80">{config.headerDescription}</p>
+              </div>
             </div>
+            <button
+              onClick={handleConnect}
+              disabled={isConnecting || facebookPages.length !== 0}
+              className={`px-4 py-2 rounded-lg  transition-colors text-[#1877F2] bg-white hover:opacity-90"
+                `}
+            >
+              {facebookPages.length !== 0 
+                ? "Already Connected" 
+                : isConnecting 
+                  ? "Connecting..." 
+                  : "Connect to Facebook"}
+            </button>
           </div>
         </div>
       </div>
@@ -78,7 +94,16 @@ const FacebookReactions = ({ chatbot }: FacebookReactionsProps) => {
                 <SectionTitle>Select Facebook Page</SectionTitle>
                 <div className="space-y-4">
                   {facebookPages.length === 0 ? (
-                    <p className="text-gray-500">No Facebook pages connected. Please connect a Facebook page first.</p>
+                    <div className="space-y-4">
+                      <p className="text-gray-500">No Facebook pages connected. Please connect a Facebook page first.</p>
+                      <button
+                        onClick={handleConnect}
+                        disabled={isConnecting}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        {isConnecting ? "Connecting..." : "Connect Facebook Page"}
+                      </button>
+                    </div>
                   ) : (
                     <>
                       <div>
