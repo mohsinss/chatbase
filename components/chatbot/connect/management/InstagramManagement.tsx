@@ -151,26 +151,29 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
         fetchPages();
     }, []);
 
-    const InstagramLoginCallbackForFB = (response: any) => {
-        if (response.authResponse) {
-            const accessToken = response.authResponse.accessToken;
-            console.log(response.authResponse)
+    const handleConnect = () => {
+        setIsConnecting(true);
 
-            fetch("/api/chatbot/integrations/instagram-page/save", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    user_access_token: accessToken,
-                    chatbotId
-                }),
-            }).then((response) => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
+        window.FB.login((response: any) => {
+            if (response.authResponse) {
+                const accessToken = response.authResponse.accessToken;
+                console.log(response.authResponse);
+
+                fetch("/api/chatbot/integrations/instagram-page/save", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        user_access_token: accessToken,
+                        chatbotId
+                    }),
+                }).then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then((data) => {
                     setIsConnecting(false);
                     fetchPages();
@@ -181,20 +184,15 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                     console.error("Error saving Instagram page credentials:", error);
                     toast.error("Failed to save Instagram page. Please check integration guide again.");
                 });
-        } else {
-            console.log(response);
-            toast.error("Sth went wrong.");
-            setIsConnecting(false);
-        }
-    }
-
-    const handleConnect = () => {
-        setIsConnecting(true);
-
-        window.FB.login(InstagramLoginCallbackForFB, {
-            config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_INSTAGRAM, // configuration ID goes here
-            response_type: 'token,signed_request,graph_domain', // must be set to 'code' for System User access token
-            override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
+            } else {
+                console.log(response);
+                toast.error("Something went wrong with the connection.");
+                setIsConnecting(false);
+            }
+        }, {
+            config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_INSTAGRAM,
+            response_type: 'token,signed_request,graph_domain',
+            override_default_response_type: true,
             extras: {
                 setup: {},
                 featureType: '',
