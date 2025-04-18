@@ -99,7 +99,7 @@ async function sendTypingIndicator(pageId: string, accessToken: string, recipien
       recipient: { id: recipientId },
       sender_action: "typing_on"
     }, {
-      headers: { Authorization: `Bearer ${process.env.INSTAGRAM_USER_ACCESS_TOKEN}` }
+      headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
     });
   } catch (error) {
     console.error('Error sending typing indicator:', error);
@@ -115,7 +115,7 @@ async function sendMessage(pageId: string, accessToken: string, recipientId: str
       message: { text },
       messaging_type: "RESPONSE",
     }, {
-      headers: { Authorization: `Bearer ${process.env.INSTAGRAM_USER_ACCESS_TOKEN}` }
+      headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
     });
     return true;
   } catch (error) {
@@ -139,7 +139,7 @@ async function sendImage(pageId: string, accessToken: string, recipientId: strin
         }
       },
     }, {
-      headers: { Authorization: `Bearer ${process.env.INSTAGRAM_USER_ACCESS_TOKEN}` }
+      headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
     });
     return true;
   } catch (error) {
@@ -444,7 +444,7 @@ async function handleQuestionFlow(instagramPage: any, sender: string, questionFl
         }
       }
     }, {
-      headers: { Authorization: `Bearer ${process.env.INSTAGRAM_USER_ACCESS_TOKEN}` }
+      headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
     });
     
     conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
@@ -593,7 +593,7 @@ async function handleMessengerPostback(instagramPage: any, chatbotId: string, se
             }
           }
         }, {
-          headers: { Authorization: `Bearer ${process.env.INSTAGRAM_USER_ACCESS_TOKEN}` }
+          headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
         
         conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
@@ -678,7 +678,7 @@ async function handleCommentEvent(data: any): Promise<any> {
   await axios.post(`https://graph.facebook.com/v22.0/${comment_id}/replies?access_token=${instagramPage.access_token}`, {
     message: `@${from_name} ${response_text}`
   }, {
-    headers: { Authorization: `Bearer ${process.env.INSTAGRAM_USER_ACCESS_TOKEN}` }
+    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
   });
   
   // Update conversation
