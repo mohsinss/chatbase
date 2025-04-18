@@ -67,9 +67,11 @@ export async function POST(request: Request) {
             const chatbotId = whatsappNumber.chatbotId;
 
             const chatbot = await Chatbot.findOne({ chatbotId });
-            const updatedPrompt = chatbot.settings?.whatsapp?.prompt;
-            const delay = chatbot.settings?.whatsapp?.delay;
+            // Get WhatsApp reaction settings from chatbot
+            const whatsappSettings = chatbot.settings?.whatsapp || {};
+            const { prompt: updatedPrompt, delay } = whatsappSettings;
 
+            // Apply delay if configured
             if (delay && delay > 0) {
               await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
             }
@@ -268,9 +270,11 @@ export async function POST(request: Request) {
               const chatbotId = whatsappNumber.chatbotId;
 
               const chatbot = await Chatbot.findOne({ chatbotId });
-              const updatedPrompt = chatbot.settings?.whatsapp?.prompt;
-              const delay = chatbot.settings?.whatsapp?.delay;
+              // Get WhatsApp reaction settings from chatbot
+              const whatsappSettings = chatbot.settings?.whatsapp || {};
+              const { prompt: updatedPrompt, delay } = whatsappSettings;
 
+              // Apply delay if configured
               if (delay && delay > 0) {
                 await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
               }
@@ -391,17 +395,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ status: 'OK' }, { status: 200 });
   } catch (error) {
     try {
-      // Send data to the specified URL
-      const response = await fetch('http://webhook.mrcoders.org/whatsapp-error.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(error),
-      });
-    } catch (error) {
-      console.log('error while saving errors.')
+      // Log error to external service if configured
+      if (process.env.ENABLE_WEBHOOK_LOGGING_WHATSAPP == "1") {
+        // Send error data to the specified URL
+        const response = await fetch('http://webhook.mrcoders.org/whatsapp-error.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(error),
+        });
+      }
+      
+      // Log error locally
+      console.error('WhatsApp webhook error:', error);
+    } catch (loggingError) {
+      console.error('Error while logging webhook error:', loggingError);
     }
-    return NextResponse.json({ error: error }, { status: 200 });
+    
+    // Always return 200 to acknowledge receipt to WhatsApp platform
+    return NextResponse.json({ error: 'An error occurred processing the webhook' }, { status: 200 });
   }
 }
