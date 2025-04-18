@@ -145,88 +145,90 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
     };
   }, [router]);
 
-  const fbLoginCallback = (response: any) => {
-    if (response.authResponse) {
-      const code = response.authResponse.code;
-      console.log(code)
-    } else {
-      console.log(response);
-      setConnectingTitle('');
-    }
-  }
-
-  const instagramLoginCallback = (response: any) => {
-    if (response.authResponse) {
-      const accessToken = response.authResponse.accessToken;
-      console.log(response.authResponse)
-      fetch("/api/chatbot/integrations/instagram-page/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_access_token: accessToken,
-          chatbotId
-        }),
-      }).then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
+  // Unified connection handler for Facebook-based platforms
+  const handleFacebookConnection = (platform: string, configId: string, responseType: string) => {
+    window.FB.login((response: any) => {
+      if (response.authResponse) {
+        if (platform === "Messenger") {
+          const code = response.authResponse.code;
+          console.log(code);
+          
+          fetch("/api/chatbot/integrations/facebook-page/save", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              code,
+              chatbotId
+            }),
+          }).then((response) => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then((data) => {
+            setConnectingTitle('');
+            router.refresh();
+            toast.success("Successfully connected to Messenger!");
+          })
+          .catch((error) => {
+            setConnectingTitle('');
+            console.error("Error saving FB page credentials:", error);
+            toast.error("Failed to save FB page. Please check integration guide again.");
+          });
+        } else if (platform === "Instagram") {
+          const accessToken = response.authResponse.accessToken;
+          console.log(response.authResponse);
+          
+          fetch("/api/chatbot/integrations/instagram-page/save", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user_access_token: accessToken,
+              chatbotId
+            }),
+          }).then((response) => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then((data) => {
+            setConnectingTitle('');
+            router.refresh();
+            toast.success("Successfully connected to Instagram!");
+          })
+          .catch((error) => {
+            setConnectingTitle('');
+            console.error("Error saving Instagram credentials:", error);
+            toast.error(error?.message || "Failed to save Instagram. Please check integration guide again.");
+          });
+        } else if (platform === "Whatsapp") {
+          // WhatsApp uses a different flow with embedded signup
+          // The actual saving happens in the message event listener
+          const code = response.authResponse.code;
+          console.log(code);
+          // No need to do anything here as the message event listener will handle it
         }
-        return response.json();
-      })
-        .then((data) => {
-          setConnectingTitle('');
-
-          router.refresh();
-          toast.success("Successfully connected to Instagram!");
-        })
-        .catch((error) => {
-          setConnectingTitle('');
-          console.error("Error saving Instagram credentials:", error);
-          toast.error(error?.message || "Failed to save Instagram. Please check integration guide again.");
-        });
-    } else {
-      console.log(response);
-      toast.error("Sth went wrong.");
-      setConnectingTitle('');
-    }
-  }
-
-  const fbLoginCallbackForFB = (response: any) => {
-    if (response.authResponse) {
-      const code = response.authResponse.code;
-      console.log(code)
-      fetch("/api/chatbot/integrations/facebook-page/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          code,
-          chatbotId
-        }),
-      }).then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-        .then((data) => {
-          setConnectingTitle('');
-
-          router.refresh();
-          toast.success("Successfully connected to Messenger!");
-        })
-        .catch((error) => {
-          setConnectingTitle('');
-          console.error("Error saving FB page credentials:", error);
-          toast.error("Failed to save FB page. Please check integration guide again.");
-        });
-    } else {
-      console.log(response);
-      toast.error("Sth went wrong.");
-      setConnectingTitle('');
-    }
+      } else {
+        console.log(response);
+        toast.error("Something went wrong with the connection.");
+        setConnectingTitle('');
+      }
+    }, {
+      config_id: configId,
+      response_type: responseType,
+      override_default_response_type: true,
+      extras: {
+        setup: {},
+        featureType: '',
+        sessionInfoVersion: '2',
+      }
+    });
   }
 
   const handleConnect = async (platform: string) => {
@@ -239,38 +241,23 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
     setConnectingTitle(platform);
 
     if (platform === "Whatsapp") {
-      window.FB.login(fbLoginCallback, {
-        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID, // configuration ID goes here
-        response_type: 'code', // must be set to 'code' for System User access token
-        override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
-        extras: {
-          setup: {},
-          featureType: '',
-          sessionInfoVersion: '2',
-        }
-      });
+      handleFacebookConnection(
+        "Whatsapp", 
+        process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID, 
+        'code'
+      );
     } else if (platform === "Messenger") {
-      window.FB.login(fbLoginCallbackForFB, {
-        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE, // configuration ID goes here
-        response_type: 'code', // must be set to 'code' for System User access token
-        override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
-        extras: {
-          setup: {},
-          featureType: '',
-          sessionInfoVersion: '2',
-        }
-      });
+      handleFacebookConnection(
+        "Messenger", 
+        process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE, 
+        'code'
+      );
     } else if (platform === "Instagram") {
-      window.FB.login(instagramLoginCallback, {
-        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_INSTAGRAM, // configuration ID goes here
-        response_type: 'token,signed_request,graph_domain', // must be set to 'code' for System User access token
-        override_default_response_type: true, // when true, any response types passed in the "response_type" will take precedence over the default types
-        extras: {
-          setup: {},
-          featureType: '',
-          sessionInfoVersion: '2',
-        }
-      });
+      handleFacebookConnection(
+        "Instagram", 
+        process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_INSTAGRAM, 
+        'token,signed_request,graph_domain'
+      );
     } else if (platform === "x") {
       const width = 600;
       const height = 700;
@@ -432,4 +419,4 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
   );
 };
 
-export default IntegrationsSection; 
+export default IntegrationsSection;
