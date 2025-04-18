@@ -1,4 +1,3 @@
-// src/app/api/webhook/whatsapp/route.ts
 import axios from 'axios';
 import WhatsAppNumber from '@/models/WhatsAppNumber';
 import connectMongo from "@/libs/mongoose";
@@ -17,7 +16,6 @@ type CacheMap<T> = Map<string, CacheEntry<T>>;
 // Cache for frequently accessed data
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 const cache = {
-  chatbots: new Map<string, CacheEntry<any>>(),
   datasets: new Map<string, CacheEntry<any>>(),
   whatsappNumbers: new Map<string, CacheEntry<any>>(),
   lastCleanup: Date.now()
@@ -28,10 +26,6 @@ function cleanupCache(): void {
   const now = Date.now();
   if (now - cache.lastCleanup > CACHE_TTL) {
     // Use Array.from to avoid iterator issues
-    Array.from(cache.chatbots.entries()).forEach(([key, { timestamp }]) => {
-      if (now - timestamp > CACHE_TTL) cache.chatbots.delete(key);
-    });
-    
     Array.from(cache.datasets.entries()).forEach(([key, { timestamp }]) => {
       if (now - timestamp > CACHE_TTL) cache.datasets.delete(key);
     });
@@ -60,7 +54,7 @@ async function getCachedOrFetch<T>(cacheMap: CacheMap<T>, key: string, fetchFn: 
   return data;
 }
 
-// Helper function to get WhatsApp number
+// Helper function to get WhatsApp number with caching
 async function getWhatsAppNumber(phoneNumberId: string): Promise<any> {
   return getCachedOrFetch(
     cache.whatsappNumbers,
@@ -69,16 +63,7 @@ async function getWhatsAppNumber(phoneNumberId: string): Promise<any> {
   );
 }
 
-// Helper function to get chatbot
-async function getChatbot(chatbotId: string): Promise<any> {
-  return getCachedOrFetch(
-    cache.chatbots,
-    chatbotId,
-    async () => await Chatbot.findOne({ chatbotId })
-  );
-}
-
-// Helper function to get dataset
+// Helper function to get dataset with caching
 async function getDataset(chatbotId: string): Promise<any> {
   return getCachedOrFetch(
     cache.datasets,
@@ -88,43 +73,8 @@ async function getDataset(chatbotId: string): Promise<any> {
 }
 
 // Helper function to get settings from WhatsAppNumber model
-async function getSettings(whatsappNumber: any): Promise<any> {
+function getSettings(whatsappNumber: any): any {
   return whatsappNumber.settings || {};
-}
-
-// Helper function to find or create conversation
-async function findOrCreateConversation(
-  chatbotId: string, 
-  platform: string, 
-  from: string, 
-  to: string, 
-  initialMessage: string | null = null, 
-  metadata: Record<string, any> = {}
-): Promise<{ conversation: any; isNew: boolean }> {
-  let conversation = await ChatbotConversation.findOne({ 
-    chatbotId, 
-    platform, 
-    "metadata.from": from, 
-    "metadata.to": to 
-  });
-  
-  let isNew = false;
-  
-  if (!conversation) {
-    isNew = true;
-    conversation = new ChatbotConversation({
-      chatbotId,
-      platform,
-      disable_auto_reply: false,
-      metadata: { from, to, ...metadata },
-      messages: initialMessage ? [{ role: "user", content: initialMessage }] : []
-    });
-  } else if (initialMessage) {
-    conversation.messages.push({ role: "user", content: initialMessage });
-  }
-  
-  await conversation.save();
-  return { conversation, isNew };
 }
 
 // Helper function to mark message as read
@@ -184,7 +134,7 @@ async function sendImageMessage(phone_number_id: string, to: string, imageUrl: s
 }
 
 // Helper function to send interactive button message
-async function sendButtonMessage(phone_number_id: string, to: string, question: string, options: string[], nodeId: string): Promise<boolean> {
+async function sendButtonMessage(phone_number_id: string, to: string, question: string, options: string[], nodeId: string): Promise<any> {
   try {
     const buttonsPayload = {
       messaging_product: "whatsapp",
@@ -208,14 +158,35 @@ async function sendButtonMessage(phone_number_id: string, to: string, question: 
       }
     };
 
-    await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
+    const response = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
       buttonsPayload, {
       headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
     });
-    return true;
+    
+    return { response, buttonsPayload };
   } catch (error) {
     console.error('Error sending button message:', error);
-    return false;
+    return { error };
+  }
+}
+
+// Helper function to log webhook data
+async function logWebhookData(data: any, endpoint: string): Promise<void> {
+  if (process.env.ENABLE_WEBHOOK_LOGGING_WHATSAPP == "1") {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        console.error(`Webhook logging error: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Webhook logging error:', error);
+      // Continue execution even if logging fails
+    }
   }
 }
 
@@ -238,43 +209,31 @@ export async function POST(request: Request) {
     const data = await request.json();
 
     // Log webhook data if enabled
-    if (process.env.ENABLE_WEBHOOK_LOGGING_WHATSAPP == "1") {
-      try {
-        const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
-        
-        if (!response.ok) {
-          console.error(`Webhook logging error: ${response.status}`);
-        }
-      } catch (error) {
-        console.error('Webhook logging error:', error);
-        // Continue execution even if logging fails
-      }
+    await logWebhookData(data, 'http://webhook.mrcoders.org/whatsapp.php');
+
+    if (!data?.entry?.length || !data?.entry[0]?.changes?.length) {
+      return NextResponse.json({ status: 'No valid entries found' }, { status: 200 });
     }
 
-    if (!data?.entry?.length) {
-      return NextResponse.json({ status: 'No entries found' }, { status: 200 });
+    const entry = data.entry[0];
+    const change = entry.changes[0];
+    
+    if (!change.value?.messages?.length) {
+      return NextResponse.json({ status: 'No messages found' }, { status: 200 });
     }
 
     await connectMongo();
+    
+    const message = change.value.messages[0];
+    const messageType = message.type;
 
     // Handle text messages
-    if (data.entry[0]?.changes?.length > 0 && 
-        data.entry[0]?.changes[0].value?.messages?.length > 0) {
-      
-      // Handle text messages
-      if (data.entry[0].changes[0].value.messages[0].type === "text") {
-        await handleTextMessage(data);
-      }
-      // Handle interactive messages (button replies)
-      else if (data.entry[0].changes[0].value.messages[0].type === "interactive") {
-        if (data.entry[0].changes[0].value.messages[0].interactive.type === "button_reply") {
-          await handleButtonReply(data);
-        }
-      }
+    if (messageType === "text") {
+      await handleTextMessage(message, change.value.metadata);
+    } 
+    // Handle interactive messages (button replies)
+    else if (messageType === "interactive" && message.interactive.type === "button_reply") {
+      await handleButtonReply(message, change.value.metadata);
     }
 
     // Respond with a 200 OK status
@@ -282,38 +241,29 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('Error processing webhook event:', error);
 
-    if (process.env.ENABLE_WEBHOOK_LOGGING_WHATSAPP == "1") {
-      try {
-        await fetch('http://webhook.mrcoders.org/whatsapp-error.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(error),
-        });
-      } catch (logError) {
-        console.error('Error logging webhook error:', logError);
-      }
-    }
+    // Log error to external service if configured
+    await logWebhookData(error, 'http://webhook.mrcoders.org/whatsapp-error.php');
     
-    // Always return 200 to WhatsApp to prevent retries
-    return NextResponse.json({ error: error.message }, { status: 200 });
+    // Always return 200 to acknowledge receipt to WhatsApp platform
+    return NextResponse.json({ error: 'An error occurred processing the webhook' }, { status: 200 });
   }
 }
 
 // Handle text messages
-async function handleTextMessage(data: any): Promise<any> {
-  const from = data.entry[0].changes[0].value.messages[0].from;
-  const phone_number_id = data.entry[0].changes[0].value.metadata.phone_number_id;
-  const message_id = data.entry[0].changes[0].value.messages[0].id;
-  const timestamp = data.entry[0].changes[0].value.messages[0].timestamp;
+async function handleTextMessage(message: any, metadata: any): Promise<any> {
+  const from = message.from;
+  const phone_number_id = metadata.phone_number_id;
+  const message_id = message.id;
+  const timestamp = message.timestamp;
   const currentTimestamp = (new Date().getTime()) / 1000;
-  const text = data.entry[0].changes[0].value.messages[0].text.body;
+  const text = message.text.body;
 
   // Skip if message is too old
   if (timestamp + 60 < currentTimestamp) {
     return { status: 'Delivery denied due to long delay' };
   }
 
-  // Fetch the existing WhatsAppNumber model
+  // Fetch the existing WhatsAppNumber model with caching
   const whatsappNumber = await getWhatsAppNumber(phone_number_id);
   if (!whatsappNumber) {
     return { status: "WhatsApp Number doesn't registered to the site." };
@@ -322,7 +272,7 @@ async function handleTextMessage(data: any): Promise<any> {
   const chatbotId = whatsappNumber.chatbotId;
 
   // Get WhatsApp settings from WhatsAppNumber model
-  const whatsappSettings = await getSettings(whatsappNumber);
+  const whatsappSettings = getSettings(whatsappNumber);
   const { prompt: updatedPrompt, delay } = whatsappSettings;
 
   // Apply delay if configured
@@ -330,72 +280,79 @@ async function handleTextMessage(data: any): Promise<any> {
     await sleep(delay * 1000);
   }
 
-  // Find or create conversation
-  const { conversation, isNew } = await findOrCreateConversation(
+  // Find existing conversation or create a new one
+  let conversation = await ChatbotConversation.findOne({ 
     chatbotId, 
-    "whatsapp", 
-    from, 
-    whatsappNumber.display_phone_number, 
-    text
-  );
+    platform: "whatsapp", 
+    "metadata.from": from, 
+    "metadata.to": whatsappNumber.display_phone_number 
+  });
+  
+  let triggerQF = false;
+
+  // Get dataset with caching
+  const dataset = await getDataset(chatbotId);
+  const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
+  const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
+
+  if (conversation) {
+    const lastMessageContent = conversation.messages[conversation.messages.length - 1].content;
+    try {
+      JSON.parse(lastMessageContent);
+      triggerQF = true; // Set triggerQF to true if parsing succeeds (content is JSON)
+    } catch (e) {
+      // Content is not JSON, do nothing
+    }
+
+    // Update existing conversation
+    conversation.messages.push({ role: "user", content: text });
+    const lastMessageTimestamp = conversation.updatedAt.getTime() / 1000;
+    if (currentTimestamp - lastMessageTimestamp > restartQFTimeoutMins * 60) {
+      triggerQF = true;
+    }
+    if (!isAiResponseEnabled) {
+      triggerQF = true;
+    }
+  } else {
+    // Create new conversation
+    conversation = new ChatbotConversation({
+      chatbotId,
+      platform: "whatsapp",
+      disable_auto_reply: false,
+      metadata: { from, to: whatsappNumber.display_phone_number },
+      messages: [{ role: "user", content: text }]
+    });
+
+    triggerQF = true;
+  }
+
+  await conversation.save();
 
   // Skip if auto-reply is disabled
-  if (conversation?.disable_auto_reply) {
+  if (conversation?.disable_auto_reply === true) {
     return { status: "Auto response is disabled." };
   }
 
   // Mark message as read
   await markMessageAsRead(phone_number_id, message_id);
 
-  // Get dataset
-  const dataset = await getDataset(chatbotId);
-  const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
-  const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
-
-  // Determine if we should use question flow
-  let triggerQF = isNew;
-  
-  if (!isNew) {
-    // Check if last message was JSON (indicating a question flow)
-    const lastMessageContent = conversation.messages[conversation.messages.length - 2]?.content;
-    if (lastMessageContent) {
-      try {
-        JSON.parse(lastMessageContent);
-        triggerQF = true;
-      } catch (e) {
-        // Not JSON, continue
-      }
-    }
-    
-    // Check if conversation is old enough to restart question flow
-    const lastMessageTimestamp = conversation.updatedAt.getTime() / 1000;
-    if (currentTimestamp - lastMessageTimestamp > restartQFTimeoutMins * 60) {
-      triggerQF = true;
-    }
-    
-    // Force question flow if AI responses are disabled
-    if (!isAiResponseEnabled) {
-      triggerQF = true;
-    }
-  }
-
-  // Use question flow if enabled and triggered
+  // Handle question flow or AI response
   if (questionFlowEnable && questionFlow && triggerQF) {
-    await handleQuestionFlow(whatsappNumber, from, questionFlow, conversation);
+    await handleQuestionFlow(phone_number_id, from, questionFlow, conversation);
   } else {
-    await handleAIResponse(whatsappNumber, chatbotId, from, text, conversation, updatedPrompt);
+    await handleAIResponse(phone_number_id, from, chatbotId, text, conversation, updatedPrompt);
   }
+
+  return { status: 'Message processed successfully' };
 }
 
 // Handle question flow
-async function handleQuestionFlow(whatsappNumber: any, from: string, questionFlow: any, conversation: any): Promise<void> {
+async function handleQuestionFlow(phone_number_id: string, from: string, questionFlow: any, conversation: any): Promise<void> {
   const { nodes, edges } = questionFlow;
   
   // Find the top parent node (node with no incoming edges)
-  //@ts-ignore
-  const childNodeIds = new Set(edges.map(edge => edge.target));
-  //@ts-ignore
-  const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
+  const childNodeIds = new Set(edges.map((edge: any) => edge.target));
+  const topParentNode = nodes.find((node: any) => !childNodeIds.has(node.id));
   
   const nodeMessage = topParentNode.data.message || '';
   const nodeOptions = topParentNode.data.options || [];
@@ -404,13 +361,13 @@ async function handleQuestionFlow(whatsappNumber: any, from: string, questionFlo
   
   // Send initial message
   if (nodeMessage) {
-    await sendTextMessage(whatsappNumber.phoneNumberId, from, nodeMessage);
+    await sendTextMessage(phone_number_id, from, nodeMessage);
     conversation.messages.push({ role: "assistant", content: nodeMessage });
   }
   
   // Send image if available
   if (nodeImage) {
-    await sendImageMessage(whatsappNumber.phoneNumberId, from, nodeImage);
+    await sendImageMessage(phone_number_id, from, nodeImage);
     await sleep(2000);
     
     conversation.messages.push({
@@ -424,28 +381,15 @@ async function handleQuestionFlow(whatsappNumber: any, from: string, questionFlo
   
   // Send buttons if available
   if (nodeOptions.length > 0) {
-    // Create button payload for logging
-    const buttonsPayloadForLogging = {
-      type: "interactive",
-      interactive: {
-        type: "button",
-        body: { text: nodeQuestion },
-        action: {
-          buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
-            type: "reply",
-            reply: {
-              id: `${topParentNode.id}-option-${index}`,
-              title: option
-            }
-          }))
-        }
-      }
-    };
+    const { buttonsPayload } = await sendButtonMessage(
+      phone_number_id, 
+      from, 
+      nodeQuestion, 
+      nodeOptions, 
+      topParentNode.id
+    );
     
-    // Send buttons
-    await sendButtonMessage(whatsappNumber.phoneNumberId, from, nodeQuestion, nodeOptions, topParentNode.id);
-    
-    conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
+    conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
   }
   
   await conversation.save();
@@ -453,17 +397,18 @@ async function handleQuestionFlow(whatsappNumber: any, from: string, questionFlo
 
 // Handle AI response
 async function handleAIResponse(
-  whatsappNumber: any, 
+  phone_number_id: string,
+  from: string,
   chatbotId: string, 
-  from: string, 
   text: string, 
   conversation: any, 
   prompt: string
 ): Promise<void> {
   // Get recent messages (last hour)
   const oneHourAgo = Date.now() - (60 * 60 * 1000);
-  //@ts-ignore
-  let messages = conversation.messages.filter(msg => new Date(msg.timestamp).getTime() >= oneHourAgo);
+  let messages = conversation.messages.filter((msg: any) => 
+    new Date(msg.timestamp).getTime() >= oneHourAgo
+  );
   
   // Ensure at least the current message is included
   if (messages.length === 0) {
@@ -474,7 +419,7 @@ async function handleAIResponse(
   const response_text = await getAIResponse(chatbotId, messages, text, prompt);
   
   // Send response
-  await sendTextMessage(whatsappNumber.phoneNumberId, from, response_text);
+  await sendTextMessage(phone_number_id, from, response_text);
   
   // Update conversation
   conversation.messages.push({ role: "assistant", content: response_text });
@@ -482,17 +427,18 @@ async function handleAIResponse(
 }
 
 // Handle button replies
-async function handleButtonReply(data: any): Promise<any> {
-  const from = data.entry[0].changes[0].value.messages[0].from;
-  const phone_number_id = data.entry[0].changes[0].value.metadata.phone_number_id;
-  const message_id = data.entry[0].changes[0].value.messages[0].id;
+async function handleButtonReply(message: any, metadata: any): Promise<any> {
+  const from = message.from;
+  const phone_number_id = metadata.phone_number_id;
+  const message_id = message.id;
   
-  const button_id = data.entry[0].changes[0].value.messages[0].interactive.button_reply.id;
-  const button_title = data.entry[0].changes[0].value.messages[0].interactive.button_reply.title;
+  const button_reply = message.interactive.button_reply;
+  const button_id = button_reply.id;
+  const button_title = button_reply.title;
   const node_id = button_id.split('-')[0];
   const option_index = button_id.split('-').pop();
   
-  // Fetch the existing WhatsAppNumber model
+  // Fetch the existing WhatsAppNumber model with caching
   const whatsappNumber = await getWhatsAppNumber(phone_number_id);
   if (!whatsappNumber) {
     return { status: "WhatsApp Number doesn't registered to the site." };
@@ -501,7 +447,7 @@ async function handleButtonReply(data: any): Promise<any> {
   const chatbotId = whatsappNumber.chatbotId;
   
   // Get WhatsApp settings from WhatsAppNumber model
-  const whatsappSettings = await getSettings(whatsappNumber);
+  const whatsappSettings = getSettings(whatsappNumber);
   const { delay } = whatsappSettings;
   
   // Apply delay if configured
@@ -510,22 +456,25 @@ async function handleButtonReply(data: any): Promise<any> {
   }
   
   // Find existing conversation
-  const { conversation } = await findOrCreateConversation(
+  const conversation = await ChatbotConversation.findOne({ 
     chatbotId, 
-    "whatsapp", 
-    from, 
-    whatsappNumber.display_phone_number, 
-    button_title
-  );
+    platform: "whatsapp", 
+    "metadata.from": from, 
+    "metadata.to": whatsappNumber.display_phone_number 
+  });
   
   if (!conversation) {
     return { status: "Can't find conversation for this button reply, something went wrong." };
   }
   
+  // Update conversation with user's button selection
+  conversation.messages.push({ role: "user", content: button_title });
+  await conversation.save();
+  
   // Mark message as read
   await markMessageAsRead(phone_number_id, message_id);
   
-  // Get dataset
+  // Get dataset with caching
   const dataset = await getDataset(chatbotId);
   const { questionFlow, questionFlowEnable } = dataset;
   
@@ -536,10 +485,11 @@ async function handleButtonReply(data: any): Promise<any> {
       : sampleFlow;
     
     // Find the next node based on the selected option
-    //@ts-ignore
-    const nextEdge = edges.find(edge => edge.source === node_id && edge.sourceHandle === option_index);
-    //@ts-ignore
-    const nextNode = nodes.find(node => node.id === nextEdge?.target);
+    const nextEdge = edges.find((edge: any) => 
+      edge.source === node_id && edge.sourceHandle === option_index
+    );
+    
+    const nextNode = nodes.find((node: any) => node.id === nextEdge?.target);
     
     if (nextNode) {
       const nodeMessage = nextNode.data.message || '';
@@ -549,13 +499,13 @@ async function handleButtonReply(data: any): Promise<any> {
       
       // Send message
       if (nodeMessage) {
-        await sendTextMessage(whatsappNumber.phoneNumberId, from, nodeMessage);
+        await sendTextMessage(phone_number_id, from, nodeMessage);
         conversation.messages.push({ role: "assistant", content: nodeMessage });
       }
       
       // Send image if available
       if (nodeImage) {
-        await sendImageMessage(whatsappNumber.phoneNumberId, from, nodeImage);
+        await sendImageMessage(phone_number_id, from, nodeImage);
         await sleep(2000);
         
         conversation.messages.push({
@@ -569,31 +519,20 @@ async function handleButtonReply(data: any): Promise<any> {
       
       // Send buttons if available
       if (nodeOptions.length > 0) {
-        // Create button payload for logging
-        const buttonsPayloadForLogging = {
-          type: "interactive",
-          interactive: {
-            type: "button",
-            body: { text: nodeQuestion },
-            action: {
-              buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
-                type: "reply",
-                reply: {
-                  id: `${nextNode.id}-option-${index}`,
-                  title: option
-                }
-              }))
-            }
-          }
-        };
+        const { buttonsPayload } = await sendButtonMessage(
+          phone_number_id, 
+          from, 
+          nodeQuestion, 
+          nodeOptions, 
+          nextNode.id
+        );
         
-        // Send buttons
-        await sendButtonMessage(whatsappNumber.phoneNumberId, from, nodeQuestion, nodeOptions, nextNode.id);
-        
-        conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayloadForLogging) });
+        conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
       }
       
       await conversation.save();
     }
   }
+  
+  return { status: 'Button reply processed successfully' };
 }
