@@ -65,7 +65,7 @@ const actionsData = [
   {
     id: "ordermanagement",
     title: "Order Management",
-    description: "Restaurant table ordering via WhatsApp QR codes",
+    description: "Restaurant menu ordering via WhatsApp QR codes",
     icon: <LayoutGrid className="h-5 w-5" />,
     bgColor: "bg-green-100",
     textColor: "text-green-600",
@@ -255,7 +255,7 @@ const Actions = (
 
   //@ts-ignore
   const ActionButton = ({ id, title, description, icon, bgColor, textColor, active }) => (
-    <div className={`mb-6  ${active ? "bg-gray-50" : "bg-gray-200 cursor-not-allowed"} rounded-2xl`}>
+    <div className={`mb-6  ${active ? "bg-gray-50" : "bg-gray-200 cursor-not-allowed"} rounded-2xl p-4`}>
       <div className="flex items-center gap-3 mb-2">
         <div className={`flex items-center justify-center w-10 h-10 rounded-full ${bgColor} ${textColor}`}>
           {icon}
@@ -411,12 +411,12 @@ const Actions = (
       </AlertDialog>
 
       <Dialog open={isModalOpen} onOpenChange={closeModal}>
-        <DialogContent className="max-w-6xl w-full">
+        <DialogContent className="max-w-6xl w-full h-[80%] max-h-[80vh]">
           <DialogHeader className="mb-6">
             <DialogTitle className="text-xl">Select Action</DialogTitle>
           </DialogHeader>
 
-          <div className="p-0">
+          <div className="p-0 overflow-y-auto" style={{ maxHeight: "calc(80vh - 120px)" }}>
             {/* Search Input */}
             <div className="flex justify-end mb-3 hidden">
               <div className="relative">

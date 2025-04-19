@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -8,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { QrCode, FileSpreadsheet, Plus, Trash2, Download, Save, Loader2 } from "lucide-react"
+import { QrCode, FileSpreadsheet, Plus, Trash2, Download, Save, Loader2, ArrowLeft } from "lucide-react"
 import toast from "react-hot-toast"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -77,6 +78,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
   const [isConnecting, setIsConnecting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const router = useRouter()
 
   // Categories for menu items
   const categories = ["Appetizer", "Main", "Dessert", "Beverage", "Special"]
@@ -241,6 +243,10 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
     }
   }
 
+  const handleBack = () => {
+    router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/actions/main`)
+  }
+
   // Generate WhatsApp URL with table number
   const generateWhatsAppUrl = (tableNumber: string) => {
     // Format: https://wa.me/[phone-number]?text=[pre-filled-message]
@@ -259,9 +265,14 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={handleBack}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
         <h1 className="text-2xl font-bold">Order Management</h1>
+        </div>
         <Button 
           onClick={saveConfiguration} 
           disabled={isSaving}
@@ -280,7 +291,6 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           )}
         </Button>
       </div>
-
       <Tabs defaultValue="menu">
         <TabsList className="mb-4">
           <TabsTrigger value="menu">Menu Management</TabsTrigger>
