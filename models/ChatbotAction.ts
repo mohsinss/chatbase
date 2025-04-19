@@ -17,7 +17,7 @@ const ChatbotActionSchema = new Schema<IChatbotAction>({
   chatbotId: { type: String, required: true },
   name: { type: String, required: true },
   type: { type: String, required: true },
-  url: { type: String, required: true },
+  url: { type: String, required: false },
   instructions: { type: String, required: true },
   enabled: { type: Boolean, default: true },
   metadata: {
