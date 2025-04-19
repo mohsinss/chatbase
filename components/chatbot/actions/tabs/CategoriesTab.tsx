@@ -15,6 +15,7 @@ interface MenuItem {
   price: number
   category: string
   available: boolean
+  images: string[]
 }
 
 interface Category {
@@ -26,7 +27,7 @@ interface CategoriesTabProps {
   categories: Category[]
   setCategories: (categories: Category[]) => void
   menuItems: MenuItem[]
-  setMenuItems: (items: MenuItem[]) => void
+  setMenuItems: React.Dispatch<React.SetStateAction<MenuItem[]>>
 }
 
 const CategoriesTab = ({ categories, setCategories, menuItems, setMenuItems }: CategoriesTabProps) => {

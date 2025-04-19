@@ -39,6 +39,7 @@ interface MenuItem {
   price: number
   category: string
   available: boolean
+  images: string[]
 }
 
 interface Category {
@@ -137,7 +138,8 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
               description: "Classic pizza with tomato sauce, mozzarella, and basil",
               price: 12.99,
               category: "Main",
-              available: true
+              available: true,
+              images: []
             },
             {
               id: "2",
@@ -145,7 +147,8 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
               description: "Fresh romaine lettuce with Caesar dressing and croutons",
               price: 8.99,
               category: "Appetizer",
-              available: true
+              available: true,
+              images: []
             }
           ]);
           
