@@ -225,7 +225,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             url: "", // Not used for QRoder but required by the model
             instructions: "Use this action to manage restaurant orders via QR codes", // Default instructions
             enabled: isEnabled,
-            type: "QRoder",
+            type: "ordermanagement",
             metadata
           }
         : {

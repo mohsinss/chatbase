@@ -35,23 +35,6 @@ const ACTION_TABS = [
   { id: "integrations", label: "Integrations", icon: <Puzzle className="w-5 h-5" /> },
 ]
 
-const ACTIONS = [
-  {
-    id: "naturesky-meeting",
-    name: "naturesky meeting",
-    description: "Retrieve and book available slots from your Cal.com account",
-    enabled: true,
-    type: "calcom",
-  },
-  {
-    id: "222",
-    name: "222",
-    description: "Retrieve and book available slots from your Cal.com account",
-    enabled: true,
-    type: "calcom",
-  },
-]
-
 const actionsData = [
   {
     id: "calcom",
@@ -324,6 +307,11 @@ const Actions = (
                           {
                             action.type == "calcom" && <div className="flex items-center justify-center w-10 h-10 rounded-full bg-black text-white">
                               Cal
+                            </div>
+                          }
+                          {
+                            action.type == "ordermanagement" && <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-600">
+                              <LayoutGrid className="h-5 w-5" />
                             </div>
                           }
                         </div>
