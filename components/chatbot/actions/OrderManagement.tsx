@@ -360,7 +360,8 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
         <TabsContent value="tables">
           <TablesTab 
             tables={tables} 
-            setTables={setTables} 
+            setTables={setTables}
+            chatbotId={chatbotId}
           />
         </TabsContent>
 
