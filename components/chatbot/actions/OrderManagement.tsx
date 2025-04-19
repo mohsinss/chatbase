@@ -294,7 +294,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
         </div>
       </div>
       
-      {/* Action Name Input */}
+      {/* Action Name Inputt */}
       <div className="mb-6">
         <Label htmlFor="action-name">Action Name</Label>
         <Input
