@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+// This prevents the route from being prerendered during build
+export const dynamic = 'force-dynamic';
 import connectMongo from "@/libs/mongoose";
 import ChatbotConversation from "@/models/ChatbotConversation";
 import InstagramPage from "@/models/InstagramPage";
