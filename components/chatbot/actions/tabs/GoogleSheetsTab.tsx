@@ -348,7 +348,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
       }
 
       // Fetch spreadsheet columns
-      await fetchSpreadsheetColumns();
+      await fetchSpreadsheetColumns(googleSheetConfig);
 
       toast.success("Connected to Google Sheet successfully");
     } catch (error) {
@@ -374,12 +374,16 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
 
     // Fetch columns for the selected sheet
     setTimeout(() => {
-      fetchSpreadsheetColumns();
+      fetchSpreadsheetColumns({
+        ...googleSheetConfig,
+        sheetId,
+        sheetName
+      });
     }, 100);
   };
 
   // Fetch spreadsheet columns
-  const fetchSpreadsheetColumns = async () => {
+  const fetchSpreadsheetColumns = async (googleSheetConfig: any) => {
     if (!googleSheetConfig.sheetId || !googleSheetConfig.sheetName) {
       return;
     }
@@ -521,7 +525,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
                           const [id, name, title] = sheet.split("|");
                           return (
                             <option key={`sheet-${index}`} value={`${id}|${name}`}>
-                              {title || name} ({id.substring(0, 8)}...)
+                              {title || name} ({id.substring(0, 24)}...) - {name}
                             </option>
                           );
                         })}
