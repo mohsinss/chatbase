@@ -70,11 +70,11 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
   const router = useRouter()
   const searchParams = useSearchParams()
   const actionId = searchParams.get("actionId")
-  
+
   // State for action name and enabled status
   const [actionName, setActionName] = useState<string>("Restaurant Order Management")
   const [isEnabled, setIsEnabled] = useState<boolean>(true)
-  
+
   // State for menu items
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
 
@@ -96,7 +96,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
     sheetName: "Orders",
     connected: false
   })
-  
+
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -111,23 +111,23 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           if (!res.ok) {
             throw new Error("Failed to fetch action");
           }
-          
+
           const action = await res.json();
-          
+
           // Set action name and enabled status
           setActionName(action.name || "Restaurant Order Management");
           setIsEnabled(action.enabled !== undefined ? action.enabled : true);
-          
+
           // Parse metadata if it exists
           if (action.metadata) {
             const metadata = action.metadata;
-            
+
             if (metadata.menuItems) setMenuItems(metadata.menuItems);
             if (metadata.categories) setCategories(metadata.categories);
             if (metadata.tables) setTables(metadata.tables);
             if (metadata.googleSheetConfig) setGoogleSheetConfig(metadata.googleSheetConfig);
           }
-          
+
           toast.success("Configuration loaded");
         } else {
           // Sample data for new action
@@ -151,7 +151,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
               images: []
             }
           ]);
-          
+
           setTables([
             {
               id: "1",
@@ -194,7 +194,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
 
         toast.success('Successfully updated.');
       }
-      
+
       setIsEnabled(checked);
     } catch (error) {
       console.error("Failed to toggle action status:", error);
@@ -208,9 +208,9 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
       toast.error("Action name is required");
       return;
     }
-    
+
     setIsSaving(true);
-    
+
     try {
       // Prepare metadata
       const metadata: OrderManagementConfig = {
@@ -219,28 +219,28 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
         tables,
         googleSheetConfig
       };
-      
+
       // Prepare request body
       const requestBody = actionId
         ? {
-            actionId,
-            name: actionName,
-            url: "", // Not used for QRoder but required by the model
-            instructions: "Use this action to manage restaurant orders via QR codes", // Default instructions
-            enabled: isEnabled,
-            type: "ordermanagement",
-            metadata
-          }
+          actionId,
+          name: actionName,
+          url: "", // Not used for QRoder but required by the model
+          instructions: "Use this action to manage restaurant orders via QR codes", // Default instructions
+          enabled: isEnabled,
+          type: "ordermanagement",
+          metadata
+        }
         : {
-            chatbotId,
-            name: actionName,
-            url: "", // Not used for QRoder but required by the model
-            instructions: "Use this action to manage restaurant orders via QR codes", // Default instructions
-            enabled: isEnabled,
-            type: "QRoder",
-            metadata
-          };
-      
+          chatbotId,
+          name: actionName,
+          url: "", // Not used for QRoder but required by the model
+          instructions: "Use this action to manage restaurant orders via QR codes", // Default instructions
+          enabled: isEnabled,
+          type: "QRoder",
+          metadata
+        };
+
       // Make API request
       const response = await fetch(`/api/chatbot/action`, {
         method: actionId ? "PUT" : "POST",
@@ -253,9 +253,9 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
       if (!response.ok) {
         throw new Error(data?.error || "Failed to save configuration.");
       }
-      
+
       toast.success("Configuration saved successfully");
-      
+
       // Redirect to main actions page
       router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/actions/main`);
     } catch (error) {
@@ -293,7 +293,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           <Switch checked={isEnabled} onCheckedChange={handleToggle} />
         </div>
       </div>
-      
+
       {/* Action Name Inputt */}
       <div className="mb-6">
         <Label htmlFor="action-name">Action Name</Label>
@@ -308,10 +308,10 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           A descriptive name for this action. This will help identify it in the actions list.
         </p>
       </div>
-      
+
       <div className="flex justify-end mb-6">
-        <Button 
-          onClick={saveConfiguration} 
+        <Button
+          onClick={saveConfiguration}
           disabled={isSaving}
           className="bg-green-600 hover:bg-green-700"
         >
@@ -328,7 +328,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           )}
         </Button>
       </div>
-      
+
       <Tabs defaultValue="menu">
         <TabsList className="mb-4">
           <TabsTrigger value="menu">Menu Management</TabsTrigger>
@@ -339,27 +339,27 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
 
         {/* Menu Management Tab */}
         <TabsContent value="menu">
-          <MenuTab 
-            menuItems={menuItems} 
-            setMenuItems={setMenuItems} 
-            categories={categories} 
+          <MenuTab
+            menuItems={menuItems}
+            setMenuItems={setMenuItems}
+            categories={categories}
           />
         </TabsContent>
 
         {/* Categories Tab */}
         <TabsContent value="categories">
-          <CategoriesTab 
-            categories={categories} 
-            setCategories={setCategories} 
-            menuItems={menuItems} 
-            setMenuItems={setMenuItems} 
+          <CategoriesTab
+            categories={categories}
+            setCategories={setCategories}
+            menuItems={menuItems}
+            setMenuItems={setMenuItems}
           />
         </TabsContent>
 
         {/* Table QR Codes Tab */}
         <TabsContent value="tables">
-          <TablesTab 
-            tables={tables} 
+          <TablesTab
+            tables={tables}
             setTables={setTables}
             chatbotId={chatbotId}
           />
@@ -367,9 +367,11 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
 
         {/* Google Sheets Integration Tab */}
         <TabsContent value="sheets">
-          <GoogleSheetsTab 
-            googleSheetConfig={googleSheetConfig} 
-            setGoogleSheetConfig={setGoogleSheetConfig} 
+          <GoogleSheetsTab
+            googleSheetConfig={googleSheetConfig}
+            setGoogleSheetConfig={setGoogleSheetConfig}
+            chatbotId={chatbotId}
+            teamId={teamId}
           />
         </TabsContent>
       </Tabs>
