@@ -26,7 +26,6 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
   const [isConnecting, setIsConnecting] = useState(false)
   const [isAuthorizing, setIsAuthorizing] = useState(false)
   const [isRemoving, setIsRemoving] = useState(false)
-  const [googleAuthUrl, setGoogleAuthUrl] = useState("")
   const [spreadsheetColumns, setSpreadsheetColumns] = useState<string[]>([])
   const [isLoadingColumns, setIsLoadingColumns] = useState(false)
   const [availableSheets, setAvailableSheets] = useState<string[]>([])
@@ -34,26 +33,6 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
 
   // Fetch Google Auth URL and check connection status on component mount
   useEffect(() => {
-    const fetchGoogleAuthUrl = async () => {
-      try {
-        const response = await fetch(`/api/chatbot/integrations/google/auth-url?chatbotId=${chatbotId}&teamId=${teamId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch Google Auth URL");
-        }
-
-        const data = await response.json();
-        setGoogleAuthUrl(data.authUrl);
-      } catch (error) {
-        console.error("Error fetching Google Auth URL:", error);
-      }
-    };
-
     // Check if already connected
     const checkConnection = async () => {
       try {
@@ -74,7 +53,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
             ...googleSheetConfig,
             connected: true
           });
-          
+
           // If connected, fetch available sheets
           fetchAvailableSheets();
         }
@@ -83,14 +62,33 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
       }
     };
 
-    fetchGoogleAuthUrl();
     checkConnection();
   }, [chatbotId, teamId]);
-  
+
+  const fetchGoogleAuthUrl = async () => {
+    try {
+      const response = await fetch(`/api/chatbot/integrations/google/auth-url?chatbotId=${chatbotId}&teamId=${teamId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch Google Auth URL");
+      }
+
+      const data = await response.json();
+      return data.authUrl;
+    } catch (error) {
+      console.error("Error fetching Google Auth URL:", error);
+    }
+  };
+
   // Fetch available sheets from the user's Google Drive
   const fetchAvailableSheets = async () => {
     if (!googleSheetConfig.connected) return;
-    
+
     setIsLoadingSheets(true);
     try {
       const response = await fetch(`/api/chatbot/integrations/google/sheets/list?chatbotId=${chatbotId}`, {
@@ -114,118 +112,167 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
     }
   };
 
+  // Set up message listener for auth window communication
+  useEffect(() => {
+    // Handler for messages from the auth window
+    const handleAuthMessage = (event: MessageEvent) => {
+      console.log(event)
+      // Check if the message is from our auth window
+      if (event.data && (event.data.type === 'GOOGLE_AUTH_SUCCESS' || event.data.type === 'GOOGLE_AUTH_FAILURE')) {
+        console.log('Received auth message:', event.data);
+
+        if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+          // Handle successful authentication
+          setIsAuthorizing(false);
+          toast.success("Successfully authorized with Google");
+
+          // Update the Google Sheet config
+          setGoogleSheetConfig({
+            ...googleSheetConfig,
+            connected: true
+          });
+
+          // Fetch available sheets
+          setTimeout(() => {
+            fetchAvailableSheets();
+          }, 500);
+        } else if (event.data.type === 'GOOGLE_AUTH_FAILURE') {
+          // Handle authentication failure
+          setIsAuthorizing(false);
+          toast.error(event.data.message || "Authentication failed. Please try again.");
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('message', handleAuthMessage);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('message', handleAuthMessage);
+    };
+  }, [googleSheetConfig, chatbotId]); // Re-add listener if these dependencies change
+
   // Authorize with Google
-  const handleAuthorizeGoogle = () => {
+  const handleAuthorizeGoogle = async () => {
     setIsAuthorizing(true);
-    
-    // Store window reference
+
+    // Variable to track if we've handled the window closing
+    let windowCloseHandled = false;
     let authWindow: Window | null = null;
     let checkWindowClosed: NodeJS.Timeout;
-    let checkAuthStatus: NodeJS.Timeout;
-    
+    let authTimeout: NodeJS.Timeout;
+
     try {
+      let googleAuthUrl = await fetchGoogleAuthUrl();
       // Force open in a new window, not a tab
       authWindow = window.open(
         googleAuthUrl,
         "googleAuthWindow",
         "width=600,height=700,menubar=no,toolbar=no,location=no,resizable=yes,scrollbars=yes"
       );
-      
+
       // Check if window was blocked by popup blocker
       if (!authWindow) {
         setIsAuthorizing(false);
         toast.error("Popup was blocked. Please allow popups for this site.");
         return;
       }
-      
+
       // Try to focus the window
       authWindow.focus();
-      
-      // Detect when auth window is closed
-      checkWindowClosed = setInterval(() => {
-        try {
-          // This will throw an error if the window is closed
-          if (authWindow && authWindow.closed) {
-            console.log("Auth window was closed");
-            clearInterval(checkWindowClosed);
-            
-            if (checkAuthStatus) {
-              clearInterval(checkAuthStatus);
-            }
-            
-            // If we haven't been authorized yet, show an alert
-            setIsAuthorizing(false);
-            toast.error("Authentication window was closed. Please try again.");
-          }
-        } catch (error) {
-          console.error("Error checking if window closed:", error);
-          clearInterval(checkWindowClosed);
-        }
-      }, 500);
-      
-      // Poll for authorization status
-      checkAuthStatus = setInterval(async () => {
-        try {
-          const response = await fetch(`/api/chatbot/integrations/google/status?chatbotId=${chatbotId}`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-  
-          if (!response.ok) {
-            return;
-          }
-  
-          const data = await response.json();
-          if (data.connected) {
-            if (checkAuthStatus) clearInterval(checkAuthStatus);
-            if (checkWindowClosed) clearInterval(checkWindowClosed);
-            
-            // Try to close the auth window
-            if (authWindow && !authWindow.closed) {
-              try {
-                authWindow.close();
-              } catch (error) {
-                console.error("Error closing auth window:", error);
-              }
-            }
-            
-            setIsAuthorizing(false);
-            toast.success("Successfully authorized with Google");
-            setGoogleSheetConfig({
-              ...googleSheetConfig,
-              connected: true
-            });
-          }
-        } catch (error) {
-          console.error("Error checking Google auth status:", error);
-        }
-      }, 2000);
-  
-      // Clear intervals after 2 minutes (timeout)
-      setTimeout(() => {
-        if (checkAuthStatus) clearInterval(checkAuthStatus);
-        if (checkWindowClosed) clearInterval(checkWindowClosed);
-        
-        // Try to close the auth window if it's still open
-        if (authWindow && !authWindow.closed) {
-          try {
-            authWindow.close();
-          } catch (error) {
-            console.error("Error closing auth window on timeout:", error);
-          }
-        }
-        
-        if (isAuthorizing) {
+
+      console.log("Auth window opened");
+
+      // Set a backup timeout in case we don't receive a message
+      authTimeout = setTimeout(() => {
+        if (isAuthorizing && !windowCloseHandled) {
+          windowCloseHandled = true;
           setIsAuthorizing(false);
           toast.error("Authorization timed out. Please try again.");
+
+          // Check if we're actually authorized despite the timeout
+          checkAuthorizationStatus();
         }
-      }, 120000);
+      }, 120000); // 2 minutes timeout
+
+      // Set up a fallback for window closing without sending a message
+      checkWindowClosed = setInterval(() => {
+        try {
+          // This will throw an error if the window reference is invalid
+          if (authWindow && authWindow.closed) {
+            console.log("Auth window was manually closed");
+
+            if (!windowCloseHandled) {
+              windowCloseHandled = true;
+              clearInterval(checkWindowClosed);
+              clearTimeout(authTimeout);
+
+              setIsAuthorizing(false);
+              // toast.error("Authentication window was closed. Please try again.");
+
+              // Small delay before checking status to allow any in-flight requests to complete
+              // setTimeout(() => {
+              //   checkAuthorizationStatus();
+              // }, 1000);
+            }
+          }
+        } catch (e) {
+          console.error("Error checking window status:", e);
+          // If we can't access the window reference, assume it's closed
+          if (!windowCloseHandled) {
+            windowCloseHandled = true;
+            clearInterval(checkWindowClosed);
+            clearTimeout(authTimeout);
+
+            setIsAuthorizing(false);
+            // toast.error("Authentication window was closed. Please try again.");
+            checkAuthorizationStatus();
+          }
+        }
+      }, 500); // Check more frequently
     } catch (error) {
       console.error("Error in Google authorization process:", error);
       setIsAuthorizing(false);
       toast.error("An error occurred during authorization. Please try again.");
+    }
+  };
+
+  // Check authorization status as a fallback
+  const checkAuthorizationStatus = async () => {
+    try {
+      const response = await fetch(`/api/chatbot/integrations/google/status?chatbotId=${chatbotId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        setIsAuthorizing(false);
+        toast.error("Sth went wrong while get auth status. Please try again.");
+        return;
+      }
+
+      const data = await response.json();
+      if (data.connected) {
+        setIsAuthorizing(false);
+        toast.success("Successfully authorized with Google");
+        setGoogleSheetConfig({
+          ...googleSheetConfig,
+          connected: true
+        });
+
+        // Fetch available sheets
+        fetchAvailableSheets();
+      } else {
+        setIsAuthorizing(false);
+        toast.error("Authentication window was closed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error checking Google auth status:", error);
+      setIsAuthorizing(false);
+      toast.error("Failed to verify authentication status. Please try again.");
     }
   };
 
@@ -234,7 +281,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
     if (!confirm("Are you sure you want to remove Google authorization? This will disconnect all Google Sheets integrations.")) {
       return;
     }
-    
+
     setIsRemoving(true);
     try {
       const response = await fetch(`/api/chatbot/integrations/google/remove`, {
@@ -250,7 +297,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
       if (!response.ok) {
         throw new Error("Failed to remove Google authorization");
       }
-      
+
       // Reset state
       setGoogleSheetConfig({
         sheetId: "",
@@ -259,7 +306,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
       });
       setSpreadsheetColumns([]);
       setAvailableSheets([]);
-      
+
       toast.success("Google authorization removed successfully");
     } catch (error) {
       console.error("Error removing Google authorization:", error);
@@ -302,7 +349,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
 
       // Fetch spreadsheet columns
       await fetchSpreadsheetColumns();
-      
+
       toast.success("Connected to Google Sheet successfully");
     } catch (error) {
       console.error("Error connecting to Google Sheet:", error);
@@ -311,20 +358,20 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
       setIsConnecting(false);
     }
   };
-  
+
   // Handle sheet selection from dropdown
   const handleSheetSelection = (sheetInfo: string) => {
     if (!sheetInfo) return;
-    
+
     // Format is "sheetId|sheetName"
     const [sheetId, sheetName] = sheetInfo.split("|");
-    
+
     setGoogleSheetConfig({
       ...googleSheetConfig,
       sheetId,
       sheetName
     });
-    
+
     // Fetch columns for the selected sheet
     setTimeout(() => {
       fetchSpreadsheetColumns();
@@ -383,8 +430,8 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
               </p>
               <div className="flex space-x-2">
                 {!googleSheetConfig.connected ? (
-                  <Button 
-                    onClick={handleAuthorizeGoogle} 
+                  <Button
+                    onClick={handleAuthorizeGoogle}
                     disabled={isAuthorizing}
                   >
                     {isAuthorizing ? (
@@ -401,14 +448,14 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
                   </Button>
                 ) : (
                   <>
-                    <Button 
+                    <Button
                       className="bg-green-600 hover:bg-green-700"
                       disabled
                     >
                       <FileSpreadsheet className="mr-2 h-4 w-4" />
                       Authorized with Google
                     </Button>
-                    <Button 
+                    <Button
                       variant="destructive"
                       onClick={handleRemoveAuthorization}
                       disabled={isRemoving}
@@ -432,53 +479,64 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
             {/* Google Sheets Configuration */}
             {googleSheetConfig.connected && (
               <div className="mb-6 p-4 border rounded-md">
-                <h3 className="text-lg font-medium mb-2">Select Google Sheet</h3>
-                
+                <div className="flex gap-4 mb-2">
+                  <h3 className="text-lg font-medium">Select Google Sheet</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={fetchAvailableSheets}
+                    disabled={isLoadingSheets}
+                    className="h-8 w-8 p-0"
+                    title="Refresh sheets list"
+                  >
+                    {isLoadingSheets ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    )}
+                  </Button>
+                </div>
+
                 {isLoadingSheets ? (
                   <div className="flex items-center py-2">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     <span>Loading available sheets...</span>
                   </div>
                 ) : availableSheets.length > 0 ? (
                   <div className="mb-4">
-                    <Label htmlFor="sheet-select">Available Google Sheets</Label>
-                    <select
-                      id="sheet-select"
-                      className="w-full mt-2 border border-gray-300 rounded-md shadow-sm p-2"
-                      onChange={(e) => handleSheetSelection(e.target.value)}
-                      value={`${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`}
-                    >
-                      <option value="">Select a Google Sheet</option>
-                      {availableSheets.map((sheet, index) => {
-                        const [id, name, title] = sheet.split("|");
-                        return (
-                          <option key={`sheet-${index}`} value={`${id}|${name}`}>
-                            {title || name} ({id.substring(0, 8)}...)
-                          </option>
-                        );
-                      })}
-                    </select>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="sheet-select">Available Google Sheets</Label>
+                    </div>
+                    <div className="relative mt-2">
+                      <select
+                        id="sheet-select"
+                        className="w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10"
+                        onChange={(e) => handleSheetSelection(e.target.value)}
+                        value={`${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`}
+                        disabled={isLoadingSheets}
+                      >
+                        <option value="">Select a Google Sheet</option>
+                        {availableSheets.map((sheet, index) => {
+                          const [id, name, title] = sheet.split("|");
+                          return (
+                            <option key={`sheet-${index}`} value={`${id}|${name}`}>
+                              {title || name} ({id.substring(0, 8)}...)
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
                     <p className="text-xs text-gray-500 mt-1">
                       Select from your available Google Sheets or enter details manually below
                     </p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-2"
-                      onClick={fetchAvailableSheets}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Refresh List
-                    </Button>
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500 mb-4">
                     No Google Sheets found. Enter sheet details manually below.
                   </p>
                 )}
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <Label htmlFor="sheet-id">Google Sheet ID</Label>
@@ -505,8 +563,8 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
                 </div>
               </div>
             )}
-            <Button 
-              onClick={handleConnectGoogleSheet} 
+            <Button
+              onClick={handleConnectGoogleSheet}
               disabled={isConnecting || !googleSheetConfig.sheetId || !googleSheetConfig.connected}
               className={googleSheetConfig.connected && spreadsheetColumns.length > 0 ? "bg-green-600 hover:bg-green-700" : ""}
             >
@@ -563,8 +621,8 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
                   <div className="bg-white p-2 rounded">Status</div>
                 </div>
                 <p className="text-xs text-gray-500 mt-4">
-                  {googleSheetConfig.connected ? 
-                    "Connect to your Google Sheet to see the actual columns." : 
+                  {googleSheetConfig.connected ?
+                    "Connect to your Google Sheet to see the actual columns." :
                     "These are the default columns that will be created in your Google Sheet."}
                 </p>
               </div>
@@ -578,7 +636,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
               <div>
                 <Label htmlFor="auto-sync">Auto-Sync Orders</Label>
                 <div className="flex items-center mt-2">
-                  <Switch 
+                  <Switch
                     id="auto-sync"
                     checked={true}
                     disabled={!googleSheetConfig.connected || spreadsheetColumns.length === 0}
@@ -588,10 +646,10 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
                   </span>
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="sync-frequency">Sync Frequency</Label>
-                <select 
+                <select
                   id="sync-frequency"
                   className="w-full mt-2 border border-gray-300 rounded-md shadow-sm p-2"
                   disabled={!googleSheetConfig.connected || spreadsheetColumns.length === 0}
