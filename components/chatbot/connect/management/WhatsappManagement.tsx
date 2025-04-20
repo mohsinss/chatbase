@@ -467,6 +467,18 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                                                 {({ active }) => (
                                                                     <div
                                                                         className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
+                                                                        onClick={() => {
+                                                                            window.open(`https://business.facebook.com/wa/manage/message-templates/?waba_id=${phone.wabaId}&phone_number=${phone.display_phone_number}`, '_blank');
+                                                                        }}
+                                                                    >
+                                                                        Manage Template
+                                                                    </div>
+                                                                )}
+                                                            </Menu.Item>
+                                                            <Menu.Item>
+                                                                {({ active }) => (
+                                                                    <div
+                                                                        className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
                                                                         onClick={() => handleSettingsMenu(phone._id)}
                                                                     >
                                                                         Advanced Settings
