@@ -185,11 +185,11 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
 
-        // Validate file size (1MB limit)
-        if (file.size > 1024 * 1024) {
-          toast.error("File size must be less than 1MB")
-          continue
-        }
+        // Validate file size (10MB limit)
+        // if (file.size > 1024 * 1024) {
+        //   toast.error("File size must be less than 1MB")
+        //   continue
+        // }
 
         // Validate file type
         if (!['image/jpeg', 'image/png', 'image/svg+xml'].includes(file.type)) {
