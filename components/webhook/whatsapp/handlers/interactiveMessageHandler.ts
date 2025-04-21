@@ -278,51 +278,58 @@ async function handleOrderManagementButton(
         `Welcome back! You're at table ${tableName}. Please select a category to view our menu:`
       );
       
-      // Prepare buttons for categories
-      const buttons = categories.slice(0, 3).map((category: any) => ({
-        type: "reply",
-        reply: {
-          id: `om-category-${tableName}-${action.id}-${category.id}`,
-          title: category.name
+      // Prepare list rows from categories
+      const sections = [
+        {
+          title: "Menu Categories",
+          rows: categories.map((category: any) => ({
+            id: `om-category-${tableName}-${action.id}-${category.id}`,
+            title: category.name,
+            description: "" // Optional: you can add a short description here
+          }))
         }
-      }));
+      ];
       
-      // Send interactive button message with categories
-      const buttonsPayload = {
+      // Build the list message payload
+      const listPayload = {
         messaging_product: "whatsapp",
         recipient_type: "individual",
         to: from,
         type: "interactive",
         interactive: {
-          type: "button",
+          type: "list",
           body: {
-            text: "Menu Categories"
+            text: "Please choose a menu category:"
+          },
+          footer: {
+            text: "Select a category to continue." // Optional footer text
           },
           action: {
-            buttons
+            button: "Select Category", // This is the button label users tap
+            sections: sections
           }
         }
       };
       
-      // Send the buttons via WhatsApp API
+      // Send the list message via WhatsApp API
       await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
         },
-        body: JSON.stringify(buttonsPayload)
+        body: JSON.stringify(listPayload)
       });
       
       // Add to conversation history
       await addAssistantMessageToConversation(
         conversation, 
-        JSON.stringify(buttonsPayload)
+        JSON.stringify(listPayload)
       );
       
       return { 
         success: true, 
-        message: "Categories sent" 
+        message: "Categories list sent" 
       };
     }
     
@@ -378,60 +385,72 @@ async function handleCategoryButton(
     };
   }
   
-  // Prepare buttons for menu items (max 3 buttons allowed by WhatsApp)
-  const buttons = menuItems.slice(0, 2).map((item: any) => ({
-    type: "reply",
-    reply: {
-      id: `om-menu-${tableName}-${action.id}-${item.id}`,
-      title: item.name
-    }
-  }));
+  // Find the category name for display
+  const categoryName = (action.metadata?.categories || []).find(
+    (cat: any) => cat.id === categoryId
+  )?.name || categoryId;
   
-  // Add back button
-  buttons.push({
-    type: "reply",
-    reply: {
+  // Prepare list rows for menu items
+  const rows = [
+    // Add back option as the first item
+    {
       id: `om-back-${tableName}-${action.id}`,
-      title: "Back to Categories"
-    }
-  });
+      title: "Back to Categories",
+      description: "Return to menu categories"
+    },
+    // Add menu items
+    ...menuItems.map((item: any) => ({
+      id: `om-menu-${tableName}-${action.id}-${item.id}`,
+      title: item.name,
+      description: `$${item.price.toFixed(2)}${item.description ? ` - ${item.description.substring(0, 50)}${item.description.length > 50 ? '...' : ''}` : ''}`
+    }))
+  ];
   
-  // Send interactive button message with menu items
-  const buttonsPayload = {
+  // Build the list message payload
+  const listPayload = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
     to: from,
     type: "interactive",
     interactive: {
-      type: "button",
+      type: "list",
       body: {
-        text: `Menu items in ${categoryId} for table ${tableName}:`
+        text: `Menu items in ${categoryName} for table ${tableName}:`
+      },
+      footer: {
+        text: "Select an item to view details or order."
       },
       action: {
-        buttons
+        button: "View Menu Items",
+        sections: [
+          {
+            title: categoryName,
+            rows: rows
+          }
+        ]
       }
     }
   };
   
-  // Send the buttons via WhatsApp API
+  // Send the list message via WhatsApp API
   await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
     method: "POST",
     headers: { 
       "Content-Type": "application/json",
       "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
     },
-    body: JSON.stringify(buttonsPayload)
+    body: JSON.stringify(listPayload)
   });
   
   // Add to conversation history
   await addAssistantMessageToConversation(
     conversation, 
-    JSON.stringify(buttonsPayload)
+    JSON.stringify(listPayload)
   );
   
   return { 
     success: true, 
-    message: "Category menu items sent" 
+    message: "Category menu items list sent" 
   };
 }
 
@@ -614,46 +633,53 @@ async function handleConfirmButton(
   const categories = action.metadata?.categories || [];
   
   if (categories.length > 0) {
-    // Prepare buttons for categories (max 3 buttons allowed by WhatsApp)
-    const buttons = categories.slice(0, 3).map((category: any) => ({
-      type: "reply",
-      reply: {
-        id: `om-category-${tableName}-${action.id}-${category.id}`,
-        title: category.name
+    // Prepare list rows from categories
+    const sections = [
+      {
+        title: "Menu Categories",
+        rows: categories.map((category: any) => ({
+          id: `om-category-${tableName}-${action.id}-${category.id}`,
+          title: category.name,
+          description: "" // Optional: you can add a short description here
+        }))
       }
-    }));
+    ];
     
-    // Send interactive button message with categories for next order
-    const buttonsPayload = {
+    // Build the list message payload
+    const listPayload = {
       messaging_product: "whatsapp",
       recipient_type: "individual",
       to: from,
       type: "interactive",
       interactive: {
-        type: "button",
+        type: "list",
         body: {
           text: "Would you like to order anything else?"
         },
+        footer: {
+          text: "Select a category to continue ordering." // Optional footer text
+        },
         action: {
-          buttons
+          button: "View Menu", // This is the button label users tap
+          sections: sections
         }
       }
     };
     
-    // Send the buttons via WhatsApp API
+    // Send the list message via WhatsApp API
     await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
         "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
       },
-      body: JSON.stringify(buttonsPayload)
+      body: JSON.stringify(listPayload)
     });
     
     // Add to conversation history
     await addAssistantMessageToConversation(
       conversation, 
-      JSON.stringify(buttonsPayload)
+      JSON.stringify(listPayload)
     );
   }
   

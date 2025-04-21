@@ -54,7 +54,7 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
     name: "",
     description: "",
     price: 0,
-    category: categories.length > 0 ? categories[0].name : "Main",
+    category: categories.length > 0 ? categories[0].id : "",
     available: true,
     images: []
   })
@@ -79,7 +79,7 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
       name: "",
       description: "",
       price: 0,
-      category: categories.length > 0 ? categories[0].name : "Main",
+      category: categories.length > 0 ? categories[0].id : "",
       available: true,
       images: []
     })
@@ -359,9 +359,9 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     {categories.map((category) => (
-                      <option key={category.id} value={category.name}>
-                        {category.name}
-                      </option>
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
                     ))}
                   </select>
                 </div>
@@ -505,7 +505,9 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
                               <div className="text-sm text-gray-500">{item.description}</div>
                             )}
                             <div className="flex items-center mt-2 space-x-4">
-                              <span className="text-sm bg-gray-100 px-2 py-1 rounded">{item.category}</span>
+                              <span className="text-sm bg-gray-100 px-2 py-1 rounded">
+                                {categories.find(cat => cat.id === item.category)?.name || item.category}
+                              </span>
                               <span className="font-medium">${item.price.toFixed(2)}</span>
                               <div className="flex items-center">
                                 <Switch
@@ -589,7 +591,7 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
                                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                               >
                                 {categories.map((category) => (
-                                  <option key={category.id} value={category.name}>
+                                  <option key={category.id} value={category.id}>
                                     {category.name}
                                   </option>
                                 ))}
