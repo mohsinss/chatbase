@@ -682,6 +682,15 @@ export async function handleInteractiveMessage(
         interactive.button_reply
       );
     }
+    else if (interactive.type === 'list_reply') {
+      // Handle list replies similar to button replies
+      return await handleButtonReply(
+        from,
+        phoneNumberId,
+        messageId,
+        interactive.list_reply
+      );
+    }
     
     // Add handlers for other interactive types if needed
     

@@ -1,10 +1,10 @@
 /**
  * Handler for text messages in WhatsApp webhook
  */
-import { 
-  getWhatsAppNumber, 
-  getOrCreateConversation, 
-  getConversationAIResponse, 
+import {
+  getWhatsAppNumber,
+  getOrCreateConversation,
+  getConversationAIResponse,
   addAssistantMessageToConversation,
   isAutoReplyDisabled
 } from '@/components/webhook/whatsapp/services/conversationService';
@@ -37,25 +37,25 @@ export async function handleTextMessage(
     // Check if message is too old
     const currentTimestamp = (new Date().getTime()) / 1000;
     if (isMessageTooOld(timestamp, currentTimestamp)) {
-      return { 
-        success: true, 
-        message: 'Delivery denied due to long delay' 
+      return {
+        success: true,
+        message: 'Delivery denied due to long delay'
       };
     }
 
     // Get WhatsApp number details
     const whatsappNumber = await getWhatsAppNumber(phoneNumberId);
     if (!whatsappNumber) {
-      return { 
-        success: false, 
-        message: "WhatsApp number not registered to the site" 
+      return {
+        success: false,
+        message: "WhatsApp number not registered to the site"
       };
     }
 
     const chatbotId = whatsappNumber.chatbotId;
     const whatsappSettings = whatsappNumber.settings || {};
     const { prompt: customPrompt, delay } = whatsappSettings;
-    
+
     // Apply configured delay
     await applyConfiguredDelay(delay);
 
@@ -68,11 +68,11 @@ export async function handleTextMessage(
       whatsappNumber.display_phone_number,
       text
     );
-    
+
     // Find enabled OrderManagement actions
-    const enabledOMActions = await ChatbotAction.find({ 
-      chatbotId, 
-      enabled: true, 
+    const enabledOMActions = await ChatbotAction.find({
+      chatbotId,
+      enabled: true,
       type: "ordermanagement",
       'metadata.phoneNumber': whatsappNumber.display_phone_number
     });
@@ -80,16 +80,16 @@ export async function handleTextMessage(
     // Check if the message matches a table order template
     let isTableOrder = false;
     let tableName = null;
-    
+
     if (enabledOMActions.length > 0) {
       for (const action of enabledOMActions) {
         if (action.metadata?.messageTemplate) {
           const template = action.metadata?.messageTemplate;
           if (!template) continue;
-        
+
           const templateRegex = templateToRegex(template);
           const match = text.match(templateRegex);
-        
+
           if (match?.groups?.table) {
             isTableOrder = true;
             tableName = match.groups.table.trim();
@@ -98,71 +98,78 @@ export async function handleTextMessage(
         }
       }
     }
-    
+
     // If this is a table order, handle it specially
     if (isTableOrder && tableName) {
       console.log(`Received order from table: ${tableName}`);
-      
+
       // Get categories from the OrderManagement action
       const action = enabledOMActions[0]; // Use the first enabled action
       const categories = action.metadata?.categories || [];
-      
+
       if (categories.length === 0) {
         // If no categories, send a simple confirmation
         await sendTextMessage(
-          phoneNumberId, 
-          from, 
+          phoneNumberId,
+          from,
           `Thank you for your order from table ${tableName}. A staff member will assist you shortly.`
         );
-        
+
         await addAssistantMessageToConversation(
-          conversation, 
+          conversation,
           `Thank you for your order from table ${tableName}. A staff member will assist you shortly.`
         );
       } else {
         // Send welcome message
         await sendTextMessage(
-          phoneNumberId, 
-          from, 
+          phoneNumberId,
+          from,
           `Welcome to our restaurant! You're at table ${tableName}. Please select a category to view our menu:`
         );
-        
-        // Prepare buttons for categories (max 3 buttons allowed by WhatsApp)
-        const buttons = categories.slice(0, 3).map((category: { id: string, name: string }) => ({
-          type: "reply",
-          reply: {
-            id: `om-category-${tableName}-${action.id}-${category.id}`,
-            title: category.name
+
+        // Prepare list rows from categories
+        const sections = [
+          {
+            title: "Menu Categories",
+            rows: categories.map((category: { id: string, name: string }) => ({
+              id: `om-category-${tableName}-${action.id}-${category.id}`,
+              title: category.name,
+              description: "" // Optional: you can add a short description here
+            }))
           }
-        }));
-        
-        // Send interactive button message with categories
-        const buttonsPayload = {
+        ];
+
+        // Build the list message payload
+        const listPayload = {
           messaging_product: "whatsapp",
           recipient_type: "individual",
           to: from,
           type: "interactive",
           interactive: {
-            type: "button",
+            type: "list",
             body: {
-              text: "Menu Categories"
+              text: "Please choose a menu category:"
+            },
+            footer: {
+              text: "Select a category to continue." // Optional footer text
             },
             action: {
-              buttons
+              button: "Select Category", // This is the button label users tap
+              sections: sections
             }
           }
         };
-        
-        // Send the buttons via WhatsApp API
+
+        // Send the list message via WhatsApp API
         await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
           },
-          body: JSON.stringify(buttonsPayload)
+          body: JSON.stringify(listPayload)
         });
-        
+
         // Save the table number in the conversation metadata for future reference
         conversation.metadata = {
           ...conversation.metadata,
@@ -170,14 +177,14 @@ export async function handleTextMessage(
           orderManagementActionId: action.id
         };
         await conversation.save();
-        
+
         // Add to conversation history
         await addAssistantMessageToConversation(
-          conversation, 
-          JSON.stringify(buttonsPayload)
+          conversation,
+          JSON.stringify(listPayload)
         );
       }
-      
+
       return {
         success: true,
         message: `Table order initiated for table ${tableName}`
@@ -187,8 +194,8 @@ export async function handleTextMessage(
     // Check if auto-reply is disabled
     if (isAutoReplyDisabled(conversation)) {
       return {
-        success: true, 
-        message: "Auto response is disabled" 
+        success: true,
+        message: "Auto response is disabled"
       };
     }
 
@@ -198,11 +205,11 @@ export async function handleTextMessage(
     // Process question flow if enabled and triggered
     if (qfEnabled && flow && triggerQF) {
       await processInitialNode(phoneNumberId, from, conversation, flow);
-      return { 
-        success: true, 
-        message: "Question flow processed" 
+      return {
+        success: true,
+        message: "Question flow processed"
       };
-    } 
+    }
     // If QF is not triggered or not enabled, use AI response
     else {
       // Only proceed with AI response if QF is not enabled or AI responses are enabled
@@ -217,26 +224,26 @@ export async function handleTextMessage(
 
         // Send response
         await sendTextMessage(phoneNumberId, from, responseText);
-        
+
         // Update conversation
         await addAssistantMessageToConversation(conversation, responseText);
-        
-        return { 
-          success: true, 
-          message: "AI response sent" 
+
+        return {
+          success: true,
+          message: "AI response sent"
         };
       }
     }
 
-    return { 
-      success: true, 
-      message: "Message processed" 
+    return {
+      success: true,
+      message: "Message processed"
     };
   } catch (error) {
     console.error('Error handling text message:', error);
-    return { 
-      success: false, 
-      message: `Error: ${error.message}` 
+    return {
+      success: false,
+      message: `Error: ${error.message}`
     };
   }
 }
