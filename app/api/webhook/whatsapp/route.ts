@@ -1,20 +1,23 @@
-import axios from 'axios';
-import WhatsAppNumber from '@/models/WhatsAppNumber';
-import connectMongo from "@/libs/mongoose";
+/**
+ * WhatsApp webhook route handler
+ */
 import { NextRequest, NextResponse } from 'next/server';
-import ChatbotConversation from '@/models/ChatbotConversation';
-import { getAIResponse } from '@/libs/utils-ai';
-import Dataset from '@/models/Dataset';
-import { sleep } from '@/libs/utils';
-import Chatbot from '@/models/Chatbot';
-import { sampleFlow } from '@/types';
+import connectMongo from "@/libs/mongoose";
+import { extractMessageData } from './utils/helpers';
+import { logWebhookData, logWebhookError } from './utils/logging';
+import { handleTextMessage } from './handlers/textMessageHandler';
+import { handleInteractiveMessage } from './handlers/interactiveMessageHandler';
 
+/**
+ * Handle GET request for webhook verification
+ */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get('hub.mode');
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
+  // Verify token
   if (mode === 'subscribe' && token === 'your_verify_token') {
     return NextResponse.json(Number(challenge), { status: 200 });
   } else {
@@ -22,415 +25,79 @@ export async function GET(request: Request) {
   }
 }
 
+/**
+ * Handle POST request for webhook events
+ */
 export async function POST(request: Request) {
   try {
     // Parse the incoming request body
     const data = await request.json();
 
-    if (process.env.ENABLE_WEBHOOK_LOGGING_WHATSAPP == "1") {
-      // Send data to the specified URL
-      const response = await fetch('http://webhook.mrcoders.org/whatsapp.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+    // Log webhook data if enabled
+    await logWebhookData(data);
 
-      // Check if the request was successful
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    // Ensure MongoDB connection
+    await connectMongo();
+
+    // Extract message data
+    const messageData = extractMessageData(data);
+    
+    // If no valid message data, return success
+    if (!messageData) {
+      return NextResponse.json({ status: 'No valid message data' }, { status: 200 });
     }
 
-    if (data?.entry?.length > 0) {
-      if (data?.entry[0]?.changes?.length > 0) {
-        if (data?.entry[0]?.changes[0].value?.messages?.length > 0) {
-          //handle normal text
-          if (data?.entry[0]?.changes[0]?.value?.messages[0]?.type == "text") {
-            await connectMongo();
+    const { 
+      from, 
+      phoneNumberId, 
+      messageId, 
+      timestamp, 
+      type, 
+      text, 
+      interactive 
+    } = messageData;
 
-            const from = data?.entry[0]?.changes[0]?.value?.messages[0]?.from;
-            const phone_number_id = data?.entry[0]?.changes[0]?.value?.metadata.phone_number_id;
-            const message_id = data?.entry[0]?.changes[0]?.value?.messages[0]?.id;
-            const timestamp = data?.entry[0]?.changes[0]?.value?.messages[0]?.timestamp;
-            const currentTimestamp = (new Date().getTime()) / 1000;
-            const text = data?.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
+    let result;
 
-            // Fetch the existing WhatsAppNumber model
-            const whatsappNumber = await WhatsAppNumber.findOne({ phoneNumberId: phone_number_id });
-            if (!whatsappNumber) {
-              // Respond with a 200 OK status
-              return NextResponse.json({ status: "Whatsapp Number doesn't registered to the site." }, { status: 200 });
-            }
-
-            const chatbotId = whatsappNumber.chatbotId;
-
-            // Get WhatsApp settings from WhatsAppNumber model instead of Chatbot model
-            const whatsappSettings = whatsappNumber.settings || {};
-            const { prompt: updatedPrompt, delay } = whatsappSettings;
-
-            // Apply delay if configured
-            if (delay && delay > 0) {
-              await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
-            }
-
-            // Find existing conversation or create a new one
-            let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "whatsapp", "metadata.from": from, "metadata.to": whatsappNumber.display_phone_number });
-            let triggerQF = false;
-
-            const dataset = await Dataset.findOne({ chatbotId });
-            const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
-            const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
-
-            if (conversation) {
-              const lastMessageContent = conversation.messages[conversation.messages.length - 1].content;
-              try {
-                JSON.parse(lastMessageContent);
-                triggerQF = true; // Set triggerQF to true if parsing succeeds (content is JSON)
-              } catch (e) {
-                // Content is not JSON, do nothing
-              }
-
-              // Update existing conversation
-              conversation.messages.push({ role: "user", content: text });
-              const lastMessageTimestamp = conversation.updatedAt.getTime() / 1000;
-              if (currentTimestamp - lastMessageTimestamp > restartQFTimeoutMins * 60) {
-                triggerQF = true;
-              }
-              if (!isAiResponseEnabled) {
-                triggerQF = true;
-              }
-            } else {
-              // Create new conversation
-              conversation = new ChatbotConversation({
-                chatbotId,
-                platform: "whatsapp",
-                disable_auto_reply: false,
-                metadata: { from, to: whatsappNumber.display_phone_number },
-                messages: [{ role: "user", content: text },]
-              });
-
-              triggerQF = true;
-            }
-
-            await conversation.save();
-
-            let nextNode = null;
-
-            if (conversation?.disable_auto_reply == true) {
-              return NextResponse.json({ status: "Auto reponse is disabled." }, { status: 200 });
-            }
-
-            if (timestamp + 60 < currentTimestamp) {
-              return NextResponse.json({ status: 'Delievery denied coz long delay' }, { status: 200 });
-            }
-
-            // mark message as read
-            const response_read = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-              messaging_product: "whatsapp",
-              status: "read",
-              message_id
-            }, {
-              headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-            });
-
-            if (questionFlowEnable && questionFlow && triggerQF) {
-              const { nodes, edges } = questionFlow;
-
-              //@ts-ignore
-              const childNodeIds = new Set(edges.map(edge => edge.target));
-              //@ts-ignore
-              const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
-              const nodeMessage = topParentNode.data.message || '';
-              const nodeOptions = topParentNode.data.options || [];
-              const nodeQuestion = topParentNode.data.question || '';
-              const nodeImage = topParentNode.data.image || '';
-
-              if (nodeOptions.length > 0) {
-                // Construct interactive button message payload
-                const buttonsPayload = {
-                  messaging_product: "whatsapp",
-                  recipient_type: "individual",
-                  to: from,
-                  type: "interactive",
-                  interactive: {
-                    type: "button",
-                    body: {
-                      text: nodeQuestion
-                    },
-                    action: {
-                      buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
-                        type: "reply",
-                        reply: {
-                          id: `${topParentNode.id}-option-${index}`,
-                          title: option
-                        }
-                      }))
-                    }
-                  }
-                };
-
-                // send text msg to from number
-                const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-                  messaging_product: "whatsapp",
-                  to: from,
-                  text: {
-                    body: nodeMessage
-                  }
-                }, {
-                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                });
-                conversation.messages.push({ role: "assistant", content: nodeMessage });
-
-                if (nodeImage) {
-                  // send text msg to from number
-                  const response_image = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-                    messaging_product: "whatsapp",
-                    recipient_type: "individual",
-                    type: "image",
-                    to: from,
-                    image: {
-                      link: nodeImage
-                    }
-                  }, {
-                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                  });
-                  await sleep(2000)
-                  conversation.messages.push({
-                    role: "assistant",
-                    content: JSON.stringify({
-                      type: "image",
-                      image: nodeImage
-                    })
-                  });
-                }
-
-                // Send interactive button message
-                const response_question = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
-                  buttonsPayload, {
-                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                });
-
-                conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
-                await conversation.save();
-              }
-            } else {
-              // Get all messages from the conversation for the last hour
-              // Use all messages if timestamp is not available
-              const oneHourAgo = Date.now() - (60 * 60 * 1000);
-              let messages = conversation.messages;
-              
-              // If there are too many messages, limit to the last hour or at least the last 10 messages
-              if (messages.length > 20) {
-                try {
-                  // Try to filter by timestamp if available
-                  const recentMessages = messages.filter((msg: any) => {
-                    // Try different timestamp fields that might exist
-                    const msgTime = msg.timestamp || msg.createdAt || null;
-                    return msgTime ? new Date(msgTime).getTime() >= oneHourAgo : true;
-                  });
-                  
-                  // If we have recent messages, use them, otherwise use the last 10 messages
-                  messages = recentMessages.length > 0 ? recentMessages : messages.slice(-10);
-                } catch (e) {
-                  // If any error occurs, fallback to the last 10 messages
-                  messages = messages.slice(-10);
-                }
-              }
-              
-              // Ensure the current message is included
-              if (!messages.some((msg: any) => msg.role === 'user' && msg.content === text)) {
-                messages.push({ role: 'user', content: text });
-              }
-              const response_text = await getAIResponse(chatbotId, messages, text, updatedPrompt);
-
-              // send text msg to from number
-              const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-                messaging_product: "whatsapp",
-                to: from,
-                text: {
-                  body: response_text
-                }
-              }, {
-                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-              });
-
-              conversation.messages.push({ role: "assistant", content: response_text });
-
-              await conversation.save();
-            }
-          }
-          //handle interactive
-          if (data?.entry[0]?.changes[0]?.value?.messages[0]?.type == "interactive") {
-            //handle buttong reply
-            if (data.entry[0].changes[0].value.messages[0].interactive.type == "button_reply") {
-              await connectMongo();
-              
-              const from = data?.entry[0]?.changes[0]?.value?.messages[0]?.from;
-              const phone_number_id = data?.entry[0]?.changes[0]?.value?.metadata.phone_number_id;
-              const message_id = data?.entry[0]?.changes[0]?.value?.messages[0]?.id;
-
-              const button_id = data.entry[0].changes[0].value.messages[0].interactive.button_reply.id;
-              const button_title = data.entry[0].changes[0].value.messages[0].interactive.button_reply.title;
-              const node_id = button_id.split('-')[0];
-              const option_index = button_id.split('-').pop();
-
-              let messages = [{ role: 'user', content: button_title }];
-
-              // Fetch the existing WhatsAppNumber model
-              const whatsappNumber = await WhatsAppNumber.findOne({ phoneNumberId: phone_number_id });
-              if (!whatsappNumber) {
-                // Respond with a 200 OK status
-                return NextResponse.json({ status: "Whatsapp Number doesn't registered to the site." }, { status: 200 });
-              }
-
-              const chatbotId = whatsappNumber.chatbotId;
-
-              // Get WhatsApp settings from WhatsAppNumber model instead of Chatbot model
-              const whatsappSettings = whatsappNumber.settings || {};
-              const { prompt: updatedPrompt, delay } = whatsappSettings;
-
-              // Apply delay if configured
-              if (delay && delay > 0) {
-                await sleep(delay * 1000); // delay is in seconds, converting to milliseconds
-              }
-              const dataset = await Dataset.findOne({ chatbotId });
-
-              // Find existing conversation or create a new one
-              let conversation = await ChatbotConversation.findOne({ chatbotId, platform: "whatsapp", "metadata.from": from, "metadata.to": whatsappNumber.display_phone_number });
-              let triggerQF = false;
-
-              if (conversation) {
-                // Update existing conversation
-                conversation.messages.push({ role: "user", content: button_title });
-                const lastMessageTimestamp = conversation.updatedAt.getTime() / 1000;
-              } else {
-                return NextResponse.json({ status: "Can't find conversation for this buttong reply, sth went wrong." }, { status: 200 });
-              }
-
-              const { questionFlow, questionFlowEnable } = dataset;
-
-              // mark message as read
-              const response_read = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-                messaging_product: "whatsapp",
-                status: "read",
-                message_id
-              }, {
-                headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-              });
-
-              if (questionFlowEnable && questionFlow) {
-                const { nodes, edges } = (questionFlow && questionFlow.nodes && questionFlow.edges) ? questionFlow : sampleFlow;
-
-                //@ts-ignore
-                const nextEdge = edges.find(edge => edge.source === node_id && edge.sourceHandle === option_index);
-                //@ts-ignore
-                const nextNode = nodes.find(node => node.id === nextEdge?.target);
-                const nodeMessage = nextNode.data.message || '';
-                const nodeQuestion = nextNode.data.question || '';
-                const nodeOptions = nextNode.data.options || [];
-                const nodeImage = nextNode.data.image || '';
-
-                // send text msg to from number
-                const response_msg = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-                  messaging_product: "whatsapp",
-                  to: from,
-                  text: {
-                    body: nodeMessage
-                  }
-                }, {
-                  headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                });
-                conversation.messages.push({ role: "assistant", content: nodeMessage });
-
-                if (nodeImage) {
-                  // send text msg to from number
-                  const response_image = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`, {
-                    messaging_product: "whatsapp",
-                    recipient_type: "individual",
-                    type: "image",
-                    to: from,
-                    image: {
-                      link: nodeImage
-                    }
-                  }, {
-                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                  });
-                  await sleep(2000)
-                  conversation.messages.push({
-                    role: "assistant",
-                    content: JSON.stringify({
-                      type: "image",
-                      image: nodeImage
-                    })
-                  });
-                }
-
-                if (nodeOptions.length > 0) {
-                  // Construct interactive button message payload
-                  const buttonsPayload = {
-                    messaging_product: "whatsapp",
-                    recipient_type: "individual",
-                    to: from,
-                    type: "interactive",
-                    interactive: {
-                      type: "button",
-                      body: {
-                        text: nodeQuestion
-                      },
-                      action: {
-                        buttons: nodeOptions.slice(0, 3).map((option: string, index: number) => ({
-                          type: "reply",
-                          reply: {
-                            id: `${nextNode.id}-option-${index}`,
-                            title: option
-                          }
-                        }))
-                      }
-                    }
-                  };
-
-                  // Send interactive button message
-                  const response_question = await axios.post(`https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
-                    buttonsPayload, {
-                    headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
-                  });
-
-                  conversation.messages.push({ role: "assistant", content: JSON.stringify(buttonsPayload) });
-                }
-
-                await conversation.save();
-              }
-            }
-          }
-        }
-      }
+    // Handle different message types
+    if (type === 'text' && text) {
+      result = await handleTextMessage(
+        from,
+        phoneNumberId,
+        messageId,
+        timestamp,
+        text
+      );
+    } 
+    else if (type === 'interactive' && interactive) {
+      result = await handleInteractiveMessage(
+        from,
+        phoneNumberId,
+        messageId,
+        interactive
+      );
+    }
+    else {
+      // Unsupported message type
+      result = {
+        success: true,
+        message: `Unsupported message type: ${type}`
+      };
     }
 
-    // Respond with a 200 OK status
-    return NextResponse.json({ status: 'OK' }, { status: 200 });
+    // Always respond with 200 OK to acknowledge receipt
+    return NextResponse.json({ 
+      status: 'OK', 
+      result: result || 'No handler for this message type'
+    }, { status: 200 });
   } catch (error) {
-    try {
-      // Log error to external service if configured
-      if (process.env.ENABLE_WEBHOOK_LOGGING_WHATSAPP == "1") {
-        // Send error data to the specified URL
-        const response = await fetch('http://webhook.mrcoders.org/whatsapp-error.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(error),
-        });
-      }
-      
-      // Log error locally
-      console.error('WhatsApp webhook error:', error);
-    } catch (loggingError) {
-      console.error('Error while logging webhook error:', loggingError);
-    }
+    // Log error
+    await logWebhookError(error);
     
     // Always return 200 to acknowledge receipt to WhatsApp platform
-    return NextResponse.json({ error: 'An error occurred processing the webhook' }, { status: 200 });
+    return NextResponse.json({ 
+      error: 'An error occurred processing the webhook',
+      message: error.message
+    }, { status: 200 });
   }
 }
