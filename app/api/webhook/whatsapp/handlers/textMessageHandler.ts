@@ -7,10 +7,10 @@ import {
   getConversationAIResponse, 
   addAssistantMessageToConversation,
   isAutoReplyDisabled
-} from '../services/conversationService';
-import { markMessageAsRead, sendTextMessage } from '../services/whatsappService';
-import { getQuestionFlow, processInitialNode } from '../services/questionFlowService';
-import { isMessageTooOld, applyConfiguredDelay } from '../utils/helpers';
+} from '@/app/api/webhook/whatsapp/services/conversationService';
+import { markMessageAsRead, sendTextMessage } from '@/app/api/webhook/whatsapp/services/whatsappService';
+import { getQuestionFlow, processInitialNode } from '@/app/api/webhook/whatsapp/services/questionFlowService';
+import { isMessageTooOld, applyConfiguredDelay } from '@/app/api/webhook/whatsapp/utils/helpers';
 
 /**
  * Handle text message from WhatsApp

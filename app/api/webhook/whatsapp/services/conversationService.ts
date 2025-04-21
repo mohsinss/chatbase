@@ -6,7 +6,7 @@ import WhatsAppNumber from '@/models/WhatsAppNumber';
 import ChatbotConversation from '@/models/ChatbotConversation';
 import Dataset from '@/models/Dataset';
 import { getAIResponse } from '@/libs/utils-ai';
-import { filterRecentMessages } from '../utils/helpers';
+import { filterRecentMessages } from '@/app/api/webhook/whatsapp/utils/helpers';
 
 /**
  * Get WhatsApp number details by phone number ID

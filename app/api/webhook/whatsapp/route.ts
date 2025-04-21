@@ -3,10 +3,10 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import connectMongo from "@/libs/mongoose";
-import { extractMessageData } from './utils/helpers';
-import { logWebhookData, logWebhookError } from './utils/logging';
-import { handleTextMessage } from './handlers/textMessageHandler';
-import { handleInteractiveMessage } from './handlers/interactiveMessageHandler';
+import { extractMessageData } from '@/app/api/webhook/whatsapp/utils/helpers';
+import { logWebhookData, logWebhookError } from '@/app/api/webhook/whatsapp/utils/logging';
+import { handleTextMessage } from '@/app/api/webhook/whatsapp/handlers/textMessageHandler';
+import { handleInteractiveMessage } from '@/app/api/webhook/whatsapp/handlers/interactiveMessageHandler';
 
 /**
  * Handle GET request for webhook verification

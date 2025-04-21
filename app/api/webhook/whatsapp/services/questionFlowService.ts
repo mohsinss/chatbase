@@ -3,8 +3,8 @@
  */
 import Dataset from '@/models/Dataset';
 import { sampleFlow } from '@/types';
-import { sendNodeContent } from './whatsappService';
-import { addAssistantMessageToConversation } from './conversationService';
+import { sendNodeContent } from '@/app/api/webhook/whatsapp/services/whatsappService';
+import { addAssistantMessageToConversation } from '@/app/api/webhook/whatsapp/services/conversationService';
 
 /**
  * Get question flow for a chatbot

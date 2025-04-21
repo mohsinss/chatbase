@@ -6,10 +6,10 @@ import {
   getOrCreateConversation, 
   addAssistantMessageToConversation,
   isAutoReplyDisabled
-} from '../services/conversationService';
-import { markMessageAsRead } from '../services/whatsappService';
-import { getQuestionFlow, processButtonReply } from '../services/questionFlowService';
-import { applyConfiguredDelay } from '../utils/helpers';
+} from '@/app/api/webhook/whatsapp/services/conversationService';
+import { markMessageAsRead } from '@/app/api/webhook/whatsapp/services/whatsappService';
+import { getQuestionFlow, processButtonReply } from '@/app/api/webhook/whatsapp/services/questionFlowService';
+import { applyConfiguredDelay } from '@/app/api/webhook/whatsapp/utils/helpers';
 
 /**
  * Handle button reply from WhatsApp
