@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, ChangeEvent } from "react"
+import { useState, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,6 +9,15 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Plus, Trash2, Upload } from "lucide-react"
 import toast from "react-hot-toast"
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
+
+const s3Client = new S3Client({
+  region: process.env.NEXT_PUBLIC_AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY!,
+  },
+})
 
 interface MenuItem {
   id: string
@@ -73,8 +82,8 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
     setMenuItems(menuItems.filter(item => item.id !== id))
   }
 
-  // Handle image upload
-  const handleImageUpload = async (files: FileList | null) => {
+  // Handle image upload using S3
+  const handleImageUpload = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return
 
     setIsUploading(true)
@@ -96,36 +105,53 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
           continue
         }
 
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('type', 'menu-item')
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!response.ok) {
-          throw new Error('Upload failed')
+        // Convert file to buffer for S3 upload
+        const buffer = Buffer.from(await file.arrayBuffer())
+        
+        // Create a unique filename with timestamp
+        const fileNameParts = file.name.split('.');
+        const name = fileNameParts.slice(0, -1).join('.');
+        const extension = fileNameParts.slice(-1)[0];
+        const newFileName = `menu-item-${name}-${Date.now()}.${extension}`;
+        
+        // Set the S3 key (path in bucket)
+        const key = `menu-items/${newFileName}`;
+        
+        try {
+          // Upload to S3
+          await s3Client.send(
+            new PutObjectCommand({
+              Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME,
+              Key: key,
+              Body: buffer,
+              ContentType: file.type,
+            })
+          );
+          
+          // Generate the URL for the uploaded file
+          const fileUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${key}`;
+          uploadedImages.push(fileUrl);
+        } catch (s3Error) {
+          console.error("S3 upload error:", s3Error);
+          toast.error(`Failed to upload ${file.name}`);
         }
-
-        const data = await response.json()
-        uploadedImages.push(data.url)
       }
 
-      setNewMenuItem(prev => ({
-        ...prev,
-        images: [...prev.images, ...uploadedImages]
-      }))
-      
-      toast.success("Images uploaded successfully")
+      if (uploadedImages.length > 0) {
+        setNewMenuItem(prev => ({
+          ...prev,
+          images: [...prev.images, ...uploadedImages]
+        }));
+        
+        toast.success("Images uploaded successfully");
+      }
     } catch (error) {
-      console.error('Upload error:', error)
-      toast.error("Failed to upload images")
+      console.error('Upload error:', error);
+      toast.error("Failed to upload images");
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  }, []);
 
   // Handle image URL addition
   const handleImageUrlAdd = (url: string) => {
@@ -245,6 +271,12 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
                     <p className="text-xs text-gray-400">
                       Supports JPG, PNG, and SVG files up to 1MB
                     </p>
+                    {isUploading && (
+                      <div className="mt-2 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                        <span className="ml-2 text-sm text-gray-500">Uploading...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

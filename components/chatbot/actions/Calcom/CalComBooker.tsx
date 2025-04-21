@@ -1,10 +1,10 @@
 "use client";
 
-import CalendarSelector from "./CalendarSelector";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/libs/utils";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import CalendarSelector from "./CalendarSelector";
 
 interface CalComBookerProps {
     onSubmit: (date: Date, timeSlot: string, formData: { name: string; email: string; notes?: string; guests?: string; rescheduleReason?: string }) => Promise<boolean>;

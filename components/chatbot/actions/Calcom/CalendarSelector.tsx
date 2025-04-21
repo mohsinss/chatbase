@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
-import { Calendar } from "../../ui/calendar"
-import { Button } from "../../ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Button } from "@/components/ui/button"
 import { ArrowLeft, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 

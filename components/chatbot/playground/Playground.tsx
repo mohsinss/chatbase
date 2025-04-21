@@ -12,7 +12,7 @@ import Link from "next/link";
 import { useSearchParams } from 'next/navigation';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PlansSettings } from "@/components/tabs/settings/PlansSettings";
-import CalComBooker from "@/components/chatbot/actions/CalComBooker";
+import CalComBooker from "@/components/chatbot/actions/Calcom/CalComBooker";
 import { getEventTypeId, bookMeeting, combineDateAndTime } from "@/lib/calcom";
 
 interface Message {

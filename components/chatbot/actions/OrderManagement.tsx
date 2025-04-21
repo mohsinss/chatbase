@@ -11,10 +11,10 @@ import { Save, Loader2, ArrowLeft } from "lucide-react"
 import toast from "react-hot-toast"
 
 // Import tab components
-import MenuTab from "./tabs/MenuTab"
-import CategoriesTab from "./tabs/CategoriesTab"
-import TablesTab from "./tabs/TablesTab"
-import GoogleSheetsTab from "./tabs/GoogleSheetsTab"
+import MenuTab from "./OMtabs/MenuTab"
+import CategoriesTab from "./OMtabs/CategoriesTab"
+import TablesTab from "./OMtabs/TablesTab"
+import GoogleSheetsTab from "./OMtabs/GoogleSheetsTab"
 
 interface OrderManagementProps {
   teamId: string
