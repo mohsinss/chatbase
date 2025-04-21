@@ -86,7 +86,7 @@ export const MODEL_MAPPING: { [key: string]: string } = {
   // Anthropic models (latest versions)
   'claude-3-5-sonnet-20241022': 'claude-3-5-sonnet-20241022',
   'claude-3-5-haiku-20241022': 'claude-3-5-haiku-20241022',
-  'claude-3-opus-20240229': 'claude-3-opus-20240229',
+  // 'claude-3-opus-20240229': 'claude-3-opus-20240229',
   'claude-3-7-sonnet-20250219': 'claude-3-7-sonnet-20250219',
   // Gemini models
   'gemini-2.0-flash-exp': 'gemini-2.0-flash-exp',
@@ -127,7 +127,7 @@ export const AI_MODELS: AIModelProviders = {
     { value: "gpt-4.5-preview-2025-02-27", label: "GPT-4.5 (Preview)", default: false},
   ],
   Anthropic: [
-    { value: "claude-3-opus-20240229", label: "Claude 3 Opus", default: false},
+    // { value: "claude-3-opus-20240229", label: "Claude 3 Opus", default: false},
     { value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet", default: false},
     { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku", default: false},
     { value: "claude-3-7-sonnet-20250219", label: "Claude 3.7 Sonnet", default: true},
