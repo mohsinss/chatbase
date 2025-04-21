@@ -64,6 +64,8 @@ interface OrderManagementConfig {
   categories: Category[]
   tables: TableInfo[]
   googleSheetConfig: GoogleSheetConfig
+  messageTemplate?: string
+  phoneNumber?: string
 }
 
 const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) => {
@@ -97,6 +99,15 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
     connected: false
   })
 
+  // State for WhatsApp metadata
+  const [metadata, setMetadata] = useState<{
+    messageTemplate?: string;
+    phoneNumber?: string;
+  }>({
+    messageTemplate: "Hello! I'm at table {table} and would like to place an order.",
+    phoneNumber: ""
+  })
+
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -126,6 +137,8 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             if (metadata.categories) setCategories(metadata.categories);
             if (metadata.tables) setTables(metadata.tables);
             if (metadata.googleSheetConfig) setGoogleSheetConfig(metadata.googleSheetConfig);
+            if (metadata.messageTemplate) setMetadata(prev => ({ ...prev, messageTemplate: metadata.messageTemplate }));
+            if (metadata.phoneNumber) setMetadata(prev => ({ ...prev, phoneNumber: metadata.phoneNumber }));
           }
 
           toast.success("Configuration loaded");
@@ -213,11 +226,13 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
 
     try {
       // Prepare metadata
-      const metadata: OrderManagementConfig = {
+      const actionMetadata: OrderManagementConfig = {
         menuItems,
         categories,
         tables,
-        googleSheetConfig
+        googleSheetConfig,
+        messageTemplate: metadata.messageTemplate,
+        phoneNumber: metadata.phoneNumber
       };
 
       // Prepare request body
@@ -229,7 +244,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           instructions: "Use this action to manage restaurant orders via QR codes", // Default instructions
           enabled: isEnabled,
           type: "ordermanagement",
-          metadata
+          metadata: actionMetadata
         }
         : {
           chatbotId,
@@ -238,7 +253,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           instructions: "Use this action to manage restaurant orders via QR codes", // Default instructions
           enabled: isEnabled,
           type: "QRoder",
-          metadata
+          metadata: actionMetadata
         };
 
       // Make API request
@@ -362,6 +377,18 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             tables={tables}
             setTables={setTables}
             chatbotId={chatbotId}
+            metadata={{
+              messageTemplate: metadata?.messageTemplate,
+              phoneNumber: metadata?.phoneNumber
+            }}
+            updateMetadata={(whatsappMetadata) => {
+              // Update only the WhatsApp-related metadata
+              setMetadata({
+                ...metadata,
+                messageTemplate: whatsappMetadata.messageTemplate,
+                phoneNumber: whatsappMetadata.phoneNumber
+              });
+            }}
           />
         </TabsContent>
 

@@ -22,16 +22,24 @@ interface TablesTabProps {
   tables: TableInfo[]
   setTables: (tables: TableInfo[]) => void
   chatbotId: string
+  metadata?: {
+    messageTemplate?: string
+    phoneNumber?: string
+  }
+  updateMetadata?: (metadata: any) => void
 }
 
-const TablesTab = ({ tables, setTables, chatbotId }: TablesTabProps) => {
+const TablesTab = ({ tables, setTables, chatbotId, metadata = {}, updateMetadata }: TablesTabProps) => {
   const [newTable, setNewTable] = useState<string>("")
   const [selectedTable, setSelectedTable] = useState<TableInfo | null>(null)
   const [showQRDialog, setShowQRDialog] = useState(false)
-  const [messageTemplate, setMessageTemplate] = useState<string>("Hello! I'm at table {table} and would like to place an order.")
-  const [phoneNumber, setPhoneNumber] = useState<string>("")
+  const [messageTemplate, setMessageTemplate] = useState<string>(
+    metadata.messageTemplate || "Hello! I'm at table {table} and would like to place an order."
+  )
+  const [phoneNumber, setPhoneNumber] = useState<string>(metadata.phoneNumber || "")
   const [isLoadingPhoneNumber, setIsLoadingPhoneNumber] = useState<boolean>(true)
   const [phoneNumbers, setPhoneNumbers] = useState<any[]>([])
+  const [isSaving, setIsSaving] = useState<boolean>(false)
   
   // Fetch WhatsApp business phone number
   useEffect(() => {
@@ -52,8 +60,8 @@ const TablesTab = ({ tables, setTables, chatbotId }: TablesTabProps) => {
         const data = await response.json();
         setPhoneNumbers(data);
         
-        // Set the first phone number as default if available
-        if (data.length > 0) {
+        // Set the first phone number as default if available and no saved number
+        if (data.length > 0 && !phoneNumber) {
           const number = data[0]?.display_phone_number || "";
           // Remove any non-digit characters
           setPhoneNumber(number.replace(/\D/g, ''));
@@ -66,7 +74,30 @@ const TablesTab = ({ tables, setTables, chatbotId }: TablesTabProps) => {
     };
 
     fetchPhoneNumbers();
-  }, [chatbotId]);
+  }, [chatbotId, phoneNumber]);
+  
+  // Update local state when metadata changes
+  useEffect(() => {
+    if (metadata) {
+      if (metadata.messageTemplate) {
+        setMessageTemplate(metadata.messageTemplate);
+      }
+      if (metadata.phoneNumber) {
+        setPhoneNumber(metadata.phoneNumber);
+      }
+    }
+  }, [metadata]);
+  
+  // Automatically update metadata when messageTemplate or phoneNumber changes
+  useEffect(() => {
+    if (updateMetadata) {
+      updateMetadata({
+        ...metadata,
+        messageTemplate,
+        phoneNumber
+      });
+    }
+  }, [messageTemplate, phoneNumber]);
 
   // Handle adding a new table
   const handleAddTable = () => {
