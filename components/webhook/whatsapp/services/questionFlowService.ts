@@ -142,12 +142,17 @@ export async function processButtonReply(
   conversation: any,
   flow: any,
   nodeId: string,
-  optionIndex: string
-): Promise<void> {
+  optionIndex: string,
+  chatbotId?: string,
+  customPrompt?: string
+): Promise<boolean> {
   const nextNode = getNextNode(flow, nodeId, optionIndex);
   
+  // If there's no next node, we've reached the end of the flow
   if (!nextNode) {
-    return;
+    // Return false to indicate we've reached the end of the flow
+    // The caller can check this and use AI response if enabled
+    return false;
   }
   
   const nodeMessage = nextNode.data.message || '';

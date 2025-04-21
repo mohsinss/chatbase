@@ -78,26 +78,29 @@ export async function handleTextMessage(
         message: "Question flow processed" 
       };
     } 
-    // Otherwise use AI response
-    else if (aiResponseEnabled) {
-      // Get AI response
-      const responseText = await getConversationAIResponse(
-        chatbotId,
-        conversation,
-        text,
-        customPrompt
-      );
+    // If QF is not triggered or not enabled, use AI response
+    else {
+      // Only proceed with AI response if QF is not enabled or AI responses are enabled
+      if (!qfEnabled || aiResponseEnabled) {
+        // Get AI response
+        const responseText = await getConversationAIResponse(
+          chatbotId,
+          conversation,
+          text,
+          customPrompt
+        );
 
-      // Send response
-      await sendTextMessage(phoneNumberId, from, responseText);
-      
-      // Update conversation
-      await addAssistantMessageToConversation(conversation, responseText);
-      
-      return { 
-        success: true, 
-        message: "AI response sent" 
-      };
+        // Send response
+        await sendTextMessage(phoneNumberId, from, responseText);
+        
+        // Update conversation
+        await addAssistantMessageToConversation(conversation, responseText);
+        
+        return { 
+          success: true, 
+          message: "AI response sent" 
+        };
+      }
     }
 
     return { 

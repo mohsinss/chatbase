@@ -5,9 +5,10 @@ import {
   getWhatsAppNumber, 
   getOrCreateConversation, 
   addAssistantMessageToConversation,
-  isAutoReplyDisabled
+  isAutoReplyDisabled,
+  getConversationAIResponse
 } from '@/components/webhook/whatsapp/services/conversationService';
-import { markMessageAsRead } from '@/components/webhook/whatsapp/services/whatsappService';
+import { markMessageAsRead, sendTextMessage } from '@/components/webhook/whatsapp/services/whatsappService';
 import { getQuestionFlow, processButtonReply } from '@/components/webhook/whatsapp/services/questionFlowService';
 import { applyConfiguredDelay } from '@/components/webhook/whatsapp/utils/helpers';
 
@@ -74,22 +75,47 @@ export async function handleButtonReply(
     }
 
     // Get question flow settings
-    const { enabled: qfEnabled, flow } = await getQuestionFlow(chatbotId);
+    const { enabled: qfEnabled, flow, aiResponseEnabled } = await getQuestionFlow(chatbotId);
 
     // Process button reply if question flow is enabled
     if (qfEnabled && flow) {
-      await processButtonReply(
+      // processButtonReply now returns false if there's no next node (end of flow)
+      const hasNextNode = await processButtonReply(
         phoneNumberId, 
         from, 
         conversation, 
         flow, 
         nodeId, 
-        optionIndex
+        optionIndex,
+        chatbotId,
+        whatsappSettings.prompt
       );
+      
+      // If we've reached the end of the flow and AI responses are enabled
+      if (!hasNextNode && aiResponseEnabled) {
+        // Get AI response
+        const responseText = await getConversationAIResponse(
+          chatbotId,
+          conversation,
+          buttonTitle, // Use the button title as the user's message
+          whatsappSettings.prompt
+        );
+
+        // Send response
+        await sendTextMessage(phoneNumberId, from, responseText);
+        
+        // Update conversation
+        await addAssistantMessageToConversation(conversation, responseText);
+        
+        return { 
+          success: true, 
+          message: "AI response sent after flow completion" 
+        };
+      }
       
       return { 
         success: true, 
-        message: "Button reply processed" 
+        message: hasNextNode ? "Button reply processed" : "Flow completed" 
       };
     }
 
