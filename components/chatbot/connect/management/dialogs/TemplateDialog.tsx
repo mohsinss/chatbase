@@ -207,7 +207,7 @@ const TemplateDialog = ({ isOpen, setIsOpen, selectedNumberId, wabaId, phoneNumb
         }
     };
 
-    const deleteTemplate = async (templateId: string) => {
+    const deleteTemplate = async (teamplateName: string, templateId: string) => {
         if (!selectedNumberId || !wabaId) return;
         
         try {
@@ -217,7 +217,8 @@ const TemplateDialog = ({ isOpen, setIsOpen, selectedNumberId, wabaId, phoneNumb
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    templateId,
+                    hsm_id: templateId,
+                    name: teamplateName,
                     wabaId
                 }),
             });
@@ -335,7 +336,7 @@ const TemplateDialog = ({ isOpen, setIsOpen, selectedNumberId, wabaId, phoneNumb
                                             </div>
                                             <div className="flex space-x-2">
                                                 <button
-                                                    className="p-1 text-gray-500 hover:text-gray-700"
+                                                    className="p-1 hidden text-gray-500 hover:text-gray-700"
                                                     onClick={() => {
                                                         setSelectedTemplate(template);
                                                         setIsEditingTemplate(true);
@@ -345,7 +346,7 @@ const TemplateDialog = ({ isOpen, setIsOpen, selectedNumberId, wabaId, phoneNumb
                                                 </button>
                                                 <button
                                                     className="p-1 text-red-500 hover:text-red-700"
-                                                    onClick={() => deleteTemplate(template.id)}
+                                                    onClick={() => deleteTemplate(template.name, template.id)}
                                                 >
                                                     <IconTrash size={18} />
                                                 </button>
@@ -444,7 +445,7 @@ const TemplateDialog = ({ isOpen, setIsOpen, selectedNumberId, wabaId, phoneNumb
                                     />
                                 </div>
 
-                                <div>
+                                <div className="hidden">
                                     <div className="flex justify-between items-center">
                                         <label className="block text-sm font-medium text-gray-700">Buttons (Optional)</label>
                                         <button

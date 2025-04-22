@@ -220,9 +220,9 @@ export async function DELETE(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { templateId, wabaId } = body;
+    const { hsm_id, name, wabaId } = body;
 
-    if (!templateId || !wabaId) {
+    if (!hsm_id || !wabaId || !name) {
       return NextResponse.json(
         { error: "Missing required parameters" },
         { status: 400 }
@@ -230,9 +230,11 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete template using Facebook Graph API
-    const url = new URL(`${GRAPH_API_URL}/${templateId}`);
+    const url = new URL(`${GRAPH_API_URL}/${wabaId}/message_templates`);
     url.searchParams.append("access_token", accessToken);
-    
+    url.searchParams.append("hsm_id", hsm_id);
+    url.searchParams.append("name", name);
+ 
     const response = await fetch(url.toString(), {
       method: 'DELETE',
     });
