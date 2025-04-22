@@ -124,14 +124,29 @@ const TemplateDialog = ({ isOpen, setIsOpen, selectedNumberId, wabaId, phoneNumb
                 components.push({
                     type: "HEADER",
                     format: "TEXT",
-                    text: newTemplate.headerText
+                    text: newTemplate.headerText,
+                    example: {
+                        header_text: [
+                            newTemplate.headerText.replace(/{{[0-9]+}}/g, "Example")
+                        ]
+                    }
                 });
             }
             
             // Add body (required)
+            // Extract variables from body text
+            const bodyVariables = (newTemplate.bodyText.match(/{{[0-9]+}}/g) || [])
+                .map(v => v.replace(/[{}]/g, ""))
+                .map(() => "Example Value");
+                
             components.push({
                 type: "BODY",
-                text: newTemplate.bodyText
+                text: newTemplate.bodyText,
+                example: {
+                    body_text: [
+                        bodyVariables.length > 0 ? bodyVariables : ["Example"]
+                    ]
+                }
             });
             
             // Add footer if provided
