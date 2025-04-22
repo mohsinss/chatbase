@@ -520,7 +520,13 @@ const ChatContainer = ({
                     </div>
                   </div>
                 ))}
-                {isLoading && <span className="loading loading-spinner loading-xs"></span>}
+                {isLoading && (
+                  <div className="flex items-center justify-between space-x-1 p-4 bg-gray-100 rounded-lg  w-16 mt-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                )}
                 {
                   embed && !standalone && !isLoading && showLead && (leadSetting?.enable == "immediately"
                     || (leadSetting?.enable == "after"
@@ -1497,4 +1503,4 @@ const Playground = ({
   );
 };
 
-export default Playground; 
+export default Playground;
