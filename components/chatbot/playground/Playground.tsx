@@ -1290,9 +1290,9 @@ const Playground = ({
     setIsUpgradePlanModalOpen(false);
   };
 
+  if (loadingAISettings)
+    return <div id='chatbot-loading-spinner'><div className="spinner"></div></div>
   if (embed) {
-    // if (loadingAISettings)
-    //   return <div id='chatbot-loading-spinner'><div className="spinner"></div></div>
     return (
       <AISettingsProvider chatbotId={chatbot.id}>
         <div className={`relative ${mocking ? '' : 'h-full'}`}>
