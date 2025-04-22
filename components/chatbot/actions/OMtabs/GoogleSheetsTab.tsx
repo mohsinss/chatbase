@@ -22,6 +22,28 @@ interface GoogleSheetsTabProps {
   teamId: string
 }
 
+// Define fixed columns for Order Data Structure
+interface OrderColumn {
+  id: string;
+  name: string;
+  enabled: boolean;
+}
+
+const DEFAULT_ORDER_COLUMNS: OrderColumn[] = [
+  // { id: 'order_id', name: 'Order ID', enabled: true },
+  { id: 'table_name', name: 'Table Name', enabled: true },
+  { id: 'timestamp', name: 'Timestamp', enabled: true },
+  { id: 'customer_phone', name: 'Customer Phone', enabled: true },
+  { id: 'total_amount', name: 'Total Amount', enabled: true },
+  { id: 'description', name: 'Description', enabled: true },
+  { id: 'status', name: 'Status', enabled: true },
+  // { id: 'quantity', name: 'Quantity', enabled: true },
+  // { id: 'items', name: 'Items', enabled: true },
+  // { id: 'customer_name', name: 'Customer Name', enabled: false },
+  // { id: 'customer_email', name: 'Customer Email', enabled: false },
+  // { id: 'payment_method', name: 'Payment Method', enabled: false },
+];
+
 const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, teamId }: GoogleSheetsTabProps) => {
   const [isConnecting, setIsConnecting] = useState(false)
   const [isAuthorizing, setIsAuthorizing] = useState(false)
@@ -30,6 +52,21 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
   const [isLoadingColumns, setIsLoadingColumns] = useState(false)
   const [availableSheets, setAvailableSheets] = useState<string[]>([])
   const [isLoadingSheets, setIsLoadingSheets] = useState(false)
+  const [orderColumns, setOrderColumns] = useState<OrderColumn[]>(DEFAULT_ORDER_COLUMNS)
+  const [connectedSheets, setConnectedSheets] = useState<Set<string>>(new Set())
+  const [isSheetConnected, setIsSheetConnected] = useState(false);
+  const [connectedSheet, setConnectedSheet] = useState<string>("");
+
+  // Update spreadsheetColumns whenever orderColumns changes
+  useEffect(() => {
+    if (googleSheetConfig.connected && spreadsheetColumns.length > 0) {
+      const enabledColumns = orderColumns
+        .filter(column => column.enabled)
+        .map(column => column.name);
+      
+      setSpreadsheetColumns(enabledColumns);
+    }
+  }, [orderColumns]);
 
   // Fetch Google Auth URL and check connection status on component mount
   useEffect(() => {
@@ -63,6 +100,8 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
     };
 
     checkConnection();
+
+    setConnectedSheet(`${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`);
   }, [chatbotId, teamId]);
 
   const fetchGoogleAuthUrl = async () => {
@@ -91,6 +130,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
 
     setIsLoadingSheets(true);
     try {
+      // Fetch available sheets
       const response = await fetch(`/api/chatbot/integrations/google/sheets/list?chatbotId=${chatbotId}`, {
         method: "GET",
         headers: {
@@ -104,19 +144,49 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
 
       const data = await response.json();
       setAvailableSheets(data.sheets || []);
+
+      // Also fetch connected sheets
+      const connectedResponse = await fetch(`/api/chatbot/integrations/google/sheets/connected?chatbotId=${chatbotId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (connectedResponse.ok) {
+        const connectedData = await connectedResponse.json();
+        const connectedSet = new Set<string>();
+        
+        if (connectedData.sheets && Array.isArray(connectedData.sheets)) {
+          connectedData.sheets.forEach((sheet: any) => {
+            if (sheet.sheetId && sheet.sheetName) {
+              connectedSet.add(`${sheet.sheetId}|${sheet.sheetName}`);
+            }
+          });
+        }
+        
+        setConnectedSheets(connectedSet);
+        
+        // Check if current sheet is connected
+        const currentSheetKey = `${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`;
+        setIsSheetConnected(connectedSet.has(currentSheetKey));
+      }
     } catch (error) {
-      console.error("Error fetching available sheets:", error);
+      console.error("Error fetching sheets:", error);
       toast.error("Failed to load available sheets");
     } finally {
       setIsLoadingSheets(false);
     }
   };
 
+  useEffect(() => {
+    setIsSheetConnected(connectedSheet == `${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`);
+  }, [connectedSheets, connectedSheet, googleSheetConfig.sheetId, googleSheetConfig.sheetName]);
+
   // Set up message listener for auth window communication
   useEffect(() => {
     // Handler for messages from the auth window
     const handleAuthMessage = (event: MessageEvent) => {
-      console.log(event)
       // Check if the message is from our auth window
       if (event.data && (event.data.type === 'GOOGLE_AUTH_SUCCESS' || event.data.type === 'GOOGLE_AUTH_FAILURE')) {
         console.log('Received auth message:', event.data);
@@ -328,6 +398,13 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
       return;
     }
 
+    // Check if at least one column is enabled
+    const enabledColumns = orderColumns.filter(column => column.enabled);
+    if (enabledColumns.length === 0) {
+      toast.error("Please enable at least one column for your order data");
+      return;
+    }
+
     setIsConnecting(true);
     try {
       const response = await fetch(`/api/chatbot/integrations/google/sheets/connect`, {
@@ -338,7 +415,9 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
         body: JSON.stringify({
           chatbotId,
           sheetId: googleSheetConfig.sheetId,
-          sheetName: googleSheetConfig.sheetName
+          sheetName: googleSheetConfig.sheetName,
+          // Pass the enabled column names to the API
+          columns: enabledColumns.map(col => col.name)
         }),
       });
 
@@ -347,8 +426,22 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
         throw new Error(errorData.error || "Failed to connect to Google Sheet");
       }
 
-      // Fetch spreadsheet columns
-      await fetchSpreadsheetColumns(googleSheetConfig);
+      // Update spreadsheet columns with enabled columns
+      const enabledColumnNames = enabledColumns.map(col => col.name);
+      setSpreadsheetColumns(enabledColumnNames);
+      
+      // Update connected status
+      setIsSheetConnected(true);
+      
+      // Add to connected sheets set
+      const sheetKey = `${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`;
+      setConnectedSheet(sheetKey);
+      // Update connected sheets state
+      setConnectedSheets(prev => {
+        const newSet = new Set(prev);
+        newSet.add(sheetKey);
+        return newSet;
+      });
 
       toast.success("Connected to Google Sheet successfully");
     } catch (error) {
@@ -371,48 +464,6 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
       sheetId,
       sheetName
     });
-
-    // Fetch columns for the selected sheet
-    setTimeout(() => {
-      fetchSpreadsheetColumns({
-        ...googleSheetConfig,
-        sheetId,
-        sheetName
-      });
-    }, 100);
-  };
-
-  // Fetch spreadsheet columns
-  const fetchSpreadsheetColumns = async (googleSheetConfig: any) => {
-    if (!googleSheetConfig.sheetId || !googleSheetConfig.sheetName) {
-      return;
-    }
-
-    setIsLoadingColumns(true);
-    try {
-      const response = await fetch(`/api/chatbot/integrations/google/sheets/columns`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          chatbotId,
-          sheetId: googleSheetConfig.sheetId,
-          sheetName: googleSheetConfig.sheetName
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch spreadsheet columns");
-      }
-
-      const data = await response.json();
-      setSpreadsheetColumns(data.columns || []);
-    } catch (error) {
-      console.error("Error fetching spreadsheet columns:", error);
-    } finally {
-      setIsLoadingColumns(false);
-    }
   };
 
   return (
@@ -569,15 +620,15 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
             )}
             <Button
               onClick={handleConnectGoogleSheet}
-              disabled={isConnecting || !googleSheetConfig.sheetId || !googleSheetConfig.connected}
-              className={googleSheetConfig.connected && spreadsheetColumns.length > 0 ? "bg-green-600 hover:bg-green-700" : ""}
+              disabled={isConnecting || !googleSheetConfig.sheetId || !googleSheetConfig.connected || isSheetConnected}
+              className={isSheetConnected ? "bg-green-600 hover:bg-green-700" : ""}
             >
               {isConnecting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Connecting...
                 </>
-              ) : googleSheetConfig.connected && spreadsheetColumns.length > 0 ? (
+              ) : isSheetConnected ? (
                 <>
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                   Connected to Sheet
@@ -594,78 +645,44 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
           <div className="bg-gray-100 p-4 rounded-md">
             <h3 className="font-medium mb-2">Order Data Structure</h3>
             <p className="text-sm text-gray-500 mb-4">
-              Your Google Sheet will be updated with the following columns:
+              Configure which columns will be used in your Google Sheet:
             </p>
-            {isLoadingColumns ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                <span>Loading columns...</span>
+            
+            <div className="mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {orderColumns.map((column, index) => (
+                  <div key={`column-${index}`} className="flex items-center justify-between bg-white p-3 rounded">
+                    <span>{column.name}</span>
+                    <Switch
+                      checked={column.enabled}
+                      onCheckedChange={(checked) => {
+                        const updatedColumns = [...orderColumns];
+                        updatedColumns[index].enabled = checked;
+                        setOrderColumns(updatedColumns);
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
-            ) : spreadsheetColumns.length > 0 ? (
-              <div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                  {spreadsheetColumns.map((column, index) => (
-                    <div key={`column-${index}`} className="bg-white p-2 rounded">{column}</div>
+              <p className="text-xs text-gray-500 mt-4">
+                Toggle switches to enable or disable columns. Only enabled columns will be used in your Google Sheet.
+              </p>
+            </div>
+            
+            <div className="mt-4">
+              <h4 className="font-medium mb-2">Active Columns Preview</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                {orderColumns
+                  .filter(column => column.enabled)
+                  .map((column, index) => (
+                    <div key={`active-column-${index}`} className="bg-white p-2 rounded border-l-4 border-green-500">
+                      {column.name}
+                    </div>
                   ))}
-                </div>
-                <p className="text-xs text-gray-500 mt-4">
-                  These columns were detected in your Google Sheet. New orders will be added as rows.
-                </p>
               </div>
-            ) : (
-              <div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                  <div className="bg-white p-2 rounded">Order ID</div>
-                  <div className="bg-white p-2 rounded">Table Number</div>
-                  <div className="bg-white p-2 rounded">Timestamp</div>
-                  <div className="bg-white p-2 rounded">Customer Phone</div>
-                  <div className="bg-white p-2 rounded">Items</div>
-                  <div className="bg-white p-2 rounded">Quantity</div>
-                  <div className="bg-white p-2 rounded">Total Amount</div>
-                  <div className="bg-white p-2 rounded">Status</div>
-                </div>
-                <p className="text-xs text-gray-500 mt-4">
-                  {googleSheetConfig.connected ?
-                    "Connect to your Google Sheet to see the actual columns." :
-                    "These are the default columns that will be created in your Google Sheet."}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Advanced Settings */}
-          <div className="mt-6 p-4 border rounded-md">
-            <h3 className="font-medium mb-4">Advanced Settings</h3>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="auto-sync">Auto-Sync Orders</Label>
-                <div className="flex items-center mt-2">
-                  <Switch
-                    id="auto-sync"
-                    checked={true}
-                    disabled={!googleSheetConfig.connected || spreadsheetColumns.length === 0}
-                  />
-                  <span className="ml-2 text-sm text-gray-700">
-                    Automatically sync new orders to Google Sheets
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="sync-frequency">Sync Frequency</Label>
-                <select
-                  id="sync-frequency"
-                  className="w-full mt-2 border border-gray-300 rounded-md shadow-sm p-2"
-                  disabled={!googleSheetConfig.connected || spreadsheetColumns.length === 0}
-                >
-                  <option value="realtime">Real-time</option>
-                  <option value="hourly">Hourly</option>
-                  <option value="daily">Daily</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  How often to sync orders to Google Sheets
-                </p>
-              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                These columns will be used when syncing orders to your Google Sheet.
+              </p>
             </div>
           </div>
         </CardContent>
