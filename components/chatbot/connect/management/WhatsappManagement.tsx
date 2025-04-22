@@ -2,24 +2,17 @@
 
 import { useState, useEffect, Fragment } from "react";
 import { Switch, Menu, Transition } from "@headlessui/react";
-import { IconInfoCircle, IconCopy, IconPlus, IconTrash } from "@tabler/icons-react";
-import Image from "next/image";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { QRCodeCanvas } from 'qrcode.react';
-import { IndentDecrease } from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import Spinner from "@/components/Spinner";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+
+// Import dialog components
+import DeleteDialog from "./dialogs/DeleteDialog";
+import SettingsDialog from "./dialogs/SettingsDialog";
+import ProfileDialog from "./dialogs/ProfileDialog";
+import TemplateDialog from "./dialogs/TemplateDialog";
 
 const WhatsappManagement = ({ chatbotId, domain, teamId }:
     {
@@ -36,29 +29,12 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
     const [integrationUrl, setIntegrationUrl] = useState('');
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
-    const [isFetchingSettings, setIsFetchingSettings] = useState(false);
-    const [settingsData, setSettingsData] = useState<{ prompt: string; delay: number } | null>(null);
-    const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-    const [isFetchingProfile, setIsFetchingProfile] = useState(false);
-    const [profileData, setProfileData] = useState<{
-        about: string;
-        address: string;
-        description: string;
-        email: string;
-        profile_picture_url: string;
-        profile_picture_file?: File;
-        websites: string[];
-    } | null>(null);
-    const [isSavingProfile, setIsSavingProfile] = useState(false);
-    const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+    const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
 
     const router = useRouter();
 
-    useEffect(() => {
-        if (selectedNumberId)
-            fetchSettings(selectedNumberId);
-    }, [selectedNumberId]);
+    // No need to fetch settings on selectedNumberId change as it's handled in the SettingsDialog component
 
     useEffect(() => {
         if (isSettingsDialogOpen == false) {
@@ -71,118 +47,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
         setSelectedNumberId(id);
     };
 
-    const saveSettings = async () => {
-        setIsSavingSettings(true);
-        try {
-            const response = await fetch(`/api/chatbot/integrations/whatsapp/settings?_id=${selectedNumberId}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    prompt: settingsData?.prompt,
-                    delay: settingsData?.delay,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || "Failed to save settings");
-            }
-
-            toast.success("Settings saved successfully!");
-            setIsSettingsDialogOpen(false);
-        } catch (error) {
-            console.error(error.message);
-            toast.error(error.message);
-        }
-        setIsSavingSettings(false);
-    };
-
-    const fetchSettings = async (id: string) => {
-        setIsFetchingSettings(true);
-        try {
-            const response = await fetch(`/api/chatbot/integrations/whatsapp/settings?_id=${id}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data?.error || "Failed to fetch settings");
-            }
-
-            setSettingsData(data);
-        } catch (error) {
-            console.error("Error fetching settings:", error);
-            toast.error("Failed to fetch settings.");
-        }
-        setIsFetchingSettings(false);
-    };
-
-    const saveProfile = async () => {
-        setIsSavingProfile(true);
-        try {
-            const formData = new FormData();
-
-            formData.append("about", profileData.about);
-            formData.append("address", profileData.address);
-            formData.append("description", profileData.description);
-            formData.append("email", profileData.email);
-            formData.append("websites", JSON.stringify(profileData.websites));
-
-            if (profileData.profile_picture_file) {
-                formData.append("profile_picture", profileData.profile_picture_file);
-            }
-
-            const response = await fetch(`/api/chatbot/integrations/whatsapp/profile?_id=${selectedNumberId}`, {
-                method: "POST",
-                body: formData, // Send formData instead of JSON
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || "Failed to save profile");
-            }
-
-            toast.success("Profile is saved successfully!");
-            setIsProfileDialogOpen(false);
-            fetchProfile(selectedNumberId);
-        } catch (error) {
-            console.error(error.message);
-            toast.error(error.message);
-        }
-        setIsSavingProfile(false);
-    };
-
-    const fetchProfile = async (id: string) => {
-        setIsFetchingProfile(true);
-        try {
-            const response = await fetch(`/api/chatbot/integrations/whatsapp/profile?_id=${id}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data?.error || "Failed to fetch profile");
-            }
-
-            setProfileData(data);
-        } catch (error) {
-            console.error("Error fetching profile:", error);
-            toast.error("Failed to fetch profile.");
-        }
-        setIsFetchingProfile(false);
-    };
+    // These functions have been moved to their respective dialog components
 
     const handleNumberChange = (phoneNumber: string) => () => {
         setPhoneNumber(phoneNumber)
@@ -456,7 +321,6 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                                                         onClick={() => {
                                                                             setSelectedNumberId(phone._id);
                                                                             setIsProfileDialogOpen(true);
-                                                                            fetchProfile(phone._id);
                                                                         }}
                                                                     >
                                                                         Manage Profile
@@ -468,7 +332,8 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                                                     <div
                                                                         className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
                                                                         onClick={() => {
-                                                                            window.open(`https://business.facebook.com/wa/manage/message-templates/?waba_id=${phone.wabaId}&phone_number=${phone.display_phone_number}`, '_blank');
+                                                                            setSelectedNumberId(phone._id);
+                                                                            setIsTemplateDialogOpen(true);
                                                                         }}
                                                                     >
                                                                         Manage Template
@@ -478,7 +343,7 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                                                             <Menu.Item>
                                                                 {({ active }) => (
                                                                     <div
-                                                                        className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
+                                                                        className={`hidden ${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} flex px-4 py-2 text-sm cursor-pointer`}
                                                                         onClick={() => handleSettingsMenu(phone._id)}
                                                                     >
                                                                         Advanced Settings
@@ -581,238 +446,38 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
 
                         <QRCodeCanvas id="qr-code-canvas" value={integrationUrl} className="w-[400px]" />
                     </div>
-                    {/* for manage setting */}
-                    <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Delete WhatsApp Number</DialogTitle>
-                                <DialogDescription>
-                                    Are you sure you want to delete this WhatsApp Number?.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setIsDeleteDialogOpen(false)}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    onClick={handleDelete}
-                                    disabled={isConnecting}
-                                >
-                                    {isConnecting ? "Deleting" : "Delete"}
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                    {/* Dialog components */}
+                    <DeleteDialog 
+                        isOpen={isDeleteDialogOpen}
+                        setIsOpen={setIsDeleteDialogOpen}
+                        isDeleting={isConnecting}
+                        onDelete={handleDelete}
+                    />
 
-                    {/* for manage profile */}
-                    <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle className="text-xl">WhatsApp Integration Settings</DialogTitle>
-                                <DialogDescription>
-                                    Manage your WhatsApp integration settings here.
-                                </DialogDescription>
-                            </DialogHeader>
+                    <SettingsDialog 
+                        isOpen={isSettingsDialogOpen}
+                        setIsOpen={setIsSettingsDialogOpen}
+                        selectedNumberId={selectedNumberId}
+                        onClose={() => setSelectedNumberId(null)}
+                    />
 
-                            {isFetchingSettings ? (
-                                <div className="flex justify-center items-center">
-                                    <Spinner />
-                                </div>
-                            ) : settingsData ? (
-                                <div className="flex flex-col gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Prompt</label>
-                                        <textarea
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            value={settingsData.prompt}
-                                            onChange={(e) => setSettingsData({ ...settingsData, prompt: e.target.value })}
-                                        />
-                                    </div>
+                    <ProfileDialog 
+                        isOpen={isProfileDialogOpen}
+                        setIsOpen={setIsProfileDialogOpen}
+                        selectedNumberId={selectedNumberId}
+                        onProfileUpdated={() => {
+                            // Profile is updated in the dialog component
+                            setIsProfileDialogOpen(false);
+                        }}
+                    />
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Delay (seconds)</label>
-                                        <input
-                                            type="number"
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            value={settingsData.delay}
-                                            onChange={(e) => setSettingsData({ ...settingsData, delay: Number(e.target.value) })}
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-gray-500">No settings available.</div>
-                            )}
-
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsSettingsDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={saveSettings} disabled={isSavingSettings}>
-                                    {isSavingSettings ? "Saving..." : "Save"}
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-
-                    <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle className="text-xl">WhatsApp Profile Management</DialogTitle>
-                                <DialogDescription>
-                                    Manage your WhatsApp business profile here.
-                                </DialogDescription>
-                            </DialogHeader>
-
-                            {isFetchingProfile ? (
-                                <div className="flex justify-center items-center">
-                                    <Spinner />
-                                </div>
-                            ) : profileData ? (
-                                <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh]">
-
-                                    <div className="flex flex-col items-center gap-2">
-                                        <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
-                                        {(profileImagePreview || profileData.profile_picture_url) && (
-                                            <Image
-                                                src={profileImagePreview || profileData.profile_picture_url}
-                                                alt="Profile Picture"
-                                                width={100}
-                                                height={100}
-                                                className="rounded-full object-cover"
-                                            />
-                                        )}
-                                        {profileImagePreview && (
-                                            <button
-                                                type="button"
-                                                className="mt-2 inline-flex items-center rounded-md border border-transparent bg-red-600 px-3 py-1 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                                                onClick={() => {
-                                                    setProfileImagePreview(null);
-                                                    setProfileData({ ...profileData, profile_picture_file: undefined });
-                                                }}
-                                            >
-                                                Cancel Selection
-                                            </button>
-                                        )}
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="mt-2 block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-700 cursor-pointer"
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) {
-                                                    setProfileData({ ...profileData, profile_picture_file: file });
-                                                    setProfileImagePreview(URL.createObjectURL(file));
-                                                }
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">About</label>
-                                        <textarea
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            value={profileData.about}
-                                            onChange={(e) => setProfileData({ ...profileData, about: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Address</label>
-                                        <input
-                                            type="text"
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            value={profileData.address}
-                                            onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Description</label>
-                                        <textarea
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            value={profileData.description}
-                                            onChange={(e) => setProfileData({ ...profileData, description: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                                        <input
-                                            type="email"
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                            value={profileData.email}
-                                            onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Websites</label>
-                                        {profileData.websites?.map((website, index) => {
-                                            const isUrlValid = website !== "" || isValidUrl(website);
-                                            return (
-                                                <div key={`website-${index}`} className="flex items-center gap-2 mt-1">
-                                                    <input
-                                                        type="text"
-                                                        className={`block w-full border rounded-md shadow-sm p-2 ${isUrlValid ? "border-gray-300" : "border-red-500"
-                                                            }`}
-                                                        value={website}
-                                                        onChange={(e) => {
-                                                            const updatedWebsites = [...profileData.websites];
-                                                            updatedWebsites[index] = e.target.value;
-                                                            setProfileData({ ...profileData, websites: updatedWebsites });
-                                                        }}
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        className="text-red-500 hover:text-red-700"
-                                                        onClick={() => {
-                                                            const updatedWebsites = profileData.websites.filter((_, i) => i !== index);
-                                                            setProfileData({ ...profileData, websites: updatedWebsites });
-                                                        }}
-                                                    >
-                                                        <IconTrash className="h-5 w-5" />
-                                                    </button>
-                                                </div>
-                                            )
-                                        }
-                                        )}
-                                        <button
-                                            type="button"
-                                            className={`mt-2 text-sm ${profileData.websites?.every((url) => isValidUrl(url) && url !== "")
-                                                ? "text-blue-600 hover:text-blue-800"
-                                                : "text-gray-400 cursor-not-allowed"
-                                                }`}
-                                            onClick={() => {
-                                                if (profileData.websites?.every((url) => isValidUrl(url) && url !== "")) {
-                                                    setProfileData({ ...profileData, websites: [...profileData.websites, ""] });
-                                                } else {
-                                                    toast.error("Please enter valid URLs before adding a new one.");
-                                                }
-                                            }}
-                                            disabled={profileData.websites?.length > 0 && !profileData.websites?.every((url) => isValidUrl(url) && url !== "")}
-                                        >
-                                            <IconPlus className="h-5 w-5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-gray-500">No profile data available.</div>
-                            )}
-
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsProfileDialogOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={saveProfile} disabled={isSavingProfile}>
-                                    {isSavingProfile ? "Saving..." : "Save"}
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                    <TemplateDialog
+                        isOpen={isTemplateDialogOpen}
+                        setIsOpen={setIsTemplateDialogOpen}
+                        selectedNumberId={selectedNumberId}
+                        wabaId={phoneNumbers.find(p => p._id === selectedNumberId)?.wabaId || null}
+                        phoneNumber={phoneNumbers.find(p => p._id === selectedNumberId)?.display_phone_number || null}
+                    />
                 </>
             }
 

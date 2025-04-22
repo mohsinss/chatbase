@@ -272,11 +272,11 @@ async function handleOrderManagementButton(
       }
       
       // Send welcome message
-      await sendTextMessage(
-        phoneNumberId, 
-        from, 
-        `Welcome back! You're at table ${tableName}. Please select a category to view our menu:`
-      );
+      // await sendTextMessage(
+      //   phoneNumberId, 
+      //   from, 
+      //   `Welcome back! You're at table ${tableName}. Please select a category to view our menu:`
+      // );
       
       // Prepare list rows from categories
       const sections = [
@@ -415,7 +415,7 @@ async function handleCategoryButton(
     interactive: {
       type: "list",
       body: {
-        text: `Menu items in ${categoryName} for table ${tableName}:`
+        text: `Menu items in ${categoryName} :`
       },
       footer: {
         text: "Select an item to view details or order."
