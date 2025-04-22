@@ -123,6 +123,7 @@ const TemplateDialog = ({ isOpen, setIsOpen, selectedNumberId, wabaId, phoneNumb
             if (newTemplate.headerText) {
                 components.push({
                     type: "HEADER",
+                    format: "TEXT",
                     text: newTemplate.headerText
                 });
             }
