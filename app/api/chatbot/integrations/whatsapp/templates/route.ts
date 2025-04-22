@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get the access token 
-    const accessToken = whatsappNumber.accessToken;
+    const accessToken = process.env.FACEBOOK_USER_ACCESS_TOKEN;
     if (!accessToken) {
       return NextResponse.json(
         { error: "Facebook access token not configured" },
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get the access token
-    const accessToken = whatsappNumber.accessToken;
+    const accessToken = process.env.FACEBOOK_USER_ACCESS_TOKEN;
     if (!accessToken) {
       return NextResponse.json(
         { error: "Facebook access token not configured" },
@@ -211,7 +211,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Get the access token
-    const accessToken = whatsappNumber.accessToken;
+    const accessToken = process.env.FACEBOOK_USER_ACCESS_TOKEN;
     if (!accessToken) {
       return NextResponse.json(
         { error: "Facebook access token not configured" },
