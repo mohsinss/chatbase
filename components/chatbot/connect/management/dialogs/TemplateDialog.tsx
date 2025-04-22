@@ -121,33 +121,44 @@ const TemplateDialog = ({ isOpen, setIsOpen, selectedNumberId, wabaId, phoneNumb
             
             // Add header if provided
             if (newTemplate.headerText) {
-                components.push({
+                const headerComponent: any = {
                     type: "HEADER",
                     format: "TEXT",
-                    text: newTemplate.headerText,
-                    example: {
+                    text: newTemplate.headerText
+                };
+                
+                // Only add example if there are variables
+                const headerVariables = newTemplate.headerText.match(/{{[0-9]+}}/g);
+                if (headerVariables && headerVariables.length > 0) {
+                    headerComponent.example = {
                         header_text: [
-                            newTemplate.headerText.replace(/{{[0-9]+}}/g, "Example")
+                            newTemplate.headerText.replace(/{{[0-9]+}}/g, "Example Value")
                         ]
-                    }
-                });
+                    };
+                }
+                
+                components.push(headerComponent);
             }
             
             // Add body (required)
             // Extract variables from body text
-            const bodyVariables = (newTemplate.bodyText.match(/{{[0-9]+}}/g) || [])
-                .map(v => v.replace(/[{}]/g, ""))
-                .map(() => "Example Value");
-                
-            components.push({
+            const bodyVariables = newTemplate.bodyText.match(/{{[0-9]+}}/g);
+            const bodyComponent: any = {
                 type: "BODY",
-                text: newTemplate.bodyText,
-                example: {
-                    body_text: [
-                        bodyVariables.length > 0 ? bodyVariables : ["Example"]
-                    ]
-                }
-            });
+                text: newTemplate.bodyText
+            };
+            
+            // Only add example if there are variables
+            if (bodyVariables && bodyVariables.length > 0) {
+                // Create example values for each variable
+                const exampleValues = bodyVariables.map(() => "Example Value");
+                
+                bodyComponent.example = {
+                    body_text: exampleValues
+                };
+            }
+            
+            components.push(bodyComponent);
             
             // Add footer if provided
             if (newTemplate.footerText) {
@@ -433,7 +444,7 @@ const TemplateDialog = ({ isOpen, setIsOpen, selectedNumberId, wabaId, phoneNumb
                                     />
                                 </div>
 
-                                <div className="hidden">
+                                <div>
                                     <div className="flex justify-between items-center">
                                         <label className="block text-sm font-medium text-gray-700">Buttons (Optional)</label>
                                         <button
