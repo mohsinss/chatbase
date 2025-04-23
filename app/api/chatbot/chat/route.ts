@@ -1,6 +1,3 @@
-import { sendAnthropic } from '@/libs/anthropic';
-import { sendGemini } from '@/libs/gemini';
-import OpenAI from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
 import connectMongo from "@/libs/mongoose";
 import ChatbotAISettings from "@/models/ChatbotAISettings";
@@ -11,113 +8,21 @@ import ChatbotConversation from '@/models/ChatbotConversation';
 import ChatbotAction from '@/models/ChatbotAction';
 import config from '@/config';
 import { MODEL_MAPPING } from '@/types';
-import { sampleFlow } from '@/types';
-import { getAvailableSlots } from '@/lib/calcom';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const deepseek = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: process.env.DEEPSEEK_API_KEY,
-});
-
-const xai = new OpenAI({
-  baseURL: 'https://api.x.ai/v1',
-  apiKey: process.env.X_GROK_API_KEY,
-});
-
-const tools = [
-  {
-    type: "function" as const,
-    function: {
-      name: "getAvailableSlots",
-      description: "Get available slots from a Cal.com URL.",
-      parameters: {
-        type: "object",
-        properties: {
-          calUrl: {
-            type: "string",
-            description: "The Cal.com URL to fetch available slots from"
-          },
-          dateFrom: {
-            type: "string",
-            description: "Start date/time in ISO 8601 format"
-          },
-          dateTo: {
-            type: "string",
-            description: "End date/time in ISO 8601 format"
-          },
-        },
-        required: ["calUrl", "dateFrom", "dateTo"],
-      },
-    },
-  },
-];
-
-// Helper function to process messages for deepseek-reasoner
-//@ts-ignore
-function processMessagesForReasoner(systemPrompt, relevant_chunk, messages, confidencePrompt) {
-  let formattedMessages = [{
-    role: 'user',
-    content: `${systemPrompt}\n${relevant_chunk}`
-  }];
-
-  // Process existing messages
-  for (const msg of messages) {
-    const lastMsg = formattedMessages[formattedMessages.length - 1];
-    if (msg.role === lastMsg.role) {
-      // Merge consecutive same-role messages
-      lastMsg.content += `\n${msg.content}`;
-    } else {
-      formattedMessages.push(msg);
-    }
-  }
-
-  // Handle confidence prompt
-  const lastMsg = formattedMessages[formattedMessages.length - 1];
-  // const confidenceMessage = {
-  //   role: 'user',
-  //   content: confidencePrompt
-  // };
-
-  // if (lastMsg.role === 'user') {
-  //   lastMsg.content += `\n${confidencePrompt}`;
-  // } else {
-  //   formattedMessages.push(confidenceMessage);
-  // }
-
-  return formattedMessages;
-}
-
-// Add model type mapping with specific O1 model versions
-const O1_MODELS = ['o1', 'o1-mini'];
-const O1_CONFIG = {
-  'o1': {
-    maxOutputTokens: 100000,
-    contextWindow: 200000,
-    model: 'o1'
-  },
-  'o1-mini': {
-    maxOutputTokens: 65536,
-    contextWindow: 128000,
-    model: 'o1-mini'
-  }
-};
-
-const allowedOrigins = ['*']; // Add your allowed origins here
-
-const setCorsHeaders = (res: Response) => {
-  res.headers.set('Access-Control-Allow-Origin', '*');
-  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.headers.set('Access-Control-Allow-Headers', 'Content-Type');
-  return res;
-};
+// Import modular components
+import { 
+  setCorsHeaders, 
+  handleOptionsRequest,
+  handleAnthropicRequest,
+  handleGeminiRequest,
+  handleDeepseekRequest,
+  handleGrokRequest,
+  handleOpenAIRequest,
+  handleQuestionFlow
+} from '@/components/chatbot/api';
 
 export async function OPTIONS(req: NextRequest) {
-  const res = NextResponse.json({}, { status: 200 });
-  return setCorsHeaders(res);
+  return handleOptionsRequest();
 }
 
 export async function POST(req: NextRequest) {
@@ -144,7 +49,6 @@ export async function POST(req: NextRequest) {
     const chatbot = await Chatbot.findOne({ chatbotId });
     const dataset = await Dataset.findOne({ chatbotId });
     const enabledActions = await ChatbotAction.find({ chatbotId, enabled: true });
-    const conversation = await ChatbotConversation.findById(conversationId);
 
     console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
 
@@ -173,53 +77,10 @@ export async function POST(req: NextRequest) {
       ));
     }
 
-    const { questionFlow, questionFlowEnable, questionAIResponseEnable, restartQFTimeoutMins } = dataset;
-    const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
-
-    let nextNode = null;
-
-    if (questionFlowEnable && questionFlow) {
-
-      const { nodes, edges } = (questionFlow && questionFlow.nodes && questionFlow.edges) ? questionFlow : sampleFlow;
-
-      // If only one message and no nodeId, set nodeId to first node
-      if (!nodeId && messages.length == 0) {
-        // Find the top parent node (node without incoming edges)
-        //@ts-ignore
-        const childNodeIds = new Set(edges.map(edge => edge.target));
-        //@ts-ignore
-        const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
-        nextNode = topParentNode;
-      }
-
-      if (nodeId) {
-        // User selected an option or initial message, find next node based on selected option or initial node
-        //@ts-ignore
-        const nextEdge = edges.find(edge => edge.source === nodeId && edge.sourceHandle === optionIndex?.toString());
-        //@ts-ignore
-        nextNode = nodes.find(node => node.id === nextEdge?.target);
-      }
-
-      if (!nextNode && !isAiResponseEnabled) {
-        // Find the top parent node (node without incoming edges)
-        //@ts-ignore
-        const childNodeIds = new Set(edges.map(edge => edge.target));
-        //@ts-ignore
-        const topParentNode = nodes.find(node => !childNodeIds.has(node.id));
-        nextNode = topParentNode;
-      }
-
-      if (nextNode) {
-        const responsePayload: any = {
-          message: nextNode.data.message || '',
-          question: nextNode.data.question || '',
-          options: nextNode.data.options || [],
-          image: nextNode.data.image || '',
-          nextNodeId: nextNode.id,
-        };
-
-        return setCorsHeaders(NextResponse.json(responsePayload, { status: 200 }));
-      }
+    // Handle question flow logic
+    const questionFlowResponse = await handleQuestionFlow(dataset, nodeId, optionIndex, messages);
+    if (questionFlowResponse) {
+      return questionFlowResponse;
     }
 
     const options = {
@@ -243,16 +104,18 @@ export async function POST(req: NextRequest) {
       console.error("semantic search failed:", chunk_response_data);
       throw new Error(chunk_response_data.message || "semantic search failed.");
     }
+    
     let relevant_chunk = "Please use the following information for answering.\n";
     for (let i = 0; i < chunk_response_data.chunks.length; i++) {
       relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
     }
     relevant_chunk = "";
+    
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
     const language = aiSettings?.language || 'en';
-    // const systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in italian language only.`;
+    
     let systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;
 
     if (enabledActions?.length > 0) {
@@ -274,451 +137,59 @@ export async function POST(req: NextRequest) {
 
     systemPrompt += todayData + confidencePrompt;
 
-    console.log("systemPrompt", systemPrompt)
-
-    const encoder = new TextEncoder();
-
-    // Measure time for model processing
-    const modelProcessingStart = Date.now();
     // Check model provider and handle accordingly
     if (internalModel.startsWith('claude-')) {
-      console.log('Using Anthropic Model:', internalModel);
-      const stream = new ReadableStream({
-        async start(controller) {
-          try {
-            const onContent = (text: string) => {
-              const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
-              controller.enqueue(encoder.encode(sseMessage));
-            };
-
-            await sendAnthropic(
-              [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: relevant_chunk },
-                ...messages,
-                // { role: 'user', content: confidencePrompt }
-              ],
-              'user-1',
-              onContent,
-              maxTokens,
-              temperature,
-              internalModel
-            );
-
-            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-            controller.close();
-          } catch (error) {
-            controller.error(error);
-          }
-        },
-      });
-
-      if (team) {
-        team.credits += 1;
-        await team.save();
-      }
-
-      return setCorsHeaders(new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      }));
+      return await handleAnthropicRequest(
+        systemPrompt,
+        relevant_chunk,
+        messages,
+        'user-1',
+        maxTokens,
+        temperature,
+        internalModel,
+        team
+      );
     } else if (internalModel.startsWith('gemini-')) {
-      console.log('Using Gemini Model:', internalModel);
-
-      const stream = new ReadableStream({
-        async start(controller) {
-          try {
-            const onContent = (text: string, confidenceScore: number) => {
-              const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
-              controller.enqueue(encoder.encode(sseMessage));
-            };
-
-            await sendGemini(
-              [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: relevant_chunk },
-                ...messages,
-                // { role: 'user', content: confidencePrompt }
-              ],
-              'user-1',
-              onContent,
-              maxTokens,
-              temperature,
-              internalModel
-            );
-
-            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-            controller.close();
-          } catch (error) {
-            controller.error(error);
-          }
-        },
-      });
-
-      if (team) {
-        team.credits += 1;
-        await team.save();
-      }
-
-      return setCorsHeaders(new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      }));
+      return await handleGeminiRequest(
+        systemPrompt,
+        relevant_chunk,
+        messages,
+        'user-1',
+        maxTokens,
+        temperature,
+        internalModel,
+        team
+      );
     } else if (internalModel.startsWith('deepseek-')) {
-      console.log('Using Deepseek Model:', MODEL_MAPPING[internalModel] || 'deepseek-chat');
-
-      // For O1 models, prepend system message as a user message
-      let formattedMessages;
-      if (MODEL_MAPPING[internalModel] == 'deepseek-reasoner') {
-        formattedMessages = processMessagesForReasoner(
-          systemPrompt,
-          relevant_chunk,
-          messages,
-          confidencePrompt
-        );
-      } else {
-        formattedMessages = [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: relevant_chunk },
-          ...messages,
-          // { role: 'user', content: confidencePrompt }
-        ];
-      }
-
-      // Configure model-specific parameters
-      const modelParams = {
-        max_tokens: maxTokens,
+      return await handleDeepseekRequest(
+        systemPrompt,
+        relevant_chunk,
+        messages,
+        maxTokens,
         temperature,
-        model: MODEL_MAPPING[internalModel] || 'deepseek-chat',
-      };
-
-      const response = await deepseek.chat.completions.create({
-        ...modelParams,
-        messages: formattedMessages,
-        stream: true,
-      });
-
-      console.log(`Model processing took ${Date.now() - modelProcessingStart}ms`);
-
-      const stream = new ReadableStream({
-        async start(controller) {
-          try {
-            let log_probs_len = 0;
-            let log_probs_sum = 0.0;
-            for await (const chunk of response) {
-              const text = chunk.choices[0]?.delta?.content || '';
-              //@ts-ignore
-              const reasonal_text = chunk.choices[0]?.delta?.reasoning_content || '';
-              // log_probs_len++;
-              // log_probs_sum += chunk.choices[0].logprobs?.content[0]?.logprob || 0.0;
-
-              if (text) {
-                const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
-                controller.enqueue(encoder.encode(sseMessage));
-              }
-              if (reasonal_text) {
-                const sseMessage = `reason: ${JSON.stringify({ reasonal_text })}\n\n`;
-                controller.enqueue(encoder.encode(sseMessage));
-              }
-            }
-
-            // Calculate average log probability
-            // const averageLogProb = log_probs_sum / log_probs_len;
-            // let confidenceScore;
-            // if (averageLogProb === 0) {
-            //   confidenceScore = 100; // If average is zero, confidence is perfect (100%)
-            // } else {
-            //   confidenceScore = (1 + averageLogProb) * 100; // Adjust as needed
-            // }
-
-            // Send confidence score as part of the response
-            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-            // controller.enqueue(encoder.encode('score:' + confidenceScore));
-            controller.close();
-          } catch (error) {
-            controller.error(error);
-          }
-        },
-      });
-
-      if (team) {
-        team.credits += 1;
-        await team.save();
-      }
-
-      return setCorsHeaders(new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      }));
+        internalModel,
+        team
+      );
     } else if (internalModel.startsWith('grok-')) {
-      console.log('Using Grok Model:', MODEL_MAPPING[internalModel] || 'grok-2');
-
-      // For O1 models, prepend system message as a user message
-      const formattedMessages = [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: relevant_chunk },
-        ...messages,
-        // { role: 'user', content: confidencePrompt }
-      ];
-
-      // Configure model-specific parameters
-      const modelParams = {
-        max_tokens: maxTokens,
+      return await handleGrokRequest(
+        systemPrompt,
+        relevant_chunk,
+        messages,
+        maxTokens,
         temperature,
-        model: MODEL_MAPPING[internalModel] || 'grok-2',
-      };
-
-      const response = await xai.chat.completions.create({
-        ...modelParams,
-        messages: formattedMessages,
-        stream: true,
-      });
-
-      console.log(`Model processing took ${Date.now() - modelProcessingStart}ms`);
-
-      const stream = new ReadableStream({
-        async start(controller) {
-          try {
-            for await (const chunk of response) {
-              const text = chunk.choices[0]?.delta?.content || '';
-              if (text) {
-                const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
-                controller.enqueue(encoder.encode(sseMessage));
-              }
-            }
-
-            // Send confidence score as part of the response
-            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-            // controller.enqueue(encoder.encode('score:' + confidenceScore));
-            controller.close();
-          } catch (error) {
-            controller.error(error);
-          }
-        },
-      });
-
-      if (team) {
-        team.credits += 1;
-        await team.save();
-      }
-
-      return setCorsHeaders(new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      }));
+        internalModel,
+        team
+      );
     } else {
-      // let assistantId = conversation?.metadata?.openaiAssistantId;
-      // let threadId = conversation?.metadata?.openaiThreadId;
-
-      // // Validate existing assistant and thread IDs
-      // let validAssistantId = assistantId;
-      // let validThreadId = threadId;
-
-      // // Verify assistant ID exists and is valid
-      // if (assistantId) {
-      //   try {
-      //     await openai.beta.assistants.retrieve(assistantId);
-      //   } catch (error) {
-      //     console.log('Invalid assistant ID, creating new assistant');
-      //     const newAssistant = await openai.beta.assistants.create({
-      //       name: `${dataset.name || 'Chatbot'} Assistant`,
-      //       instructions: aiSettings?.systemPrompt || 'You are a helpful AI assistant.',
-      //       model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
-      //       // tools: [{ type: "retrieval" }],
-      //       // file_ids: dataset.fileIds || []
-      //     });
-      //     validAssistantId = newAssistant.id;
-      //   }
-      // } else {
-      //   // Create new assistant if none exists
-      //   const newAssistant = await openai.beta.assistants.create({
-      //     name: `${dataset.name || 'Chatbot'} Assistant`,
-      //     instructions: aiSettings?.systemPrompt || 'You are a helpful AI assistant.',
-      //     model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
-      //     // tools: [{ type: "retrieval" }],
-      //     // file_ids: dataset.fileIds || []
-      //   });
-      //   validAssistantId = newAssistant.id;
-      // }
-
-      // // Verify thread ID exists and is valid
-      // if (threadId) {
-      //   try {
-      //     await openai.beta.threads.retrieve(threadId);
-      //   } catch (error) {
-      //     console.log('Invalid thread ID, creating new thread');
-      //     const newThread = await openai.beta.threads.create();
-      //     validThreadId = newThread.id;
-      //   }
-      // } else {
-      //   const newThread = await openai.beta.threads.create();
-      //   validThreadId = newThread.id;
-      // }
-
-      // Update conversation with valid IDs if needed
-      // if (conversation && (!assistantId || !threadId || assistantId !== validAssistantId || threadId !== validThreadId)) {
-      //   await ChatbotConversation.findByIdAndUpdate(
-      //     conversation._id,
-      //     {
-      //       metadata: {
-      //         ...conversation.metadata,
-      //         openaiAssistantId: validAssistantId,
-      //         openaiThreadId: validThreadId
-      //       }
-      //     },
-      //     { new: true }
-      //   );
-      // }
-
-      // // Add the user's message to the thread
-      // await openai.beta.threads.messages.create(validThreadId, {
-      //   role: "user",
-      //   content: messages[messages.length - 1].content,
-      // });
-
-      // // Run the assistant
-      // const run = await openai.beta.threads.runs.create(validThreadId, {
-      //   assistant_id: validAssistantId,
-      // });
-
-
-      console.log('Using OpenAI Model:', MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo');
-
-      // For O1 models, prepend system message as a user message
-      let formattedMessages;
-      if (O1_MODELS.includes(internalModel)) {
-        formattedMessages = [
-          { role: 'user', content: systemPrompt },
-          { role: 'user', content: relevant_chunk },
-          ...messages,
-          // { role: 'user', content: confidencePrompt }
-        ];
-      } else {
-        formattedMessages = [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: relevant_chunk },
-          ...messages,
-          // { role: 'user', content: confidencePrompt }
-        ];
-      }
-
-      // Configure model-specific parameters
-      const modelParams = O1_MODELS.includes(internalModel)
-        ? {
-          max_completion_tokens: Math.min(
-            maxTokens,
-            O1_CONFIG[internalModel as keyof typeof O1_CONFIG].maxOutputTokens
-          ),
-          temperature: 1,
-          model: O1_CONFIG[internalModel as keyof typeof O1_CONFIG].model,
-          // logprobs: 5 // Adjust this number based on how many log probabilities you want
-        }
-        : {
-          max_tokens: maxTokens,
-          temperature,
-          model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
-          // logprobs: 5 // Adjust this number based on how many log probabilities you want
-        };
-
-      const response = await openai.chat.completions.create({
-        ...modelParams,
-        messages: formattedMessages,
-        tools,
-        // tool_choice: "auto",
-        stream: true,
-      });
-
-      console.log(`Model processing took ${Date.now() - modelProcessingStart}ms`);
-
-      const stream = new ReadableStream({
-        async start(controller) {
-          try {
-            let functionCallData: any = null;
-            let assistantMessage = "";
-
-            for await (const chunk of response) {
-              const choice = chunk.choices[0];
-
-              if (choice.delta.tool_calls) {
-                functionCallData = functionCallData || { name: "", arguments: "" };
-                const toolCall = choice.delta.tool_calls[0];
-
-                if (toolCall.function.name) {
-                  functionCallData.name = toolCall.function.name;
-                }
-                if (toolCall.function.arguments) {
-                  functionCallData.arguments += toolCall.function.arguments;
-                }
-
-              } else if (choice.delta.content) {
-                assistantMessage += choice.delta.content;
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: choice.delta.content })}\n\n`));
-              }
-              // const text = chunk.choices[0]?.delta?.content || '';
-
-              // if (text) {
-              //   const sseMessage = `data: ${JSON.stringify({ text })}\n\n`;
-              //   controller.enqueue(encoder.encode(sseMessage));
-              // }
-            }
-
-            if (functionCallData) {
-              const args = JSON.parse(functionCallData.arguments);
-              console.log(functionCallData.name, args)
-
-              if (functionCallData.name === "getAvailableSlots") {
-                const formatDateHour = (isoString: string) => isoString.slice(0, 13);
-
-                const dateFromFormatted = formatDateHour(args.dateFrom);
-                const dateToFormatted = formatDateHour(args.dateTo);
-                const meetingUrl = args.calUrl;
-                const [username, eventType] = meetingUrl.replace("https://cal.com/", "").split("/");
-                console.log(meetingUrl, dateFromFormatted, dateToFormatted)
-                const slotsResponse = await getAvailableSlots(username, eventType, dateFromFormatted, dateToFormatted);
-
-                const hasSlots = slotsResponse && Object.keys(slotsResponse).some(date => slotsResponse[date].length > 0);
-                const slotsMessage = hasSlots
-                  ? `I have found available slots between ${dateFromFormatted} and ${dateToFormatted}.`
-                  : `I have not found available slots between ${dateFromFormatted} and ${dateToFormatted}.`;
-
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: slotsMessage, slots: hasSlots ? slotsResponse : {}, meetingUrl })}\n\n`));
-              }
-            }
-
-            // Send confidence score as part of the response
-            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-            // controller.enqueue(encoder.encode('score:' + confidenceScore));
-            controller.close();
-          } catch (error) {
-            controller.error(error);
-          }
-        },
-      });
-
-      if (team) {
-        team.credits += 1;
-        await team.save();
-      }
-
-      return setCorsHeaders(new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      }));
+      return await handleOpenAIRequest(
+        systemPrompt,
+        relevant_chunk,
+        messages,
+        maxTokens,
+        temperature,
+        internalModel,
+        team
+      );
     }
   } catch (error) {
     console.error('Streaming error:', error);
