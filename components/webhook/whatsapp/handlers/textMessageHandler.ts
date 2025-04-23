@@ -60,7 +60,8 @@ export async function handleTextMessage(
     await applyConfiguredDelay(delay);
 
     // Mark message as read
-    // await markMessageAsRead(phoneNumberId, messageId);
+    await markMessageAsRead(phoneNumberId, messageId);
+    
     // Get or create conversation
     const { conversation, triggerQF } = await getOrCreateConversation(
       chatbotId,
