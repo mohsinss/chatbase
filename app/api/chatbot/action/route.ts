@@ -7,6 +7,20 @@ export async function POST(req: NextRequest) {
   await connectMongo();
   const { chatbotId, name, url, instructions, enabled, metadata, type } = await req.json();
 
+  // Check if an action with type=ordermanagement already exists for this chatbotId
+  if (type === 'ordermanagement') {
+    const existingAction = await ChatbotAction.findOne({ 
+      chatbotId, 
+      type: 'ordermanagement' 
+    });
+
+    if (existingAction) {
+      return NextResponse.json({ 
+        error: 'Only one action of type ordermanagement is allowed per chatbot' 
+      }, { status: 400 });
+    }
+  }
+
   const action = await ChatbotAction.create({
     chatbotId,
     name,

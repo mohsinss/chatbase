@@ -252,7 +252,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           url: "", // Not used for QRoder but required by the model
           instructions: "Use this action to manage restaurant orders via QR codes", // Default instructions
           enabled: isEnabled,
-          type: "QRoder",
+          type: "ordermanagement",
           metadata: actionMetadata
         };
 
@@ -320,7 +320,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           className="max-w-md"
         />
         <p className="text-sm text-gray-500 mt-1">
-          A descriptive name for this action. This will help identify it in the actions list.
+          Enabling this action will automatically disable other actions.
         </p>
       </div>
 

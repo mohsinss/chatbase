@@ -220,6 +220,16 @@ const Actions = (
     }
   };
 
+  const handleActionClick = (actionId: string) => async () => {
+    if(actionId == 'ordermanagement' && actions.filter(a => a.type == "ordermanagement").length > 0) {
+      toast.error("You can only have one Order Management Action, check our docs more.");
+      return;
+    }
+
+    setIsModalOpen(false);
+    router.push(`/dashboard/${params.teamId}/chatbot/${params.chatbotId}/actions/${actionId}`);
+  }
+
   if (currentTab == "calcom") {
     return (
       <div>
@@ -237,7 +247,7 @@ const Actions = (
   }
 
   //@ts-ignore
-  const ActionButton = ({ id, title, description, icon, bgColor, textColor, active }) => (
+  const ActionButton = ({ id, title, description, icon, bgColor, textColor, active, onClick }) => (
     <div className={`mb-6  ${active ? "bg-gray-50" : "bg-gray-200 cursor-not-allowed"} rounded-2xl p-4`}>
       <div className="flex items-center gap-3 mb-2">
         <div className={`flex items-center justify-center w-10 h-10 rounded-full ${bgColor} ${textColor}`}>
@@ -247,10 +257,7 @@ const Actions = (
       </div>
       <button
         className={`w-full p-4 border rounded-lg transition-colors flex items-center justify-between ${active ? "hover:bg-gray-100 " : "bg-gray-200 cursor-not-allowed"}`}
-        onClick={() => {
-          setIsModalOpen(false);
-          router.push(`/dashboard/${params.teamId}/chatbot/${params.chatbotId}/actions/${id}`);
-        }}
+        onClick={onClick}
         disabled={!active}
       >
         <div>
@@ -416,7 +423,7 @@ const Actions = (
             {/* Actions List */}
             <div className="space-y-4">
               {actionsData.map((action) => (
-                <ActionButton key={action.id} {...action} />
+                <ActionButton key={action.id} {...action} onClick={handleActionClick(action.id)} />
               ))}
             </div>
           </div>
