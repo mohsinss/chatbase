@@ -4,10 +4,8 @@ import ChatbotAISettings from "@/models/ChatbotAISettings";
 import Chatbot from '@/models/Chatbot';
 import Dataset from "@/models/Dataset";
 import Team from '@/models/Team';
-import ChatbotConversation from '@/models/ChatbotConversation';
 import ChatbotAction from '@/models/ChatbotAction';
 import config from '@/config';
-import { MODEL_MAPPING } from '@/types';
 
 // Import modular components
 import { 
