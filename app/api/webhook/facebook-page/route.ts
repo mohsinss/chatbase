@@ -217,7 +217,7 @@ export async function POST(request: Request) {
           console.error(`Webhook logging error: ${response.status}`);
         }
       } catch (error) {
-        console.error('Webhook logging error:', error);
+        console.error('Webhook logging error:', JSON.stringify(data));
         // Continue execution even if logging fails
       }
     }

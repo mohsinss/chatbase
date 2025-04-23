@@ -22,7 +22,7 @@ export async function logWebhookData(data: any): Promise<void> {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
-      console.error('Error logging webhook data:', error);
+      console.error('Error logging webhook data:', JSON.stringify(data));
     }
   }
 }
