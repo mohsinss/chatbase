@@ -13,7 +13,7 @@ This directory contains modular components for the Instagram webhook functionali
 ### Handlers Directory
 
 - `handlers/index.ts` - Exports all handlers for easier imports
-- `handlers/message-handler.ts` - Handlers for direct messages
+- `handlers/message-handler.ts` - Handlers for direct messages, including message unsend events
 - `handlers/comment-handler.ts` - Handlers for comments
 - `handlers/like-handler.ts` - Handlers for likes
 - `handlers/dm-handler.ts` - Handlers for DM reactions to comments

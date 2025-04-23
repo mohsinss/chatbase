@@ -4,7 +4,8 @@
 export { 
   handleMessengerEvent,
   handleMessengerMessage,
-  handleMessengerPostback 
+  handleMessengerPostback,
+  handleMessageUnsend
 } from './message-handler';
 
 // Comment handlers

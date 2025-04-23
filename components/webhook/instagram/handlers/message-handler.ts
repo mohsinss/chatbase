@@ -4,6 +4,7 @@ import { sendTypingIndicator } from '../messaging';
 import { findOrCreateConversation } from '../conversation';
 import { handleQuestionFlow } from './question-flow';
 import { handleAIResponse } from './ai-response';
+import ChatbotConversation from '@/models/ChatbotConversation';
 
 // Handle Messenger text messages
 export async function handleMessengerMessage(
@@ -146,6 +147,55 @@ export async function handleMessengerPostback(
   return { status: "No question flow available for postback." };
 }
 
+// Handle message unsend/delete
+export async function handleMessageUnsend(
+  instagramPage: any,
+  chatbotId: string,
+  sender: string,
+  messaging: any
+): Promise<any> {
+  const mid = messaging.message.mid;
+  
+  if (!mid) {
+    return { status: "Missing message ID for unsend event." };
+  }
+
+  try {
+    // Find the conversation
+    const conversation = await ChatbotConversation.findOne({
+      chatbotId,
+      platform: "instagram",
+      "metadata.from": sender,
+      "metadata.to": instagramPage.name
+    });
+
+    if (!conversation) {
+      return { status: "Conversation not found for unsend event." };
+    }
+
+    // Find the message with the matching mid and mark it as deleted
+    let messageFound = false;
+    for (const message of conversation.messages) {
+      if (message.mid === mid) {
+        message.deleted = true;
+        messageFound = true;
+        break;
+      }
+    }
+
+    if (!messageFound) {
+      return { status: "Message not found for unsend event." };
+    }
+
+    // Save the conversation
+    await conversation.save();
+    return { status: "Message marked as deleted." };
+  } catch (error) {
+    console.error('Error handling message unsend:', error);
+    return { status: "Error handling message unsend.", error };
+  }
+}
+
 // Handle Messenger events (messages and postbacks)
 export async function handleMessengerEvent(data: any): Promise<any> {
   const messaging = data.entry[0].messaging[0];
@@ -169,6 +219,10 @@ export async function handleMessengerEvent(data: any): Promise<any> {
   // Handle text messages
   if (messaging.message?.text) {
     return await handleMessengerMessage(instagramPage, chatbotId, sender, messaging);
+  }
+  // Handle message unsend
+  else if (messaging.message?.is_deleted) {
+    return await handleMessageUnsend(instagramPage, chatbotId, sender, messaging);
   }
   // Handle postbacks (button clicks)
   else if (messaging.postback) {
