@@ -562,36 +562,38 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
                     return (
                       <div key={index} className={` mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
                         <div className={`rounded-lg p-4 inline-block max-w-[80%] ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
-                          {parsedContent?.type === 'image' && parsedContent.image ? (
-                            <img src={parsedContent.image} alt="Chat Image" className="max-w-full h-auto rounded" />
-                          ) : parsedContent?.type === 'interactive' && parsedContent.interactive?.type === 'button' ? (
-                            <div>
-                              <p className="mb-2">{parsedContent.interactive.body.text}</p>
-                              <div className="flex flex-col gap-2">
-                                {parsedContent.interactive.action.buttons.map((button: any) => (
-                                  <button
-                                    key={button.reply.id}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                                    onClick={() => {
-                                      // Handle button click here
-                                      console.log(`Button clicked: ${button.reply.title}`);
-                                    }}
-                                  >
-                                    {button.reply.title}
-                                  </button>
-                                ))}
-                              </div>
+                          {message?.deleted ?
+                            <div className="text-red-500 italic text-sm bg-red-100 px-2 py-1 rounded-xl inline-block">
+                              Message deleted
                             </div>
-                          ) : (
-                            <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
-                          )}
+                            :
+                            parsedContent?.type === 'image' && parsedContent.image ? (
+                              <img src={parsedContent.image} alt="Chat Image" className="max-w-full h-auto rounded" />
+                            ) : parsedContent?.type === 'interactive' && parsedContent.interactive?.type === 'button' ? (
+                              <div>
+                                <p className="mb-2">{parsedContent.interactive.body.text}</p>
+                                <div className="flex flex-col gap-2">
+                                  {parsedContent.interactive.action.buttons.map((button: any) => (
+                                    <button
+                                      key={button.reply.id}
+                                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                      onClick={() => {
+                                        // Handle button click here
+                                        console.log(`Button clicked: ${button.reply.title}`);
+                                      }}
+                                    >
+                                      {button.reply.title}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
+                            )}
                           <div className={`text-xs mt-1 ${message.role === 'assistant' ? 'bg-white' : 'bg-blue-500 text-white'}`}>
                             {new Date(message.timestamp).toLocaleString()}
                             {message.role === 'assistant' && ` by ${message?.from ?? 'Bot'}`}
                           </div>
-                          { message?.deleted && 
-                            <div>deleted</div>
-                          }
                         </div>
                       </div>
                     );
