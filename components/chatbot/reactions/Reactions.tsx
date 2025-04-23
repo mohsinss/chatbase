@@ -128,7 +128,7 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
   };
 
   return (
-    <div className="flex h-screen flex-row">
+    <div className="flex h-screen flex-row pl-8">
       {/* Sidebar - Fixed */}
       <div className="w-[70px] md:w-48 bg-white border-r border-gray-200 transition-all duration-200">
         <div className="p-3 hidden md:block">
@@ -142,13 +142,17 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
               <button
                 key={item.id}
                 onClick={() => handleTabClick(item.id)}
-                className={`w-full flex items-center justify-center md:justify-start px-2 md:px-3 py-4 text-sm font-medium ${
+                className={`w-full flex items-center justify-center md:justify-start px-2 md:px-3 py-4 text-sm font-medium rounded-lg transition-all duration-200 ${
                   activeTab === item.id
-                    ? "bg-primary/10 text-primary"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-primary/10 text-primary shadow-lg"
+                    : "text-gray-600 hover:bg-gray-50 hover:shadow-md"
+                } hover:scale-[1.02] active:scale-[0.98] ${
+                  activeTab === item.id 
+                    ? `hover:shadow-${item.color.split('-')[1]}-200/50`
+                    : 'hover:shadow-gray-200/50'
                 }`}
               >
-                <Icon className={`w-7 h-7 md:w-5 md:h-5 ${item.color} ${activeTab === item.id ? 'md:mr-2' : ''} drop-shadow-md hover:drop-shadow-lg transition-all`} />
+                <Icon className={`w-7 h-7 md:w-5 md:h-5 ${item.color} ${activeTab === item.id ? 'md:mr-2' : ''} transition-all`} />
                 <span className="hidden md:inline text-sm">{item.label}</span>
               </button>
             );
