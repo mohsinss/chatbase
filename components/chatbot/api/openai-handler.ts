@@ -1,9 +1,10 @@
 import { openai } from './clients';
 import { setCorsHeaders } from './cors';
 import { O1_MODELS, O1_CONFIG } from './models';
-import { tools } from './tools';
+import { tools, orderTools } from './tools';
 import { MODEL_MAPPING } from '@/types';
 import { getAvailableSlots } from '@/lib/calcom';
+import { getCategories, getMenu, addToCart, submitOrder } from './order-management';
 
 export async function handleOpenAIRequest(
   systemPrompt: string,
@@ -12,7 +13,8 @@ export async function handleOpenAIRequest(
   maxTokens: number,
   temperature: number,
   internalModel: string,
-  team: any
+  team: any,
+  enabledActions: any[],
 ) {
   console.log('Using OpenAI Model:', MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo');
   const encoder = new TextEncoder();
@@ -49,10 +51,16 @@ export async function handleOpenAIRequest(
         model: MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo',
       };
 
+  // Check if order management action is enabled
+  const hasOrderManagement = enabledActions.some(
+    (action: any) => action.type === 'ordermanagement' && action.enabled
+  );
+  
+  // Create a properly typed tools array for the OpenAI API
   const response = await openai.chat.completions.create({
     ...modelParams,
     messages: formattedMessages,
-    tools,
+    tools: hasOrderManagement ? tools.concat(orderTools as any) : tools,
     stream: true,
   });
 
@@ -100,6 +108,46 @@ export async function handleOpenAIRequest(
               : `I have not found available slots between ${dateFromFormatted} and ${dateToFormatted}.`;
 
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: slotsMessage, slots: hasSlots ? slotsResponse : {}, meetingUrl })}\n\n`));
+          }
+          
+          // Handle order management function calls
+          else if (hasOrderManagement) {
+            // Extract chatbotId from the first enabled order management action
+            const orderAction = enabledActions.find(
+              (action: any) => action.type === 'ordermanagement' && action.enabled
+            );
+            
+            if (orderAction) {
+              const chatbotId = orderAction.chatbotId;
+              let result;
+              
+              switch (functionCallData.name) {
+                case "get_categories":
+                  result = await getCategories(chatbotId);
+                  break;
+                  
+                case "get_menu":
+                  result = await getMenu(chatbotId, args.category);
+                  break;
+                  
+                case "add_to_cart":
+                  result = await addToCart(chatbotId, args.item_id, args.quantity);
+                  break;
+                  
+                case "submit_order":
+                  result = await submitOrder(chatbotId, args.order);
+                  break;
+              }
+              
+              if (result) {
+                // const responseMessage = result.success 
+                //   ? `Here's what I found: ${JSON.stringify(result)}`
+                //   : `I'm sorry, there was an issue: ${result.message}`;
+                  
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: result })}\n\n`));
+                // controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: responseMessage, orderResult: result })}\n\n`));
+              }
+            }
           }
         }
 

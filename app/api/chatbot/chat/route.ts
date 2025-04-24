@@ -8,8 +8,8 @@ import ChatbotAction from '@/models/ChatbotAction';
 import config from '@/config';
 
 // Import modular components
-import { 
-  setCorsHeaders, 
+import {
+  setCorsHeaders,
   handleOptionsRequest,
   handleAnthropicRequest,
   handleGeminiRequest,
@@ -25,21 +25,9 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, selectedOption, optionIndex, nodeId, chatbotId, conversationId, mocking, mockingdata } = await req.json();
+    const { messages, selectedOption, optionIndex, nodeId, chatbotId, mocking, mockingdata } = await req.json();
 
     await connectMongo();
-
-    if (!conversationId) {
-      return setCorsHeaders(new Response(
-        JSON.stringify({
-          error: 'conversationId is missing.',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      ));
-    }
 
     // Measure time for fetching AI settings and dataset
     const fetchStart = Date.now();
@@ -102,31 +90,44 @@ export async function POST(req: NextRequest) {
       console.error("semantic search failed:", chunk_response_data);
       throw new Error(chunk_response_data.message || "semantic search failed.");
     }
-    
+
     let relevant_chunk = "Please use the following information for answering.\n";
     for (let i = 0; i < chunk_response_data.chunks.length; i++) {
       relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
     }
     relevant_chunk = "";
-    
+
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
     const language = aiSettings?.language || 'en';
-    
+
     let systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;
 
-    if (enabledActions?.length > 0) {
-      const calComActions = enabledActions.filter(action => action.type == 'calcom')
-      if (calComActions.length > 0) {
+    if (internalModel.startsWith('gpt-') && enabledActions?.length > 0) {
+      const calComActions = enabledActions.filter(action => action.type === 'calcom');
+      const orderManagementAction = enabledActions.filter(action => action.type === 'ordermanagement');
+      if (orderManagementAction.length > 0) {
+        const orderManagementActionPrompt = `
+You are a restaurant ordering assistant.  You have four functions available:
+1) get_categories(): returns all menu categories.
+2) get_menu(category): returns items in a specific category.
+3) add_to_cart(item_id, quantity): adds an item to the user’s cart.
+4) submit_order(order): places the final order.
+
+When the user asks to browse or order food, you MUST call the appropriate function
+in JSON format (no extra explanation).  For anything else, just reply normally.
+`;
+        systemPrompt += orderManagementActionPrompt;
+      } else if (calComActions.length > 0) {
         const calComActionsPrompt = `
-        When a user asks for available slots, use the "getAvailableSlots" function.
-        Choose the correct "calUrl" from the available actions list:
-          Meeting Actions List:
-          ${calComActions.map((action, index) => `  ${index + 1}. "${action.url}" for '${action.instructions}'`).join('\n')}
+When a user asks for available slots, use the "getAvailableSlots" function.
+Choose the correct "calUrl" from the available actions list:
+  Meeting Actions List:
+${calComActions.map((action, index) => `          ${index + 1}. "${action.url}" for '${action.instructions}'`).join('\n')}
         Match the user's request to the correct "calUrl" before calling the function.
-        `
-        systemPrompt += calComActionsPrompt
+    `;
+        systemPrompt += calComActionsPrompt;
       }
     }
 
@@ -186,7 +187,8 @@ export async function POST(req: NextRequest) {
         maxTokens,
         temperature,
         internalModel,
-        team
+        team,
+        enabledActions
       );
     }
   } catch (error) {

@@ -198,3 +198,123 @@ progress::-webkit-progress-value {
 .overflow-x-auto::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
 }
+
+.category-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: baseline;
+}
+
+.category-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  /* margin: 0.5rem 0; */
+  border-radius: var(--radius);
+  background-color: var(--background);
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.add-to-cart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  /* margin: 0.5rem 0; */
+  border-radius: var(--radius);
+  background-color: var(--background);
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  /* margin: 0.5rem 0; */
+  border-radius: var(--radius);
+  background-color: var(--background);
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.continue-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  /* margin: 0.5rem 0; */
+  border-radius: var(--radius);
+  background-color: var(--background);
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.checkout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  /* margin: 0.5rem 0; */
+  border-radius: var(--radius);
+  background-color: var(--background);
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.browse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  /* margin: 0.5rem 0; */
+  border-radius: var(--radius);
+  background-color: var(--background);
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.continue-btn:hover {
+  background-color: #555;
+  color: beige;
+  cursor: pointer;
+}
+
+.browse-btn:hover {
+  background-color: #555;
+  color: beige;
+  cursor: pointer;
+}
+
+.checkout-btn:hover {
+  background-color: #555;
+  color: beige;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background-color: #555;
+  color: beige;
+  cursor: pointer;
+}
+
+.category-btn:hover {
+  background-color: #555;
+  color: beige;
+  cursor: pointer;
+}
+
+.add-to-cart-btn:hover {
+  background-color: #555;
+  color: beige;
+  cursor: pointer;
+}

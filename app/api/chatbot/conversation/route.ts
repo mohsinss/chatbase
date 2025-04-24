@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       // Create a new conversation only if needed
       conversation = await ChatbotConversation.create({
         chatbotId,
-        messages: [],
+        messages,
         platform: source,
       });
     } else if (conversationId && hasValidMessages) {

@@ -67,7 +67,7 @@ const Playground: React.FC<PlaygroundProps> = ({
 
   const debouncedSave = React.useCallback(
     debounce((msgs: Message[]) => {
-      if (msgs.length > 0 && conversationId) {
+      if (msgs.length > 0) {
         saveConversation(msgs);
       }
     }, 1000),
@@ -87,11 +87,11 @@ const Playground: React.FC<PlaygroundProps> = ({
   // Add effect to refetch settings when they change
   useEffect(() => {
     fetchSettings();
-  }, [chatbot.id, fetchSettings]);
+  }, [chatbot.id]);
 
   const saveConversation = async (messages: Message[]) => {
     try {
-      await fetch('/api/chatbot/conversation', {
+      const response = await fetch('/api/chatbot/conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -100,6 +100,12 @@ const Playground: React.FC<PlaygroundProps> = ({
           messages,
         }),
       });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch dataset');
+      }
+      setConversationId(data._id);
     } catch (error) {
       console.error('Failed to save conversation:', error);
     }
@@ -323,8 +329,6 @@ const Playground: React.FC<PlaygroundProps> = ({
   };
 
   const handleSendMessage = async (message: string) => {
-    if (!conversationId) return;
-
     const triggerQF = message === "";
     const userMessage: Message = { role: 'user', content: message };
 
