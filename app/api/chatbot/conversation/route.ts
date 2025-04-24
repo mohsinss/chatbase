@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     // Only create or update if there are actual messages
     const hasValidMessages = messages && messages.some((m: ChatMessage) => m.content?.trim());
 
-    if (createNew) {
+    if (!conversationId) {
       // Create a new conversation only if needed
       conversation = await ChatbotConversation.create({
         chatbotId,

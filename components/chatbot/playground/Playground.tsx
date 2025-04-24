@@ -1,711 +1,24 @@
 "use client";
+
 import React, { useState, useRef, useEffect } from "react";
-import { IconSend, IconRefresh, IconX, IconAlertCircle, IconArrowUp } from "@tabler/icons-react";
-import ReactMarkdown from 'react-markdown';
-import { ChatSettings } from './ChatSettings';
-import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings';
-import { useChatbotLeadSetting, ChatbotLeadSettings } from "@/hooks/useChatbotLeadSetting";
-import { useAISettings } from '@/hooks/useAISettings';
-import { AISettingsProvider, useAISettings as useAISettingsProvider } from "@/contexts/AISettingsContext";
-import toast from "react-hot-toast";
+import { IconX, IconArrowUp } from "@tabler/icons-react";
+import { toast } from "react-hot-toast";
 import Link from "next/link";
 import { useSearchParams } from 'next/navigation';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PlansSettings } from "@/components/tabs/settings/PlansSettings";
-import CalComBooker from "@/components/chatbot/actions/Calcom/CalComBooker";
+import { ChatSettings } from './ChatSettings';
+import { useChatInterfaceSettings } from '@/hooks/useChatInterfaceSettings';
+import { useChatbotLeadSetting } from "@/hooks/useChatbotLeadSetting";
+import { useAISettings } from '@/hooks/useAISettings';
+import { AISettingsProvider, useAISettings as useAISettingsProvider } from "@/contexts/AISettingsContext";
 import { getEventTypeId, bookMeeting, combineDateAndTime } from "@/lib/calcom";
+import { PlaygroundProps, Message } from './types';
+import InfoTooltip from './InfoTooltip';
+import SourcesModal from './SourcesModal';
+import ChatContainer from './ChatContainer';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  confidenceScore?: number;
-  reasonal_content?: string;
-}
-
-interface PlaygroundProps {
-  chatbot: {
-    name: string;
-    id: string;
-    settings?: {
-      model?: string;
-      temperature?: number;
-      maxTokens?: number;
-      systemPrompt?: string;
-      language?: string;
-    };
-  };
-  embed?: boolean,
-  mocking?: boolean,
-  team?: any,
-  standalone?: boolean,
-  mockingData?: Object,
-  isMockingDataValid?: boolean
-}
-
-const InfoTooltip = ({ content }: { content: string }) => (
-  <div className="absolute left-0 top-full mt-1 w-64 p-3 bg-white border text-sm text-gray-600 rounded-md shadow-lg z-50">
-    {content}
-  </div>
-);
-
-interface ChatContainerProps {
-  isSettingsOpen: boolean;
-  setIsSettingsOpen: (open: boolean) => void;
-  messages: Message[];
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  config: any;
-  isLoading: boolean;
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  setCurrentNodeId: React.Dispatch<React.SetStateAction<Number>>;
-  input: string;
-  chatbotId: string;
-  setInput: (input: string) => void;
-  handleSubmit: (e: React.FormEvent) => Promise<void>;
-  handleRefresh: () => void;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
-  aiSettings: any;
-  embed?: boolean;
-  mocking?: boolean;
-  setConfig: React.Dispatch<React.SetStateAction<any>>;
-  leadSetting?: ChatbotLeadSettings;
-  conversationId?: string;
-  currentNodeId?: Number;
-  qFlowAIEnabled: boolean;
-  standalone?: boolean;
-  showCalendar: boolean;
-  setShowCalendar: React.Dispatch<React.SetStateAction<boolean>>;
-  availableSlots: Record<string, { time: string }[]>;
-  handleSendMessage: (message: string) => Promise<void>;
-  meetingUrl?: string;
-}
-
-interface ChatConfig {
-  chatWidth: number;
-  theme: string;
-  roundedHeaderCorners: boolean;
-  roundedChatCorners: boolean;
-  userMessageColor: string;
-  displayName: string;
-  profilePictureUrl?: string;
-  chatIconUrl?: string;
-  initialMessage: string;
-  messagePlaceholder: string;
-  suggestedMessages?: string;
-  footerText?: string;
-  syncColors: boolean;
-  bubbleAlignment: string;
-  chatBackgroundUrl?: string;
-  chatBackgroundOpacity?: number;
-  conversationId?: string;
-}
-
-const ChatContainer = ({
-  isSettingsOpen,
-  setIsSettingsOpen,
-  messages,
-  setMessages,
-  config,
-  isLoading,
-  setIsLoading,
-  input,
-  setInput,
-  handleSubmit,
-  handleRefresh,
-  messagesEndRef,
-  chatbotId,
-  aiSettings,
-  embed = false,
-  setConfig,
-  leadSetting,
-  conversationId,
-  setCurrentNodeId,
-  currentNodeId,
-  qFlowAIEnabled,
-  standalone = false,
-  mocking = false,
-  showCalendar,
-  setShowCalendar,
-  handleSendMessage,
-  availableSlots,
-  meetingUrl
-}: ChatContainerProps) => {
-  const getBackgroundColor = (confidenceScore: number) => {
-    if (confidenceScore === -1) {
-      return 'rgb(241, 241, 241)';
-    }
-    const normalizedScore = confidenceScore / 100;
-
-    // Calculate the color based on the normalized score
-    const red = Math.max(256 - Math.floor(normalizedScore * 15), 0); // Red decreases as score increases
-    const green = Math.min(Math.floor(normalizedScore * 241), 241); // Green increases as score increases
-    const blue = 241; // Keep blue constant
-
-    return `rgb(${red}, ${green}, ${blue})`; // Return the RGB color
-  };
-
-  const getTextColor = (confidenceScore: number) => {
-    const bgColor = getBackgroundColor(confidenceScore);
-    const rgb = bgColor.match(/\d+/g)?.map(Number) || [255, 255, 255];
-
-    // Calculate luminance
-    const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]);
-
-    // Return black for bright backgrounds, white for dark backgrounds
-    return luminance > 186 ? '#000000' : '#FFFFFF';
-  };
-
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
-  const [loadingSources, setLoadingSources] = useState(false);
-  const [sources, setSources] = useState([]);
-  const [showLead, setShowLead] = useState(true);
-  const { settings: globalSettings, updateSettings: updateGlobalSettings } = useAISettingsProvider();
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(window?.navigator?.userAgent);
-  const [disableInput, setDisableInput] = useState(false);
-
-  useEffect(() => {
-    setDisableInput(isLoading || !!currentNodeId || showCalendar);
-  }, [isLoading, !!currentNodeId, showCalendar])
-
-  const fetchDataset = async () => {
-    try {
-      const response = await fetch(`/api/chatbot/sources/dataset?chatbotId=${chatbotId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch dataset');
-      }
-      const data = await response.json();
-      return data.datasetId;
-    } catch (error) {
-      console.error("Error fetching dataset:", error);
-    }
-  };
-
-  const loadSources = async () => {
-    setLoadingSources(true);
-    const datasetId = await fetchDataset();
-    console.log(datasetId)
-
-    // Find the last user message
-    const lastUserMessage = [...messages].reverse().find(msg => msg.role === 'user');
-
-    const options = {
-      method: 'POST',
-      headers: {
-        'TR-Dataset': datasetId,
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        query: lastUserMessage?.content || " ",
-        search_type: 'semantic',
-        page_size: aiSettings?.chunkCount || 4,
-      })
-    };
-
-    const chunk_response = await fetch('https://api.trieve.ai/api/chunk/search', options)
-      .then(response => response.json())
-      .then(response => {
-        setSources(response.chunks);
-      })
-      .catch(err => console.error(err))
-      .finally(() => setLoadingSources(false));
-
-    // fetch('https://api.trieve.ai/api/chunks/scroll', options)
-    //   .then(response => response.json())
-    //   .then(response => setSources(response.chunks))
-    //   .catch(err => console.error(err))
-    //   .finally(() => setLoadingSources(false));
-  }
-
-  // Modal Component
-  //@ts-ignore
-  const Modal = ({ isOpen, onClose }) => {
-    if (!isOpen) return null; // Don't render if not open
-
-    return (
-      <div className="z-[11] fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white p-4 pt-8 rounded shadow-lg relative min-w-[400px] max-w-[800px] w-[80%] h-[80%] overflow-x-hidden overflow-y-scroll">
-          <button onClick={onClose} className="absolute top-2 right-2">
-            ✖️
-          </button>
-          <h1 className="font-bold text-2xl">Sources</h1>
-          {sources.map((chunk, index) => {
-            // if (chunk.metadata.filetype == "pdf") return null;
-            return <div key={'chunk-' + chunk.chunk.id} className="border-b-[1px] pt-2">{chunk.chunk.chunk_html}</div>
-          })}
-          <button
-            onClick={onClose} // Open modal on button click
-            className="mt-2 w-full rounded-md border-[1px] bg-white p-2 text-center hover:bg-slate-100"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const toggleChatWindow = () => {
-    const chatContainer = document.getElementById('chatbot-widget')
-    const closeButton = document.getElementById('close-button')
-    const chatIcon = document.getElementById('chatbot-widget-icon')
-    if (chatContainer.style.display === 'none' || chatContainer.style.display === '') {
-      chatContainer.style.display = 'block';
-      closeButton.style.display = 'block';
-      if (!config?.chatIconUrl) {
-        chatIcon.innerHTML = `<svg id="closeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.3" stroke="white" width="24" height="24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
-            </svg>`;
-      }
-      document.getElementsByTagName('body')[0].style.overflow = 'hidden';
-    } else {
-      chatContainer.style.display = 'none';
-      closeButton.style.display = 'none';
-      if (!config?.chatIconUrl) {
-        chatIcon.innerHTML = '<div>💬</div>';
-      }
-      document.getElementsByTagName('body')[0].style.overflowY = 'scroll';
-    }
-  }
-
-  useEffect(() => {
-    const handleSettingsUpdate = (event: MessageEvent) => {
-      if (event.data.type === 'chatbot-settings-update') {
-        const newSettings = event.data.settings;
-        // Update the config with new settings
-        setConfig((prev: ChatConfig) => ({
-          ...prev,
-          ...newSettings
-        }));
-      }
-    };
-
-    window.addEventListener('message', handleSettingsUpdate);
-    return () => window.removeEventListener('message', handleSettingsUpdate);
-  }, [setConfig]);
-
-  useEffect(() => {
-    // Update the config with new settings
-    setConfig((prev: ChatConfig) => ({
-      ...prev,
-      suggestedMessages: globalSettings?.suggestedMessages,
-    }));
-  }, [globalSettings])
-
-  const handleLeadFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
-    const name = formData.get('name');
-    const email = formData.get('email');
-    const phone = formData.get('phone');
-
-    const customQuestions = leadSetting?.customQuestions || [];
-    const customAnswers = customQuestions.reduce((answers, question) => {
-      answers[question] = formData.get(question) as string;
-      return answers;
-    }, {} as Record<string, string>);
-
-    try {
-      const response = await fetch('/api/chatbot/lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chatbotId: chatbotId,
-          name,
-          email,
-          phone,
-          customAnswers,
-          conversationId
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 400) {
-          // Handle invalid email error
-          const data = await response.json();
-          setShowLead(false);
-          toast.error(data.error);
-          return;
-        } else {
-          throw new Error('Failed to submit lead');
-        }
-      }
-
-      toast.success('Thank you for your attention.');
-      // Handle successful lead submission here
-      // For example, you might want to clear the form and show a success message
-    } catch (error) {
-      console.error('Error submitting lead:', error);
-
-      toast.error('Sth went wrong.');
-    } finally {
-      setShowLead(false);
-    }
-  };
-
-  const handleTimeSlotSelect = (data: any) => {
-    console.log(data)
-  }
-
-  const onScheduleSubmit = async (date: Date, timeSlot: string, formData: { name: string; email: string; notes?: string; guests?: string; rescheduleReason?: string }) => {
-    const [username, eventSlug] = meetingUrl.replace("https://cal.com/", "").split("/");
-    const eventTypeId = await getEventTypeId(username, eventSlug);
-
-    if (!eventTypeId) {
-      toast.error('Unable to retrieve event type ID.');
-      return false;
-    }
-
-    const startTime = combineDateAndTime(date, timeSlot);
-
-    const bookingPayload = {
-      eventTypeId,
-      start: startTime.toISOString(),
-      responses: {
-        name: formData.name,
-        email: formData.email,
-        location: { value: 'userPhone', optionValue: '' },
-      },
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      language: 'en',
-      title: `Meeting between ${username} and ${formData.name}`,
-      description: formData.notes || null,
-      status: 'PENDING',
-      metadata: {},
-    };
-
-    try {
-      const bookingResult = await bookMeeting(bookingPayload);
-      toast.success('Meeting successfully booked!');
-
-      // Add assistant message after successful booking
-      setMessages(prevMessages => [
-        ...prevMessages,
-        {
-          role: 'assistant',
-          content: `Your meeting has been successfully booked for ${startTime.toLocaleString()}.`,
-          confidenceScore: 100,
-        }
-      ]);
-
-      setShowCalendar(false);
-      return true;
-    } catch (error) {
-      toast.error(`Booking failed: ${error.message}`);
-      return false;
-    }
-  }
-
-  return (
-    <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center ${mocking ? 'h-[calc(100dvh-300px)]' : 'min-h-[calc(100dvh-80px)] h-full'}`}>
-      <div
-        className={`${embed ? 'w-full h-full' : ''} relative`}
-        style={{ width: `${(embed && !standalone) ? 'w-full' : (config.chatWidth + 'px')}` }}
-      >
-        {!embed && !isSettingsOpen && !standalone && (
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            className={`absolute ${config.bubbleAlignment === 'right' ? '-left-12' : '-right-12'} h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white`}
-          >
-            ☰
-          </button>
-        )}
-
-        <div className={`h-full flex flex-col bg-white shadow-sm border overflow-hidden ${config.theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : ''
-          } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
-          {/* Chat Header */}
-          <div
-            className={`flex items-center justify-between p-3 border-b ${config.roundedHeaderCorners ? 'rounded-t-xl' : ''
-              }`}
-            style={{
-              backgroundColor: config.syncColors ? config.userMessageColor :
-                config.theme === 'dark' ? '#1e3a8a' : undefined, // Dark blue for dark theme
-              color: config.syncColors || config.theme === 'dark' ? 'white' : undefined
-            }}
-          >
-            <div className="flex items-center gap-3">
-              {/* Profile Picture */}
-              {config.profilePictureUrl && (
-                <div
-                  className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden"
-                  style={{
-                    backgroundImage: `url(${config.profilePictureUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                />
-              )}
-              <div className="font-medium">{config.displayName}</div>
-            </div>
-            <div className="flex justify-center items-center">
-              <button
-                onClick={() => { handleRefresh() }}
-                className={`p-1.5 rounded-full ${config.syncColors
-                  ? 'hover:bg-white/10 text-white'
-                  : 'hover:bg-gray-100'
-                  }`}
-                  disabled={disableInput}
-              >
-                <IconRefresh className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => { window.parent.postMessage({ action: 'closeIframe' }, '*') }}
-                className={`p-1.5 rounded-full ${config.syncColors
-                  ? 'hover:bg-white/10 text-white'
-                  : 'hover:bg-gray-100'
-                  } ${isMobile ? '' : 'hidden'}`}
-              >
-                <IconX className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Chat Messages */}
-          <div
-            className={`overflow-y-hidden p-4 flex-grow relative ${config.theme === 'dark' ? 'border-b-0' : ''}`}
-            style={{
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundColor: config.theme === 'dark' ? '#111827' : undefined,
-            }}
-          >
-            <div className="absolute inset-0 p-4 overflow-y-auto"
-              style={{
-                backgroundImage: config.chatBackgroundUrl ? `url(${config.chatBackgroundUrl})` : 'none',
-                backgroundColor: config.theme === 'dark' ? '#111827' : 'white',
-                opacity: config.chatBackgroundOpacity,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}>
-            </div>
-            <div className="absolute inset-0 p-4 overflow-y-auto"
-              style={{
-                backgroundColor: 'none',
-              }}>
-              {/* Keep existing chat messages but wrap them in a relative div */}
-              <div className="relative z-10">
-                {messages.length === 0 && (
-                  <div className={`max-w-[80%] p-4 ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                    } ${config.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-50'}`}>
-                    {config.initialMessage}
-                  </div>
-                )}
-                {messages.map((message, index) => (
-                  <div key={index} className={`mb-4 ${message.role === 'assistant' ? '' : 'flex justify-end'}`}>
-                    <div className={`p-3 inline-block max-w-[80%] ${config.roundedChatCorners ? 'rounded-xl' : 'rounded-lg'
-                      } ${message.role === 'assistant'
-                        ? (config.theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-50 text-black') + ' prose prose-sm bg-gray-50'
-                        : 'text-white'
-                      } `}
-                      style={{
-                        backgroundColor: message.role === 'user' ? config.userMessageColor : undefined,
-                        transition: 'background-color 0.3s ease'
-                      }}>
-                      {message.reasonal_content &&
-                        <p className="p-1 rounded-sm bg-slate-100 pb-3 hidden">{message.reasonal_content}</p>
-                      }
-                      {message.role === 'assistant' ? (
-                        <div className="html-content" dangerouslySetInnerHTML={{ __html: message.content }} />
-                        // <ReactMarkdown>{message.content}</ReactMarkdown>
-                      ) : (
-                        <p className="p-1">{message.content}</p>
-                      )}
-                      {message.role === 'assistant' && message.confidenceScore != -1 &&
-                        <div className="mt-2">
-                          <span style={{
-                            backgroundColor: getBackgroundColor(message.confidenceScore),
-                            color: getTextColor(message.confidenceScore),
-                            padding: '2px 4px', borderRadius: '4px'
-                          }}>{message.confidenceScore}</span>
-                        </div>}
-                    </div>
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="flex items-center justify-between space-x-1 p-4 bg-gray-100 rounded-lg  w-16 mt-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                  </div>
-                )}
-                {
-                  embed && !standalone && !isLoading && showLead && (leadSetting?.enable == "immediately"
-                    || (leadSetting?.enable == "after"
-                      && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))
-                  &&
-                  <div className="py-3">
-                    <div className="hyphens-auto break-words rounded-[20px] text-left text-sm leading-5 antialiased relative inline-block max-w-full rounded-r-[20px] rounded-l px-5 py-4 only:rounded-[20px] last:rounded-tl first:rounded-tl-[20px] first:rounded-bl only:rounded-bl last:rounded-bl-[20px] bg-zinc-200/50 text-zinc-800 group-data-[theme=dark]:bg-zinc-800/80 group-data-[theme=dark]:text-zinc-300">
-                      <div className="float-left clear-both">
-                        <div className="flex space-x-3">
-                          <div className="flex-1 gap-4">
-                            <div className="text-left text-inherit">
-                              <form onSubmit={handleLeadFormSubmit}>
-                                <div className="mb-4 flex items-start justify-between">
-                                  <h4 className="pr-8 font-semibold text-sm">{leadSetting?.title}</h4>
-                                  <button
-                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 underline-offset-4 hover:underline dark:text-zinc-50 h-9 w-9 absolute top-0 right-0 p-0 group-data-[theme=dark]:hover:text-zinc-400 group-data-[theme=dark]:text-zinc-300 text-zinc-700 hover:text-zinc-600"
-                                    type="button"
-                                    onClick={() => setShowLead(false)}
-                                    aria-label="Close contact form"
-                                    title="Close contact form">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true" className="h-4 w-4">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                  </button>
-                                </div>
-                                {
-                                  leadSetting?.name
-                                  && <div className="mb-4">
-                                    <label className="mb-1 block font-medium text-sm" htmlFor="name">Name</label>
-                                    <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
-                                      <input id="name" autoComplete="name" className="w-full min-w-0 flex-auto appearance-none rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" maxLength={70} aria-label="Name" title="Name" name="name" />
-                                    </div>
-                                  </div>
-                                }
-                                {
-                                  leadSetting?.email
-                                  && <div className="mb-4">
-                                    <label className="mb-1 block font-medium text-sm" htmlFor="email">Email</label>
-                                    <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
-                                      <input id="email" autoComplete="email" required={true} className="w-full min-w-0 flex-auto rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" aria-label="Email" title="Email" type="email" name="email" />
-                                    </div>
-                                  </div>
-                                }
-                                {
-                                  leadSetting?.phone
-                                  && <div className="mb-4">
-                                    <label className="mb-1 block font-medium text-sm" htmlFor="phone">Phone Number</label>
-                                    <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
-                                      <input id="phone" autoComplete="tel" required={true} className="w-full min-w-0 flex-auto appearance-none rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" aria-label="Phone Number" title="Phone Number" type="tel" name="phone" />
-                                    </div>
-                                  </div>
-                                }
-                                {
-                                  leadSetting?.customQuestions?.map((question, index) => (
-                                    <div key={index} className="mb-4">
-                                      <label className="mb-1 block font-medium text-sm" htmlFor={`customQuestion-${index}`}>{question}</label>
-                                      <div className="flex w-full rounded group-data-[theme=dark]:bg-black bg-white">
-                                        <input id={`${question}`} className="w-full min-w-0 flex-auto rounded border bg-inherit p-1 px-3 py-2 sm:text-sm focus:outline-none focus:ring-none group-data-[theme=dark]:border-[#5f5f5e] border-[#cfcfce]" aria-label={question} title={question} name={question} />
-                                      </div>
-                                    </div>
-                                  ))
-                                }
-                                <div className="flex items-end justify-between">
-                                  <button
-                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 bg-zinc-900 text-zinc-50 shadow hover:bg-zinc-800/90 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/90 h-9 px-4 py-1"
-                                    aria-label="Send your contact info"
-                                    title="Send your contact info"
-                                    type="submit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="h-4 w-4">
-                                      <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z">
-                                      </path>
-                                    </svg>
-                                  </button>
-                                </div>
-                              </form>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                }
-                {showCalendar && (
-                  <div className="flex justify-start pt-4">
-                    <div className="flex gap-3 max-w-[80%]">
-                      <div className="bg-muted rounded-lg p-0">
-                        <CalComBooker onSubmit={onScheduleSubmit} availableSlots={availableSlots} theme={config.theme} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-
-          <div className={`flex flex-col justify-between ${config.theme === 'dark' ? 'bg-gray-900' : ''}`}>
-            {/* Suggested Messages - Horizontal scrollable */}
-            <div className={`w-full overflow-x-auto pb-2 mb-2 px-4 pt-2 ${config.theme === 'dark' ? 'bg-gray-900' : ''}`}>
-              {config.suggestedMessages && config.suggestedMessages.split('\n').filter(Boolean).map((message: string, i: number) => (
-                <button
-                  key={i}
-                  className={`inline-block mr-2 mb-2 px-3 py-1.5 text-xs rounded-full ${config.theme === 'dark' ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
-                  onClick={() => {
-                    if (embed && !standalone && !isLoading && showLead && (leadSetting?.enable == "immediately"
-                      || (leadSetting?.enable == "after"
-                        && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
-                      toast.error('Please submit the form. 🙂');
-                      return;
-                    }
-
-                    // Set input and immediately send the message
-                    setInput(message);
-                    handleSendMessage(message);
-                  }}
-                  disabled={disableInput}
-                >
-                  {message}
-                </button>
-              ))}
-            </div>
-
-            {/* Chat Input */}
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (embed && !standalone && !isLoading && showLead && (leadSetting?.enable == "immediately"
-                || (leadSetting?.enable == "after"
-                  && messages.filter(message => message.role === 'user').length >= leadSetting?.delay))) {
-                toast.error('Please submit the form. 🙂');
-                return;
-              }
-              handleSubmit(e)
-            }} className={`border-t p-3 ${config.theme === 'dark' ? 'border-gray-800 bg-gray-900' : ''}`}>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={config.messagePlaceholder}
-                  className={`w-full p-3 pr-10 border focus:outline-none focus:border-blue-500 text-sm ${config.roundedChatCorners ? 'rounded-lg' : 'rounded-md'
-                    } ${config.theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
-                  disabled={disableInput}
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading || !input.trim() || !!currentNodeId}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full disabled:opacity-50"
-                  style={{
-                    backgroundColor: !isLoading && input.trim() && !currentNodeId ? config.userMessageColor : 'transparent',
-                    color: !isLoading && input.trim() && !currentNodeId ? 'white' : config.theme === 'dark' ? '#9ca3af' : 'gray'
-                  }}
-                >
-                  <IconSend className="w-4 h-4" />
-                </button>
-              </div>
-            </form>
-
-            {/* Footer */}
-            {!mocking && embed && <div className={`p-2 text-center text-sm ${config.theme === 'dark' ? 'text-gray-400 bg-gray-900' : 'text-gray-500'}`}>
-              <span>Powered by <a href={`${process.env.NODE_ENV === 'development' ? 'http:' : 'https:'}//${process.env.NEXT_PUBLIC_DOMAIN}`} target="_black" className={`${config.theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}>Chatsa.co</a></span>
-              {config.footerText && <span className="ml-1">{config.footerText}</span>}
-            </div>}
-          </div>
-        </div>
-        <button
-          onClick={() => { loadSources(); setIsModalOpen(true); }} // Open modal on button click
-          className={`${embed ? 'hidden' : ""} mt-2 w-full rounded-md border-[1px] ${config.theme === 'dark' ? 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700' : 'bg-white hover:bg-slate-100'
-            } p-2 text-center`}
-        >
-          {loadingSources ? 'Loading Sources...' : "Show Sources"}
-        </button>
-      </div>
-      {!embed && <Modal isOpen={isModalOpen && !loadingSources} onClose={() => setIsModalOpen(false)} />}
-
-    </div>
-  );
-};
-
+// Utility function for debouncing
 const debounce = (func: Function, wait: number) => {
   let timeout: any;
   const debouncedFunc = (...args: any[]) => {
@@ -716,7 +29,7 @@ const debounce = (func: Function, wait: number) => {
   return debouncedFunc;
 };
 
-const Playground = ({
+const Playground: React.FC<PlaygroundProps> = ({
   chatbot,
   embed = false,
   team,
@@ -724,24 +37,23 @@ const Playground = ({
   standalone = false,
   mockingData = {},
   isMockingDataValid = false,
-}: PlaygroundProps) => {
+}) => {
   if (team) {
-    team = JSON.parse(team)
+    team = JSON.parse(team);
   }
+  
   const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isParsing, setIsParsing] = useState(false);
   const [conversationId, setConversationId] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showPlaygroundInfo, setShowPlaygroundInfo] = useState(false);
   const { config, setConfig } = useChatInterfaceSettings(chatbot.id);
   const { settings: aiSettings, fetchSettings, loading: loadingAISettings } = useAISettings(chatbot.id);
-  const [confidenceScore, setConfidenceScore] = useState(0);
   const { leadSetting } = useChatbotLeadSetting(chatbot.id);
-  const [currentNodeId, setCurrentNodeId] = useState(null);
+  const [currentNodeId, setCurrentNodeId] = useState<any>(null);
   const [qFlow, setQFlow] = useState(null);
   const [qFlowEnabled, setQFlowEnabled] = useState(false);
   const [qFlowAIEnabled, setQFlowAIEnabled] = useState(true);
@@ -749,6 +61,9 @@ const Playground = ({
   const [showCalendar, setShowCalendar] = useState(false);
   const [meetingUrl, setMeetingUrl] = useState(process.env.NEXT_PUBLIC_MEETING_URL);
   const [availableSlots, setAvailableSlots] = useState<Record<string, { time: string }[]>>({});
+  const [sources, setSources] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadingSources, setLoadingSources] = useState(false);
 
   const debouncedSave = React.useCallback(
     debounce((msgs: Message[]) => {
@@ -758,11 +73,6 @@ const Playground = ({
     }, 1000),
     [conversationId]
   );
-
-  // Create new conversation on mount
-  useEffect(() => {
-    createNewConversation();
-  }, [chatbot.id]);
 
   // Save conversation when messages change
   useEffect(() => {
@@ -777,34 +87,9 @@ const Playground = ({
   // Add effect to refetch settings when they change
   useEffect(() => {
     fetchSettings();
-  }, [chatbot.id]);
-
-  const createNewConversation = async () => {
-    try {
-      const response = await fetch('/api/chatbot/conversation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chatbotId: chatbot.id,
-          messages: [],
-          createNew: true, // Signal to create a new conversation
-          source: embed ? "Playground" : "Playground",
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setConversationId(data._id);
-        setMessages([]);
-      }
-    } catch (error) {
-      console.error('Failed to create new conversation:', error);
-    }
-  };
+  }, [chatbot.id, fetchSettings]);
 
   const saveConversation = async (messages: Message[]) => {
-    if (!conversationId) return;
-
     try {
       await fetch('/api/chatbot/conversation', {
         method: 'POST',
@@ -821,7 +106,8 @@ const Playground = ({
   };
 
   const handleRefresh = async () => {
-    createNewConversation();
+    setMessages([]);
+    setConversationId(null);
   };
 
   useEffect(() => {
@@ -834,13 +120,13 @@ const Playground = ({
           throw new Error(data.error || 'Failed to fetch dataset');
         }
         if (data.questionFlow) {
-          setQFlow(data.questionFlow)
+          setQFlow(data.questionFlow);
         }
         if (data.questionFlowEnable) {
-          setQFlowEnabled(data.questionFlowEnable)
+          setQFlowEnabled(data.questionFlowEnable);
         }
         if (data.questionAiIResponseEnable) {
-          setQFlowAIEnabled(data.questionAiIResponseEnable)
+          setQFlowAIEnabled(data.questionAiIResponseEnable);
         }
       } catch (error) {
         console.error("Error fetching dataset:", error);
@@ -849,14 +135,14 @@ const Playground = ({
     };
 
     fetchDataset();
-  }, [chatbot]);
+  }, [chatbot.id]);
 
   useEffect(() => {
     if (qFlowEnabled && conversationId) {
       //init QF automatically
-      handleSendMessage('')
+      handleSendMessage('');
     }
-  }, [qFlowEnabled, conversationId])
+  }, [qFlowEnabled, conversationId]);
 
   // Handle option clicks
   useEffect(() => {
@@ -904,7 +190,7 @@ const Playground = ({
                 const assistantMessage: Message = { role: 'assistant', content: combinedMessage, confidenceScore: 100 };
                 setMessages(prev => [...prev, assistantMessage]);
               } else {
-                content = data.message
+                content = data.message;
                 const assistantMessage: Message = { role: 'assistant', content, confidenceScore: 100 };
                 setMessages(prev => [...prev, assistantMessage]);
               }
@@ -946,7 +232,6 @@ const Playground = ({
 
                 const chunk = decoder.decode(result.value);
                 const lines = chunk.split('\n');
-                // console.log(lines)
 
                 for (const line of lines) {
                   if (line.startsWith('data: ')) {
@@ -954,7 +239,7 @@ const Playground = ({
 
                     if (data === '[DONE]') {
                       setIsLoading(false);
-                      continue
+                      continue;
                     }
 
                     const parsed = JSON.parse(data);
@@ -967,8 +252,7 @@ const Playground = ({
 
                         if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
                           const confidenceScore = lastMessage_content.split(":::")[1];
-                          confidenceScore1 = Number(confidenceScore)
-                          console.log(confidenceScore1)
+                          confidenceScore1 = Number(confidenceScore);
                           lastMessage_content = lastMessage_content.split(":::")[0];
                         }
                         return [
@@ -980,12 +264,10 @@ const Playground = ({
                   }
                   else if (line.startsWith('reason: ')) {
                     const data = line.slice(7).trim();
-                    console.log(data)
 
                     try {
                       const parsed = JSON.parse(data);
                       if (parsed.reasonal_text) {
-
                         setMessages(prev => {
                           const lastMessage = prev[prev.length - 1];
                           let lastMessage_reasonal_content = lastMessage?.reasonal_content + parsed.reasonal_text;
@@ -995,21 +277,14 @@ const Playground = ({
                           ];
                         });
                       }
-
                     } catch (e) {
-                      console.log(e)
+                      console.log(e);
                     }
-                  }
-                  else if (line.startsWith('score: ')) {
-                    const score = line.slice(6).trim();
-                    setConfidenceScore(Number(score))
-                    console.log(score)
                   }
                 }
               }
             }
           }
-
         } catch (error) {
           console.error('Option click error:', error);
           toast.error(error.message);
@@ -1021,7 +296,7 @@ const Playground = ({
 
     document.addEventListener('click', handleOptionClick);
     return () => document.removeEventListener('click', handleOptionClick);
-  }, [currentNodeId, chatbot, conversationId]);
+  }, [currentNodeId, chatbot.id, conversationId, messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1047,13 +322,13 @@ const Playground = ({
     handleSendMessage(input);
   };
 
-  const handleSendMessage = async (input: string) => {
+  const handleSendMessage = async (message: string) => {
     if (!conversationId) return;
 
-    const triggetQF = input == "";
-    const userMessage: Message = { role: 'user', content: input };
+    const triggerQF = message === "";
+    const userMessage: Message = { role: 'user', content: message };
 
-    if (!triggetQF) {
+    if (!triggerQF) {
       setMessages(prev => [...prev, userMessage]);
       setInput('');
     }
@@ -1068,7 +343,7 @@ const Playground = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: triggetQF ? messages : [...messages, userMessage],
+          messages: triggerQF ? messages : [...messages, userMessage],
           chatbotId: chatbot.id,
           language: aiSettings?.language,
           model: aiSettings?.model,
@@ -1108,7 +383,7 @@ const Playground = ({
             const assistantMessage: Message = { role: 'assistant', content: combinedMessage, confidenceScore: 100 };
             setMessages(prev => [...prev, assistantMessage]);
           } else {
-            content = data.message
+            content = data.message;
             const assistantMessage: Message = { role: 'assistant', content, confidenceScore: 100 };
             setMessages(prev => [...prev, assistantMessage]);
           }
@@ -1152,7 +427,6 @@ const Playground = ({
 
             const chunk = decoder.decode(result.value);
             const lines = chunk.split('\n');
-            // console.log(lines)
 
             for (const line of lines) {
               if (line.startsWith('data: ')) {
@@ -1160,7 +434,7 @@ const Playground = ({
 
                 if (data === '[DONE]') {
                   setIsLoading(false);
-                  continue
+                  continue;
                 }
 
                 const parsed = JSON.parse(data);
@@ -1173,8 +447,7 @@ const Playground = ({
 
                     if (lastMessage_content.split(":::").length > 1 && lastMessage_content.split(":::")[1].length > 0) {
                       const confidenceScore = lastMessage_content.split(":::")[1];
-                      confidenceScore1 = Number(confidenceScore)
-                      console.log(confidenceScore1)
+                      confidenceScore1 = Number(confidenceScore);
                       lastMessage_content = lastMessage_content.split(":::")[0];
                     }
                     return [
@@ -1188,17 +461,14 @@ const Playground = ({
                   setShowCalendar(true);
                   setAvailableSlots(parsed.slots);
                   setMeetingUrl(parsed.meetingUrl);
-                  console.log(parsed.slots)
                 }
               }
               else if (line.startsWith('reason: ')) {
                 const data = line.slice(7).trim();
-                console.log(data)
 
                 try {
                   const parsed = JSON.parse(data);
                   if (parsed.reasonal_text) {
-
                     setMessages(prev => {
                       const lastMessage = prev[prev.length - 1];
                       let lastMessage_reasonal_content = lastMessage?.reasonal_content + parsed.reasonal_text;
@@ -1208,15 +478,13 @@ const Playground = ({
                       ];
                     });
                   }
-
                 } catch (e) {
-                  console.log(e)
+                  console.log(e);
                 }
               }
               else if (line.startsWith('score: ')) {
                 const score = line.slice(6).trim();
-                setConfidenceScore(Number(score))
-                console.log(score)
+                // Handle score if needed
               }
             }
           }
@@ -1231,11 +499,6 @@ const Playground = ({
       }
       setIsLoading(false);
     }
-  }
-
-  const handleContent = (text: string, confidenceScore: number) => {
-    console.log(`Received text: ${text} with confidence score: ${confidenceScore}`);
-    // Handle the text and confidence score as needed
   };
 
   // Custom toast for limit reached error
@@ -1290,8 +553,51 @@ const Playground = ({
     setIsUpgradePlanModalOpen(false);
   };
 
+  const loadSources = async () => {
+    setLoadingSources(true);
+    const response = await fetch(`/api/chatbot/sources/dataset?chatbotId=${chatbot.id}`);
+    if (!response.ok) {
+      toast.error('Failed to fetch dataset');
+      setLoadingSources(false);
+      return;
+    }
+    
+    const data = await response.json();
+    const datasetId = data.datasetId;
+
+    // Find the last user message
+    const lastUserMessage = [...messages].reverse().find(msg => msg.role === 'user');
+
+    const options = {
+      method: 'POST',
+      headers: {
+        'TR-Dataset': datasetId,
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: lastUserMessage?.content || " ",
+        search_type: 'semantic',
+        page_size: 4, // Default chunk count
+      })
+    };
+
+    try {
+      const response = await fetch('https://api.trieve.ai/api/chunk/search', options);
+      const data = await response.json();
+      setSources(data.chunks);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load sources');
+    } finally {
+      setLoadingSources(false);
+    }
+  };
+
   if (loadingAISettings)
-    return <div id='chatbot-loading-spinner'><div className="spinner"></div></div>
+    return <div id='chatbot-loading-spinner'><div className="spinner"></div></div>;
+
   if (embed) {
     return (
       <AISettingsProvider chatbotId={chatbot.id}>
@@ -1371,8 +677,9 @@ const Playground = ({
           </Dialog>
         </div>
       </AISettingsProvider>
-    )
+    );
   }
+
   return (
     <AISettingsProvider chatbotId={chatbot.id}>
       <div>
@@ -1422,8 +729,6 @@ const Playground = ({
               />
             </div>
 
-            {/* {loadingAISettings ? */}
-            {/* <div id='chatbot-loading-spinner'><div className="spinner"></div></div> : */}
             <ChatContainer
               setCurrentNodeId={setCurrentNodeId}
               isSettingsOpen={isSettingsOpen}
@@ -1444,17 +749,24 @@ const Playground = ({
               aiSettings={aiSettings}
               conversationId={conversationId}
               leadSetting={leadSetting}
-              embed={embed}
               qFlowAIEnabled={qFlowAIEnabled}
               showCalendar={showCalendar}
               setShowCalendar={setShowCalendar}
               availableSlots={availableSlots}
-              meetingUrl={meetingUrl}
               handleSendMessage={handleSendMessage}
+              meetingUrl={meetingUrl}
             />
-            {/* } */}
           </div>
         </div>
+
+        {/* Sources Modal */}
+        {isModalOpen && (
+          <SourcesModal 
+            isOpen={isModalOpen} 
+            onClose={() => setIsModalOpen(false)} 
+            sources={sources} 
+          />
+        )}
 
         {/* Upgrade Plan Modal */}
         <Dialog open={isUpgradePlanModalOpen} onOpenChange={handleUpgradePlanModalClose}>
