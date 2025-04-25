@@ -67,7 +67,7 @@ export async function POST(req: Request) {
                     headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                 });
                 if (!response2.data.success) {
-                    return NextResponse.json({ success: false, message: response2.data.error?.message || 'Page Subscription failed.' });
+                    return NextResponse.json({ error: response2.data.error?.message || 'Page Subscription failed.' }, { status: 400 });
                 }
 
                 const existingInstagramPage = await InstagramPage.findOne({ pageId });
