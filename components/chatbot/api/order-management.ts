@@ -33,7 +33,7 @@ interface OrderItem {
 interface Order {
   table: string;
   items: OrderItem[];
-  subtotal: number;
+  subtotal?: number;
 }
 
 interface OrderManagementMetadata {
@@ -334,6 +334,23 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
     
     const categoryId = categoryObj ? categoryObj.id : '';
     
+    // In a real implementation, we would retrieve the full cart from a database or session
+    // For this simulation, we'll create a cart with just the current item
+    const cart: OrderItem[] = [
+      {
+        item_id: menuItem.id,
+        name: menuItem.name,
+        qty: quantity,
+        price: menuItem.price
+      }
+    ];
+    
+    // Calculate the cart total
+    const cartTotal = cart.reduce(
+      (sum: number, item: OrderItem) => sum + (item.price * item.qty),
+      0
+    );
+    
     // Create buttons for next actions
     const continueButtons = [
       {
@@ -355,12 +372,25 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
         text: "Proceed to Checkout",
         value: "checkout",
         action: "submit_order",
-        params: { order: { items: [] as OrderItem[], subtotal: 0 } } // This would be populated with actual cart items in a real implementation
+        params: { order: { items: cart, subtotal: cartTotal } } // Pass the cart with subtotal to the checkout
       }
     ];
     
-    // Generate HTML content with confirmation and buttons (compact, no newlines)
-    return `<div class="cart-confirmation"><div class="cart-message"><h4>Added to Cart</h4><p>${quantity} x ${menuItem.name} - $${menuItem.price.toFixed(2)}</p></div><div class="action-buttons"><button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0" >View More ${menuItem.category} Items</button><button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0" >Browse All Categories</button><button class="checkout-btn chat-option-btn" data-action="submit_order" data-index="0">Proceed to Checkout</button></div></div>`;
+    // Generate HTML content with cart and buttons
+    return `<div class="cart-confirmation">
+      <div class="cart-message">
+        <h4>Cart Updated</h4>
+        <div class="cart-items">
+          ${cart.map((item: OrderItem) => `<p>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</p>`).join('')}
+        </div>
+        <p class="cart-total"><strong>Total: $${cartTotal.toFixed(2)}</strong></p>
+      </div>
+      <div class="action-buttons">
+        <button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0">View More ${menuItem.category} Items</button>
+        <button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0">Browse All Categories</button>
+        <button class="checkout-btn chat-option-btn" data-action="submit_order" data-order='${JSON.stringify({items: cart, subtotal: cartTotal})}' data-index="0">Proceed to Checkout</button>
+      </div>
+    </div>`;
   } catch (error) {
     console.error('Error adding item to cart:', error);
     return `<div class="error-message"><p>Failed to add item to cart</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
@@ -470,16 +500,11 @@ export async function submitOrder(chatbotId: string, order: Order) {
       }
     }
     
-    // Calculate total to verify
+    // Calculate total from items
     const calculatedTotal = order.items.reduce(
-      (sum, item) => sum + (item.price * item.qty), 
+      (sum: number, item: OrderItem) => sum + (item.price * item.qty), 
       0
     );
-    
-    // Check if the provided subtotal matches our calculation (with small tolerance for floating point)
-    if (Math.abs(calculatedTotal - order.subtotal) > 0.00) {
-      return `<div class="error-message"><p>Order subtotal does not match item prices</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
-    }
     
     // If Google Sheets integration is enabled, we would save the order there
     const hasGoogleSheets = action.metadata.googleSheetConfig && 
@@ -496,7 +521,7 @@ export async function submitOrder(chatbotId: string, order: Order) {
         orderId,
         table: order.table,
         items: order.items,
-        subtotal: order.subtotal,
+        subtotal: calculatedTotal, // Set the subtotal from the calculated total
         status: 'received',
         timestamp: new Date()
       });
@@ -527,7 +552,7 @@ export async function submitOrder(chatbotId: string, order: Order) {
     ];
     
     // Generate HTML content with order confirmation and buttons (compact, no newlines)
-    return `<div class="order-confirmation"><div class="order-success"><h3>Order Confirmed!</h3><p>Your order #${orderId} has been received and is being processed.</p>${order.table ? `<p>Table: ${order.table}</p>` : ''}<div class="order-details"><h4>Order Summary</h4><ul class="order-items">${order.items.map((item: OrderItem) => `<li>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</li>`).join('')}</ul><p class="order-total">Total: $${order.subtotal.toFixed(2)}</p></div>${hasGoogleSheets ? '<p>Your order has been recorded in our system.</p>' : ''}</div><div class="after-order-actions"><button class="new-order-btn chat-option-btn" data-action="get_categories" data-index="0" >Place Another Order</button><button class="track-order-btn chat-option-btn" data-action="track_order" data-order-id="${orderId}" data-index="0">Track Order Status</button></div></div>`;
+    return `<div class="order-confirmation"><div class="order-success"><h3>Order Confirmed!</h3><p>Your order #${orderId} has been received and is being processed.</p>${order.table ? `<p>Table: ${order.table}</p>` : ''}<div class="order-details"><h4>Order Summary</h4><ul class="order-items">${order.items.map((item: OrderItem) => `<li>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</li>`).join('')}</ul><p class="order-total">Total: $${calculatedTotal.toFixed(2)}</p></div>${hasGoogleSheets ? '<p>Your order has been recorded in our system.</p>' : ''}</div><div class="after-order-actions"><button class="new-order-btn chat-option-btn" data-action="get_categories" data-index="0" >Place Another Order</button><button class="track-order-btn chat-option-btn" data-action="track_order" data-order-id="${orderId}" data-index="0">Track Order Status</button></div></div>`;
   } catch (error) {
     console.error('Error submitting order:', error);
     return `<div class="error-message"><p>Failed to submit order</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
