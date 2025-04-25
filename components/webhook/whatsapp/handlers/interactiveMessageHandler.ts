@@ -436,6 +436,21 @@ async function handleCategoryButton(
     
     // Check if we got a JSON response
     if (typeof menuResult === 'object') {
+      // Replace placeholders in button IDs with actual values
+      if (menuResult.sections && menuResult.sections.length > 0) {
+        menuResult.sections.forEach((section: any) => {
+          if (section.rows && section.rows.length > 0) {
+            section.rows.forEach((row: any) => {
+              if (row.id) {
+                row.id = row.id
+                  .replace('{tableName}', tableName)
+                  .replace('{actionId}', action._id);
+              }
+            });
+          }
+        });
+      }
+      
       // Create a WhatsApp list message from the JSON response
       const listPayload = {
         messaging_product: "whatsapp",
@@ -604,6 +619,17 @@ async function handleMenuButton(
         });
       }
       
+      // Replace placeholders in button IDs with actual values
+      if (menuItemResult.buttons && menuItemResult.buttons.length > 0) {
+        menuItemResult.buttons.forEach((button: any) => {
+          if (button.id) {
+            button.id = button.id
+              .replace('{tableName}', tableName)
+              .replace('{actionId}', action._id);
+          }
+        });
+      }
+      
       // Send buttons for actions
       const buttonsPayload = {
         messaging_product: "whatsapp",
@@ -619,9 +645,7 @@ async function handleMenuButton(
             buttons: menuItemResult.buttons.map((button: any) => ({
               type: "reply",
               reply: {
-                id: button.id === "order_now" 
-                  ? `om-confirm-${tableName}-${action._id}-${menuId}`
-                  : `om-category-${tableName}-${action._id}-${categoryId}`,
+                id: button.id,
                 title: button.title
               }
             }))
@@ -758,6 +782,17 @@ async function handleConfirmButton(
         orderSummary
       );
       
+      // Replace placeholders in button IDs with actual values
+      if (orderResult.buttons && orderResult.buttons.length > 0) {
+        orderResult.buttons.forEach((button: any) => {
+          if (button.id) {
+            button.id = button.id
+              .replace('{tableName}', tableName)
+              .replace('{actionId}', action._id);
+          }
+        });
+      }
+      
       // Send buttons for next actions
       const buttonsPayload = {
         messaging_product: "whatsapp",
@@ -773,9 +808,7 @@ async function handleConfirmButton(
             buttons: orderResult.buttons.map((button: any) => ({
               type: "reply",
               reply: {
-                id: button.id === "place_another_order" 
-                  ? `om-back-${tableName}-${action._id}`
-                  : `om-track-${tableName}-${action._id}-${button.orderId || ''}`,
+                id: button.id,
                 title: button.title
               }
             }))

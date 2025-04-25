@@ -129,6 +129,21 @@ export async function handleTextMessage(
         
         // Check if we got a JSON response
         if (typeof categoriesResult === 'object') {
+          // Replace placeholders in button IDs with actual values
+          if (categoriesResult.sections && categoriesResult.sections.length > 0) {
+            categoriesResult.sections.forEach((section: any) => {
+              if (section.rows && section.rows.length > 0) {
+                section.rows.forEach((row: any) => {
+                  if (row.id) {
+                    row.id = row.id
+                      .replace('{tableName}', tableName)
+                      .replace('{actionId}', enabledOMAction._id);
+                  }
+                });
+              }
+            });
+          }
+          
           // Create a WhatsApp list message from the JSON response
           const listPayload = {
             messaging_product: "whatsapp",

@@ -262,13 +262,13 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
             rows: [
               // Add back option as the first item
               {
-                id: `back_to_categories`,
+                id: `om-back-{tableName}-{actionId}`,
                 title: "Back to Categories",
                 description: "Return to menu categories"
               },
               // Add menu items
               ...items.map((item: any) => ({
-                id: item.id,
+                id: `om-menu-{tableName}-{actionId}-${item.id}`,
                 title: item.name,
                 description: `$${item.price.toFixed(2)}`
               }))
@@ -348,11 +348,11 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
         },
         buttons: [
           {
-            id: `order_now`,
+            id: `om-confirm-{tableName}-{actionId}-${selectedItem.id}`,
             title: "Order Now"
           },
           {
-            id: `back_to_menu`,
+            id: `om-category-{tableName}-{actionId}-${category}`,
             title: "Back to Menu"
           }
         ]
@@ -479,15 +479,15 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
         categoryName: menuItem.category,
         buttons: [
           {
-            id: "view_more",
+            id: `om-category-{tableName}-{actionId}-${categoryId}`,
             title: `View More ${menuItem.category} Items`
           },
           {
-            id: "browse_categories",
+            id: `om-back-{tableName}-{actionId}`,
             title: "Browse All Categories"
           },
           {
-            id: "checkout",
+            id: `om-confirm-{tableName}-{actionId}-${menuItem.id}`,
             title: "Proceed to Checkout"
           }
         ]
@@ -683,11 +683,11 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
         },
         buttons: [
           {
-            id: "place_another_order",
+            id: `om-back-{tableName}-{actionId}`,
             title: "Place Another Order"
           },
           {
-            id: "track_order",
+            id: `om-track-{tableName}-{actionId}-${orderId}`,
             title: "Track Order Status",
             orderId: orderId
           }
