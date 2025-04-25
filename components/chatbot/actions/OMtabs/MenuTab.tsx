@@ -60,7 +60,27 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
   })
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [activeCategory, setActiveCategory] = useState<string | null>(() => {
+    // Initialize from localStorage if available
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("activeMenuCategory")
+      return saved || null
+    }
+    return null
+  })
+  const [searchQuery, setSearchQuery] = useState("")
+
+  // Update localStorage when category changes
+  const handleCategoryChange = (category: string | null) => {
+    setActiveCategory(category)
+    if (typeof window !== "undefined") {
+      if (category) {
+        localStorage.setItem("activeMenuCategory", category)
+      } else {
+        localStorage.removeItem("activeMenuCategory")
+      }
+    }
+  }
 
   // Handle adding a new menu item
   const handleAddMenuItem = () => {
@@ -482,13 +502,40 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
           <div className="border rounded-md p-4">
             <h3 className="font-medium mb-4">Menu Items</h3>
             
+            {/* Search Bar */}
+            <div className="mb-4">
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Search menu items..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+            
             {/* Category Filter Tabs */}
             <div className="mb-4">
               <div className="flex flex-wrap gap-2 mb-3">
                 <Button 
                   variant={!activeCategory ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setActiveCategory(null)}
+                  onClick={() => handleCategoryChange(null)}
                   className="text-xs"
                 >
                   All Items
@@ -498,7 +545,7 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
                     key={cat}
                     variant={activeCategory === cat ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setActiveCategory(cat)}
+                    onClick={() => handleCategoryChange(cat)}
                     className="text-xs"
                   >
                     {cat}
@@ -512,9 +559,18 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
             ) : (
               <div className="space-y-6">
                 {(() => {
-                  const filteredItems = menuItems.filter(item => 
-                    !activeCategory || categories.find(cat => cat.id === item.category)?.name === activeCategory
-                  );
+                  const filteredItems = menuItems.filter(item => {
+                    // Category filter
+                    const matchesCategory = !activeCategory || 
+                      categories.find(cat => cat.id === item.category)?.name === activeCategory;
+                    
+                    // Search query filter
+                    const matchesSearch = searchQuery === "" || 
+                      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      item.description.toLowerCase().includes(searchQuery.toLowerCase());
+                    
+                    return matchesCategory && matchesSearch;
+                  });
                   
                   return filteredItems.length === 0 ? (
                     <p className="text-center text-gray-500 py-4">No items in this category</p>
