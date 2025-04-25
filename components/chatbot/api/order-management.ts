@@ -99,7 +99,7 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
           {
             title: "Menu Categories",
             rows: action.metadata.categories.map((category: any) => ({
-              id: category.id,
+              id: `om-category-{tableName}-{actionId}-${category.id}`,
               title: category.name,
               description: ""
             }))
