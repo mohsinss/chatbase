@@ -348,8 +348,12 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
         },
         buttons: [
           {
-            id: `om-confirm-{tableName}-{actionId}-${selectedItem.id}`,
-            title: "Order Now"
+            id: `om-add-to-cart-{tableName}-{actionId}-${selectedItem.id}-1`,
+            title: "Add 1 to Cart"
+          },
+          {
+            id: `om-add-to-cart-{tableName}-{actionId}-${selectedItem.id}-2`,
+            title: "Add 2 to Cart"
           },
           {
             id: `om-category-{tableName}-{actionId}-${category}`,

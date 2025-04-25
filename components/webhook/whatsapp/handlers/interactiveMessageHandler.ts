@@ -289,6 +289,22 @@ async function handleOrderManagementButton(
         tableName
       );
     }
+    else if (buttonId.startsWith('om-add-to-cart-')) {
+      // Format: om-add-to-cart-{tableName}-{actionId}-{menuId}-{quantity}
+      const parts = buttonId.replace('om-add-to-cart-', '').split('-');
+      const quantity = parseInt(parts.pop() || '1', 10); // Get quantity from the end
+      const menuId = parts.pop() || ''; // Get menu ID
+      
+      return await handleAddToCartButton(
+        from,
+        phoneNumberId,
+        menuId,
+        quantity,
+        action,
+        conversation,
+        tableName
+      );
+    }
     else if (buttonId.startsWith('om-back-')) {
       // Handle back button - show categories again
       const categories = action.metadata?.categories || [];
@@ -707,6 +723,149 @@ async function handleMenuButton(
     return {
       success: false,
       message: `Error using getMenu tool: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Handle add to cart button click
+ */
+async function handleAddToCartButton(
+  from: string,
+  phoneNumberId: string,
+  menuId: string,
+  quantity: number,
+  action: any,
+  conversation: any,
+  tableName: string
+): Promise<{ success: boolean, message: string }> {
+  try {
+    // Import the order management functions
+    const { addToCart } = await import('@/components/chatbot/api/order-management');
+    
+    // Find the menu item to get its details
+    const menuItem = (action.metadata?.menuItems || []).find(
+      (item: any) => item.id === menuId
+    );
+    
+    if (!menuItem) {
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        "Sorry, we couldn't find that menu item. Please try again."
+      );
+      return {
+        success: false,
+        message: "Menu item not found"
+      };
+    }
+    
+    // Add the item to cart using the tool with isWhatsApp=true
+    const cartResult = await addToCart(action.chatbotId, menuId, quantity, true);
+    
+    // Check if we got a JSON response
+    if (typeof cartResult === 'object') {
+      // Send cart confirmation message
+      let cartMessage = `*Cart Updated*\n\n`;
+      cartResult.cart.items.forEach((item: any) => {
+        cartMessage += `${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}\n`;
+      });
+      cartMessage += `\n*Total: $${cartResult.cart.total.toFixed(2)}*`;
+      
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        cartMessage
+      );
+      
+      // Replace placeholders in button IDs with actual values
+      if (cartResult.buttons && cartResult.buttons.length > 0) {
+        cartResult.buttons.forEach((button: any) => {
+          if (button.id) {
+            button.id = button.id
+              .replace('{tableName}', tableName)
+              .replace('{actionId}', action._id);
+          }
+        });
+      }
+      
+      // Send buttons for next actions
+      const buttonsPayload = {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: from,
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: {
+            text: "What would you like to do next?"
+          },
+          action: {
+            buttons: cartResult.buttons.map((button: any) => ({
+              type: "reply",
+              reply: {
+                id: button.id,
+                title: button.title
+              }
+            }))
+          }
+        }
+      };
+      
+      // Send the buttons via WhatsApp API
+      const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+        },
+        body: JSON.stringify(buttonsPayload)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`WhatsApp API returned ${response.status}`);
+      }
+      
+      // Add to conversation history
+      await addAssistantMessageToConversation(
+        conversation,
+        JSON.stringify(buttonsPayload)
+      );
+      
+      return {
+        success: true,
+        message: "Item added to cart with buttons"
+      };
+    } else {
+      // If we didn't get a JSON response, send the result as a text message
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        cartResult
+      );
+      
+      // Add to conversation history
+      await addAssistantMessageToConversation(
+        conversation,
+        cartResult
+      );
+      
+      return {
+        success: true,
+        message: "Item added to cart as text"
+      };
+    }
+  } catch (error) {
+    console.error('Error using addToCart tool:', error);
+    await sendTextMessage(
+      phoneNumberId,
+      from,
+      "Sorry, we're experiencing technical difficulties with our cart system. Please try again later."
+    );
+    
+    return {
+      success: false,
+      message: `Error using addToCart tool: ${error.message}`
     };
   }
 }
