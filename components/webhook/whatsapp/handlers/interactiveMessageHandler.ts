@@ -289,22 +289,45 @@ async function handleOrderManagementButton(
         tableName
       );
     }
-    else if (buttonId.startsWith('om-add-to-cart-')) {
-      // Format: om-add-to-cart-{tableName}-{actionId}-{menuId}-{quantity}
-      const parts = buttonId.replace('om-add-to-cart-', '').split('-');
-      const quantity = parseInt(parts.pop() || '1', 10); // Get quantity from the end
-      const menuId = parts.pop() || ''; // Get menu ID
-      
-      return await handleAddToCartButton(
-        from,
-        phoneNumberId,
-        menuId,
-        quantity,
-        action,
-        conversation,
-        tableName
-      );
-    }
+      else if (buttonId.startsWith('om-add-to-cart-')) {
+        // Format: om-add-to-cart-{tableName}-{actionId}-{menuId}-{quantity}
+        try {
+          const parts = buttonId.replace('om-add-to-cart-', '').split('-');
+          if (parts.length < 3) {
+            throw new Error(`Invalid add to cart button ID format: ${buttonId}`);
+          }
+          
+          const quantity = parseInt(parts.pop() || '1', 10); // Get quantity from the end
+          const menuId = parts.pop() || ''; // Get menu ID
+          
+          if (!menuId) {
+            throw new Error(`Missing menu ID in add to cart button: ${buttonId}`);
+          }
+          
+          console.log(`Adding to cart: menuId=${menuId}, quantity=${quantity}, tableName=${tableName}`);
+          
+          return await handleAddToCartButton(
+            from,
+            phoneNumberId,
+            menuId,
+            quantity,
+            action,
+            conversation,
+            tableName
+          );
+        } catch (parseError) {
+          console.error('Error parsing add to cart button ID:', parseError);
+          await sendTextMessage(
+            phoneNumberId, 
+            from, 
+            "Sorry, we couldn't process your add to cart request. Please try again."
+          );
+          return { 
+            success: false, 
+            message: `Add to cart button ID parsing error: ${parseError.message}` 
+          };
+        }
+      }
     else if (buttonId.startsWith('om-back-')) {
       // Handle back button - show categories again
       const categories = action.metadata?.categories || [];
