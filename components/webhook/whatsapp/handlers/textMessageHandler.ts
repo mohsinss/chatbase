@@ -71,162 +71,100 @@ export async function handleTextMessage(
     );
 
     // Find enabled OrderManagement actions with error handling
-    let enabledOMActions = [];
+    let enabledOMAction = null;
     try {
-      enabledOMActions = await ChatbotAction.find({
+      enabledOMAction = await ChatbotAction.findOne({
         chatbotId,
         enabled: true,
         type: "ordermanagement",
         'metadata.phoneNumber': whatsappNumber.display_phone_number
       });
-      console.log('Found order management actions:', enabledOMActions.length);
+      console.log('Found order management actions:', enabledOMAction.name);
     } catch (error) {
       console.error('Error fetching order management actions:', error);
       // Continue with empty array if query fails
     }
+    
     // Check if the message matches a table order template
     let isTableOrder = false;
     let tableName = null;
 
-    if (enabledOMActions.length > 0) {
-      for (const action of enabledOMActions) {
+    if (enabledOMAction) {
         try {
-          if (action.metadata?.messageTemplate) {
-            const template = action.metadata?.messageTemplate;
-            if (!template) continue;
-
-            const templateRegex = templateToRegex(template);
-            const match = text.match(templateRegex);
-
-            if (match?.groups?.table) {
-              isTableOrder = true;
-              tableName = match.groups.table.trim();
-              break;
+          if (enabledOMAction.metadata?.messageTemplate) {
+            const template = enabledOMAction.metadata?.messageTemplate;
+            if (template) {
+              const templateRegex = templateToRegex(template);
+              const match = text.match(templateRegex);
+  
+              if (match?.groups?.table) {
+                isTableOrder = true;
+                tableName = match.groups.table.trim();
+              }
             }
           }
         } catch (error) {
           console.error('Error processing order template match:', error);
-          // Continue to next action if one fails
-          continue;
+          // Continue to next enabledOMAction if one fails
         }
-      }
     }
 
-    // If this is a table order, handle it specially
-    if (isTableOrder && tableName) {
+    // If this is a table order, handle it using the order management tools
+    if (isTableOrder && tableName && enabledOMAction) {
       console.log(`Received order from table: ${tableName}`);
-
-      // Get categories from the OrderManagement action
-      const action = enabledOMActions[0]; // Use the first enabled action
-      const categories = action.metadata?.categories || [];
-
-      if (categories.length === 0) {
-        // If no categories, send a simple confirmation
-        await sendTextMessage(
-          phoneNumberId,
-          from,
-          `Thank you for your order from table ${tableName}. A staff member will assist you shortly.`
-        );
-
-        await addAssistantMessageToConversation(
-          conversation,
-          `Thank you for your order from table ${tableName}. A staff member will assist you shortly.`
-        );
-      } else {
+      
+      // Import the order management functions
+      const { getCategories } = await import('@/components/chatbot/api/order-management');
+      
+      try {
+        // Get categories using the tool
+        const categoriesResult = await getCategories(chatbotId);
+        
         // Send welcome message
         await sendTextMessage(
           phoneNumberId,
           from,
           `Welcome to our restaurant! You're at table ${tableName}. Please select a category to view our menu:`
         );
-
-        // Prepare list rows from categories
-        const sections = [
-          {
-            title: "Menu Categories",
-            rows: categories.map((category: { id: string, name: string }) => ({
-              id: `om-category-${tableName}-${action.id}-${category.id}`,
-              title: category.name,
-              description: "" // Optional: you can add a short description here
-            }))
-          }
-        ];
-
-        // Build the list message payload
-        const listPayload = {
-          messaging_product: "whatsapp",
-          recipient_type: "individual",
-          to: from,
-          type: "interactive",
-          interactive: {
-            type: "list",
-            body: {
-              text: "Please choose a menu category:"
-            },
-            footer: {
-              text: "Select a category to continue." // Optional footer text
-            },
-            action: {
-              button: "Select Category", // This is the button label users tap
-              sections: sections
-            }
-          }
-        };
-
-        // Send the list message via WhatsApp API with error handling
-        try {
-          // Safely stringify the payload
-          let payloadString;
-          try {
-            payloadString = JSON.stringify(listPayload);
-          } catch (stringifyError) {
-            console.error('Error stringifying list payload:', stringifyError);
-            throw new Error(`Failed to stringify list payload: ${stringifyError.message}`);
-          }
-          
-          const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
-            },
-            body: payloadString
-          });
-          
-          if (!response.ok) {
-            const responseText = await response.text();
-            console.error(`WhatsApp API error (${response.status}):`, responseText);
-            throw new Error(`WhatsApp API returned ${response.status}: ${responseText}`);
-          }
-        } catch (apiError) {
-          console.error('Error sending menu categories to WhatsApp:', apiError);
-          // Send a simpler fallback message if the interactive message fails
-          await sendTextMessage(
-            phoneNumberId,
-            from,
-            `Welcome to our restaurant! You're at table ${tableName}. We're experiencing technical difficulties with our menu system. A staff member will assist you shortly.`
-          );
-        }
-
+        
+        // Send the categories response
+        await sendTextMessage(
+          phoneNumberId,
+          from,
+          categoriesResult
+        );
+        
         // Save the table number in the conversation metadata for future reference
         conversation.metadata = {
           ...conversation.metadata,
           tableName,
-          orderManagementActionId: action.id
+          orderManagementActionId: enabledOMAction._id
         };
         await conversation.save();
-
+        
         // Add to conversation history
         await addAssistantMessageToConversation(
           conversation,
-          JSON.stringify(listPayload)
+          categoriesResult
         );
+        
+        return {
+          success: true,
+          message: `Table order initiated for table ${tableName}`
+        };
+      } catch (error) {
+        console.error('Error using order management tools:', error);
+        await sendTextMessage(
+          phoneNumberId,
+          from,
+          `Welcome to our restaurant! You're at table ${tableName}. We're experiencing technical difficulties with our menu system. A staff member will assist you shortly.`
+        );
+        
+        return {
+          success: false,
+          message: `Error using order management tools: ${error.message}`
+        };
       }
-
-      return {
-        success: true,
-        message: `Table order initiated for table ${tableName}`
-      };
     }
 
     // Check if auto-reply is disabled

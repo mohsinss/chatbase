@@ -427,90 +427,43 @@ async function handleCategoryButton(
   conversation: any,
   tableName: string
 ): Promise<{ success: boolean, message: string }> {
-  // Get menu items for this category
-  const menuItems = (action.metadata?.menuItems || []).filter(
-    (item: any) => item.category === categoryId && item.available
-  );
-  
-  if (menuItems.length === 0) {
+  try {
+    // Import the order management functions
+    const { getMenus } = await import('@/components/chatbot/api/order-management');
+    
+    // Get menu items for this category using the tool
+    const menuResult = await getMenus(action.chatbotId, categoryId);
+    
+    // Send the menu items response
     await sendTextMessage(
-      phoneNumberId, 
-      from, 
-      "Sorry, there are no available items in this category."
+      phoneNumberId,
+      from,
+      menuResult
     );
-    return { 
-      success: true, 
-      message: "No menu items in category" 
+    
+    // Add to conversation history
+    await addAssistantMessageToConversation(
+      conversation,
+      menuResult
+    );
+    
+    return {
+      success: true,
+      message: "Category menu items list sent"
+    };
+  } catch (error) {
+    console.error('Error using getMenus tool:', error);
+    await sendTextMessage(
+      phoneNumberId,
+      from,
+      "Sorry, we're experiencing technical difficulties with our menu system. Please try again later."
+    );
+    
+    return {
+      success: false,
+      message: `Error using getMenus tool: ${error.message}`
     };
   }
-  
-  // Find the category name for display
-  const categoryName = (action.metadata?.categories || []).find(
-    (cat: any) => cat.id === categoryId
-  )?.name || categoryId;
-  
-  // Prepare list rows for menu items
-  const rows = [
-    // Add back option as the first item
-    {
-      id: `om-back-${tableName}-${action.id}`,
-      title: "Back to Categories",
-      description: "Return to menu categories"
-    },
-    // Add menu items
-    ...menuItems.map((item: any) => ({
-      id: `om-menu-${tableName}-${action.id}-${item.id}`,
-      title: item.name,
-      description: `$${item.price.toFixed(2)}${item.description ? ` - ${item.description.substring(0, 50)}${item.description.length > 50 ? '...' : ''}` : ''}`
-    }))
-  ];
-  
-  // Build the list message payload
-  const listPayload = {
-    messaging_product: "whatsapp",
-    recipient_type: "individual",
-    to: from,
-    type: "interactive",
-    interactive: {
-      type: "list",
-      body: {
-        text: `Menu items in ${categoryName} :`
-      },
-      footer: {
-        text: "Select an item to view details or order."
-      },
-      action: {
-        button: "View Menu Items",
-        sections: [
-          {
-            title: categoryName,
-            rows: rows
-          }
-        ]
-      }
-    }
-  };
-  
-  // Send the list message via WhatsApp API
-  await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-    method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
-    },
-    body: JSON.stringify(listPayload)
-  });
-  
-  // Add to conversation history
-  await addAssistantMessageToConversation(
-    conversation, 
-    JSON.stringify(listPayload)
-  );
-  
-  return { 
-    success: true, 
-    message: "Category menu items list sent" 
-  };
 }
 
 /**
@@ -524,117 +477,64 @@ async function handleMenuButton(
   conversation: any,
   tableName: string
 ): Promise<{ success: boolean, message: string }> {
-  // Find the menu item
-  const menuItem = (action.metadata?.menuItems || []).find(
-    (item: any) => item.id === menuId
-  );
-  
-  if (!menuItem) {
-    await sendTextMessage(
-      phoneNumberId, 
-      from, 
-      "Sorry, we couldn't find that menu item. Please try again."
+  try {
+    // Import the order management functions
+    const { getMenu } = await import('@/components/chatbot/api/order-management');
+    
+    // Get menu item details using the tool
+    // We need the category ID, which should be stored in the menu item
+    // For now, we'll try to extract it from the action's metadata
+    const menuItem = (action.metadata?.menuItems || []).find(
+      (item: any) => item.id === menuId
     );
-    return { 
-      success: false, 
-      message: "Menu item not found" 
+    
+    if (!menuItem) {
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        "Sorry, we couldn't find that menu item. Please try again."
+      );
+      return {
+        success: false,
+        message: "Menu item not found"
+      };
+    }
+    
+    const categoryId = menuItem.category;
+    
+    // Get menu item details using the tool
+    const menuItemResult = await getMenu(action.chatbotId, menuId, categoryId);
+    
+    // Send the menu item details
+    await sendTextMessage(
+      phoneNumberId,
+      from,
+      menuItemResult
+    );
+    
+    // Add to conversation history
+    await addAssistantMessageToConversation(
+      conversation,
+      menuItemResult
+    );
+    
+    return {
+      success: true,
+      message: "Menu item details sent"
+    };
+  } catch (error) {
+    console.error('Error using getMenu tool:', error);
+    await sendTextMessage(
+      phoneNumberId,
+      from,
+      "Sorry, we're experiencing technical difficulties with our menu system. Please try again later."
+    );
+    
+    return {
+      success: false,
+      message: `Error using getMenu tool: ${error.message}`
     };
   }
-  
-  // Get the category for the back button
-  const categoryId = menuItem.category;
-  
-  // Send menu item details
-  let messageText = `*${menuItem.name}*\n\n`;
-  if (menuItem.description) {
-    messageText += `${menuItem.description}\n\n`;
-  }
-  messageText += `Price: $${menuItem.price.toFixed(2)}`;
-  
-  await sendTextMessage(
-    phoneNumberId, 
-    from, 
-    messageText
-  );
-  
-  // Send image if available
-  if (menuItem.images && menuItem.images.length > 0) {
-    const imageUrl = menuItem.images[0];
-    
-    // Send image message
-    await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: from,
-        type: "image",
-        image: {
-          link: imageUrl
-        }
-      })
-    });
-  }
-  
-  // Prepare confirmation buttons
-  const buttons = [
-    {
-      type: "reply",
-      reply: {
-        id: `om-confirm-${tableName}-${action.id}-${menuId}`,
-        title: "Order Now"
-      }
-    },
-    {
-      type: "reply",
-      reply: {
-        id: `om-category-${tableName}-${action.id}-${categoryId}`,
-        title: "Back to Menu"
-      }
-    }
-  ];
-  
-  // Send interactive button message with confirmation options
-  const buttonsPayload = {
-    messaging_product: "whatsapp",
-    recipient_type: "individual",
-    to: from,
-    type: "interactive",
-    interactive: {
-      type: "button",
-      body: {
-        text: "Would you like to order this item?"
-      },
-      action: {
-        buttons
-      }
-    }
-  };
-  
-  // Send the buttons via WhatsApp API
-  await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-    method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
-    },
-    body: JSON.stringify(buttonsPayload)
-  });
-  
-  // Add to conversation history
-  await addAssistantMessageToConversation(
-    conversation, 
-    JSON.stringify(buttonsPayload)
-  );
-  
-  return { 
-    success: true, 
-    message: "Menu item details sent" 
-  };
 }
 
 /**
@@ -648,104 +548,73 @@ async function handleConfirmButton(
   conversation: any,
   tableName: string
 ): Promise<{ success: boolean, message: string }> {
-  // Find the menu item
-  const menuItem = (action.metadata?.menuItems || []).find(
-    (item: any) => item.id === menuId
-  );
-  
-  if (!menuItem) {
-    await sendTextMessage(
-      phoneNumberId, 
-      from, 
-      "Sorry, we couldn't find that menu item. Please try again."
+  try {
+    // Import the order management functions
+    const { submitOrder } = await import('@/components/chatbot/api/order-management');
+    
+    // Find the menu item to get its details
+    const menuItem = (action.metadata?.menuItems || []).find(
+      (item: any) => item.id === menuId
     );
-    return { 
-      success: false, 
-      message: "Menu item not found" 
-    };
-  }
-  
-  // Add order to conversation metadata
-  const orders = conversation.metadata?.orders || [];
-  orders.push({
-    menuId,
-    menuName: menuItem.name,
-    price: menuItem.price,
-    timestamp: new Date()
-  });
-  
-  conversation.metadata = {
-    ...conversation.metadata,
-    orders
-  };
-  
-  await conversation.save();
-  
-  // Send confirmation message
-  await sendTextMessage(
-    phoneNumberId, 
-    from, 
-    `Thank you! Your order for *${menuItem.name}* has been placed for table ${tableName}. A staff member will assist you shortly.`
-  );
-  
-  // Get categories for next order
-  const categories = action.metadata?.categories || [];
-  
-  if (categories.length > 0) {
-    // Prepare list rows from categories
-    const sections = [
-      {
-        title: "Menu Categories",
-        rows: categories.map((category: any) => ({
-          id: `om-category-${tableName}-${action.id}-${category.id}`,
-          title: category.name,
-          description: "" // Optional: you can add a short description here
-        }))
-      }
-    ];
     
-    // Build the list message payload
-    const listPayload = {
-      messaging_product: "whatsapp",
-      recipient_type: "individual",
-      to: from,
-      type: "interactive",
-      interactive: {
-        type: "list",
-        body: {
-          text: "Would you like to order anything else?"
-        },
-        footer: {
-          text: "Select a category to continue ordering." // Optional footer text
-        },
-        action: {
-          button: "View Menu", // This is the button label users tap
-          sections: sections
+    if (!menuItem) {
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        "Sorry, we couldn't find that menu item. Please try again."
+      );
+      return {
+        success: false,
+        message: "Menu item not found"
+      };
+    }
+    
+    // Create an order object
+    const order = {
+      table: tableName,
+      items: [
+        {
+          item_id: menuId,
+          name: menuItem.name,
+          qty: 1,
+          price: menuItem.price
         }
-      }
+      ]
     };
     
-    // Send the list message via WhatsApp API
-    await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
-      },
-      body: JSON.stringify(listPayload)
-    });
+    // Submit the order using the tool
+    const orderResult = await submitOrder(action.chatbotId, order);
+    
+    // Send the order confirmation
+    await sendTextMessage(
+      phoneNumberId,
+      from,
+      orderResult
+    );
     
     // Add to conversation history
     await addAssistantMessageToConversation(
-      conversation, 
-      JSON.stringify(listPayload)
+      conversation,
+      orderResult
     );
+    
+    return {
+      success: true,
+      message: "Order confirmed"
+    };
+  } catch (error) {
+    console.error('Error using submitOrder tool:', error);
+    await sendTextMessage(
+      phoneNumberId,
+      from,
+      "Sorry, we're experiencing technical difficulties with our ordering system. Please try again later."
+    );
+    
+    return {
+      success: false,
+      message: `Error using submitOrder tool: ${error.message}`
+    };
   }
-  
-  return { 
-    success: true, 
-    message: "Order confirmed" 
-  };
 }
 
 /**
