@@ -68,12 +68,14 @@ export async function getOrderManagementAction(chatbotId: string) {
 /**
  * Returns available menu categories
  */
-export async function getCategories(chatbotId: string) {
+export async function getCategories(chatbotId: string, isWhatsApp: boolean = false) {
   try {
     const action = await getOrderManagementAction(chatbotId);
     
     if (!action || !action.metadata || !action.metadata.categories) {
-      return `<div class="error-message"><p>No categories found</p></div>`;
+      return isWhatsApp 
+        ? { error: "No categories found" }
+        : `<div class="error-message"><p>No categories found</p></div>`;
     }
     
     // Create buttons for each category
@@ -85,19 +87,42 @@ export async function getCategories(chatbotId: string) {
       params: { category: category.id }
     }));
     
-    // Generate HTML content with buttons (compact, no newlines)
-    const htmlContent = `<div class="order-categories"><h3>Menu Categories</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menus" data-category="${category.id}" data-index="0">${category.name}</button>`).join('')}</div></div>`;
-    return htmlContent;
+    if (isWhatsApp) {
+      // Return JSON structure for WhatsApp
+      return {
+        type: "list",
+        title: "Menu Categories",
+        body: "Please choose a menu category:",
+        footer: "Select a category to continue.",
+        button: "Select Category",
+        sections: [
+          {
+            title: "Menu Categories",
+            rows: action.metadata.categories.map((category: any) => ({
+              id: category.id,
+              title: category.name,
+              description: ""
+            }))
+          }
+        ]
+      };
+    } else {
+      // Generate HTML content with buttons for web interface
+      const htmlContent = `<div class="order-categories"><h3>Menu Categories</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menus" data-category="${category.id}" data-index="0">${category.name}</button>`).join('')}</div></div>`;
+      return htmlContent;
+    }
   } catch (error) {
     console.error('Error getting categories:', error);
-    return `<div class="error-message"><p>Failed to retrieve categories</p></div>`;
+    return isWhatsApp 
+      ? { error: "Failed to retrieve categories" }
+      : `<div class="error-message"><p>Failed to retrieve categories</p></div>`;
   }
 }
 
 /**
  * Returns a list of menu items for a specific category
  */
-export async function getMenus(chatbotId: string, category: string) {
+export async function getMenus(chatbotId: string, category: string, isWhatsApp: boolean = false) {
   try {
     console.log('getMenus', category, 'category');
     const action = await getOrderManagementAction(chatbotId);
@@ -209,7 +234,9 @@ export async function getMenus(chatbotId: string, category: string) {
     }
     
     if (!categoryObj) {
-      return `<div>Category "${category}" not found</div><div><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+      return isWhatsApp
+        ? { error: `Category "${category}" not found` }
+        : `<div>Category "${category}" not found</div><div><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
     
     // Filter menu items by category
@@ -221,25 +248,56 @@ export async function getMenus(chatbotId: string, category: string) {
         price: item.price
       }));
     
-    // Generate HTML content with menu items list (name and price only)
-    return `<div class="menu-items">
-      <h3>${categoryObj.name} Menu</h3>
-      <div class="items-list">
-        ${items.map((item: any) => `
-          <button class="menu-item-btn chat-option-btn" 
-            data-action="get_menu" 
-            data-category="${categoryObj.id}" 
-            data-item-id="${item.id}" 
-            data-index="0">
-              ${item.name} - $${item.price.toFixed(2)}
-          </button>`).join('')}
-      </div>
-      <div class="navigation">
-        <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">
-          Back to Categories
-        </button>
-      </div>
-    </div>`;
+    if (isWhatsApp) {
+      // Return JSON structure for WhatsApp
+      return {
+        type: "list",
+        title: `${categoryObj.name} Menu`,
+        body: `Menu items in ${categoryObj.name}:`,
+        footer: "Select an item to view details or order.",
+        button: "View Menu Items",
+        sections: [
+          {
+            title: categoryObj.name,
+            rows: [
+              // Add back option as the first item
+              {
+                id: `back_to_categories`,
+                title: "Back to Categories",
+                description: "Return to menu categories"
+              },
+              // Add menu items
+              ...items.map((item: any) => ({
+                id: item.id,
+                title: item.name,
+                description: `$${item.price.toFixed(2)}`
+              }))
+            ]
+          }
+        ],
+        categoryId: categoryObj.id // Include category ID for reference
+      };
+    } else {
+      // Generate HTML content with menu items list for web interface
+      return `<div class="menu-items">
+        <h3>${categoryObj.name} Menu</h3>
+        <div class="items-list">
+          ${items.map((item: any) => `
+            <button class="menu-item-btn chat-option-btn" 
+              data-action="get_menu" 
+              data-category="${categoryObj.id}" 
+              data-item-id="${item.id}" 
+              data-index="0">
+                ${item.name} - $${item.price.toFixed(2)}
+            </button>`).join('')}
+        </div>
+        <div class="navigation">
+          <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">
+            Back to Categories
+          </button>
+        </div>
+      </div>`;
+    }
   } catch (error) {
     console.error('Error getting menu items:', error);
     return `<div class="error-message"><p>Failed to retrieve menu items</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
@@ -249,7 +307,7 @@ export async function getMenus(chatbotId: string, category: string) {
 /**
  * Returns detailed information about a specific menu item
  */
-export async function getMenu(chatbotId: string, item_id: string, category: string) {
+export async function getMenu(chatbotId: string, item_id: string, category: string, isWhatsApp: boolean = false) {
   try {
     const action = await getOrderManagementAction(chatbotId);
     
@@ -272,27 +330,60 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
     );
     
     if (!selectedItem) {
-      return `<div class="error-message"><p>Item not found or not available</p><button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">Back to Menu</button></div>`;
+      return isWhatsApp
+        ? { error: "Item not found or not available" }
+        : `<div class="error-message"><p>Item not found or not available</p><button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">Back to Menu</button></div>`;
     }
     
-    // Generate HTML content with detailed item view and add to cart button
-    return `<div class="item-detail">
-      <h3>${selectedItem.name}</h3>
-      ${selectedItem.images && selectedItem.images.length > 0 ? 
-        `<img src="${selectedItem.images[0]}" alt="${selectedItem.name}" class="item-detail-image" />` : ''}
-      <div class="item-detail-info">
-        <p class="item-price">$${selectedItem.price.toFixed(2)}</p>
-        <p class="item-description">${selectedItem.description}</p>
-        <div class="quantity-selector">
-          <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="1" data-index="0">Add 1 to Cart</button>
-          <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="2" data-index="0">Add 2 to Cart</button>
-          <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="3" data-index="0">Add 3 to Cart</button>
+    if (isWhatsApp) {
+      // Return JSON structure for WhatsApp
+      const response: any = {
+        type: "item_detail",
+        item: {
+          id: selectedItem.id,
+          name: selectedItem.name,
+          price: selectedItem.price,
+          description: selectedItem.description || "",
+          categoryId: category
+        },
+        buttons: [
+          {
+            id: `order_now`,
+            title: "Order Now"
+          },
+          {
+            id: `back_to_menu`,
+            title: "Back to Menu"
+          }
+        ]
+      };
+      
+      // Add image if available
+      if (selectedItem.images && selectedItem.images.length > 0) {
+        response.item.image = selectedItem.images[0];
+      }
+      
+      return response;
+    } else {
+      // Generate HTML content with detailed item view for web interface
+      return `<div class="item-detail">
+        <h3>${selectedItem.name}</h3>
+        ${selectedItem.images && selectedItem.images.length > 0 ? 
+          `<img src="${selectedItem.images[0]}" alt="${selectedItem.name}" class="item-detail-image" />` : ''}
+        <div class="item-detail-info">
+          <p class="item-price">$${selectedItem.price.toFixed(2)}</p>
+          <p class="item-description">${selectedItem.description}</p>
+          <div class="quantity-selector">
+            <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="1" data-index="0">Add 1 to Cart</button>
+            <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="2" data-index="0">Add 2 to Cart</button>
+            <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="3" data-index="0">Add 3 to Cart</button>
+          </div>
         </div>
-      </div>
-      <div class="navigation">
-        <button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">Back to Menu</button>
-      </div>
-    </div>`;
+        <div class="navigation">
+          <button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">Back to Menu</button>
+        </div>
+      </div>`;
+    }
   } catch (error) {
     console.error('Error getting menu item details:', error);
     return `<div class="error-message"><p>Failed to retrieve menu item details</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
@@ -304,7 +395,7 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
  * Note: This is a simulated function as we don't have actual cart storage
  * In a real implementation, this would store the cart in a database or session
  */
-export async function addToCart(chatbotId: string, item_id: string, quantity: number) {
+export async function addToCart(chatbotId: string, item_id: string, quantity: number, isWhatsApp: boolean = false) {
   // Convert quantity to number if it's passed as a string from data-quantity attribute
   quantity = typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
   try {
@@ -376,21 +467,48 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
       }
     ];
     
-    // Generate HTML content with cart and buttons
-    return `<div class="cart-confirmation">
-      <div class="cart-message">
-        <h4>Cart Updated</h4>
-        <div class="cart-items">
-          ${cart.map((item: OrderItem) => `<p>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</p>`).join('')}
+    if (isWhatsApp) {
+      // Return JSON structure for WhatsApp
+      return {
+        type: "cart_confirmation",
+        cart: {
+          items: cart,
+          total: cartTotal
+        },
+        categoryId: categoryId,
+        categoryName: menuItem.category,
+        buttons: [
+          {
+            id: "view_more",
+            title: `View More ${menuItem.category} Items`
+          },
+          {
+            id: "browse_categories",
+            title: "Browse All Categories"
+          },
+          {
+            id: "checkout",
+            title: "Proceed to Checkout"
+          }
+        ]
+      };
+    } else {
+      // Generate HTML content with cart and buttons for web interface
+      return `<div class="cart-confirmation">
+        <div class="cart-message">
+          <h4>Cart Updated</h4>
+          <div class="cart-items">
+            ${cart.map((item: OrderItem) => `<p>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</p>`).join('')}
+          </div>
+          <p class="cart-total"><strong>Total: $${cartTotal.toFixed(2)}</strong></p>
         </div>
-        <p class="cart-total"><strong>Total: $${cartTotal.toFixed(2)}</strong></p>
-      </div>
-      <div class="action-buttons">
-        <button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0">View More ${menuItem.category} Items</button>
-        <button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0">Browse All Categories</button>
-        <button class="checkout-btn chat-option-btn" data-action="submit_order" data-order='${JSON.stringify({items: cart, subtotal: cartTotal})}' data-index="0">Proceed to Checkout</button>
-      </div>
-    </div>`;
+        <div class="action-buttons">
+          <button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0">View More ${menuItem.category} Items</button>
+          <button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0">Browse All Categories</button>
+          <button class="checkout-btn chat-option-btn" data-action="submit_order" data-order='${JSON.stringify({items: cart, subtotal: cartTotal})}' data-index="0">Proceed to Checkout</button>
+        </div>
+      </div>`;
+    }
   } catch (error) {
     console.error('Error adding item to cart:', error);
     return `<div class="error-message"><p>Failed to add item to cart</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
@@ -467,7 +585,7 @@ export async function getOrders(chatbotId: string, orderId?: string) {
  * In a real implementation, this would save the order to a database
  * and potentially integrate with a POS system or Google Sheets
  */
-export async function submitOrder(chatbotId: string, order: Order) {
+export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: boolean = false) {
   try {
     console.log('submitOrder', order);
     const action = await getOrderManagementAction(chatbotId);
@@ -551,8 +669,34 @@ export async function submitOrder(chatbotId: string, order: Order) {
       }
     ];
     
-    // Generate HTML content with order confirmation and buttons (compact, no newlines)
-    return `<div class="order-confirmation"><div class="order-success"><h3>Order Confirmed!</h3><p>Your order #${orderId} has been received and is being processed.</p>${order.table ? `<p>Table: ${order.table}</p>` : ''}<div class="order-details"><h4>Order Summary</h4><ul class="order-items">${order.items.map((item: OrderItem) => `<li>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</li>`).join('')}</ul><p class="order-total">Total: $${calculatedTotal.toFixed(2)}</p></div>${hasGoogleSheets ? '<p>Your order has been recorded in our system.</p>' : ''}</div><div class="after-order-actions"><button class="new-order-btn chat-option-btn" data-action="get_categories" data-index="0" >Place Another Order</button><button class="track-order-btn chat-option-btn" data-action="track_order" data-order-id="${orderId}" data-index="0">Track Order Status</button></div></div>`;
+    if (isWhatsApp) {
+      // Return JSON structure for WhatsApp
+      return {
+        type: "order_confirmation",
+        order: {
+          id: orderId,
+          table: order.table,
+          items: order.items,
+          total: calculatedTotal,
+          status: 'received',
+          timestamp: new Date()
+        },
+        buttons: [
+          {
+            id: "place_another_order",
+            title: "Place Another Order"
+          },
+          {
+            id: "track_order",
+            title: "Track Order Status",
+            orderId: orderId
+          }
+        ]
+      };
+    } else {
+      // Generate HTML content with order confirmation for web interface
+      return `<div class="order-confirmation"><div class="order-success"><h3>Order Confirmed!</h3><p>Your order #${orderId} has been received and is being processed.</p>${order.table ? `<p>Table: ${order.table}</p>` : ''}<div class="order-details"><h4>Order Summary</h4><ul class="order-items">${order.items.map((item: OrderItem) => `<li>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</li>`).join('')}</ul><p class="order-total">Total: $${calculatedTotal.toFixed(2)}</p></div>${hasGoogleSheets ? '<p>Your order has been recorded in our system.</p>' : ''}</div><div class="after-order-actions"><button class="new-order-btn chat-option-btn" data-action="get_categories" data-index="0" >Place Another Order</button><button class="track-order-btn chat-option-btn" data-action="track_order" data-order-id="${orderId}" data-index="0">Track Order Status</button></div></div>`;
+    }
   } catch (error) {
     console.error('Error submitting order:', error);
     return `<div class="error-message"><p>Failed to submit order</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;

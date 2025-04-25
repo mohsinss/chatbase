@@ -431,26 +431,90 @@ async function handleCategoryButton(
     // Import the order management functions
     const { getMenus } = await import('@/components/chatbot/api/order-management');
     
-    // Get menu items for this category using the tool
-    const menuResult = await getMenus(action.chatbotId, categoryId);
+    // Get menu items for this category using the tool with isWhatsApp=true
+    const menuResult = await getMenus(action.chatbotId, categoryId, true);
     
-    // Send the menu items response
-    await sendTextMessage(
-      phoneNumberId,
-      from,
-      menuResult
-    );
-    
-    // Add to conversation history
-    await addAssistantMessageToConversation(
-      conversation,
-      menuResult
-    );
-    
-    return {
-      success: true,
-      message: "Category menu items list sent"
-    };
+    // Check if we got a JSON response
+    if (typeof menuResult === 'object') {
+      // Create a WhatsApp list message from the JSON response
+      const listPayload = {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: from,
+        type: "interactive",
+        interactive: {
+          type: "list",
+          body: {
+            text: menuResult.body || `Menu items in category:`
+          },
+          footer: {
+            text: menuResult.footer || "Select an item to view details or order."
+          },
+          action: {
+            button: menuResult.button || "View Menu Items",
+            sections: menuResult.sections || []
+          }
+        }
+      };
+      
+      // Send the list message via WhatsApp API
+      try {
+        const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+          },
+          body: JSON.stringify(listPayload)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`WhatsApp API returned ${response.status}`);
+        }
+        
+        // Add to conversation history
+        await addAssistantMessageToConversation(
+          conversation,
+          JSON.stringify(listPayload)
+        );
+        
+        return {
+          success: true,
+          message: "Category menu items list sent"
+        };
+      } catch (apiError) {
+        console.error('Error sending WhatsApp message:', apiError);
+        // Send a simple text message as fallback
+        await sendTextMessage(
+          phoneNumberId,
+          from,
+          "We're having trouble displaying the menu. Please try again later."
+        );
+        
+        return {
+          success: false,
+          message: `Error sending WhatsApp message: ${apiError.message}`
+        };
+      }
+    } else {
+      // If we didn't get a JSON response, send the result as a text message
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        menuResult
+      );
+      
+      // Add to conversation history
+      await addAssistantMessageToConversation(
+        conversation,
+        menuResult
+      );
+      
+      return {
+        success: true,
+        message: "Category menu items list sent as text"
+      };
+    }
   } catch (error) {
     console.error('Error using getMenus tool:', error);
     await sendTextMessage(
@@ -502,26 +566,112 @@ async function handleMenuButton(
     
     const categoryId = menuItem.category;
     
-    // Get menu item details using the tool
-    const menuItemResult = await getMenu(action.chatbotId, menuId, categoryId);
+    // Get menu item details using the tool with isWhatsApp=true
+    const menuItemResult = await getMenu(action.chatbotId, menuId, categoryId, true);
     
-    // Send the menu item details
-    await sendTextMessage(
-      phoneNumberId,
-      from,
-      menuItemResult
-    );
-    
-    // Add to conversation history
-    await addAssistantMessageToConversation(
-      conversation,
-      menuItemResult
-    );
-    
-    return {
-      success: true,
-      message: "Menu item details sent"
-    };
+    // Check if we got a JSON response
+    if (typeof menuItemResult === 'object') {
+      // First send item details as a text message
+      let messageText = `*${menuItemResult.item.name}*\n\n`;
+      if (menuItemResult.item.description) {
+        messageText += `${menuItemResult.item.description}\n\n`;
+      }
+      messageText += `Price: $${menuItemResult.item.price.toFixed(2)}`;
+      
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        messageText
+      );
+      
+      // Send image if available
+      if (menuItemResult.item.image) {
+        await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+          },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: from,
+            type: "image",
+            image: {
+              link: menuItemResult.item.image
+            }
+          })
+        });
+      }
+      
+      // Send buttons for actions
+      const buttonsPayload = {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: from,
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: {
+            text: "Would you like to order this item?"
+          },
+          action: {
+            buttons: menuItemResult.buttons.map((button: any) => ({
+              type: "reply",
+              reply: {
+                id: button.id === "order_now" 
+                  ? `om-confirm-${tableName}-${action._id}-${menuId}`
+                  : `om-category-${tableName}-${action._id}-${categoryId}`,
+                title: button.title
+              }
+            }))
+          }
+        }
+      };
+      
+      // Send the buttons via WhatsApp API
+      const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+        },
+        body: JSON.stringify(buttonsPayload)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`WhatsApp API returned ${response.status}`);
+      }
+      
+      // Add to conversation history
+      await addAssistantMessageToConversation(
+        conversation,
+        JSON.stringify(buttonsPayload)
+      );
+      
+      return {
+        success: true,
+        message: "Menu item details sent with buttons"
+      };
+    } else {
+      // If we didn't get a JSON response, send the result as a text message
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        menuItemResult
+      );
+      
+      // Add to conversation history
+      await addAssistantMessageToConversation(
+        conversation,
+        menuItemResult
+      );
+      
+      return {
+        success: true,
+        message: "Menu item details sent as text"
+      };
+    }
   } catch (error) {
     console.error('Error using getMenu tool:', error);
     await sendTextMessage(
@@ -582,26 +732,100 @@ async function handleConfirmButton(
       ]
     };
     
-    // Submit the order using the tool
-    const orderResult = await submitOrder(action.chatbotId, order);
+    // Submit the order using the tool with isWhatsApp=true
+    const orderResult = await submitOrder(action.chatbotId, order, true);
     
-    // Send the order confirmation
-    await sendTextMessage(
-      phoneNumberId,
-      from,
-      orderResult
-    );
-    
-    // Add to conversation history
-    await addAssistantMessageToConversation(
-      conversation,
-      orderResult
-    );
-    
-    return {
-      success: true,
-      message: "Order confirmed"
-    };
+    // Check if we got a JSON response
+    if (typeof orderResult === 'object') {
+      // Send confirmation message
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        `Thank you! Your order #${orderResult.order.id} has been placed for table ${tableName}. A staff member will assist you shortly.`
+      );
+      
+      // Format order summary
+      let orderSummary = "*Order Summary*\n\n";
+      orderResult.order.items.forEach((item: any) => {
+        orderSummary += `${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}\n`;
+      });
+      orderSummary += `\n*Total: $${orderResult.order.total.toFixed(2)}*`;
+      
+      // Send order summary
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        orderSummary
+      );
+      
+      // Send buttons for next actions
+      const buttonsPayload = {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: from,
+        type: "interactive",
+        interactive: {
+          type: "button",
+          body: {
+            text: "Would you like to place another order or track this order?"
+          },
+          action: {
+            buttons: orderResult.buttons.map((button: any) => ({
+              type: "reply",
+              reply: {
+                id: button.id === "place_another_order" 
+                  ? `om-back-${tableName}-${action._id}`
+                  : `om-track-${tableName}-${action._id}-${button.orderId || ''}`,
+                title: button.title
+              }
+            }))
+          }
+        }
+      };
+      
+      // Send the buttons via WhatsApp API
+      const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+        },
+        body: JSON.stringify(buttonsPayload)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`WhatsApp API returned ${response.status}`);
+      }
+      
+      // Add to conversation history
+      await addAssistantMessageToConversation(
+        conversation,
+        JSON.stringify(buttonsPayload)
+      );
+      
+      return {
+        success: true,
+        message: "Order confirmed with buttons"
+      };
+    } else {
+      // If we didn't get a JSON response, send the result as a text message
+      await sendTextMessage(
+        phoneNumberId,
+        from,
+        orderResult
+      );
+      
+      // Add to conversation history
+      await addAssistantMessageToConversation(
+        conversation,
+        orderResult
+      );
+      
+      return {
+        success: true,
+        message: "Order confirmed as text"
+      };
+    }
   } catch (error) {
     console.error('Error using submitOrder tool:', error);
     await sendTextMessage(

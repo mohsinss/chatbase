@@ -117,8 +117,8 @@ export async function handleTextMessage(
       const { getCategories } = await import('@/components/chatbot/api/order-management');
       
       try {
-        // Get categories using the tool
-        const categoriesResult = await getCategories(chatbotId);
+        // Get categories using the tool with isWhatsApp=true
+        const categoriesResult = await getCategories(chatbotId, true);
         
         // Send welcome message
         await sendTextMessage(
@@ -127,12 +127,60 @@ export async function handleTextMessage(
           `Welcome to our restaurant! You're at table ${tableName}. Please select a category to view our menu:`
         );
         
-        // Send the categories response
-        await sendTextMessage(
-          phoneNumberId,
-          from,
-          categoriesResult
-        );
+        // Check if we got a JSON response
+        if (typeof categoriesResult === 'object') {
+          // Create a WhatsApp list message from the JSON response
+          const listPayload = {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: from,
+            type: "interactive",
+            interactive: {
+              type: "list",
+              body: {
+                text: categoriesResult.body || "Please choose a menu category:"
+              },
+              footer: {
+                text: categoriesResult.footer || "Select a category to continue."
+              },
+              action: {
+                button: categoriesResult.button || "Select Category",
+                sections: categoriesResult.sections || []
+              }
+            }
+          };
+          
+          // Send the list message via WhatsApp API
+          try {
+            const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+              },
+              body: JSON.stringify(listPayload)
+            });
+            
+            if (!response.ok) {
+              throw new Error(`WhatsApp API returned ${response.status}`);
+            }
+          } catch (apiError) {
+            console.error('Error sending WhatsApp message:', apiError);
+            // Send a simple text message as fallback
+            await sendTextMessage(
+              phoneNumberId,
+              from,
+              "Please select from our menu categories. If you're having trouble, please scan the QR code again."
+            );
+          }
+        } else {
+          // If we didn't get a JSON response, send the result as a text message
+          await sendTextMessage(
+            phoneNumberId,
+            from,
+            categoriesResult
+          );
+        }
         
         // Save the table number in the conversation metadata for future reference
         conversation.metadata = {
