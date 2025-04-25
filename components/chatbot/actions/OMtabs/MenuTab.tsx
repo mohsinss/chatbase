@@ -60,6 +60,7 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
   })
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   // Handle adding a new menu item
   const handleAddMenuItem = () => {
@@ -480,257 +481,293 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
           {/* Menu Items List */}
           <div className="border rounded-md p-4">
             <h3 className="font-medium mb-4">Menu Items</h3>
+            
+            {/* Category Filter Tabs */}
+            <div className="mb-4">
+              <div className="flex flex-wrap gap-2 mb-3">
+                <Button 
+                  variant={!activeCategory ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveCategory(null)}
+                  className="text-xs"
+                >
+                  All Items
+                </Button>
+                {['Appetizer', 'Main', 'Dessert', 'Beverage', 'Special', 'Fruits'].map((cat) => (
+                  <Button
+                    key={cat}
+                    variant={activeCategory === cat ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setActiveCategory(cat)}
+                    className="text-xs"
+                  >
+                    {cat}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
             {menuItems.length === 0 ? (
               <p className="text-center text-gray-500 py-4">No menu items added yet</p>
             ) : (
               <div className="space-y-6">
-                {menuItems.map((item) => (
-                  <div key={item.id} className="border rounded-md p-4">
-                    {!item.isEditing ? (
-                      // View Mode
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex gap-4">
-                          {item.images && item.images?.length > 0 && (
-                            <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                              <img
-                                src={item.images[0]}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-medium">{item.name}</div>
-                            {item.description && (
-                              <div className="text-sm text-gray-500">{item.description}</div>
-                            )}
-                            <div className="flex items-center mt-2 space-x-4">
-                              <span className="text-sm bg-gray-100 px-2 py-1 rounded">
-                                {categories.find(cat => cat.id === item.category)?.name || item.category}
-                              </span>
-                              <span className="font-medium">${item.price.toFixed(2)}</span>
-                              <div className="flex items-center">
-                                <Switch
-                                  checked={item.available}
-                                  onCheckedChange={(checked) => {
-                                    setMenuItems(
-                                      menuItems.map((menuItem) =>
-                                        menuItem.id === item.id
-                                          ? { ...menuItem, available: checked }
-                                          : menuItem
-                                      )
-                                    )
-                                  }}
-                                  className="mr-2"
-                                />
-                                <span className="text-sm">Available</span>
+                {(() => {
+                  const filteredItems = menuItems.filter(item => 
+                    !activeCategory || categories.find(cat => cat.id === item.category)?.name === activeCategory
+                  );
+                  
+                  return filteredItems.length === 0 ? (
+                    <p className="text-center text-gray-500 py-4">No items in this category</p>
+                  ) : (
+                    filteredItems.map((item) => (
+                      <div key={item.id} className="border rounded-md p-4">
+                        {!item.isEditing ? (
+                          // View Mode
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex gap-4">
+                              {item.images && item.images?.length > 0 && (
+                                <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                                  <img
+                                    src={item.images[0]}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                              <div>
+                                <div className="font-medium">{item.name}</div>
+                                {item.description && (
+                                  <div className="text-sm text-gray-500">{item.description}</div>
+                                )}
+                                <div className="flex items-center mt-2 space-x-4">
+                                  <span className="text-sm bg-gray-100 px-2 py-1 rounded">
+                                    {categories.find(cat => cat.id === item.category)?.name || item.category}
+                                  </span>
+                                  <span className="font-medium">${item.price.toFixed(2)}</span>
+                                  <div className="flex items-center">
+                                    <Switch
+                                      checked={item.available}
+                                      onCheckedChange={(checked) => {
+                                        setMenuItems(
+                                          menuItems.map((menuItem) =>
+                                            menuItem.id === item.id
+                                              ? { ...menuItem, available: checked }
+                                              : menuItem
+                                          )
+                                        )
+                                      }}
+                                      className="mr-2"
+                                    />
+                                    <span className="text-sm">Available</span>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditMenuItem(item.id)}
-                          >
-                            Edit Item
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteMenuItem(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      // Edit Mode - Form Fields
-                      <div className="mb-4">
-                        <h4 className="text-sm font-medium mb-4">Edit Menu Item</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <Label htmlFor={`edit-name-${item.id}`}>Item Name</Label>
-                            <Input
-                              id={`edit-name-${item.id}`}
-                              value={item.editData?.name || ""}
-                              onChange={(e) => handleUpdateEditData(item.id, "name", e.target.value)}
-                              placeholder="e.g. Margherita Pizza"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor={`edit-price-${item.id}`}>Price</Label>
-                            <Input
-                              id={`edit-price-${item.id}`}
-                              type="number"
-                              value={item.editData?.price || ""}
-                              onChange={(e) => handleUpdateEditData(item.id, "price", parseFloat(e.target.value) || 0)}
-                              placeholder="e.g. 12.99"
-                            />
-                          </div>
-                        </div>
-                        <div className="mb-4">
-                          <Label htmlFor={`edit-description-${item.id}`}>Description</Label>
-                          <Textarea
-                            id={`edit-description-${item.id}`}
-                            value={item.editData?.description || ""}
-                            onChange={(e) => handleUpdateEditData(item.id, "description", e.target.value)}
-                            placeholder="Brief description of the item"
-                            rows={2}
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <Label htmlFor={`edit-category-${item.id}`}>Category</Label>
-                            <div className="relative">
-                              <select
-                                id={`edit-category-${item.id}`}
-                                value={item.editData?.category || ""}
-                                onChange={(e) => handleUpdateEditData(item.id, "category", e.target.value)}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditMenuItem(item.id)}
                               >
-                                {categories.map((category) => (
-                                  <option key={category.id} value={category.id}>
-                                    {category.name}
-                                  </option>
-                                ))}
-                              </select>
+                                Edit Item
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteMenuItem(item.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2 mt-8">
-                            <Switch
-                              id={`edit-available-${item.id}`}
-                              checked={item.editData?.available || false}
-                              onCheckedChange={(checked) => handleUpdateEditData(item.id, "available", checked)}
-                            />
-                            <Label htmlFor={`edit-available-${item.id}`}>Available</Label>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2 mt-4 mb-4">
-                          <Button
-                            variant="default"
-                            onClick={() => handleSaveMenuItem(item.id)}
-                          >
-                            Save Changes
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => handleCancelEdit(item.id)}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Image Gallery - Only show in view mode */}
-                    {item.images && item.images?.length > 0 && !item.isEditing && (
-                      <div className="mt-4">
-                        <h4 className="text-sm font-medium mb-2">Images ({item.images?.length})</h4>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                          {item.images.map((image, index) => (
-                            <div key={index} className="aspect-square rounded-lg overflow-hidden">
-                              <img
-                                src={image}
-                                alt={`${item.name} image ${index + 1}`}
-                                className="w-full h-full object-cover"
+                        ) : (
+                          // Edit Mode - Form Fields
+                          <div className="mb-4">
+                            <h4 className="text-sm font-medium mb-4">Edit Menu Item</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <Label htmlFor={`edit-name-${item.id}`}>Item Name</Label>
+                                <Input
+                                  id={`edit-name-${item.id}`}
+                                  value={item.editData?.name || ""}
+                                  onChange={(e) => handleUpdateEditData(item.id, "name", e.target.value)}
+                                  placeholder="e.g. Margherita Pizza"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor={`edit-price-${item.id}`}>Price</Label>
+                                <Input
+                                  id={`edit-price-${item.id}`}
+                                  type="number"
+                                  value={item.editData?.price || ""}
+                                  onChange={(e) => handleUpdateEditData(item.id, "price", parseFloat(e.target.value) || 0)}
+                                  placeholder="e.g. 12.99"
+                                />
+                              </div>
+                            </div>
+                            <div className="mb-4">
+                              <Label htmlFor={`edit-description-${item.id}`}>Description</Label>
+                              <Textarea
+                                id={`edit-description-${item.id}`}
+                                value={item.editData?.description || ""}
+                                onChange={(e) => handleUpdateEditData(item.id, "description", e.target.value)}
+                                placeholder="Brief description of the item"
+                                rows={2}
                               />
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <Label htmlFor={`edit-category-${item.id}`}>Category</Label>
+                                <div className="relative">
+                                  <select
+                                    id={`edit-category-${item.id}`}
+                                    value={item.editData?.category || ""}
+                                    onChange={(e) => handleUpdateEditData(item.id, "category", e.target.value)}
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                  >
+                                    {categories.map((category) => (
+                                      <option key={category.id} value={category.id}>
+                                        {category.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2 mt-8">
+                                <Switch
+                                  id={`edit-available-${item.id}`}
+                                  checked={item.editData?.available || false}
+                                  onCheckedChange={(checked) => handleUpdateEditData(item.id, "available", checked)}
+                                />
+                                <Label htmlFor={`edit-available-${item.id}`}>Available</Label>
+                              </div>
+                            </div>
+                            <div className="flex space-x-2 mt-4 mb-4">
+                              <Button
+                                variant="default"
+                                onClick={() => handleSaveMenuItem(item.id)}
+                              >
+                                Save Changes
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleCancelEdit(item.id)}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        )}
 
-                    {/* Image Editing Section - Only show in edit mode */}
-                    {item.isEditing && (
-                      <div className="mt-4 border-t pt-4">
-                        <h4 className="text-sm font-medium mb-2">Manage Images</h4>
+                        {/* Image Gallery - Only show in view mode */}
+                        {item.images && item.images?.length > 0 && !item.isEditing && (
+                          <div className="mt-4">
+                            <h4 className="text-sm font-medium mb-2">Images ({item.images?.length})</h4>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                              {item.images.map((image, index) => (
+                                <div key={index} className="aspect-square rounded-lg overflow-hidden">
+                                  <img
+                                    src={image}
+                                    alt={`${item.name} image ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
-                        {/* Image Upload Area */}
-                        <div
-                          className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors mb-4"
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={(e) => {
-                            e.preventDefault()
-                            handleImageUpload(e.dataTransfer.files, item.id)
-                          }}
-                          onClick={() => {
-                            const input = document.createElement('input')
-                            input.type = 'file'
-                            input.multiple = true
-                            input.accept = 'image/*'
-                            input.onchange = (e) => handleImageUpload((e.target as HTMLInputElement).files, item.id)
-                            input.click()
-                          }}
-                        >
-                          <div className="flex flex-col items-center gap-2">
-                            <Upload className="h-6 w-6 text-gray-400" />
-                            <p className="text-sm text-gray-500">
-                              Drag & drop images here, or click to select files
-                            </p>
-                            {isUploading && (
-                              <div className="mt-2 flex items-center justify-center">
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                                <span className="ml-2 text-sm text-gray-500">Uploading...</span>
+                        {/* Image Editing Section - Only show in edit mode */}
+                        {item.isEditing && (
+                          <div className="mt-4 border-t pt-4">
+                            <h4 className="text-sm font-medium mb-2">Manage Images</h4>
+
+                            {/* Image Upload Area */}
+                            <div
+                              className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors mb-4"
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={(e) => {
+                                e.preventDefault()
+                                handleImageUpload(e.dataTransfer.files, item.id)
+                              }}
+                              onClick={() => {
+                                const input = document.createElement('input')
+                                input.type = 'file'
+                                input.multiple = true
+                                input.accept = 'image/*'
+                                input.onchange = (e) => handleImageUpload((e.target as HTMLInputElement).files, item.id)
+                                input.click()
+                              }}
+                            >
+                              <div className="flex flex-col items-center gap-2">
+                                <Upload className="h-6 w-6 text-gray-400" />
+                                <p className="text-sm text-gray-500">
+                                  Drag & drop images here, or click to select files
+                                </p>
+                                {isUploading && (
+                                  <div className="mt-2 flex items-center justify-center">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                                    <span className="ml-2 text-sm text-gray-500">Uploading...</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Image URL Input */}
+                            <div className="flex gap-2 mb-4">
+                              <Input
+                                type="url"
+                                placeholder="Or enter image URL..."
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleImageUrlAdd(e.currentTarget.value, item.id)
+                                    e.currentTarget.value = ''
+                                  }
+                                }}
+                                className="flex-1"
+                              />
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  const input = document.querySelector(`input[type="url"]`) as HTMLInputElement
+                                  if (input && input.value) {
+                                    handleImageUrlAdd(input.value, item.id)
+                                    input.value = ''
+                                  }
+                                }}
+                              >
+                                Add URL
+                              </Button>
+                            </div>
+
+                            {/* Image Preview Grid with Delete */}
+                            {item.images?.length > 0 && (
+                              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                                {item.images.map((image, index) => (
+                                  <div key={index} className="relative group aspect-square">
+                                    <img
+                                      src={image}
+                                      alt={`${item.name} image ${index + 1}`}
+                                      className="w-full h-full object-cover rounded-lg"
+                                    />
+                                    <Button
+                                      variant="destructive"
+                                      size="icon"
+                                      className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      onClick={() => handleImageRemove(index, item.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
                               </div>
                             )}
-                          </div>
-                        </div>
-
-                        {/* Image URL Input */}
-                        <div className="flex gap-2 mb-4">
-                          <Input
-                            type="url"
-                            placeholder="Or enter image URL..."
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                handleImageUrlAdd(e.currentTarget.value, item.id)
-                                e.currentTarget.value = ''
-                              }
-                            }}
-                            className="flex-1"
-                          />
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              const input = document.querySelector(`input[type="url"]`) as HTMLInputElement
-                              if (input && input.value) {
-                                handleImageUrlAdd(input.value, item.id)
-                                input.value = ''
-                              }
-                            }}
-                          >
-                            Add URL
-                          </Button>
-                        </div>
-
-                        {/* Image Preview Grid with Delete */}
-                        {item.images?.length > 0 && (
-                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                            {item.images.map((image, index) => (
-                              <div key={index} className="relative group aspect-square">
-                                <img
-                                  src={image}
-                                  alt={`${item.name} image ${index + 1}`}
-                                  className="w-full h-full object-cover rounded-lg"
-                                />
-                                <Button
-                                  variant="destructive"
-                                  size="icon"
-                                  className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => handleImageRemove(index, item.id)}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ))}
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                    ))
+                  )
+                })()}
               </div>
             )}
           </div>
