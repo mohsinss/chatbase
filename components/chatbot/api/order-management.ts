@@ -86,7 +86,7 @@ export async function getCategories(chatbotId: string) {
     }));
     
     // Generate HTML content with buttons (compact, no newlines)
-    const htmlContent = `<div class="order-categories"><h3>Menu Categories</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menu" data-category="${category.id}" data-index="0">${category.name}</button>`).join('')}</div></div>`;
+    const htmlContent = `<div class="order-categories"><h3>Menu Categories</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menus" data-category="${category.id}" data-index="0">${category.name}</button>`).join('')}</div></div>`;
     return htmlContent;
   } catch (error) {
     console.error('Error getting categories:', error);
@@ -95,11 +95,11 @@ export async function getCategories(chatbotId: string) {
 }
 
 /**
- * Returns menu items for a specific category
+ * Returns a list of menu items for a specific category
  */
-export async function getMenu(chatbotId: string, category: string) {
+export async function getMenus(chatbotId: string, category: string) {
   try {
-    console.log(category, 'category');
+    console.log('getMenus', category, 'category');
     const action = await getOrderManagementAction(chatbotId);
     
     if (!action || !action.metadata || !action.metadata.menuItems) {
@@ -218,34 +218,84 @@ export async function getMenu(chatbotId: string, category: string) {
       .map((item: any) => ({
         id: item.id,
         name: item.name,
-        description: item.description,
-        price: item.price,
-        image: item.images && item.images.length > 0 ? item.images[0] : null
+        price: item.price
       }));
     
-    // Create buttons for adding items to cart
-    const itemButtons = items.map((item: any) => ({
-      id: item.id,
-      text: `Add ${item.name} - $${item.price.toFixed(2)}`,
-      value: item.id,
-      action: "add_to_cart",
-      params: { item_id: item.id, quantity: 1 }
-    }));
-    
-    // Add a button to view all categories
-    const backButton = {
-      id: "back_to_categories",
-      text: "Back to Categories",
-      value: "categories",
-      action: "get_categories",
-      params: {}
-    };
-    
-    // Generate HTML content with menu items and buttons (compact, no newlines)
-    return `<div class="menu-items"><h3>${categoryObj.name} Menu</h3><div class="items-container">${items.map((item: any) => `<div class="menu-item">${item.image ? `<img src="${item.image}" alt="${item.name}" class="item-image" />` : ''}<div class="item-details"><h4>${item.name} - $${item.price.toFixed(2)}</h4><p>${item.description}</p><button class="add-to-cart-btn chat-option-btn" data-action="add_to_cart" data-item-id="${item.id}" data-index="0">Add to Cart</button></div></div>`).join('')}</div><div class="navigation"><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div></div>`;
+    // Generate HTML content with menu items list (name and price only)
+    return `<div class="menu-items">
+      <h3>${categoryObj.name} Menu</h3>
+      <div class="items-list">
+        ${items.map((item: any) => `
+          <button class="menu-item-btn chat-option-btn" 
+            data-action="get_menu" 
+            data-category="${categoryObj.id}" 
+            data-item-id="${item.id}" 
+            data-index="0">
+              ${item.name} - $${item.price.toFixed(2)}
+          </button>`).join('')}
+      </div>
+      <div class="navigation">
+        <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">
+          Back to Categories
+        </button>
+      </div>
+    </div>`;
   } catch (error) {
     console.error('Error getting menu items:', error);
     return `<div class="error-message"><p>Failed to retrieve menu items</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+  }
+}
+
+/**
+ * Returns detailed information about a specific menu item
+ */
+export async function getMenu(chatbotId: string, item_id: string, category: string) {
+  try {
+    const action = await getOrderManagementAction(chatbotId);
+    
+    if (!action || !action.metadata || !action.metadata.menuItems) {
+      return `<div class="error-message"><p>No menu items found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+    }
+    
+    // Find the category by ID
+    const categoryObj = action.metadata.categories.find(
+      (cat: any) => cat.id === category
+    );
+    
+    if (!categoryObj) {
+      return `<div class="error-message"><p>Category not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+    }
+    
+    // Find the menu item
+    const selectedItem = action.metadata.menuItems.find(
+      (item: any) => item.id === item_id && item.available
+    );
+    
+    if (!selectedItem) {
+      return `<div class="error-message"><p>Item not found or not available</p><button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">Back to Menu</button></div>`;
+    }
+    
+    // Generate HTML content with detailed item view and add to cart button
+    return `<div class="item-detail">
+      <h3>${selectedItem.name}</h3>
+      ${selectedItem.images && selectedItem.images.length > 0 ? 
+        `<img src="${selectedItem.images[0]}" alt="${selectedItem.name}" class="item-detail-image" />` : ''}
+      <div class="item-detail-info">
+        <p class="item-price">$${selectedItem.price.toFixed(2)}</p>
+        <p class="item-description">${selectedItem.description}</p>
+        <div class="quantity-selector">
+          <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="1" data-index="0">Add 1 to Cart</button>
+          <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="2" data-index="0">Add 2 to Cart</button>
+          <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="3" data-index="0">Add 3 to Cart</button>
+        </div>
+      </div>
+      <div class="navigation">
+        <button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">Back to Menu</button>
+      </div>
+    </div>`;
+  } catch (error) {
+    console.error('Error getting menu item details:', error);
+    return `<div class="error-message"><p>Failed to retrieve menu item details</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
   }
 }
 
@@ -255,6 +305,8 @@ export async function getMenu(chatbotId: string, category: string) {
  * In a real implementation, this would store the cart in a database or session
  */
 export async function addToCart(chatbotId: string, item_id: string, quantity: number) {
+  // Convert quantity to number if it's passed as a string from data-quantity attribute
+  quantity = typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
   try {
     const action = await getOrderManagementAction(chatbotId);
     
@@ -308,7 +360,7 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
     ];
     
     // Generate HTML content with confirmation and buttons (compact, no newlines)
-    return `<div class="cart-confirmation"><div class="cart-message"><h4>Added to Cart</h4><p>${quantity} x ${menuItem.name} - $${menuItem.price.toFixed(2)}</p></div><div class="action-buttons"><button class="continue-btn chat-option-btn" data-action="get_menu" data-category="${categoryId}" data-index="0" >View More ${menuItem.category} Items</button><button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0" >Browse All Categories</button><button class="checkout-btn chat-option-btn" data-action="submit_order" data-index="0">Proceed to Checkout</button></div></div>`;
+    return `<div class="cart-confirmation"><div class="cart-message"><h4>Added to Cart</h4><p>${quantity} x ${menuItem.name} - $${menuItem.price.toFixed(2)}</p></div><div class="action-buttons"><button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0" >View More ${menuItem.category} Items</button><button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0" >Browse All Categories</button><button class="checkout-btn chat-option-btn" data-action="submit_order" data-index="0">Proceed to Checkout</button></div></div>`;
   } catch (error) {
     console.error('Error adding item to cart:', error);
     return `<div class="error-message"><p>Failed to add item to cart</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
@@ -387,6 +439,7 @@ export async function getOrders(chatbotId: string, orderId?: string) {
  */
 export async function submitOrder(chatbotId: string, order: Order) {
   try {
+    console.log('submitOrder', order);
     const action = await getOrderManagementAction(chatbotId);
     
     if (!action || !action.metadata) {
@@ -424,7 +477,7 @@ export async function submitOrder(chatbotId: string, order: Order) {
     );
     
     // Check if the provided subtotal matches our calculation (with small tolerance for floating point)
-    if (Math.abs(calculatedTotal - order.subtotal) > 0.01) {
+    if (Math.abs(calculatedTotal - order.subtotal) > 0.00) {
       return `<div class="error-message"><p>Order subtotal does not match item prices</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
     

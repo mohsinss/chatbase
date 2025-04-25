@@ -4,7 +4,7 @@ import { O1_MODELS, O1_CONFIG } from './models';
 import { tools, orderTools } from './tools';
 import { MODEL_MAPPING } from '@/types';
 import { getAvailableSlots } from '@/lib/calcom';
-import { getCategories, getMenu, addToCart, submitOrder, getOrders } from './order-management';
+import { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders } from './order-management';
 
 export async function handleOpenAIRequest(
   systemPrompt: string,
@@ -126,12 +126,18 @@ export async function handleOpenAIRequest(
                   result = await getCategories(chatbotId);
                   break;
                   
+                case "get_menus":
+                  result = await getMenus(chatbotId, args.category);
+                  break;
+                  
                 case "get_menu":
-                  result = await getMenu(chatbotId, args.category);
+                  result = await getMenu(chatbotId, args.item_id, args.category);
                   break;
                   
                 case "add_to_cart":
-                  result = await addToCart(chatbotId, args.item_id, args.quantity);
+                  // Extract quantity from data-quantity attribute if available
+                  const quantity = args.quantity || 1;
+                  result = await addToCart(chatbotId, args.item_id, quantity);
                   break;
                   
                 case "submit_order":

@@ -42,14 +42,29 @@ export const orderTools = [
   {
     type: "function" as const,
     function: {
-      name: "get_menu",
-      description: "Return menu items (id, name, price, dietary tags) for a category",
+      name: "get_menus",
+      description: "Return a list of menu items (id, name, price) for a category",
       parameters: {
         type: "object",
         properties: {
           category: { type: "string", enum: ["starters", "mains", "desserts", "vegan_appetizers"] }
         },
         required: ["category"]
+      }
+    }
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "get_menu",
+      description: "Return detailed information about a specific food item",
+      parameters: {
+        type: "object",
+        properties: {
+          item_id: { type: "string", description: "The ID of the menu item to get details for" },
+          category: { type: "string", description: "The category ID the item belongs to" }
+        },
+        required: ["item_id", "category"]
       }
     }
   },

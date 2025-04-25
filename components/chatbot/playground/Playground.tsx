@@ -158,7 +158,9 @@ const Playground: React.FC<PlaygroundProps> = ({
         const option = target.textContent || '';
         const optionIndex = target.getAttribute('data-index');
         const nodeId = target.getAttribute('data-node');
-
+        const dataAction = target.getAttribute('data-action');
+        
+        // Create user message and update UI
         const userMessage: Message = { role: 'user', content: option };
         setMessages(prev => [...prev, userMessage]);
         setIsLoading(true);
@@ -174,6 +176,13 @@ const Playground: React.FC<PlaygroundProps> = ({
               chatbotId: chatbot.id,
               conversationId,
               messages: [...messages, userMessage],
+              dataAction: dataAction,
+              metadata: {
+                itemId: target.getAttribute('data-item-id'),
+                category: target.getAttribute('data-category'),
+                quantity: target.getAttribute('data-quantity'),
+                orderId: target.getAttribute('data-order-id')
+              }
             }),
           });
 

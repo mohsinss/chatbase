@@ -25,7 +25,17 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, selectedOption, optionIndex, nodeId, chatbotId, mocking, mockingdata } = await req.json();
+    const { 
+      messages, 
+      selectedOption, 
+      optionIndex, 
+      nodeId, 
+      chatbotId, 
+      mocking, 
+      mockingdata,
+      dataAction,
+      metadata
+    } = await req.json();
 
     await connectMongo();
 
@@ -69,6 +79,60 @@ export async function POST(req: NextRequest) {
       return questionFlowResponse;
     }
 
+    const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
+    
+    // Handle direct actions if dataAction is provided
+    if (internalModel.startsWith('gpt-') && dataAction && enabledActions?.length > 0) {
+      const orderManagementAction = enabledActions.find(action => action.type === 'ordermanagement');
+      
+      if (orderManagementAction && ['get_categories', 'get_menu', 'get_menus', 'add_to_cart', 'track_order', 'submit_order'].includes(dataAction)) {
+        try {
+          // Import the order management functions
+          const { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders } = await import('@/components/chatbot/api/order-management');
+          
+          let result;
+          
+          // Call the appropriate function based on dataAction
+          switch (dataAction) {
+            case 'get_categories':
+              result = await getCategories(chatbotId);
+              break;
+              
+            case 'get_menus':
+              result = await getMenus(chatbotId, metadata?.category);
+              break;
+              
+            case 'get_menu':
+              result = await getMenu(chatbotId, metadata?.itemId, metadata?.category);
+              break;
+              
+            case 'add_to_cart':
+              const quantity = metadata?.quantity ? parseInt(metadata.quantity, 10) : 1;
+              result = await addToCart(chatbotId, metadata?.itemId, quantity);
+              break;
+              
+            case 'track_order':
+              result = await getOrders(chatbotId, metadata?.orderId);
+              break;
+          }
+          
+          if (result) {
+            // Return the result directly
+            return setCorsHeaders(new Response(
+              JSON.stringify({ message: result }),
+              {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            ));
+          }
+        } catch (error) {
+          console.error('Direct action error:', error);
+          // Continue with AI processing if direct action fails
+        }
+      }
+    }
+
     const options = {
       method: 'POST',
       headers: {
@@ -97,7 +161,6 @@ export async function POST(req: NextRequest) {
     }
     relevant_chunk = "";
 
-    const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
     const language = aiSettings?.language || 'en';
@@ -109,11 +172,13 @@ export async function POST(req: NextRequest) {
       const orderManagementAction = enabledActions.filter(action => action.type === 'ordermanagement');
       if (orderManagementAction.length > 0) {
         const orderManagementActionPrompt = `
-You are a restaurant ordering assistant.  You have four functions available:
+You are a restaurant ordering assistant.  You have six functions available:
 1) get_categories(): returns all menu categories.
-2) get_menu(category): returns items in a specific category.
-3) add_to_cart(item_id, quantity): adds an item to the user’s cart.
-4) submit_order(order): places the final order.
+2) get_menus(category): returns a list of items in a specific category with name and price only.
+3) get_menu(item_id, category): returns detailed information about a specific menu item.
+4) add_to_cart(item_id, quantity): adds an item to the user's cart.
+5) submit_order(order): places the final order.
+6) track_order(orderId): tracks the status of an order.
 
 When the user asks to browse or order food, you MUST call the appropriate function
 in JSON format (no extra explanation).  For anything else, just reply normally.
