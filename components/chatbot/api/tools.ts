@@ -100,5 +100,18 @@ export const orderTools = [
         required: ["order"]
       }
     }
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "track_order",
+      description: "Track the status of a specific order or view recent orders",
+      parameters: {
+        type: "object",
+        properties: {
+          orderId: { type: "string", description: "Optional order ID to track a specific order" }
+        }
+      }
+    }
   }
 ]

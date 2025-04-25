@@ -309,7 +309,7 @@ progress::-webkit-progress-value {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.new-order-btn {
+.chat-option-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -328,7 +328,7 @@ progress::-webkit-progress-value {
   cursor: pointer;
 }
 
-.new-order-btn:hover {
+.chat-option-btn:hover {
   background-color: #555;
   color: beige;
   cursor: pointer;
@@ -374,4 +374,11 @@ progress::-webkit-progress-value {
   background-color: #555;
   color: beige;
   cursor: pointer;
+}
+
+.item-details {
+  border: #555 solid 1px;
+  border-radius: var(--radius);
+  margin-top: 4px;
+  padding: 0 4px;
 }

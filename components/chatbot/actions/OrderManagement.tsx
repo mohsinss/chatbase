@@ -150,7 +150,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
               name: "Margherita Pizza",
               description: "Classic pizza with tomato sauce, mozzarella, and basil",
               price: 12.99,
-              category: "Main",
+              category: "1",
               available: true,
               images: []
             },
@@ -159,7 +159,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
               name: "Caesar Salad",
               description: "Fresh romaine lettuce with Caesar dressing and croutons",
               price: 8.99,
-              category: "Appetizer",
+              category: "2",
               available: true,
               images: []
             }

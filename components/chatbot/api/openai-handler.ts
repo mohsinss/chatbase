@@ -4,7 +4,7 @@ import { O1_MODELS, O1_CONFIG } from './models';
 import { tools, orderTools } from './tools';
 import { MODEL_MAPPING } from '@/types';
 import { getAvailableSlots } from '@/lib/calcom';
-import { getCategories, getMenu, addToCart, submitOrder } from './order-management';
+import { getCategories, getMenu, addToCart, submitOrder, getOrders } from './order-management';
 
 export async function handleOpenAIRequest(
   systemPrompt: string,
@@ -136,6 +136,10 @@ export async function handleOpenAIRequest(
                   
                 case "submit_order":
                   result = await submitOrder(chatbotId, args.order);
+                  break;
+                  
+                case "track_order":
+                  result = await getOrders(chatbotId, args.orderId);
                   break;
               }
               

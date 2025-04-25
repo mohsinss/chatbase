@@ -1,4 +1,5 @@
 import ChatbotAction, { IChatbotAction } from '@/models/ChatbotAction';
+import Order from '@/models/Order';
 
 // Type definitions for order management
 interface MenuItem {
@@ -79,13 +80,13 @@ export async function getCategories(chatbotId: string) {
     const categoryButtons = action.metadata.categories.map((category: any) => ({
       id: category.id,
       text: category.name,
-      value: category.name,
+      value: category.id,
       action: "get_menu",
-      params: { category: category.name }
+      params: { category: category.id }
     }));
     
     // Generate HTML content with buttons (compact, no newlines)
-    const htmlContent = `<div class="order-categories"><h3>Menu Categories</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menu" data-category="${category.name}" data-index="0">${category.name}</button>`).join('')}</div></div>`;
+    const htmlContent = `<div class="order-categories"><h3>Menu Categories</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menu" data-category="${category.id}" data-index="0">${category.name}</button>`).join('')}</div></div>`;
     return htmlContent;
   } catch (error) {
     console.error('Error getting categories:', error);
@@ -105,99 +106,106 @@ export async function getMenu(chatbotId: string, category: string) {
       return `<div class="error-message"><p>No menu items found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
     
-    // Normalize the requested category for better matching
-    const normalizedRequestedCategory = category.toLowerCase().trim();
-    
-    // Generate dynamic category mappings based on available categories
-    const categoryMappings: Record<string, string[]> = {};
-    
-    // Common variations to try for each category
-    const generateVariations = (name: string): string[] => {
-      const variations = [];
-      
-      // Singular/plural variations
-      if (name.endsWith('s')) {
-        variations.push(name.slice(0, -1)); // Remove 's' at the end
-      } else {
-        variations.push(name + 's'); // Add 's' at the end
-      }
-      
-      // Common category name variations
-      const commonMappings: Record<string, string[]> = {
-        'appetizer': ['starter', 'starters', 'appetizers', 'entree', 'entrees'],
-        'starter': ['appetizer', 'appetizers', 'entree', 'entrees'],
-        'main': ['mains', 'entree', 'entrees', 'main course', 'main courses'],
-        'dessert': ['desserts', 'sweet', 'sweets'],
-        'beverage': ['beverages', 'drink', 'drinks'],
-        'special': ['specials', 'specialty', 'specialties', 'chef special', 'chef specials']
-      };
-      
-      // Add common variations if they exist
-      for (const [key, values] of Object.entries(commonMappings)) {
-        if (name === key || values.includes(name)) {
-          variations.push(...values.filter(v => v !== name));
-          variations.push(key);
-        }
-      }
-      
-      return Array.from(new Set(variations)); // Remove duplicates
-    };
-    
-    // Build dynamic mappings for each category
-    action.metadata.categories.forEach((cat: any) => {
-      const catName = cat.name.toLowerCase();
-      categoryMappings[catName] = generateVariations(catName);
-    });
-    
-    // Find the category with improved matching logic
     let categoryObj = null;
     
-    // First try exact match
+    // First try to find category by ID
     categoryObj = action.metadata.categories.find(
-      (cat: any) => cat.name.toLowerCase() === normalizedRequestedCategory
+      (cat: any) => cat.id === category
     );
     
-    // If no exact match, try common variations
+    // If not found by ID, try to find by name with improved matching
     if (!categoryObj) {
-      // Handle singular/plural variations (e.g., "main" vs "mains")
-      if (normalizedRequestedCategory.endsWith('s')) {
-        // Try without the 's' at the end
-        const singularForm = normalizedRequestedCategory.slice(0, -1);
-        categoryObj = action.metadata.categories.find(
-          (cat: any) => cat.name.toLowerCase() === singularForm
-        );
-      } else {
-        // Try with an 's' at the end
-        const pluralForm = normalizedRequestedCategory + 's';
-        categoryObj = action.metadata.categories.find(
-          (cat: any) => cat.name.toLowerCase() === pluralForm
-        );
-      }
-    }
-    
-    // If still no match, try common category mappings
-    if (!categoryObj) {
-      // Check if the requested category has known alternatives
-      for (const [baseCategory, alternatives] of Object.entries(categoryMappings)) {
-        if (normalizedRequestedCategory === baseCategory || alternatives.includes(normalizedRequestedCategory)) {
-          // Look for categories that match either the base category or any of its alternatives
+      // Normalize the requested category for better matching
+      const normalizedRequestedCategory = category.toLowerCase().trim();
+      
+      // Generate dynamic category mappings based on available categories
+      const categoryMappings: Record<string, string[]> = {};
+      
+      // Common variations to try for each category
+      const generateVariations = (name: string): string[] => {
+        const variations = [];
+        
+        // Singular/plural variations
+        if (name.endsWith('s')) {
+          variations.push(name.slice(0, -1)); // Remove 's' at the end
+        } else {
+          variations.push(name + 's'); // Add 's' at the end
+        }
+        
+        // Common category name variations
+        const commonMappings: Record<string, string[]> = {
+          'appetizer': ['starter', 'starters', 'appetizers', 'entree', 'entrees'],
+          'starter': ['appetizer', 'appetizers', 'entree', 'entrees'],
+          'main': ['mains', 'entree', 'entrees', 'main course', 'main courses'],
+          'dessert': ['desserts', 'sweet', 'sweets'],
+          'beverage': ['beverages', 'drink', 'drinks'],
+          'special': ['specials', 'specialty', 'specialties', 'chef special', 'chef specials']
+        };
+        
+        // Add common variations if they exist
+        for (const [key, values] of Object.entries(commonMappings)) {
+          if (name === key || values.includes(name)) {
+            variations.push(...values.filter(v => v !== name));
+            variations.push(key);
+          }
+        }
+        
+        return Array.from(new Set(variations)); // Remove duplicates
+      };
+      
+      // Build dynamic mappings for each category
+      action.metadata.categories.forEach((cat: any) => {
+        const catName = cat.name.toLowerCase();
+        categoryMappings[catName] = generateVariations(catName);
+      });
+      
+      // First try exact match by name
+      categoryObj = action.metadata.categories.find(
+        (cat: any) => cat.name.toLowerCase() === normalizedRequestedCategory
+      );
+      
+      // If no exact match, try common variations
+      if (!categoryObj) {
+        // Handle singular/plural variations (e.g., "main" vs "mains")
+        if (normalizedRequestedCategory.endsWith('s')) {
+          // Try without the 's' at the end
+          const singularForm = normalizedRequestedCategory.slice(0, -1);
           categoryObj = action.metadata.categories.find(
-            (cat: any) => cat.name.toLowerCase() === baseCategory || 
-                          alternatives.includes(cat.name.toLowerCase()) ||
-                          baseCategory === cat.name.toLowerCase() ||
-                          alternatives.some(alt => alt === cat.name.toLowerCase())
+            (cat: any) => cat.name.toLowerCase() === singularForm
           );
-          if (categoryObj) break;
+        } else {
+          // Try with an 's' at the end
+          const pluralForm = normalizedRequestedCategory + 's';
+          categoryObj = action.metadata.categories.find(
+            (cat: any) => cat.name.toLowerCase() === pluralForm
+          );
         }
       }
-    }
-    
-    // If still no match, try partial match (contains)
-    if (!categoryObj) {
-      categoryObj = action.metadata.categories.find(
-        (cat: any) => cat.name.toLowerCase().includes(normalizedRequestedCategory) || 
-                      normalizedRequestedCategory.includes(cat.name.toLowerCase())
-      );
+      
+      // If still no match, try common category mappings
+      if (!categoryObj) {
+        // Check if the requested category has known alternatives
+        for (const [baseCategory, alternatives] of Object.entries(categoryMappings)) {
+          if (normalizedRequestedCategory === baseCategory || alternatives.includes(normalizedRequestedCategory)) {
+            // Look for categories that match either the base category or any of its alternatives
+            categoryObj = action.metadata.categories.find(
+              (cat: any) => cat.name.toLowerCase() === baseCategory || 
+                            alternatives.includes(cat.name.toLowerCase()) ||
+                            baseCategory === cat.name.toLowerCase() ||
+                            alternatives.some(alt => alt === cat.name.toLowerCase())
+            );
+            if (categoryObj) break;
+          }
+        }
+      }
+      
+      // If still no match, try partial match (contains)
+      if (!categoryObj) {
+        categoryObj = action.metadata.categories.find(
+          (cat: any) => cat.name.toLowerCase().includes(normalizedRequestedCategory) || 
+                        normalizedRequestedCategory.includes(cat.name.toLowerCase())
+        );
+      }
     }
     
     if (!categoryObj) {
@@ -206,7 +214,7 @@ export async function getMenu(chatbotId: string, category: string) {
     
     // Filter menu items by category
     const items = action.metadata.menuItems
-      .filter((item: any) => item.category === categoryObj.name && item.available)
+      .filter((item: any) => item.category === categoryObj.id && item.available)
       .map((item: any) => ({
         id: item.id,
         name: item.name,
@@ -267,14 +275,21 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
     
     // In a real implementation, we would store this in a database or session
     // For now, we'll just return success with the item details
+    // Find the category ID for the menu item's category
+    const categoryObj = action.metadata.categories.find(
+      (cat: any) => cat.name === menuItem.category
+    );
+    
+    const categoryId = categoryObj ? categoryObj.id : '';
+    
     // Create buttons for next actions
     const continueButtons = [
       {
         id: "view_category",
         text: `View More ${menuItem.category} Items`,
-        value: menuItem.category,
+        value: categoryId,
         action: "get_menu",
-        params: { category: menuItem.category }
+        params: { category: categoryId }
       },
       {
         id: "view_categories",
@@ -293,10 +308,75 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
     ];
     
     // Generate HTML content with confirmation and buttons (compact, no newlines)
-    return `<div class="cart-confirmation"><div class="cart-message"><h4>Added to Cart</h4><p>${quantity} x ${menuItem.name} - $${menuItem.price.toFixed(2)}</p></div><div class="action-buttons"><button class="continue-btn chat-option-btn" data-action="get_menu" data-category="${menuItem.category}" data-index="0" >View More ${menuItem.category} Items</button><button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0" >Browse All Categories</button><button class="checkout-btn chat-option-btn" data-action="submit_order" data-index="0">Proceed to Checkout</button></div></div>`;
+    return `<div class="cart-confirmation"><div class="cart-message"><h4>Added to Cart</h4><p>${quantity} x ${menuItem.name} - $${menuItem.price.toFixed(2)}</p></div><div class="action-buttons"><button class="continue-btn chat-option-btn" data-action="get_menu" data-category="${categoryId}" data-index="0" >View More ${menuItem.category} Items</button><button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0" >Browse All Categories</button><button class="checkout-btn chat-option-btn" data-action="submit_order" data-index="0">Proceed to Checkout</button></div></div>`;
   } catch (error) {
     console.error('Error adding item to cart:', error);
     return `<div class="error-message"><p>Failed to add item to cart</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+  }
+}
+
+/**
+ * Retrieves orders for a specific chatbot
+ */
+export async function getOrders(chatbotId: string, orderId?: string) {
+  try {
+    // If orderId is provided, get a specific order
+    if (orderId) {
+      const order = await Order.findOne({ chatbotId, orderId });
+      if (!order) {
+        return `<div class="error-message"><p>Order #${orderId} not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+      }
+      
+      // Generate HTML content with order details
+      return `<div class="order-details-container">
+        <h3>Order #${order.orderId}</h3>
+        <p>Status: <span class="order-status status-${order.status}">${order.status}</span></p>
+        <p>Date: ${new Date(order.timestamp).toLocaleString()}</p>
+        ${order.table ? `<p>Table: ${order.table}</p>` : ''}
+        <div class="order-items-list">
+          <h4>Items</h4>
+          <ul>
+            ${order.items.map((item: any) => `<li>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</li>`).join('')}
+          </ul>
+          <p class="order-total">Total: $${order.subtotal.toFixed(2)}</p>
+        </div>
+        <div class="order-actions">
+          <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button>
+        </div>
+      </div>`;
+    }
+    
+    // Get all orders for this chatbot
+    const orders = await Order.find({ chatbotId }).sort({ timestamp: -1 }).limit(10);
+    
+    if (!orders || orders.length === 0) {
+      return `<div class="error-message"><p>No orders found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+    }
+    
+    // Generate HTML content with order list
+    return `<div class="orders-list-container">
+      <h3>Recent Orders</h3>
+      <div class="orders-list">
+        ${orders.map((order: any) => `
+          <div class="order-item">
+            <div class="order-header">
+              <h4>Order #${order.orderId}</h4>
+              <span class="order-status status-${order.status}">${order.status}</span>
+            </div>
+            <p>Date: ${new Date(order.timestamp).toLocaleString()}</p>
+            <p>Items: ${order.items.length}</p>
+            <p>Total: $${order.subtotal.toFixed(2)}</p>
+            <button class="view-order-btn chat-option-btn" data-action="track_order" data-order-id="${order.orderId}" data-index="0">View Details</button>
+          </div>
+        `).join('')}
+      </div>
+      <div class="order-actions">
+        <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button>
+      </div>
+    </div>`;
+  } catch (error) {
+    console.error('Error retrieving orders:', error);
+    return `<div class="error-message"><p>Failed to retrieve orders</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
   }
 }
 
@@ -353,11 +433,27 @@ export async function submitOrder(chatbotId: string, order: Order) {
                            action.metadata.googleSheetConfig.connected &&
                            action.metadata.googleSheetConfig.sheetId;
     
-    // In a real implementation, we would save the order to a database
-    // and potentially send it to a POS system or Google Sheets
-    // For now, we'll just return success with the order details
-    
+    // Generate a unique order ID
     const orderId = `ORD-${Date.now()}`;
+    
+    // Save the order to the database
+    try {
+      const newOrder = new Order({
+        chatbotId,
+        orderId,
+        table: order.table,
+        items: order.items,
+        subtotal: order.subtotal,
+        status: 'received',
+        timestamp: new Date()
+      });
+      
+      await newOrder.save();
+      console.log(`Order ${orderId} saved to database`);
+    } catch (dbError) {
+      console.error('Error saving order to database:', dbError);
+      // Continue even if database save fails - we don't want to block the order confirmation
+    }
     
     // Create buttons for after order submission
     const afterOrderButtons = [
