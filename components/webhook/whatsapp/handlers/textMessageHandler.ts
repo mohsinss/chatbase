@@ -79,7 +79,6 @@ export async function handleTextMessage(
         type: "ordermanagement",
         'metadata.phoneNumber': whatsappNumber.display_phone_number
       });
-      console.log('Found order management actions:', enabledOMAction.name);
     } catch (error) {
       console.error('Error fetching order management actions:', error);
       // Continue with empty array if query fails
@@ -90,6 +89,7 @@ export async function handleTextMessage(
     let tableName = null;
 
     if (enabledOMAction) {
+      console.log('Found order management actions:', enabledOMAction.name);
         try {
           if (enabledOMAction.metadata?.messageTemplate) {
             const template = enabledOMAction.metadata?.messageTemplate;
