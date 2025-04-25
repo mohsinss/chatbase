@@ -27,7 +27,7 @@ const OrderSchema = new Schema<IOrder>({
     qty: { type: Number, required: true },
     price: { type: Number, required: true }
   }],
-  subtotal: { type: Number, required: true },
+  subtotal: { type: Number, required: false },
   status: { 
     type: String, 
     required: true, 
