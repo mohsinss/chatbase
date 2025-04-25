@@ -70,32 +70,44 @@ export async function handleTextMessage(
       text
     );
 
-    // Find enabled OrderManagement actions
-    const enabledOMActions = await ChatbotAction.find({
-      chatbotId,
-      enabled: true,
-      type: "ordermanagement",
-      'metadata.phoneNumber': whatsappNumber.display_phone_number
-    });
-    console.log(enabledOMActions)
+    // Find enabled OrderManagement actions with error handling
+    let enabledOMActions = [];
+    try {
+      enabledOMActions = await ChatbotAction.find({
+        chatbotId,
+        enabled: true,
+        type: "ordermanagement",
+        'metadata.phoneNumber': whatsappNumber.display_phone_number
+      });
+      console.log('Found order management actions:', enabledOMActions.length);
+    } catch (error) {
+      console.error('Error fetching order management actions:', error);
+      // Continue with empty array if query fails
+    }
     // Check if the message matches a table order template
     let isTableOrder = false;
     let tableName = null;
 
     if (enabledOMActions.length > 0) {
       for (const action of enabledOMActions) {
-        if (action.metadata?.messageTemplate) {
-          const template = action.metadata?.messageTemplate;
-          if (!template) continue;
+        try {
+          if (action.metadata?.messageTemplate) {
+            const template = action.metadata?.messageTemplate;
+            if (!template) continue;
 
-          const templateRegex = templateToRegex(template);
-          const match = text.match(templateRegex);
+            const templateRegex = templateToRegex(template);
+            const match = text.match(templateRegex);
 
-          if (match?.groups?.table) {
-            isTableOrder = true;
-            tableName = match.groups.table.trim();
-            break;
+            if (match?.groups?.table) {
+              isTableOrder = true;
+              tableName = match.groups.table.trim();
+              break;
+            }
           }
+        } catch (error) {
+          console.error('Error processing order template match:', error);
+          // Continue to next action if one fails
+          continue;
         }
       }
     }
@@ -161,15 +173,40 @@ export async function handleTextMessage(
           }
         };
 
-        // Send the list message via WhatsApp API
-        await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
-          },
-          body: JSON.stringify(listPayload)
-        });
+        // Send the list message via WhatsApp API with error handling
+        try {
+          // Safely stringify the payload
+          let payloadString;
+          try {
+            payloadString = JSON.stringify(listPayload);
+          } catch (stringifyError) {
+            console.error('Error stringifying list payload:', stringifyError);
+            throw new Error(`Failed to stringify list payload: ${stringifyError.message}`);
+          }
+          
+          const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+            },
+            body: payloadString
+          });
+          
+          if (!response.ok) {
+            const responseText = await response.text();
+            console.error(`WhatsApp API error (${response.status}):`, responseText);
+            throw new Error(`WhatsApp API returned ${response.status}: ${responseText}`);
+          }
+        } catch (apiError) {
+          console.error('Error sending menu categories to WhatsApp:', apiError);
+          // Send a simpler fallback message if the interactive message fails
+          await sendTextMessage(
+            phoneNumberId,
+            from,
+            `Welcome to our restaurant! You're at table ${tableName}. We're experiencing technical difficulties with our menu system. A staff member will assist you shortly.`
+          );
+        }
 
         // Save the table number in the conversation metadata for future reference
         conversation.metadata = {

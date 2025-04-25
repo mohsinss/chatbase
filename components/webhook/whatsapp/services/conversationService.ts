@@ -44,8 +44,10 @@ export async function getOrCreateConversation(
     try {
       JSON.parse(lastMessageContent);
       triggerQF = true; // Set triggerQF to true if parsing succeeds (content is JSON)
-    } catch (e) {
+    } catch (parseError) {
       // Content is not JSON, do nothing
+      console.debug('Last message is not JSON (expected for normal messages):', parseError.message);
+      // No need to log the full error stack as this is an expected case for text messages
     }
 
     // Update existing conversation
@@ -112,8 +114,20 @@ export async function addAssistantMessageToConversation(
   conversation: any, 
   content: string | object
 ): Promise<any> {
-  // If content is an object, stringify it
-  const messageContent = typeof content === 'object' ? JSON.stringify(content) : content;
+  // If content is an object, stringify it with error handling
+  let messageContent: string;
+  
+  if (typeof content === 'object') {
+    try {
+      messageContent = JSON.stringify(content);
+    } catch (stringifyError) {
+      console.error('Error stringifying message content:', stringifyError);
+      // Provide a fallback string representation
+      messageContent = `[Object could not be stringified: ${stringifyError.message}]`;
+    }
+  } else {
+    messageContent = content;
+  }
   
   conversation.messages.push({ 
     role: "assistant", 

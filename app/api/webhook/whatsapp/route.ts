@@ -29,9 +29,23 @@ export async function GET(request: Request) {
  * Handle POST request for webhook events
  */
 export async function POST(request: Request) {
+  let data;
   try {
-    // Parse the incoming request body
-    const data = await request.json();
+    // Parse the incoming request body with error handling
+    try {
+      data = await request.json();
+    } catch (parseError) {
+      console.error('Error parsing webhook request body:', parseError);
+      // Log the raw request body for debugging
+      const rawBody = await request.text();
+      console.error('Raw request body:', rawBody.substring(0, 1000)); // Log first 1000 chars to avoid huge logs
+      
+      // Return a 200 response to acknowledge receipt to WhatsApp platform
+      return NextResponse.json({ 
+        error: 'Failed to parse request body',
+        message: parseError.message
+      }, { status: 200 });
+    }
 
     // Log webhook data if enabled
     await logWebhookData(data);

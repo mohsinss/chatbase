@@ -90,7 +90,15 @@ export async function handleOpenAIRequest(
         }
 
         if (functionCallData) {
-          const args = JSON.parse(functionCallData.arguments);
+          let args;
+          try {
+            args = JSON.parse(functionCallData.arguments);
+          } catch (parseError) {
+            console.error('Error parsing function arguments:', parseError);
+            console.error('Raw arguments string:', functionCallData.arguments);
+            // Provide a fallback empty object to prevent the entire function from failing
+            args = {};
+          }
           console.log(functionCallData.name, args);
 
           if (functionCallData.name === "getAvailableSlots") {

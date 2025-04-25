@@ -157,36 +157,64 @@ async function handleOrderManagementButton(
   chatbotId: string
 ): Promise<{ success: boolean, message: string }> {
   try {
-    // Extract information from button ID
+    // Extract information from button ID with error handling
     let tableName: string = '', actionId: string = '', itemId: string = '';
     
-    // Parse button ID based on its type
-    if (buttonId.startsWith('om-category-')) {
-      // Format: om-category-{tableName}-{actionId}-{categoryId}
-      const parts = buttonId.replace('om-category-', '').split('-');
-      itemId = parts.pop(); // Category ID
-      actionId = parts.pop(); // Action ID
-      tableName = parts.join('-'); // Table name
-    } 
-    else if (buttonId.startsWith('om-menu-')) {
-      // Format: om-menu-{tableName}-{actionId}-{menuId}
-      const parts = buttonId.replace('om-menu-', '').split('-');
-      itemId = parts.pop(); // Menu ID
-      actionId = parts.pop(); // Action ID
-      tableName = parts.join('-'); // Table name
-    }
-    else if (buttonId.startsWith('om-confirm-')) {
-      // Format: om-confirm-{tableName}-{actionId}-{menuId}
-      const parts = buttonId.replace('om-confirm-', '').split('-');
-      itemId = parts.pop(); // Menu ID
-      actionId = parts.pop(); // Action ID
-      tableName = parts.join('-'); // Table name
-    }
-    else if (buttonId.startsWith('om-back-')) {
-      // Format: om-back-{tableName}-{actionId}
-      const parts = buttonId.replace('om-back-', '').split('-');
-      actionId = parts.pop(); // Action ID
-      tableName = parts.join('-'); // Table name
+    try {
+      // Parse button ID based on its type
+      if (buttonId.startsWith('om-category-')) {
+        // Format: om-category-{tableName}-{actionId}-{categoryId}
+        const parts = buttonId.replace('om-category-', '').split('-');
+        if (parts.length < 2) {
+          throw new Error(`Invalid category button ID format: ${buttonId}`);
+        }
+        itemId = parts.pop() || ''; // Category ID
+        actionId = parts.pop() || ''; // Action ID
+        tableName = parts.join('-'); // Table name
+      } 
+      else if (buttonId.startsWith('om-menu-')) {
+        // Format: om-menu-{tableName}-{actionId}-{menuId}
+        const parts = buttonId.replace('om-menu-', '').split('-');
+        if (parts.length < 2) {
+          throw new Error(`Invalid menu button ID format: ${buttonId}`);
+        }
+        itemId = parts.pop() || ''; // Menu ID
+        actionId = parts.pop() || ''; // Action ID
+        tableName = parts.join('-'); // Table name
+      }
+      else if (buttonId.startsWith('om-confirm-')) {
+        // Format: om-confirm-{tableName}-{actionId}-{menuId}
+        const parts = buttonId.replace('om-confirm-', '').split('-');
+        if (parts.length < 2) {
+          throw new Error(`Invalid confirm button ID format: ${buttonId}`);
+        }
+        itemId = parts.pop() || ''; // Menu ID
+        actionId = parts.pop() || ''; // Action ID
+        tableName = parts.join('-'); // Table name
+      }
+      else if (buttonId.startsWith('om-back-')) {
+        // Format: om-back-{tableName}-{actionId}
+        const parts = buttonId.replace('om-back-', '').split('-');
+        if (parts.length < 1) {
+          throw new Error(`Invalid back button ID format: ${buttonId}`);
+        }
+        actionId = parts.pop() || ''; // Action ID
+        tableName = parts.join('-'); // Table name
+      }
+      else {
+        throw new Error(`Unknown button ID prefix: ${buttonId}`);
+      }
+    } catch (parseError) {
+      console.error('Error parsing order management button ID:', parseError);
+      await sendTextMessage(
+        phoneNumberId, 
+        from, 
+        "Sorry, we couldn't process your selection due to a technical issue. Please scan the QR code again."
+      );
+      return { 
+        success: false, 
+        message: `Button ID parsing error: ${parseError.message}` 
+      };
     }
     
     if (!tableName || !actionId) {
@@ -210,9 +238,15 @@ async function handleOrderManagementButton(
     conversation.metadata.orderManagementActionId = actionId;
     await conversation.save();
     
-    // Get the action
-    const action = await ChatbotAction.findById(actionId);
-    if (!action) {
+    // Get the action with error handling
+    let action;
+    try {
+      action = await ChatbotAction.findById(actionId);
+      if (!action) {
+        throw new Error(`Action not found with ID: ${actionId}`);
+      }
+    } catch (dbError) {
+      console.error('Error fetching order management action:', dbError);
       await sendTextMessage(
         phoneNumberId, 
         from, 
@@ -220,7 +254,7 @@ async function handleOrderManagementButton(
       );
       return { 
         success: false, 
-        message: "Order management action not found" 
+        message: `Order management action error: ${dbError.message}` 
       };
     }
     
@@ -311,15 +345,40 @@ async function handleOrderManagementButton(
         }
       };
       
-      // Send the list message via WhatsApp API
-      await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
-        },
-        body: JSON.stringify(listPayload)
-      });
+  // Send the list message via WhatsApp API with error handling
+  try {
+    // Safely stringify the payload
+    let payloadString;
+    try {
+      payloadString = JSON.stringify(listPayload);
+    } catch (stringifyError) {
+      console.error('Error stringifying category list payload:', stringifyError);
+      throw new Error(`Failed to stringify category list payload: ${stringifyError.message}`);
+    }
+    
+    const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+      },
+      body: payloadString
+    });
+    
+    if (!response.ok) {
+      const responseText = await response.text();
+      console.error(`WhatsApp API error (${response.status}):`, responseText);
+      throw new Error(`WhatsApp API returned ${response.status}: ${responseText}`);
+    }
+  } catch (apiError) {
+    console.error('Error sending category menu to WhatsApp:', apiError);
+    // Send a simpler fallback message if the interactive message fails
+    await sendTextMessage(
+      phoneNumberId,
+      from,
+      `Please select a category to view our menu. If you're having trouble, please scan the QR code again.`
+    );
+  }
       
       // Add to conversation history
       await addAssistantMessageToConversation(
