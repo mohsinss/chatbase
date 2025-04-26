@@ -1,9 +1,9 @@
 /**
  * Handler for interactive messages in WhatsApp webhook
  */
-import {
-  getWhatsAppNumber,
-  getOrCreateConversation,
+import { 
+  getWhatsAppNumber, 
+  getOrCreateConversation, 
   addAssistantMessageToConversation,
   isAutoReplyDisabled,
   getConversationAIResponse
@@ -12,6 +12,14 @@ import { markMessageAsRead, sendTextMessage } from '@/components/webhook/whatsap
 import { getQuestionFlow, processButtonReply } from '@/components/webhook/whatsapp/services/questionFlowService';
 import { applyConfiguredDelay } from '@/components/webhook/whatsapp/utils/helpers';
 import ChatbotAction from '@/models/ChatbotAction';
+import { sleep } from '@/libs/utils';
+
+/**
+ * Apply a 1-second delay before sending WhatsApp messages
+ */
+async function applyMessageDelay(): Promise<void> {
+  await sleep(1000); // 1 second delay
+}
 
 /**
  * Handle button reply from WhatsApp
@@ -115,6 +123,7 @@ export async function handleButtonReply(
         );
 
         // Send response
+        await applyMessageDelay();
         await sendTextMessage(phoneNumberId, from, responseText);
 
         // Update conversation
@@ -223,9 +232,10 @@ async function handleOrderManagementButton(
       }
     } catch (parseError) {
       console.error('Error parsing order management button ID:', parseError);
+      await applyMessageDelay();
       await sendTextMessage(
-        phoneNumberId,
-        from,
+        phoneNumberId, 
+        from, 
         "Sorry, we couldn't process your selection due to a technical issue. Please scan the QR code again."
       );
       return {
@@ -235,6 +245,7 @@ async function handleOrderManagementButton(
     }
 
     if (!tableName || !actionId) {
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -264,6 +275,7 @@ async function handleOrderManagementButton(
       }
     } catch (dbError) {
       console.error('Error fetching order management action:', dbError);
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -307,10 +319,12 @@ async function handleOrderManagementButton(
       );
     }
     else if (buttonId.startsWith('om-add-to-cart-')) {
-      // Get the quantity from conversation metadata (set during initial parsing)
+      // The quantity was already parsed from the button ID during initial parsing
+      // and stored in conversation.metadata.cartQuantity
       const quantity = conversation.metadata?.cartQuantity || 1;
 
       if (!itemId) {
+        await applyMessageDelay();
         await sendTextMessage(
           phoneNumberId,
           from,
@@ -341,6 +355,7 @@ async function handleOrderManagementButton(
       const categories = action.metadata?.categories || [];
 
       if (categories.length === 0) {
+        await applyMessageDelay();
         await sendTextMessage(
           phoneNumberId,
           from,
@@ -420,6 +435,7 @@ async function handleOrderManagementButton(
       } catch (apiError) {
         console.error('Error sending category menu to WhatsApp:', apiError);
         // Send a simpler fallback message if the interactive message fails
+        await applyMessageDelay();
         await sendTextMessage(
           phoneNumberId,
           from,
@@ -440,6 +456,7 @@ async function handleOrderManagementButton(
     }
 
     // Unknown button type
+    await applyMessageDelay();
     await sendTextMessage(
       phoneNumberId,
       from,
@@ -451,6 +468,7 @@ async function handleOrderManagementButton(
     };
   } catch (error) {
     console.error('Error handling order management button:', error);
+    await applyMessageDelay();
     await sendTextMessage(
       phoneNumberId,
       from,
@@ -547,6 +565,7 @@ async function handleCategoryButton(
       } catch (apiError) {
         console.error('Error sending WhatsApp message:', apiError);
         // Send a simple text message as fallback
+        await applyMessageDelay();
         await sendTextMessage(
           phoneNumberId,
           from,
@@ -560,6 +579,7 @@ async function handleCategoryButton(
       }
     } else {
       // If we didn't get a JSON response, send the result as a text message
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -579,6 +599,7 @@ async function handleCategoryButton(
     }
   } catch (error) {
     console.error('Error using getMenus tool:', error);
+    await applyMessageDelay();
     await sendTextMessage(
       phoneNumberId,
       from,
@@ -615,6 +636,7 @@ async function handleMenuButton(
     );
 
     if (!menuItem) {
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -640,6 +662,7 @@ async function handleMenuButton(
       }
       messageText += `Price: $${menuItemResult.item.price.toFixed(2)}`;
 
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -726,6 +749,7 @@ async function handleMenuButton(
       };
     } else {
       // If we didn't get a JSON response, send the result as a text message
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -745,6 +769,7 @@ async function handleMenuButton(
     }
   } catch (error) {
     console.error('Error using getMenu tool:', error);
+    await applyMessageDelay();
     await sendTextMessage(
       phoneNumberId,
       from,
@@ -780,6 +805,7 @@ async function handleAddToCartButton(
     );
 
     if (!menuItem) {
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -803,6 +829,7 @@ async function handleAddToCartButton(
       });
       cartMessage += `\n*Total: $${cartResult.cart.total.toFixed(2)}*`;
 
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -869,6 +896,7 @@ async function handleAddToCartButton(
       };
     } else {
       // If we didn't get a JSON response, send the result as a text message
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -888,6 +916,7 @@ async function handleAddToCartButton(
     }
   } catch (error) {
     console.error('Error using addToCart tool:', error);
+    await applyMessageDelay();
     await sendTextMessage(
       phoneNumberId,
       from,
@@ -922,6 +951,7 @@ async function handleConfirmButton(
     );
 
     if (!menuItem) {
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -952,6 +982,7 @@ async function handleConfirmButton(
     // Check if we got a JSON response
     if (typeof orderResult === 'object') {
       // Send confirmation message
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -966,6 +997,7 @@ async function handleConfirmButton(
       orderSummary += `\n*Total: $${orderResult.order.total.toFixed(2)}*`;
 
       // Send order summary
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -1032,6 +1064,7 @@ async function handleConfirmButton(
       };
     } else {
       // If we didn't get a JSON response, send the result as a text message
+      await applyMessageDelay();
       await sendTextMessage(
         phoneNumberId,
         from,
@@ -1051,6 +1084,7 @@ async function handleConfirmButton(
     }
   } catch (error) {
     console.error('Error using submitOrder tool:', error);
+    await applyMessageDelay();
     await sendTextMessage(
       phoneNumberId,
       from,
