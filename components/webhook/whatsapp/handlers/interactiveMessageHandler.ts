@@ -881,7 +881,8 @@ async function handleAddToCartButton(
       });
 
       if (!response.ok) {
-        throw new Error(`WhatsApp API returned ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(`WhatsApp API returned ${errorData}`);
       }
 
       // Add to conversation history
