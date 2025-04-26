@@ -484,7 +484,7 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
         buttons: [
           {
             id: `om-category-{tableName}-{actionId}-${categoryId}`,
-            title: `View More ${menuItem.category} Items`
+            title: `View More Items`
           },
           {
             id: `om-back-{tableName}-{actionId}`,
