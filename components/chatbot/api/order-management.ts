@@ -488,7 +488,7 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
           },
           {
             id: `om-back-{tableName}-{actionId}`,
-            title: "Browse All Categories"
+            title: "View All Categories"
           },
           {
             id: `om-confirm-{tableName}-{actionId}-${menuItem.id}`,
