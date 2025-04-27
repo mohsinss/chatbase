@@ -1,9 +1,9 @@
 /**
  * Handler for interactive messages in WhatsApp webhook
  */
-import { 
-  getWhatsAppNumber, 
-  getOrCreateConversation, 
+import {
+  getWhatsAppNumber,
+  getOrCreateConversation,
   addAssistantMessageToConversation,
   isAutoReplyDisabled,
   getConversationAIResponse
@@ -17,8 +17,8 @@ import { sleep } from '@/libs/utils';
 /**
  * Apply a 1-second delay before sending WhatsApp messages
  */
-async function applyMessageDelay(): Promise<void> {
-  await sleep(1000); // 1 second delay
+async function applyMessageDelay(delay: number = 1000): Promise<void> {
+  await sleep(delay); // default 1 second delay
 }
 
 /**
@@ -234,8 +234,8 @@ async function handleOrderManagementButton(
       console.error('Error parsing order management button ID:', parseError);
       await applyMessageDelay();
       await sendTextMessage(
-        phoneNumberId, 
-        from, 
+        phoneNumberId,
+        from,
         "Sorry, we couldn't process your selection due to a technical issue. Please scan the QR code again."
       );
       return {
@@ -289,14 +289,29 @@ async function handleOrderManagementButton(
 
     // Handle different button types
     if (buttonId.startsWith('om-category-')) {
-      return await handleCategoryButton(
-        from,
-        phoneNumberId,
-        itemId, // Category ID
-        action,
+      const { processOrderManagementWithAI } = await import('@/components/webhook/whatsapp/services/orderManagementAIService');
+      // Process the message using AI with tool calling
+      const result = await processOrderManagementWithAI(
+        chatbotId,
         conversation,
-        tableName
+        buttonTitle,
+        phoneNumberId,
+        from,
+        actionId
       );
+      
+      // If successful, return the result
+      if (result.success) {
+        return result;
+      }
+      // return await handleCategoryButton(
+      //   from,
+      //   phoneNumberId,
+      //   itemId, // Category ID
+      //   action,
+      //   conversation,
+      //   tableName
+      // );
     }
     else if (buttonId.startsWith('om-menu-')) {
       return await handleMenuButton(
@@ -549,7 +564,9 @@ async function handleCategoryButton(
         });
 
         if (!response.ok) {
-          throw new Error(`WhatsApp API returned ${response.status}`);
+          const errorText = await response.text();
+          console.error(`WhatsApp API error (${response.status}):`, errorText);
+          throw new Error(`WhatsApp API returned ${response.status}: ${errorText}`);
         }
 
         // Add to conversation history
@@ -687,6 +704,7 @@ async function handleMenuButton(
             }
           })
         });
+        await applyMessageDelay(4000);
       }
 
       // Replace placeholders in button IDs with actual values
@@ -724,17 +742,30 @@ async function handleMenuButton(
       };
 
       // Send the buttons via WhatsApp API
-      const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
-        },
-        body: JSON.stringify(buttonsPayload)
-      });
+      try {
+        const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+          },
+          body: JSON.stringify(buttonsPayload)
+        });
 
-      if (!response.ok) {
-        throw new Error(`WhatsApp API returned ${response.status}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`WhatsApp API error (${response.status}):`, errorText);
+          throw new Error(`WhatsApp API returned ${response.status}: ${errorText}`);
+        }
+      } catch (apiError) {
+        console.error('Error sending menu item buttons to WhatsApp:', apiError);
+        // Send a simpler fallback message if the interactive message fails
+        await applyMessageDelay();
+        await sendTextMessage(
+          phoneNumberId,
+          from,
+          `${menuItemResult.item.name} is available for $${menuItemResult.item.price.toFixed(2)}. You can order this item by replying "order ${menuItemResult.item.name}".`
+        );
       }
 
       // Add to conversation history
@@ -871,18 +902,25 @@ async function handleAddToCartButton(
       };
 
       // Send the buttons via WhatsApp API
-      const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
-        },
-        body: JSON.stringify(buttonsPayload)
-      });
+      try {
+        const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+          },
+          body: JSON.stringify(buttonsPayload)
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`WhatsApp API returned ${JSON.stringify(errorData)}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`WhatsApp API error (${response.status}):`, errorText);
+          throw new Error(`WhatsApp API returned ${response.status}: ${errorText}`);
+        }
+      } catch (apiError) {
+        console.error('Error sending cart buttons to WhatsApp:', apiError);
+        // No need to send a fallback message here as we've already sent the cart confirmation
+        // message above
       }
 
       // Add to conversation history
@@ -965,8 +1003,8 @@ async function handleConfirmButton(
     }
 
     // Create an order object
-    const order = {
-      table: tableName,
+    // Make table name optional during checkout
+    const order: any = {
       items: [
         {
           item_id: menuId,
@@ -976,6 +1014,11 @@ async function handleConfirmButton(
         }
       ]
     };
+
+    // Only add table name if it exists and is not empty
+    if (tableName && tableName.trim() !== '') {
+      order.table = tableName;
+    }
 
     // Submit the order using the tool with isWhatsApp=true
     const orderResult = await submitOrder(action.chatbotId, order, true);
@@ -1040,17 +1083,25 @@ async function handleConfirmButton(
       };
 
       // Send the buttons via WhatsApp API
-      const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
-        },
-        body: JSON.stringify(buttonsPayload)
-      });
+      try {
+        const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+          },
+          body: JSON.stringify(buttonsPayload)
+        });
 
-      if (!response.ok) {
-        throw new Error(`WhatsApp API returned ${response.status}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`WhatsApp API error (${response.status}):`, errorText);
+          throw new Error(`WhatsApp API returned ${response.status}: ${errorText}`);
+        }
+      } catch (apiError) {
+        console.error('Error sending order confirmation buttons to WhatsApp:', apiError);
+        // No need to send a fallback message here as we've already sent the order confirmation
+        // and summary messages above
       }
 
       // Add to conversation history
