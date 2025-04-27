@@ -66,9 +66,9 @@ export function filterRecentMessages(messages: any[]): any[] {
     });
     
     // If we have recent messages, use them, otherwise use the last 10 messages
-    return recentMessages.length > 0 ? recentMessages : messages.slice(-10);
+    return recentMessages.length > 0 ? recentMessages : [];
   } catch (e) {
     // If any error occurs, fallback to the last 10 messages
-    return messages.slice(-10);
+    return [];
   }
 }
