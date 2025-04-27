@@ -446,31 +446,6 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
       0
     );
     
-    // Create buttons for next actions
-    const continueButtons = [
-      {
-        id: "view_category",
-        text: `View More ${menuItem.category} Items`,
-        value: categoryId,
-        action: "get_menu",
-        params: { category: categoryId }
-      },
-      {
-        id: "view_categories",
-        text: "Browse All Categories",
-        value: "categories",
-        action: "get_categories",
-        params: {}
-      },
-      {
-        id: "checkout",
-        text: "Proceed to Checkout",
-        value: "checkout",
-        action: "submit_order",
-        params: { order: { items: cart, subtotal: cartTotal } } // Pass the cart with subtotal to the checkout
-      }
-    ];
-    
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       return {

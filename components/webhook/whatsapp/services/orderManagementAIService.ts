@@ -19,7 +19,7 @@ export async function processOrderManagementWithAI(
   text: string,
   phoneNumberId: string,
   from: string,
-  enabledOMAction: any
+  actionId: string,
 ): Promise<{ success: boolean, message: string }> {
   try {
     // Get AI settings
@@ -165,7 +165,7 @@ export async function processOrderManagementWithAI(
                       if (row.id) {
                         row.id = row.id
                           .replace('{tableName}', conversation.metadata?.tableName || 'unknown')
-                          .replace('{actionId}', enabledOMAction._id);
+                          .replace('{actionId}', actionId);
                       }
                     });
                   }

@@ -70,6 +70,14 @@ export async function handleTextMessage(
       text
     );
 
+    // Check if auto-reply is disabled
+    if (isAutoReplyDisabled(conversation)) {
+      return {
+        success: true,
+        message: "Auto response is disabled"
+      };
+    }
+
     // Find enabled OrderManagement actions with error handling
     let enabledOMAction = null;
     try {
@@ -230,14 +238,32 @@ export async function handleTextMessage(
       }
     }
 
-    // Check if auto-reply is disabled
-    if (isAutoReplyDisabled(conversation)) {
-      return {
-        success: true,
-        message: "Auto response is disabled"
-      };
-    }
 
+    if (enabledOMAction) {
+      try {
+        // Import the order management AI service
+        const { processOrderManagementWithAI } = await import('@/components/webhook/whatsapp/services/orderManagementAIService');
+        
+        // Process the message using AI with tool calling
+        const result = await processOrderManagementWithAI(
+          chatbotId,
+          conversation,
+          text,
+          phoneNumberId,
+          from,
+          enabledOMAction._id
+        );
+        
+        // If successful, return the result
+        if (result.success) {
+          return result;
+        }
+        // Otherwise, continue with normal flow
+      } catch (error) {
+        console.error('Error processing order management with AI:', error);
+        // Continue with normal flow if tool calling fails
+      }
+    }
     // Get question flow settings
     const { enabled: qfEnabled, flow, aiResponseEnabled } = await getQuestionFlow(chatbotId);
 
