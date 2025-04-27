@@ -16,7 +16,8 @@ import {
   handleDeepseekRequest,
   handleGrokRequest,
   handleOpenAIRequest,
-  handleQuestionFlow
+  handleQuestionFlow,
+  orderManagementSystemPrompt
 } from '@/components/chatbot/api';
 
 export async function OPTIONS(req: NextRequest) {
@@ -171,18 +172,7 @@ export async function POST(req: NextRequest) {
       const calComActions = enabledActions.filter(action => action.type === 'calcom');
       const orderManagementAction = enabledActions.filter(action => action.type === 'ordermanagement');
       if (orderManagementAction.length > 0) {
-        const orderManagementActionPrompt = `
-You are a restaurant ordering assistant.  You have six functions available:
-1) get_categories(): returns all menu categories.
-2) get_menus(category): returns a list of items in a specific category with name and price only.
-3) get_menu(item_id, category): returns detailed information about a specific menu item.
-4) add_to_cart(item_id, quantity): adds an item to the user's cart.
-5) submit_order(order): places the final order.
-6) track_order(orderId): tracks the status of an order.
-
-When the user asks to browse or order food, you MUST call the appropriate function
-in JSON format (no extra explanation).  For anything else, just reply normally.
-`;
+        const orderManagementActionPrompt = orderManagementSystemPrompt;
         systemPrompt += orderManagementActionPrompt;
       } else if (calComActions.length > 0) {
         const calComActionsPrompt = `
