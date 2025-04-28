@@ -1,5 +1,6 @@
 import ChatbotAction, { IChatbotAction } from '@/models/ChatbotAction';
 import Order from '@/models/Order';
+import GoogleIntegration from '@/models/GoogleIntegration';
 
 // Type definitions for order management
 interface MenuItem {
@@ -34,6 +35,7 @@ interface Order {
   table: string;
   items: OrderItem[];
   subtotal?: number;
+  orderId: string;
 }
 
 interface OrderManagementMetadata {
@@ -742,12 +744,21 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
       // Continue even if database save fails - we don't want to block the order confirmation
     }
 
+    // Update Google Sheet if connected
+    if (hasGoogleSheets) {
+      try {
+        await updateGoogleSheet(chatbotId, order);
+      } catch (sheetError) {
+        console.error('Error updating Google Sheet:', sheetError);
+      }
+    }
+
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       return {
         type: "order_confirmation",
         order: {
-          id: orderId,
+          orderId: orderId,
           table: order.table,
           items: order.items,
           total: calculatedTotal,
@@ -768,10 +779,76 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
       };
     } else {
       // Generate HTML content with order confirmation for web interface
-      return `<div class="order-confirmation"><div class="order-success"><h3>Order Confirmed!</h3><p>Your order #${orderId} has been received and is being processed.</p>${order.table ? `<p>Table: ${order.table}</p>` : ''}<div class="order-details"><h4>Order Summary</h4><ul class="order-items">${order.items.map((item: OrderItem) => `<li>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</li>`).join('')}</ul><p class="order-total">Total: $${calculatedTotal.toFixed(2)}</p></div>${hasGoogleSheets ? '<p>Your order has been recorded in our system.</p>' : ''}</div><div class="after-order-actions"><button class="new-order-btn chat-option-btn" data-action="get_categories" data-index="0" >Place Another Order</button><button class="track-order-btn chat-option-btn" data-action="track_order" data-order-id="${orderId}" data-index="0">Track Order Status</button></div></div>`;
+      return `<div class="order-confirmation"><div class="order-success"><h3>Order Confirmed!</h3><p>Your order #${orderId} has been received and is being processed.</p>${order.table ? `<p>Table: ${order.table}</p>` : ''}<div class="order-details"><h4>Order Summary</h4><ul class="order-items">${order.items.map((item: OrderItem) => `<li>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</li>`).join('')}</ul><p class="order-total">Total: $${calculatedTotal.toFixed(2)}</p></div></div><div class="after-order-actions"><button class="new-order-btn chat-option-btn" data-action="get_categories" data-index="0" >Place Another Order</button><button class="track-order-btn chat-option-btn" data-action="track_order" data-order-id="${orderId}" data-index="0">Track Order Status</button></div></div>`;
     }
   } catch (error) {
     console.error('Error submitting order:', error);
     return `<div class="error-message"><p>Failed to submit order</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+  }
+}
+
+import { google } from 'googleapis';
+
+/**
+ * Updates the connected Google Sheet with the order data
+ */
+export async function updateGoogleSheet(chatbotId: string, order: Order) {
+  try {
+    // Fetch the chatbot action to get Google Sheet config
+    const action = await getOrderManagementAction(chatbotId);
+    if (!action || !action.metadata || !action.metadata.googleSheetConfig) {
+      throw new Error('Google Sheet configuration not found');
+    }
+
+    const { sheetId, sheetName, connected } = action.metadata.googleSheetConfig;
+    if (!connected || !sheetId || !sheetName) {
+      throw new Error('Google Sheet is not properly configured or connected');
+    }
+
+    // Setup Google Sheets API client
+    // Using OAuth2 client with client ID and secret from environment variables
+    const googleIntegration = await GoogleIntegration.findOne({ chatbotId });
+
+    const { OAuth2 } = google.auth;
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
+    
+    oauth2Client.setCredentials({
+      access_token: googleIntegration.accessToken,
+      refresh_token: googleIntegration.refreshToken,
+      expiry_date: googleIntegration.expiryDate
+    });
+
+    const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
+
+    // Prepare data to append
+    // Format: [orderId, table, item1 name, item1 qty, item1 price, ..., total, status, timestamp]
+    const rowData: any[] = [
+      (order as any).orderId || '',
+      order.table || '',
+      ...order.items.flatMap(item => [item.name, item.qty, item.price]),
+      order.subtotal || 0,
+      (order as any).status || '',
+      (order as any).timestamp ? new Date((order as any).timestamp).toLocaleString() : new Date().toLocaleString()
+    ];
+
+    // Append the row to the sheet
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: sheetId,
+      range: `${sheetName}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: {
+        values: [rowData],
+      },
+    });
+
+    console.log(`Google Sheet updated for chatbot ${chatbotId} with order ${order.orderId}`);
+  } catch (error) {
+    console.error('Error updating Google Sheet:', error);
+    throw error;
   }
 }
