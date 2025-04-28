@@ -16,6 +16,7 @@ import CategoriesTab from "./OMtabs/CategoriesTab"
 import TablesTab from "./OMtabs/TablesTab"
 import GoogleSheetsTab from "./OMtabs/GoogleSheetsTab"
 import CashierPageTab from "./OMtabs/CashierPageTab"
+import FollowUpTab from "./OMtabs/FollowUpTab"
 
 interface OrderManagementProps {
   teamId: string
@@ -104,9 +105,21 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
   const [metadata, setMetadata] = useState<{
     messageTemplate?: string;
     phoneNumber?: string;
+    followUpSettings?: {
+      enabled: boolean;
+      messageTemplate: string;
+      timeWindow: number;
+      suggestItems: boolean;
+    };
   }>({
     messageTemplate: "Hello! I'm at table {table} and would like to place an order.",
-    phoneNumber: ""
+    phoneNumber: "",
+    followUpSettings: {
+      enabled: false,
+      messageTemplate: "Thank you for your order! We hope you enjoyed your meal. Would you like to order anything else, such as dessert or drinks?",
+      timeWindow: 30,
+      suggestItems: true
+    }
   })
 
   const [isLoading, setIsLoading] = useState(true)
@@ -140,6 +153,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             if (metadata.googleSheetConfig) setGoogleSheetConfig(metadata.googleSheetConfig);
             if (metadata.messageTemplate) setMetadata(prev => ({ ...prev, messageTemplate: metadata.messageTemplate }));
             if (metadata.phoneNumber) setMetadata(prev => ({ ...prev, phoneNumber: metadata.phoneNumber }));
+            if (metadata.followUpSettings) setMetadata(prev => ({ ...prev, followUpSettings: metadata.followUpSettings }));
           }
 
           toast.success("Configuration loaded");
@@ -227,13 +241,14 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
 
     try {
       // Prepare metadata
-      const actionMetadata: OrderManagementConfig = {
+      const actionMetadata: any = {
         menuItems,
         categories,
         tables,
         googleSheetConfig,
         messageTemplate: metadata.messageTemplate,
-        phoneNumber: metadata.phoneNumber
+        phoneNumber: metadata.phoneNumber,
+        followUpSettings: metadata.followUpSettings
       };
 
       // Prepare request body
@@ -350,6 +365,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           <TabsTrigger value="menu">Menu Management</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="tables">Table QR Codes</TabsTrigger>
+          <TabsTrigger value="follow-up">Follow-up</TabsTrigger>
           <TabsTrigger value="sheets">Google Sheets</TabsTrigger>
           <TabsTrigger value="cashier">Cashier</TabsTrigger>
         </TabsList>
@@ -401,6 +417,17 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             setGoogleSheetConfig={setGoogleSheetConfig}
             chatbotId={chatbotId}
             teamId={teamId}
+          />
+        </TabsContent>
+
+        {/* Follow-up Tab */}
+        <TabsContent value="follow-up">
+          <FollowUpTab
+            chatbotId={chatbotId}
+            metadata={metadata}
+            updateMetadata={(newMetadata) => {
+              setMetadata(newMetadata);
+            }}
           />
         </TabsContent>
 
