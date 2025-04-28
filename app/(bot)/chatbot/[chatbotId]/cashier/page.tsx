@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 interface OrderItem {
   item_id: string;
@@ -66,7 +67,7 @@ export default function CashierPage() {
       setOrders(data.orders);
     } catch (error) {
       console.error('Error fetching orders:', error);
-      alert('Failed to load orders. Please try again.');
+      toast.error('Failed to load orders. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -93,11 +94,11 @@ export default function CashierPage() {
           : order
       ));
 
-      alert(`Order #${orderId} status changed to ${newStatus}`);
+      toast.success(`Order #${orderId} status changed to ${newStatus}`);
 
     } catch (error) {
       console.error('Error updating order status:', error);
-      alert('Failed to update order status. Please try again.');
+      toast.error('Failed to update order status. Please try again.');
     }
   };
 
@@ -106,7 +107,7 @@ export default function CashierPage() {
       const order = orders.find(o => o.orderId === orderId);
 
       if (!order || order.portal !== 'whatsapp') {
-        alert('This is not a WhatsApp order');
+        toast.error('This is not a WhatsApp order');
         return;
       }
 
@@ -125,11 +126,11 @@ export default function CashierPage() {
         throw new Error('Failed to send WhatsApp notification');
       }
 
-      alert(`WhatsApp notification sent for order #${orderId}`);
+      toast.success(`WhatsApp notification sent for order #${orderId}`);
 
     } catch (error) {
       console.error('Error sending WhatsApp notification:', error);
-      alert('Failed to send WhatsApp notification. Please try again.');
+      toast.error('Failed to send WhatsApp notification. Please try again.');
     }
   };
 
