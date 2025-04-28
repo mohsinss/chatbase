@@ -305,7 +305,8 @@ export async function processOrderManagementWithAI(
                 });
                 
                 if (!response.ok) {
-                  throw new Error(`WhatsApp API returned ${response.status}`);
+                  const errorData = await response.json();
+                  throw new Error(`WhatsApp API returned ${response.status}, ${JSON.stringify(errorData)}`);
                 }
               } catch (apiError) {
                 console.error('Error sending WhatsApp interactive message:', apiError);
