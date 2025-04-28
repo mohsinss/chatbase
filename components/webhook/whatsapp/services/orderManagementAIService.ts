@@ -167,7 +167,7 @@ export async function processOrderManagementWithAI(
                 // Check if the result is an object (not a string)
                 if (typeof orderResult === 'object') {
                   // Extract order information
-                  const orderId = orderResult.order?.id || 'N/A';
+                  const orderId = orderResult.order?.orderId || 'N/A';
                   const orderItems = orderResult.order?.items || [];
                   const orderTotal = orderResult.order?.total || 0;
                   const orderSuccess = orderResult.type === 'order_confirmation';
