@@ -71,7 +71,7 @@ export async function POST(
       const response = await fetch(`https://graph.facebook.com/v22.0/${whatsappNumber.phoneNumberId}/messages`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${whatsappNumber.accessToken}`,
+          'Authorization': `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
