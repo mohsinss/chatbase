@@ -130,24 +130,24 @@ export async function processOrderManagementWithAI(
               break;
               
             case "get_menus":
-              result = await getMenus(chatbotId, functionArgs.category);
+              result = await getMenus(chatbotId, functionArgs.category, true);
               break;
               
             case "get_menu":
-              result = await getMenu(chatbotId, functionArgs.item_id, functionArgs.category);
+              result = await getMenu(chatbotId, functionArgs.item_id, functionArgs.category, true);
               break;
               
             case "add_to_cart":
               const quantity = functionArgs.quantity || 1;
-              result = await addToCart(chatbotId, functionArgs.item_id, quantity);
+              result = await addToCart(chatbotId, functionArgs.item_id, quantity, true);
               break;
               
             case "track_order":
-              result = await getOrders(chatbotId, functionArgs.order_id);
+              result = await getOrders(chatbotId, functionArgs.order_id, true);
               break;
               
             case "submit_order":
-              result = await submitOrder(chatbotId, functionArgs.order);
+              result = await submitOrder(chatbotId, functionArgs.order, true);
               break;
               
             default:

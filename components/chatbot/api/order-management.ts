@@ -497,62 +497,122 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
 /**
  * Retrieves orders for a specific chatbot
  */
-export async function getOrders(chatbotId: string, orderId?: string) {
+export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp: boolean = false) {
   try {
     // If orderId is provided, get a specific order
     if (orderId) {
       const order = await Order.findOne({ chatbotId, orderId });
       if (!order) {
-        return `<div class="error-message"><p>Order #${orderId} not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+        return isWhatsApp
+          ? { error: `Order #${orderId} not found` }
+          : `<div class="error-message"><p>Order #${orderId} not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
       }
       
-      // Generate HTML content with order details
-      return `<div class="order-details-container">
-        <h3>Order #${order.orderId}</h3>
-        <p>Status: <span class="order-status status-${order.status}">${order.status}</span></p>
-        <p>Date: ${new Date(order.timestamp).toLocaleString()}</p>
-        ${order.table ? `<p>Table: ${order.table}</p>` : ''}
-        <div class="order-items-list">
-          <h4>Items</h4>
-          <ul>
-            ${order.items.map((item: any) => `<li>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</li>`).join('')}
-          </ul>
-          <p class="order-total">Total: $${order.subtotal.toFixed(2)}</p>
-        </div>
-        <div class="order-actions">
-          <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button>
-        </div>
-      </div>`;
+      if (isWhatsApp) {
+        // Return JSON structure for WhatsApp
+        return {
+          type: "order_detail",
+          order: {
+            id: order.orderId,
+            status: order.status,
+            timestamp: new Date(order.timestamp).toLocaleString(),
+            table: order.table || "",
+            items: order.items.map((item: any) => ({
+              name: item.name,
+              quantity: item.qty,
+              price: item.price,
+              total: (item.price * item.qty).toFixed(2)
+            })),
+            total: order.subtotal.toFixed(2)
+          },
+          buttons: [
+            {
+              id: `om-back-{tableName}-{actionId}`,
+              title: "Back to Categories"
+            }
+          ]
+        };
+      } else {
+        // Generate HTML content with order details for web interface
+        return `<div class="order-details-container">
+          <h3>Order #${order.orderId}</h3>
+          <p>Status: <span class="order-status status-${order.status}">${order.status}</span></p>
+          <p>Date: ${new Date(order.timestamp).toLocaleString()}</p>
+          ${order.table ? `<p>Table: ${order.table}</p>` : ''}
+          <div class="order-items-list">
+            <h4>Items</h4>
+            <ul>
+              ${order.items.map((item: any) => `<li>${item.qty} x ${item.name} - $${(item.price * item.qty).toFixed(2)}</li>`).join('')}
+            </ul>
+            <p class="order-total">Total: $${order.subtotal.toFixed(2)}</p>
+          </div>
+          <div class="order-actions">
+            <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button>
+          </div>
+        </div>`;
+      }
     }
     
     // Get all orders for this chatbot
     const orders = await Order.find({ chatbotId }).sort({ timestamp: -1 }).limit(10);
     
     if (!orders || orders.length === 0) {
-      return `<div class="error-message"><p>No orders found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+      return isWhatsApp
+        ? { error: "No orders found" }
+        : `<div class="error-message"><p>No orders found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
     
-    // Generate HTML content with order list
-    return `<div class="orders-list-container">
-      <h3>Recent Orders</h3>
-      <div class="orders-list">
-        ${orders.map((order: any) => `
-          <div class="order-item">
-            <div class="order-header">
-              <h4>Order #${order.orderId}</h4>
-              <span class="order-status status-${order.status}">${order.status}</span>
+    if (isWhatsApp) {
+      // Return JSON structure for WhatsApp
+      return {
+        type: "orders_list",
+        title: "Recent Orders",
+        body: "Here are your recent orders:",
+        footer: "Select an order to view details.",
+        button: "View Orders",
+        sections: [
+          {
+            title: "Recent Orders",
+            rows: [
+              // Add back option as the first item
+              {
+                id: `om-back-{tableName}-{actionId}`,
+                title: "Back to Categories",
+                description: "Return to menu categories"
+              },
+              // Add orders
+              ...orders.map((order: any) => ({
+                id: `om-track-{tableName}-{actionId}-${order.orderId}`,
+                title: `Order #${order.orderId} - ${order.status}`,
+                description: `${new Date(order.timestamp).toLocaleString()} - $${order.subtotal.toFixed(2)}`
+              }))
+            ]
+          }
+        ]
+      };
+    } else {
+      // Generate HTML content with order list for web interface
+      return `<div class="orders-list-container">
+        <h3>Recent Orders</h3>
+        <div class="orders-list">
+          ${orders.map((order: any) => `
+            <div class="order-item">
+              <div class="order-header">
+                <h4>Order #${order.orderId}</h4>
+                <span class="order-status status-${order.status}">${order.status}</span>
+              </div>
+              <p>Date: ${new Date(order.timestamp).toLocaleString()}</p>
+              <p>Items: ${order.items.length}</p>
+              <p>Total: $${order.subtotal.toFixed(2)}</p>
+              <button class="view-order-btn chat-option-btn" data-action="track_order" data-order-id="${order.orderId}" data-index="0">View Details</button>
             </div>
-            <p>Date: ${new Date(order.timestamp).toLocaleString()}</p>
-            <p>Items: ${order.items.length}</p>
-            <p>Total: $${order.subtotal.toFixed(2)}</p>
-            <button class="view-order-btn chat-option-btn" data-action="track_order" data-order-id="${order.orderId}" data-index="0">View Details</button>
-          </div>
-        `).join('')}
-      </div>
-      <div class="order-actions">
-        <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button>
-      </div>
-    </div>`;
+          `).join('')}
+        </div>
+        <div class="order-actions">
+          <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button>
+        </div>
+      </div>`;
+    }
   } catch (error) {
     console.error('Error retrieving orders:', error);
     return `<div class="error-message"><p>Failed to retrieve orders</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
