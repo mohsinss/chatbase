@@ -57,7 +57,7 @@ export async function getOrderManagementAction(chatbotId: string) {
       type: 'ordermanagement',
       enabled: true
     });
-    
+
     return action;
   } catch (error) {
     console.error('Error fetching order management action:', error);
@@ -71,13 +71,13 @@ export async function getOrderManagementAction(chatbotId: string) {
 export async function getCategories(chatbotId: string, isWhatsApp: boolean = false) {
   try {
     const action = await getOrderManagementAction(chatbotId);
-    
+
     if (!action || !action.metadata || !action.metadata.categories) {
-      return isWhatsApp 
+      return isWhatsApp
         ? { error: "No categories found" }
         : `<div class="error-message"><p>No categories found</p></div>`;
     }
-    
+
     // Create buttons for each category
     const categoryButtons = action.metadata.categories.map((category: any) => ({
       id: category.id,
@@ -86,7 +86,7 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
       action: "get_menu",
       params: { category: category.id }
     }));
-    
+
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       return {
@@ -113,7 +113,7 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
     }
   } catch (error) {
     console.error('Error getting categories:', error);
-    return isWhatsApp 
+    return isWhatsApp
       ? { error: "Failed to retrieve categories" }
       : `<div class="error-message"><p>Failed to retrieve categories</p></div>`;
   }
@@ -126,37 +126,37 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
   try {
     console.log('getMenus', category, 'category');
     const action = await getOrderManagementAction(chatbotId);
-    
+
     if (!action || !action.metadata || !action.metadata.menuItems) {
       return `<div class="error-message"><p>No menu items found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
-    
+
     let categoryObj = null;
-    
+
     // First try to find category by ID
     categoryObj = action.metadata.categories.find(
       (cat: any) => cat.id === category
     );
-    
+
     // If not found by ID, try to find by name with improved matching
     if (!categoryObj) {
       // Normalize the requested category for better matching
       const normalizedRequestedCategory = category.toLowerCase().trim();
-      
+
       // Generate dynamic category mappings based on available categories
       const categoryMappings: Record<string, string[]> = {};
-      
+
       // Common variations to try for each category
       const generateVariations = (name: string): string[] => {
         const variations = [];
-        
+
         // Singular/plural variations
         if (name.endsWith('s')) {
           variations.push(name.slice(0, -1)); // Remove 's' at the end
         } else {
           variations.push(name + 's'); // Add 's' at the end
         }
-        
+
         // Common category name variations
         const commonMappings: Record<string, string[]> = {
           'appetizer': ['starter', 'starters', 'appetizers', 'entree', 'entrees'],
@@ -166,7 +166,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
           'beverage': ['beverages', 'drink', 'drinks'],
           'special': ['specials', 'specialty', 'specialties', 'chef special', 'chef specials']
         };
-        
+
         // Add common variations if they exist
         for (const [key, values] of Object.entries(commonMappings)) {
           if (name === key || values.includes(name)) {
@@ -174,21 +174,21 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
             variations.push(key);
           }
         }
-        
+
         return Array.from(new Set(variations)); // Remove duplicates
       };
-      
+
       // Build dynamic mappings for each category
       action.metadata.categories.forEach((cat: any) => {
         const catName = cat.name.toLowerCase();
         categoryMappings[catName] = generateVariations(catName);
       });
-      
+
       // First try exact match by name
       categoryObj = action.metadata.categories.find(
         (cat: any) => cat.name.toLowerCase() === normalizedRequestedCategory
       );
-      
+
       // If no exact match, try common variations
       if (!categoryObj) {
         // Handle singular/plural variations (e.g., "main" vs "mains")
@@ -206,7 +206,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
           );
         }
       }
-      
+
       // If still no match, try common category mappings
       if (!categoryObj) {
         // Check if the requested category has known alternatives
@@ -214,31 +214,31 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
           if (normalizedRequestedCategory === baseCategory || alternatives.includes(normalizedRequestedCategory)) {
             // Look for categories that match either the base category or any of its alternatives
             categoryObj = action.metadata.categories.find(
-              (cat: any) => cat.name.toLowerCase() === baseCategory || 
-                            alternatives.includes(cat.name.toLowerCase()) ||
-                            baseCategory === cat.name.toLowerCase() ||
-                            alternatives.some(alt => alt === cat.name.toLowerCase())
+              (cat: any) => cat.name.toLowerCase() === baseCategory ||
+                alternatives.includes(cat.name.toLowerCase()) ||
+                baseCategory === cat.name.toLowerCase() ||
+                alternatives.some(alt => alt === cat.name.toLowerCase())
             );
             if (categoryObj) break;
           }
         }
       }
-      
+
       // If still no match, try partial match (contains)
       if (!categoryObj) {
         categoryObj = action.metadata.categories.find(
-          (cat: any) => cat.name.toLowerCase().includes(normalizedRequestedCategory) || 
-                        normalizedRequestedCategory.includes(cat.name.toLowerCase())
+          (cat: any) => cat.name.toLowerCase().includes(normalizedRequestedCategory) ||
+            normalizedRequestedCategory.includes(cat.name.toLowerCase())
         );
       }
     }
-    
+
     if (!categoryObj) {
       return isWhatsApp
         ? { error: `Category "${category}" not found` }
         : `<div>Category "${category}" not found</div><div><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
-    
+
     // Filter menu items by category
     const items = action.metadata.menuItems
       .filter((item: any) => item.category === categoryObj.id && item.available)
@@ -247,7 +247,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
         name: item.name,
         price: item.price
       }));
-    
+
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       return {
@@ -310,31 +310,31 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
 export async function getMenu(chatbotId: string, item_id: string, category: string, isWhatsApp: boolean = false) {
   try {
     const action = await getOrderManagementAction(chatbotId);
-    
+
     if (!action || !action.metadata || !action.metadata.menuItems) {
       return `<div class="error-message"><p>No menu items found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
-    
+
     // Find the category by ID
     const categoryObj = action.metadata.categories.find(
       (cat: any) => cat.id === category
     );
-    
+
     if (!categoryObj) {
       return `<div class="error-message"><p>Category not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
-    
+
     // Find the menu item
     const selectedItem = action.metadata.menuItems.find(
       (item: any) => item.id === item_id && item.available
     );
-    
+
     if (!selectedItem) {
       return isWhatsApp
         ? { error: "Item not found or not available" }
         : `<div class="error-message"><p>Item not found or not available</p><button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">Back to Menu</button></div>`;
     }
-    
+
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       const response: any = {
@@ -361,18 +361,18 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
           }
         ]
       };
-      
+
       // Add image if available
       if (selectedItem.images && selectedItem.images.length > 0) {
         response.item.image = selectedItem.images[0];
       }
-      
+
       return response;
     } else {
       // Generate HTML content with detailed item view for web interface
       return `<div class="item-detail">
         <h3>${selectedItem.name}</h3>
-        ${selectedItem.images && selectedItem.images.length > 0 ? 
+        ${selectedItem.images && selectedItem.images.length > 0 ?
           `<img src="${selectedItem.images[0]}" alt="${selectedItem.name}" class="item-detail-image" />` : ''}
         <div class="item-detail-info">
           <p class="item-price">$${selectedItem.price.toFixed(2)}</p>
@@ -404,31 +404,31 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
   quantity = typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
   try {
     const action = await getOrderManagementAction(chatbotId);
-    
+
     if (!action || !action.metadata || !action.metadata.menuItems) {
       return `<div class="error-message"><p>Menu not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
-    
+
     // Find the menu item
     const menuItem = action.metadata.menuItems.find((item: any) => item.id === item_id);
-    
+
     if (!menuItem) {
       return `<div class="error-message"><p>Item not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
-    
+
     if (!menuItem.available) {
       return `<div class="error-message"><p>Item is not available</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
-    
+
     // In a real implementation, we would store this in a database or session
     // For now, we'll just return success with the item details
     // Find the category ID for the menu item's category
     const categoryObj = action.metadata.categories.find(
       (cat: any) => cat.name === menuItem.category
     );
-    
+
     const categoryId = categoryObj ? categoryObj.id : '';
-    
+
     // In a real implementation, we would retrieve the full cart from a database or session
     // For this simulation, we'll create a cart with just the current item
     const cart: OrderItem[] = [
@@ -439,13 +439,13 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
         price: menuItem.price
       }
     ];
-    
+
     // Calculate the cart total
     const cartTotal = cart.reduce(
       (sum: number, item: OrderItem) => sum + (item.price * item.qty),
       0
     );
-    
+
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       return {
@@ -484,7 +484,7 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
         <div class="action-buttons">
           <button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0">View More ${menuItem.category} Items</button>
           <button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0">Browse All Categories</button>
-          <button class="checkout-btn chat-option-btn" data-action="submit_order" data-order='${JSON.stringify({items: cart, subtotal: cartTotal})}' data-index="0">Proceed to Checkout</button>
+          <button class="checkout-btn chat-option-btn" data-action="submit_order" data-order='${JSON.stringify({ items: cart, subtotal: cartTotal })}' data-index="0">Proceed to Checkout</button>
         </div>
       </div>`;
     }
@@ -507,7 +507,7 @@ export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp:
           ? { error: `Order #${orderId} not found` }
           : `<div class="error-message"><p>Order #${orderId} not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
       }
-      
+
       if (isWhatsApp) {
         // Return JSON structure for WhatsApp
         return {
@@ -552,16 +552,16 @@ export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp:
         </div>`;
       }
     }
-    
+
     // Get all orders for this chatbot
     const orders = await Order.find({ chatbotId }).sort({ timestamp: -1 }).limit(10);
-    
+
     if (!orders || orders.length === 0) {
       return isWhatsApp
         ? { error: "No orders found" }
         : `<div class="error-message"><p>No orders found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
-    
+
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       return {
@@ -624,53 +624,53 @@ export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp:
  * In a real implementation, this would save the order to a database
  * and potentially integrate with a POS system or Google Sheets
  */
-export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: boolean = false) {
+export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: boolean = false, metadata?: Object) {
   try {
     console.log('submitOrder', order);
     const action = await getOrderManagementAction(chatbotId);
-    
+
     if (!action || !action.metadata) {
       return `<div class="error-message"><p>Order management not configured</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
-    
+
     // Validate table exists
     if (order.table) {
       const tableExists = action.metadata.tables.some(
         (table: any) => table.id === order.table || table.tableNumber === order.table
       );
-      
+
       if (!tableExists) {
         return `<div class="error-message"><p>Invalid table number</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
       }
     }
-    
+
     // Validate items exist and are available
     for (const orderItem of order.items) {
-      const menuItem = action.metadata.menuItems.find((item: any) => item.id === orderItem.item_id);
-      
+      const menuItem = action.metadata.menuItems.find((item: any) => item.id == orderItem.item_id.split('-').pop());
+
       if (!menuItem) {
         return `<div class="error-message"><p>Item "${orderItem.name}" not found in menu</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
       }
-      
+
       if (!menuItem.available) {
         return `<div class="error-message"><p>Item "${orderItem.name}" is not available</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
       }
     }
-    
+
     // Calculate total from items
     const calculatedTotal = order.items.reduce(
-      (sum: number, item: OrderItem) => sum + (item.price * item.qty), 
+      (sum: number, item: OrderItem) => sum + (item.price * item.qty),
       0
     );
-    
+
     // If Google Sheets integration is enabled, we would save the order there
-    const hasGoogleSheets = action.metadata.googleSheetConfig && 
-                           action.metadata.googleSheetConfig.connected &&
-                           action.metadata.googleSheetConfig.sheetId;
-    
+    const hasGoogleSheets = action.metadata.googleSheetConfig &&
+      action.metadata.googleSheetConfig.connected &&
+      action.metadata.googleSheetConfig.sheetId;
+
     // Generate a unique order ID
     const orderId = `ORD-${Date.now()}`;
-    
+
     // Save the order to the database
     try {
       const newOrder = new Order({
@@ -680,16 +680,18 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
         items: order.items,
         subtotal: calculatedTotal, // Set the subtotal from the calculated total
         status: 'received',
+        portal: isWhatsApp ? "whatsapp" : 'web',
+        metadata,
         timestamp: new Date()
       });
-      
+
       await newOrder.save();
       console.log(`Order ${orderId} saved to database`);
     } catch (dbError) {
       console.error('Error saving order to database:', dbError);
       // Continue even if database save fails - we don't want to block the order confirmation
     }
-    
+
     // Create buttons for after order submission
     const afterOrderButtons = [
       {
@@ -707,7 +709,7 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
         params: { orderId }
       }
     ];
-    
+
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       return {

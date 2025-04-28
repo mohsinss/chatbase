@@ -147,7 +147,7 @@ export async function processOrderManagementWithAI(
               break;
               
             case "submit_order":
-              result = await submitOrder(chatbotId, functionArgs.order, true);
+              result = await submitOrder(chatbotId, functionArgs.order, true, {phoneNumberId});
               break;
               
             default:

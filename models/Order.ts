@@ -10,11 +10,13 @@ export interface IOrder extends Document {
     qty: number;
     price: number;
   }>;
+  portal: string;
   subtotal: number;
   status: string;
   timestamp: Date;
   createdAt: Date;
   updatedAt: Date;
+  metadata: Object;
 }
 
 const OrderSchema = new Schema<IOrder>({
@@ -27,10 +29,20 @@ const OrderSchema = new Schema<IOrder>({
     qty: { type: Number, required: true },
     price: { type: Number, required: true }
   }],
+  portal: {
+    type: String,
+    required: false,
+    enum: ['web', 'whatsapp'],
+    default: 'web',
+  },
+  metadata: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
   subtotal: { type: Number, required: false },
-  status: { 
-    type: String, 
-    required: true, 
+  status: {
+    type: String,
+    required: true,
     enum: ['received', 'preparing', 'ready', 'delivered', 'cancelled'],
     default: 'received'
   },
