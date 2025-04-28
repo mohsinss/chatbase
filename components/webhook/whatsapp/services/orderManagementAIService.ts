@@ -255,8 +255,90 @@ export async function processOrderManagementWithAI(
           
           // Send the result to the user
           if (typeof result === 'object') {
+            if (result && result.type === "cart_confirmation" && Array.isArray(result.buttons)) {
+              // Build detailed cart info
+              let cartDetails = `🛒 *Cart Updated!*\n\n`;
+              if (result.cart.items && result.cart.items.length > 0) {
+                cartDetails += `*Items in your cart:*\n`;
+                result.cart.items.forEach((item: any, idx: number) => {
+                  cartDetails += `${idx + 1}. ${item.name} x${item.qty || 1} - $${((item.price || 0) * (item.qty || 1)).toFixed(2)}\n`;
+                  if (item.description) {
+                    cartDetails += `   _${item.description}_\n`;
+                  }
+                });
+                cartDetails += `\n*Total: $${result.cart.total.toFixed(2)}*\n`;
+              } else {
+                cartDetails += `Your cart is empty.\n`;
+              }
+              cartDetails += `\n_Category: ${result.categoryName}_`;
+          
+              // Replace placeholders in button IDs
+              result.buttons.forEach((button: any) => {
+                if (button.id) {
+                  button.id = button.id
+                    .replace('{tableName}', conversation.metadata?.tableName || 'unknown')
+                    .replace('{actionId}', actionId);
+                }
+              });
+          
+              // Create WhatsApp button message
+              const buttonPayload = {
+                messaging_product: "whatsapp",
+                recipient_type: "individual",
+                to: from,
+                type: "interactive",
+                interactive: {
+                  type: "button",
+                  body: {
+                    text: cartDetails
+                  },
+                  footer: {
+                    text: `What would you like to do next?`
+                  },
+                  action: {
+                    buttons: result.buttons.map((button: any) => ({
+                      type: "reply",
+                      reply: {
+                        id: button.id,
+                        title: button.title
+                      }
+                    })).slice(0, 3)
+                  }
+                }
+              };
+          
+              // Send the button message via WhatsApp API
+              try {
+                const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+                  },
+                  body: JSON.stringify(buttonPayload)
+                });
+          
+                if (!response.ok) {
+                  const errorData = await response.json();
+                  throw new Error(`WhatsApp API returned ${response.status}, ${JSON.stringify(errorData)}`);
+                }
+              } catch (apiError) {
+                console.error('Error sending WhatsApp interactive button message:', apiError);
+                await sendTextMessage(
+                  phoneNumberId,
+                  from,
+                  "There was an error displaying the cart options. Please try again."
+                );
+              }
+              // Add to conversation history
+              await addAssistantMessageToConversation(
+                conversation,
+                cartDetails
+              );
+              break;
+            }
             // If it's a WhatsApp interactive list message format
-            if (result.sections) {
+            else if (result.sections) {
               // Replace placeholders in button IDs with actual values
               if (result.sections && result.sections.length > 0) {
                 result.sections.forEach((section: any) => {

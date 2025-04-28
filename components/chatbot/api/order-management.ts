@@ -47,6 +47,46 @@ interface OrderManagementMetadata {
   };
 }
 
+export async function getMenuPrompt(chatbotId: string): Promise<string> {
+  try {
+    const action = await getOrderManagementAction(chatbotId);
+
+    if (!action || !action.metadata || !action.metadata.menuItems || !action.metadata.categories) {
+      return "No menu available.";
+    }
+
+    // Build a map of categoryId -> categoryName for easy lookup
+    const categoryMap: Record<string, string> = {};
+    action.metadata.categories.forEach((cat: any) => {
+      categoryMap[cat.id] = cat.name;
+    });
+
+    // Group menu items by category
+    const itemsByCategory: Record<string, any[]> = {};
+    action.metadata.menuItems.forEach((item: any) => {
+      if (!item.available) return;
+      if (!itemsByCategory[item.category]) {
+        itemsByCategory[item.category] = [];
+      }
+      itemsByCategory[item.category].push(item);
+    });
+
+    // Build the prompt string
+    let prompt = "Here is the menu:\n";
+    for (const [categoryId, items] of Object.entries(itemsByCategory)) {
+      prompt += `\n${categoryMap[categoryId] || categoryId}:\n`;
+      items.forEach((item: any) => {
+        prompt += `- ${item.name}: $${item.price.toFixed(2)}${item.description ? ` - ${item.description}` : ""}\n`;
+      });
+    }
+
+    return prompt.trim();
+  } catch (error) {
+    console.error('Error generating menu prompt:', error);
+    return "Failed to generate menu prompt.";
+  }
+}
+
 /**
  * Retrieves the order management action for a specific chatbot
  */
