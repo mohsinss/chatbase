@@ -24,6 +24,7 @@ interface TablesTabProps {
   chatbotId: string
   metadata?: {
     messageTemplate?: string
+    messageTemplate1?: string
     phoneNumber?: string
   }
   updateMetadata?: (metadata: any) => void
@@ -35,6 +36,9 @@ const TablesTab = ({ tables, setTables, chatbotId, metadata = {}, updateMetadata
   const [showQRDialog, setShowQRDialog] = useState(false)
   const [messageTemplate, setMessageTemplate] = useState<string>(
     metadata.messageTemplate || "Hello! I'm at table {table} and would like to place an order."
+  )
+  const [messageTemplate1, setMessageTemplate1] = useState<string>(
+    metadata.messageTemplate1 || "Welcome to our restaurant! You're at table {table}. Please select a category to view our menu"
   )
   const [phoneNumber, setPhoneNumber] = useState<string>(metadata.phoneNumber || "")
   const [isLoadingPhoneNumber, setIsLoadingPhoneNumber] = useState<boolean>(true)
@@ -196,6 +200,16 @@ const TablesTab = ({ tables, setTables, chatbotId, metadata = {}, updateMetadata
                   id="message-template"
                   value={messageTemplate}
                   onChange={(e) => setMessageTemplate(e.target.value)}
+                  placeholder="Enter message template"
+                  className="min-h-[80px]"
+                />
+              </div>
+              <div>
+                <Label htmlFor="message-template">Reply Message Template</Label>
+                <Textarea
+                  id="message-template"
+                  value={messageTemplate1}
+                  onChange={(e) => setMessageTemplate1(e.target.value)}
                   placeholder="Enter message template"
                   className="min-h-[80px]"
                 />

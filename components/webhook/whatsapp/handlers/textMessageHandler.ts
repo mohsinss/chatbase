@@ -127,12 +127,13 @@ export async function handleTextMessage(
       try {
         // Get categories using the tool with isWhatsApp=true
         const categoriesResult = await getCategories(chatbotId, true);
+        const template1 = enabledOMAction.metadata?.messageTemplate1 || "Welcome to our restaurant! You're at table {table}. Please select a category to view our menu";
         
         // Send welcome message
         await sendTextMessage(
           phoneNumberId,
           from,
-          `Welcome to our restaurant! You're at table ${tableName}. Please select a category to view our menu:`
+          template1.replace("{table}", tableName)
         );
         
         // Check if we got a JSON response
