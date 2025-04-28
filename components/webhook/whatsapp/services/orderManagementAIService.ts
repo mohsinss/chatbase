@@ -255,7 +255,7 @@ export async function processOrderManagementWithAI(
           
           // Send the result to the user
           if (typeof result === 'object') {
-            // If it's a WhatsApp interactive message format
+            // If it's a WhatsApp interactive list message format
             if (result.sections) {
               // Replace placeholders in button IDs with actual values
               if (result.sections && result.sections.length > 0) {
@@ -309,12 +309,72 @@ export async function processOrderManagementWithAI(
                   throw new Error(`WhatsApp API returned ${response.status}, ${JSON.stringify(errorData)}`);
                 }
               } catch (apiError) {
-                console.error('Error sending WhatsApp interactive message:', apiError);
+                console.error('Error sending WhatsApp interactive list message:', apiError);
                 // Send a simple text message as fallback
                 await sendTextMessage(
                   phoneNumberId,
                   from,
                   "There was an error displaying the menu. Please try again."
+                );
+              }
+            } 
+            // If it's a WhatsApp interactive button message format
+            else if (result.buttons && Array.isArray(result.buttons) && result.buttons.length > 0) {
+              // Replace placeholders in button IDs
+              result.buttons.forEach((button: any) => {
+                if (button.id) {
+                  button.id = button.id
+                    .replace('{tableName}', conversation.metadata?.tableName || 'unknown')
+                    .replace('{actionId}', actionId);
+                }
+              });
+              
+              // Create a WhatsApp button message
+              const buttonPayload = {
+                messaging_product: "whatsapp",
+                recipient_type: "individual",
+                to: from,
+                type: "interactive",
+                interactive: {
+                  type: "button",
+                  body: {
+                    text: result.body || "Please select an option:"
+                  },
+                  footer: result.footer ? { text: result.footer } : undefined,
+                  action: {
+                    buttons: result.buttons.map((button: any) => ({
+                      type: "reply",
+                      reply: {
+                        id: button.id,
+                        title: button.title
+                      }
+                    })).slice(0, 3) // WhatsApp only supports up to 3 buttons
+                  }
+                }
+              };
+              
+              // Send the button message via WhatsApp API
+              try {
+                const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`
+                  },
+                  body: JSON.stringify(buttonPayload)
+                });
+                
+                if (!response.ok) {
+                  const errorData = await response.json();
+                  throw new Error(`WhatsApp API returned ${response.status}, ${JSON.stringify(errorData)}`);
+                }
+              } catch (apiError) {
+                console.error('Error sending WhatsApp interactive button message:', apiError);
+                // Send a simple text message as fallback
+                await sendTextMessage(
+                  phoneNumberId,
+                  from,
+                  "There was an error displaying the options. Please try again."
                 );
               }
             } else {
