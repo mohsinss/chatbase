@@ -46,7 +46,7 @@ export default function CashierPage() {
   
   const fetchOrders = async () => {
     try {
-      setLoading(true);
+      setLoading(false);
       
       // Determine portal filter based on active tab
       let portalFilter = '';
