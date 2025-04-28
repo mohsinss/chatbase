@@ -317,12 +317,14 @@ export async function processOrderManagementWithAI(
                 );
               }
             } else {
-              // For other object results, convert to string
-              await sendTextMessage(
-                phoneNumberId,
-                from,
-                JSON.stringify(result, null, 2)
-              );
+              // For other object results, convert to string and log via console.
+              // await sendTextMessage(
+              //   phoneNumberId,
+              //   from,
+              //   JSON.stringify(result, null, 2)
+              // );
+              console.log(JSON.stringify(result, null, 2))
+              return result;
             }
           } else {
             // For string results
