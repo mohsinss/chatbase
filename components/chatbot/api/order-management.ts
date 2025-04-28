@@ -312,7 +312,9 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
     const action = await getOrderManagementAction(chatbotId);
 
     if (!action || !action.metadata || !action.metadata.menuItems) {
-      return `<div class="error-message"><p>No menu items found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+      return isWhatsApp
+        ? { error: "No menu items found" }
+        : `<div class="error-message"><p>No menu items found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
 
     // Find the category by ID
@@ -321,12 +323,14 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
     );
 
     if (!categoryObj) {
-      return `<div class="error-message"><p>Category not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+      return isWhatsApp
+        ? { error: "Category not found" }
+        : `<div class="error-message"><p>Category not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
 
     // Find the menu item
     const selectedItem = action.metadata.menuItems.find(
-      (item: any) => item.id === item_id && item.available
+      (item: any) => item.id === item_id.split('-').pop() && item.available
     );
 
     if (!selectedItem) {
@@ -410,14 +414,20 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
     }
 
     // Find the menu item
-    const menuItem = action.metadata.menuItems.find((item: any) => item.id === item_id);
+    const menuItem = action.metadata.menuItems.find((item: any) => item.id === item_id.split('-').pop());
 
     if (!menuItem) {
-      return `<div class="error-message"><p>Item not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+      console.log(item_id, 'not found');
+      return isWhatsApp
+        ? { error: "Item not found" }
+        : `<div class="error-message"><p>Item not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
 
     if (!menuItem.available) {
-      return `<div class="error-message"><p>Item is not available</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+      console.log(item_id, 'not available')
+      return isWhatsApp
+        ? { error: "Item not available" }
+        : `<div class="error-message"><p>Item is not available</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
 
     // In a real implementation, we would store this in a database or session
