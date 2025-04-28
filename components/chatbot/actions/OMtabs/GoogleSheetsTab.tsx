@@ -59,7 +59,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
 
   // Update spreadsheetColumns whenever orderColumns changes
   useEffect(() => {
-    if (googleSheetConfig.connected && spreadsheetColumns.length > 0) {
+    if (googleSheetConfig?.connected && spreadsheetColumns.length > 0) {
       const enabledColumns = orderColumns
         .filter(column => column.enabled)
         .map(column => column.name);
@@ -101,7 +101,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
 
     checkConnection();
 
-    setConnectedSheet(`${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`);
+    setConnectedSheet(`${googleSheetConfig?.sheetId}|${googleSheetConfig?.sheetName}`);
   }, [chatbotId, teamId]);
 
   const fetchGoogleAuthUrl = async () => {
@@ -126,7 +126,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
 
   // Fetch available sheets from the user's Google Drive
   const fetchAvailableSheets = async () => {
-    if (!googleSheetConfig.connected) return;
+    if (!googleSheetConfig?.connected) return;
 
     setIsLoadingSheets(true);
     try {
@@ -168,7 +168,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
         setConnectedSheets(connectedSet);
         
         // Check if current sheet is connected
-        const currentSheetKey = `${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`;
+        const currentSheetKey = `${googleSheetConfig?.sheetId}|${googleSheetConfig?.sheetName}`;
         setIsSheetConnected(connectedSet.has(currentSheetKey));
       }
     } catch (error) {
@@ -180,8 +180,8 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
   };
 
   useEffect(() => {
-    setIsSheetConnected(connectedSheet == `${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`);
-  }, [connectedSheets, connectedSheet, googleSheetConfig.sheetId, googleSheetConfig.sheetName]);
+    setIsSheetConnected(connectedSheet == `${googleSheetConfig?.sheetId}|${googleSheetConfig?.sheetName}`);
+  }, [connectedSheets, connectedSheet, googleSheetConfig?.sheetId, googleSheetConfig?.sheetName]);
 
   // Set up message listener for auth window communication
   useEffect(() => {
@@ -388,12 +388,12 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
 
   // Connect to Google Sheets
   const handleConnectGoogleSheet = async () => {
-    if (!googleSheetConfig.sheetId) {
+    if (!googleSheetConfig?.sheetId) {
       toast.error("Google Sheet ID is required");
       return;
     }
 
-    if (!googleSheetConfig.connected) {
+    if (!googleSheetConfig?.connected) {
       toast.error("Please authorize with Google first");
       return;
     }
@@ -414,8 +414,8 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
         },
         body: JSON.stringify({
           chatbotId,
-          sheetId: googleSheetConfig.sheetId,
-          sheetName: googleSheetConfig.sheetName,
+          sheetId: googleSheetConfig?.sheetId,
+          sheetName: googleSheetConfig?.sheetName,
           // Pass the enabled column names to the API
           columns: enabledColumns.map(col => col.name)
         }),
@@ -434,7 +434,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
       setIsSheetConnected(true);
       
       // Add to connected sheets set
-      const sheetKey = `${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`;
+      const sheetKey = `${googleSheetConfig?.sheetId}|${googleSheetConfig?.sheetName}`;
       setConnectedSheet(sheetKey);
       // Update connected sheets state
       setConnectedSheets(prev => {
@@ -484,7 +484,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
                 First, authorize with Google to access your Google Sheets.
               </p>
               <div className="flex space-x-2">
-                {!googleSheetConfig.connected ? (
+                {!googleSheetConfig?.connected ? (
                   <Button
                     onClick={handleAuthorizeGoogle}
                     disabled={isAuthorizing}
@@ -532,7 +532,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
             </div>
 
             {/* Google Sheets Configuration */}
-            {googleSheetConfig.connected && (
+            {googleSheetConfig?.connected && (
               <div className="mb-6 p-4 border rounded-md">
                 <div className="flex gap-4 mb-2">
                   <h3 className="text-lg font-medium">Select Google Sheet</h3>
@@ -568,7 +568,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
                         id="sheet-select"
                         className="w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10"
                         onChange={(e) => handleSheetSelection(e.target.value)}
-                        value={`${googleSheetConfig.sheetId}|${googleSheetConfig.sheetName}`}
+                        value={`${googleSheetConfig?.sheetId}|${googleSheetConfig?.sheetName}`}
                         disabled={isLoadingSheets}
                       >
                         <option value="">Select a Google Sheet</option>
@@ -597,7 +597,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
                     <Label htmlFor="sheet-id">Google Sheet ID</Label>
                     <Input
                       id="sheet-id"
-                      value={googleSheetConfig.sheetId}
+                      value={googleSheetConfig?.sheetId}
                       onChange={(e) => setGoogleSheetConfig({ ...googleSheetConfig, sheetId: e.target.value })}
                       placeholder="Enter Google Sheet ID"
                     />
@@ -610,7 +610,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
                     <Label htmlFor="sheet-name">Sheet Name</Label>
                     <Input
                       id="sheet-name"
-                      value={googleSheetConfig.sheetName}
+                      value={googleSheetConfig?.sheetName}
                       onChange={(e) => setGoogleSheetConfig({ ...googleSheetConfig, sheetName: e.target.value })}
                       placeholder="e.g. Orders"
                     />
@@ -620,7 +620,7 @@ const GoogleSheetsTab = ({ googleSheetConfig, setGoogleSheetConfig, chatbotId, t
             )}
             <Button
               onClick={handleConnectGoogleSheet}
-              disabled={isConnecting || !googleSheetConfig.sheetId || !googleSheetConfig.connected || isSheetConnected}
+              disabled={isConnecting || !googleSheetConfig?.sheetId || !googleSheetConfig?.connected || isSheetConnected}
               className={isSheetConnected ? "bg-green-600 hover:bg-green-700" : ""}
             >
               {isConnecting ? (

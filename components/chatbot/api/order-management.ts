@@ -692,24 +692,6 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
       // Continue even if database save fails - we don't want to block the order confirmation
     }
 
-    // Create buttons for after order submission
-    const afterOrderButtons = [
-      {
-        id: "new_order",
-        text: "Place Another Order",
-        value: "categories",
-        action: "get_categories",
-        params: {}
-      },
-      {
-        id: "track_order",
-        text: "Track Order Status",
-        value: orderId,
-        action: "track_order", // This would be implemented in a real system
-        params: { orderId }
-      }
-    ];
-
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       return {

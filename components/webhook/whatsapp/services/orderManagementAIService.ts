@@ -147,7 +147,106 @@ export async function processOrderManagementWithAI(
               break;
               
             case "submit_order":
-              result = await submitOrder(chatbotId, functionArgs.order, true, {phoneNumberId});
+              try {
+                // Add table information to the order if available
+                const orderData = {
+                  ...functionArgs.order,
+                  tableName: conversation.metadata?.tableName || 'unknown',
+                  phoneNumber: from,
+                  whatsappInfo: {
+                    phoneNumberId,
+                    from
+                  }
+                };
+                
+                // Submit the order with enhanced metadata
+                const orderResult = await submitOrder(chatbotId, orderData, true, {phoneNumberId, from});
+                
+                // Check if the result is an object (not a string)
+                if (typeof orderResult === 'object') {
+                  // Extract order information
+                  const orderId = orderResult.order?.id || 'N/A';
+                  const orderItems = orderResult.order?.items || [];
+                  const orderTotal = orderResult.order?.total || 0;
+                  const orderSuccess = orderResult.type === 'order_confirmation';
+                  
+                  // If the order was submitted successfully
+                  if (orderSuccess) {
+                    // Format a nice confirmation message
+                    let confirmationMessage = `*Order #${orderId} Confirmed!* ✅\n\n`;
+                    confirmationMessage += `Thank you for your order. Your order has been received and is being processed.\n\n`;
+                    
+                    // Add order details if available
+                    if (orderItems && Array.isArray(orderItems) && orderItems.length > 0) {
+                      confirmationMessage += `*Order Summary:*\n`;
+                      orderItems.forEach((item: any) => {
+                        confirmationMessage += `• ${item.qty || 1}x ${item.name} - $${((item.price || 0) * (item.qty || 1)).toFixed(2)}\n`;
+                      });
+                      
+                      confirmationMessage += `\n*Total: $${orderTotal.toFixed(2)}*\n\n`;
+                    }
+                    
+                    // Add estimated time if available (might be in different location based on API)
+                    // Since estimatedTime might not be in the type definition, use optional access
+                    const estimatedTime = 
+                      // @ts-ignore - estimatedTime might exist in runtime even if not in type
+                      orderResult.order?.estimatedTime || 
+                      // @ts-ignore - estimatedTime might exist in runtime even if not in type
+                      orderResult.estimatedTime || 
+                      null;
+                    
+                    if (estimatedTime) {
+                      confirmationMessage += `*Estimated preparation time:* ${estimatedTime} minutes\n\n`;
+                    }
+                    
+                    confirmationMessage += `You can track your order status by replying with "Track order #${orderId}"`;
+                    
+                    // Send the formatted confirmation message
+                    await sendTextMessage(phoneNumberId, from, confirmationMessage);
+                    
+                    // Add to conversation history
+                    await addAssistantMessageToConversation(conversation, confirmationMessage);
+                    
+                    // Set the result with the formatted message
+                    result = {
+                      success: true,
+                      orderId: orderId,
+                      message: "Order submitted successfully",
+                      formattedMessage: confirmationMessage
+                    };
+                  } else {
+                    // If there was an issue with the order submission
+                    // Use type assertion or optional properties since 'message' might not be in the type definition
+                    const errorMessage = 
+                      // @ts-ignore - message might exist in runtime even if not in type
+                      orderResult.message || 
+                      // @ts-ignore - message might exist in runtime even if not in type
+                      orderResult.order?.message || 
+                      "There was an issue processing your order. Please try again.";
+                    await sendTextMessage(phoneNumberId, from, errorMessage);
+                    await addAssistantMessageToConversation(conversation, errorMessage);
+                    result = orderResult;
+                  }
+                } else {
+                  // If the result is a string, just send it as a message
+                  await sendTextMessage(phoneNumberId, from, orderResult);
+                  await addAssistantMessageToConversation(conversation, orderResult);
+                  result = {
+                    success: false,
+                    message: orderResult
+                  };
+                }
+              } catch (orderError) {
+                console.error('Error submitting order:', orderError);
+                const errorMessage = "Sorry, we encountered a technical issue while processing your order. Please try again later.";
+                await sendTextMessage(phoneNumberId, from, errorMessage);
+                await addAssistantMessageToConversation(conversation, errorMessage);
+                result = {
+                  success: false,
+                  message: errorMessage,
+                  error: orderError.message
+                };
+              }
               break;
               
             default:

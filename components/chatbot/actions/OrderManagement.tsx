@@ -15,6 +15,7 @@ import MenuTab from "./OMtabs/MenuTab"
 import CategoriesTab from "./OMtabs/CategoriesTab"
 import TablesTab from "./OMtabs/TablesTab"
 import GoogleSheetsTab from "./OMtabs/GoogleSheetsTab"
+import CashierPageTab from "./OMtabs/CashierPageTab"
 
 interface OrderManagementProps {
   teamId: string
@@ -350,6 +351,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="tables">Table QR Codes</TabsTrigger>
           <TabsTrigger value="sheets">Google Sheets</TabsTrigger>
+          <TabsTrigger value="cashier">Cashier</TabsTrigger>
         </TabsList>
 
         {/* Menu Management Tab */}
@@ -399,6 +401,14 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             setGoogleSheetConfig={setGoogleSheetConfig}
             chatbotId={chatbotId}
             teamId={teamId}
+          />
+        </TabsContent>
+
+        {/* Cashier Page Tab */}
+        <TabsContent value="cashier">
+          <CashierPageTab
+            chatbotId={chatbotId}
+            actionId={actionId}
           />
         </TabsContent>
       </Tabs>
