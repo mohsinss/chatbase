@@ -41,9 +41,17 @@ export async function POST(
       );
     }
 
+    // Get customer phone number from order metadata
+    if (!order.metadata || !order.metadata.phoneNumberId || !order.metadata.from) {
+      return NextResponse.json(
+        { error: 'Customer phone number not found in order metadata' },
+        { status: 400 }
+      );
+    }
+
     // Find the WhatsApp number associated with this chatbot
     const whatsappNumber = await WhatsAppNumber.findOne({
-      chatbotId: chatbotId
+      phoneNumberId: order.metadata.phoneNumberId
     });
 
     if (!whatsappNumber) {
@@ -53,15 +61,7 @@ export async function POST(
       );
     }
 
-    // Get customer phone number from order metadata
-    if (!order.metadata || !order.metadata.customerPhone) {
-      return NextResponse.json(
-        { error: 'Customer phone number not found in order metadata' },
-        { status: 400 }
-      );
-    }
-
-    const customerPhone = order.metadata.customerPhone;
+    const customerPhone = order.metadata.from;
 
     // Prepare message content
     const message = body.message || `Your order #${orderId} status has been updated to: ${order.status}`;

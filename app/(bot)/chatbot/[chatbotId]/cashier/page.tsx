@@ -28,26 +28,26 @@ interface Order {
 export default function CashierPage() {
   const params = useParams();
   const chatbotId = params.chatbotId as string;
-  
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
-  
+
   // Fetch orders on component mount and periodically refresh
   useEffect(() => {
     fetchOrders();
-    
+
     // Set up polling to refresh orders every 30 seconds
     const intervalId = setInterval(fetchOrders, 30000);
-    
+
     return () => clearInterval(intervalId);
   }, [chatbotId, activeTab]);
-  
+
   const fetchOrders = async () => {
     try {
       setLoading(false);
-      
+
       // Determine portal filter based on active tab
       let portalFilter = '';
       if (activeTab === 'whatsapp') {
@@ -55,13 +55,13 @@ export default function CashierPage() {
       } else if (activeTab === 'web') {
         portalFilter = 'web';
       }
-      
+
       const response = await fetch(`/api/chatbot/${chatbotId}/orders?portal=${portalFilter}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch orders');
       }
-      
+
       const data = await response.json();
       setOrders(data.orders);
     } catch (error) {
@@ -71,7 +71,7 @@ export default function CashierPage() {
       setLoading(false);
     }
   };
-  
+
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const response = await fetch(`/api/chatbot/${chatbotId}/orders/${orderId}`, {
@@ -81,58 +81,58 @@ export default function CashierPage() {
         },
         body: JSON.stringify({ status: newStatus }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to update order status');
       }
-      
+
       // Update local state
-      setOrders(orders.map(order => 
-        order.orderId === orderId 
-          ? { ...order, status: newStatus as any } 
+      setOrders(orders.map(order =>
+        order.orderId === orderId
+          ? { ...order, status: newStatus as any }
           : order
       ));
-      
+
       alert(`Order #${orderId} status changed to ${newStatus}`);
-      
+
     } catch (error) {
       console.error('Error updating order status:', error);
       alert('Failed to update order status. Please try again.');
     }
   };
-  
+
   const sendWhatsAppConfirmation = async (orderId: string) => {
     try {
       const order = orders.find(o => o.orderId === orderId);
-      
+
       if (!order || order.portal !== 'whatsapp') {
         alert('This is not a WhatsApp order');
         return;
       }
-      
+
       const response = await fetch(`/api/chatbot/${chatbotId}/orders/${orderId}/notify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: order.status,
           message: `Your order #${orderId} status has been updated to: ${order.status}`
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to send WhatsApp notification');
       }
-      
+
       alert(`WhatsApp notification sent for order #${orderId}`);
-      
+
     } catch (error) {
       console.error('Error sending WhatsApp notification:', error);
       alert('Failed to send WhatsApp notification. Please try again.');
     }
   };
-  
+
   const toggleOrderExpand = (orderId: string) => {
     if (expandedOrder === orderId) {
       setExpandedOrder(null);
@@ -140,11 +140,11 @@ export default function CashierPage() {
       setExpandedOrder(orderId);
     }
   };
-  
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
-  
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       received: 'bg-blue-100 text-blue-800',
@@ -155,7 +155,7 @@ export default function CashierPage() {
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
-  
+
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -165,38 +165,35 @@ export default function CashierPage() {
             Manage and process orders from web and WhatsApp customers
           </p>
         </div>
-        
+
         <div className="p-6">
           {/* Tabs */}
           <div className="flex justify-between items-center mb-4">
             <div className="flex space-x-2">
               <button
                 onClick={() => setActiveTab('all')}
-                className={`px-4 py-2 rounded-md ${
-                  activeTab === 'all'
+                className={`px-4 py-2 rounded-md ${activeTab === 'all'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-800'
-                }`}
+                  }`}
               >
                 All Orders
               </button>
               <button
                 onClick={() => setActiveTab('whatsapp')}
-                className={`px-4 py-2 rounded-md ${
-                  activeTab === 'whatsapp'
+                className={`px-4 py-2 rounded-md ${activeTab === 'whatsapp'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-800'
-                }`}
+                  }`}
               >
                 WhatsApp
               </button>
               <button
                 onClick={() => setActiveTab('web')}
-                className={`px-4 py-2 rounded-md ${
-                  activeTab === 'web'
+                className={`px-4 py-2 rounded-md ${activeTab === 'web'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-800'
-                }`}
+                  }`}
               >
                 Web
               </button>
@@ -208,7 +205,7 @@ export default function CashierPage() {
               Refresh
             </button>
           </div>
-          
+
           {/* Orders Table */}
           {loading ? (
             <div className="flex justify-center p-8">Loading orders...</div>
@@ -225,7 +222,12 @@ export default function CashierPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {activeTab === 'whatsapp' ? (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
+                        From
+                      </th>
+                    ) : null}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
                       Source
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -248,7 +250,7 @@ export default function CashierPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {orders.map((order) => (
                     <React.Fragment key={order.orderId}>
-                      <tr 
+                      <tr
                         className="cursor-pointer hover:bg-gray-50"
                         onClick={() => toggleOrderExpand(order.orderId)}
                       >
@@ -258,7 +260,12 @@ export default function CashierPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {formatDate(order.timestamp)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        {activeTab === 'whatsapp' ? (
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
+                            {order.metadata.from}
+                          </th>
+                        ) : null}
+                        <td className="px-6 py-4 whitespace-nowrap hidden">
                           <span className="px-2 py-1 text-xs rounded-full border">
                             {order.portal === 'whatsapp' ? 'WhatsApp' : 'Web'}
                           </span>
@@ -279,7 +286,7 @@ export default function CashierPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
-                            <select 
+                            <select
                               value={order.status}
                               onChange={(e) => updateOrderStatus(order.orderId, e.target.value)}
                               className="px-2 py-1 border rounded-md text-sm"
@@ -290,9 +297,9 @@ export default function CashierPage() {
                               <option value="delivered">Delivered</option>
                               <option value="cancelled">Cancelled</option>
                             </select>
-                            
+
                             {order.portal === 'whatsapp' && (
-                              <button 
+                              <button
                                 className="px-2 py-1 border rounded-md text-sm"
                                 onClick={() => sendWhatsAppConfirmation(order.orderId)}
                               >
@@ -302,7 +309,7 @@ export default function CashierPage() {
                           </div>
                         </td>
                       </tr>
-                      
+
                       {/* Expanded order details */}
                       {expandedOrder === order.orderId && (
                         <tr>
