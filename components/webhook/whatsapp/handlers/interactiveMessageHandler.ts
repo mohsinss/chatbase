@@ -289,6 +289,26 @@ async function handleOrderManagementButton(
 
     // Handle different button types
     if (buttonId.startsWith('om-category-')) {
+      return await handleCategoryButton(
+        from,
+        phoneNumberId,
+        itemId, // Category ID
+        action,
+        conversation,
+        tableName
+      );
+    }
+    else if (buttonId.startsWith('om-menu-')) {
+      return await handleMenuButton(
+        from,
+        phoneNumberId,
+        itemId, // Menu ID
+        action,
+        conversation,
+        tableName
+      );
+    }
+    else if (buttonId.startsWith('om-confirm-')) {
       const { processOrderManagementWithAI } = await import('@/components/webhook/whatsapp/services/orderManagementAIService');
       // Process the message using AI with tool calling
       const result = await processOrderManagementWithAI(
@@ -304,34 +324,6 @@ async function handleOrderManagementButton(
       if (result.success) {
         return result;
       }
-      // return await handleCategoryButton(
-      //   from,
-      //   phoneNumberId,
-      //   itemId, // Category ID
-      //   action,
-      //   conversation,
-      //   tableName
-      // );
-    }
-    else if (buttonId.startsWith('om-menu-')) {
-      return await handleMenuButton(
-        from,
-        phoneNumberId,
-        itemId, // Menu ID
-        action,
-        conversation,
-        tableName
-      );
-    }
-    else if (buttonId.startsWith('om-confirm-')) {
-      return await handleConfirmButton(
-        from,
-        phoneNumberId,
-        itemId, // Menu ID
-        action,
-        conversation,
-        tableName
-      );
     }
     else if (buttonId.startsWith('om-add-to-cart-')) {
       // The quantity was already parsed from the button ID during initial parsing
