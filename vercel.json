@@ -12,6 +12,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/order-management/check-new-orders",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/dailyCron",
       "schedule": "0 0 * * *"
     }
