@@ -32,7 +32,7 @@ export async function POST(
     }
 
     // Get the chatbot to find associated WhatsApp number
-    const chatbot = await Chatbot.findById(chatbotId);
+    const chatbot = await Chatbot.findOne({ chatbotId });
 
     if (!chatbot) {
       return NextResponse.json(
