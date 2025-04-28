@@ -12,17 +12,17 @@ export async function POST(
     await dbConnect();
     const { chatbotId, orderId } = params;
     const body = await request.json();
-    
+
     // Find the order
     const order = await Order.findOne({ chatbotId, orderId });
-    
+
     if (!order) {
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
       );
     }
-    
+
     // Verify this is a WhatsApp order
     if (order.portal !== 'whatsapp') {
       return NextResponse.json(
@@ -30,29 +30,29 @@ export async function POST(
         { status: 400 }
       );
     }
-    
+
     // Get the chatbot to find associated WhatsApp number
-    const chatbot = await Chatbot.findOne({ _id: chatbotId });
-    
+    const chatbot = await Chatbot.findById(chatbotId);
+
     if (!chatbot) {
       return NextResponse.json(
         { error: 'Chatbot not found' },
         { status: 404 }
       );
     }
-    
+
     // Find the WhatsApp number associated with this chatbot
-    const whatsappNumber = await WhatsAppNumber.findOne({ 
-      chatbotId: chatbotId 
+    const whatsappNumber = await WhatsAppNumber.findOne({
+      chatbotId: chatbotId
     });
-    
+
     if (!whatsappNumber) {
       return NextResponse.json(
         { error: 'No WhatsApp number found for this chatbot' },
         { status: 404 }
       );
     }
-    
+
     // Get customer phone number from order metadata
     if (!order.metadata || !order.metadata.customerPhone) {
       return NextResponse.json(
@@ -60,15 +60,15 @@ export async function POST(
         { status: 400 }
       );
     }
-    
+
     const customerPhone = order.metadata.customerPhone;
-    
+
     // Prepare message content
     const message = body.message || `Your order #${orderId} status has been updated to: ${order.status}`;
-    
+
     // Send WhatsApp message using Meta API
     try {
-      const response = await fetch(`https://graph.facebook.com/v17.0/${whatsappNumber.phoneNumberId}/messages`, {
+      const response = await fetch(`https://graph.facebook.com/v22.0/${whatsappNumber.phoneNumberId}/messages`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${whatsappNumber.accessToken}`,
@@ -84,9 +84,9 @@ export async function POST(
           }
         })
       });
-      
+
       const result = await response.json();
-      
+
       // Update order metadata to include notification history
       const notifications = order.metadata.notifications || [];
       notifications.push({
@@ -95,16 +95,16 @@ export async function POST(
         status: response.ok ? 'sent' : 'failed',
         response: result
       });
-      
+
       await Order.updateOne(
         { chatbotId, orderId },
-        { 
-          $set: { 
-            'metadata.notifications': notifications 
-          } 
+        {
+          $set: {
+            'metadata.notifications': notifications
+          }
         }
       );
-      
+
       if (!response.ok) {
         console.error('WhatsApp API error:', result);
         return NextResponse.json(
@@ -112,13 +112,13 @@ export async function POST(
           { status: 500 }
         );
       }
-      
-      return NextResponse.json({ 
-        success: true, 
+
+      return NextResponse.json({
+        success: true,
         message: 'WhatsApp notification sent successfully',
         result: result
       }, { status: 200 });
-      
+
     } catch (apiError) {
       console.error('Error sending WhatsApp notification:', apiError);
       return NextResponse.json(
@@ -129,7 +129,7 @@ export async function POST(
   } catch (error) {
     console.error('Error processing notification request:', error);
     return NextResponse.json(
-      { error: 'Failed to process notification request' },
+      { error },
       { status: 500 }
     );
   }
