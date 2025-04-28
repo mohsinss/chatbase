@@ -9,6 +9,7 @@ import { filterRecentMessages } from '@/components/webhook/whatsapp/utils/helper
 import Dataset from "@/models/Dataset";
 import Chatbot from "@/models/Chatbot";
 import Team from "@/models/Team";
+import config from "@/config";
 
 /**
  * Process a message using AI with tool calling for order management
