@@ -1,73 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/dbConnect';
+import connectMongo from '@/libs/mongoose';
 import Order from '@/models/Order';
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { chatbotId: string; orderId: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { chatbotId: string; orderId: string } }) {
   try {
-    await dbConnect();
     const { chatbotId, orderId } = params;
     const body = await request.json();
-    
-    // Validate status
-    const validStatuses = ['received', 'preparing', 'ready', 'delivered', 'cancelled'];
-    if (body.status && !validStatuses.includes(body.status)) {
-      return NextResponse.json(
-        { error: 'Invalid status value' },
-        { status: 400 }
-      );
+
+    await connectMongo();
+
+    // Find the order by chatbotId and orderId
+    const order = await Order.findOne({ chatbotId, orderId });
+
+    if (!order) {
+      return NextResponse.json({
+        success: false,
+        message: 'Order not found'
+      }, { status: 404 });
     }
-    
-    // Find and update the order
-    const updatedOrder = await Order.findOneAndUpdate(
-      { chatbotId, orderId },
-      { $set: { status: body.status } },
-      { new: true }
-    );
-    
-    if (!updatedOrder) {
-      return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
+
+    // Update order fields from body
+    if (body.items) {
+      order.items = body.items;
     }
-    
-    return NextResponse.json({ order: updatedOrder }, { status: 200 });
+    if (body.status) {
+      order.status = body.status;
+    }
+    if (body.subtotal !== undefined) {
+      order.subtotal = body.subtotal;
+    }
+    if (body.table !== undefined) {
+      order.table = body.table;
+    }
+    // Add any other fields as needed
+
+    await order.save();
+
+    return NextResponse.json({
+      success: true,
+      message: 'Order updated successfully',
+      order
+    }, { status: 200 });
+
   } catch (error) {
     console.error('Error updating order:', error);
-    return NextResponse.json(
-      { error: 'Failed to update order' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { chatbotId: string; orderId: string } }
-) {
-  try {
-    await dbConnect();
-    const { chatbotId, orderId } = params;
-    
-    // Find the order
-    const order = await Order.findOne({ chatbotId, orderId });
-    
-    if (!order) {
-      return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
-    }
-    
-    return NextResponse.json({ order }, { status: 200 });
-  } catch (error) {
-    console.error('Error fetching order:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch order' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      message: `Error: ${error.message}`
+    }, { status: 500 });
   }
 }
