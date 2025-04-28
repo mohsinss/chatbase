@@ -76,7 +76,7 @@ export async function getMenuPrompt(chatbotId: string): Promise<string> {
     for (const [categoryId, items] of Object.entries(itemsByCategory)) {
       prompt += `\n${categoryMap[categoryId] || categoryId}:\n`;
       items.forEach((item: any) => {
-        prompt += `- ${item.name}: $${item.price.toFixed(2)}${item.description ? ` - ${item.description}` : ""}\n`;
+        prompt += `- ${item.id} - ${item.name}: $${item.price.toFixed(2)}${item.description ? ` - ${item.description}` : ""}\n`;
       });
     }
 

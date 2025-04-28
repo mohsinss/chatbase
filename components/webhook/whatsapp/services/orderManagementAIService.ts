@@ -89,7 +89,9 @@ export async function processOrderManagementWithAI(
     let systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;
     systemPrompt += orderManagementSystemPrompt;
     // Import the order management functions
-    const { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders } = await import('@/components/chatbot/api/order-management');
+    const { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders, getMenuPrompt } = await import('@/components/chatbot/api/order-management');
+    const menuPrompt = await getMenuPrompt(chatbotId);
+    systemPrompt += menuPrompt;
     
     // Process based on model type
     if (internalModel.startsWith('gpt-')) {
