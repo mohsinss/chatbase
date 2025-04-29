@@ -516,38 +516,42 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
           {/* Right section */}
           <div className="flex items-center">
             {/* Desktop links and account */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link
-                href="/docs"
-                className="text-sm font-medium hover:text-primary"
-              >
-                Docs
-              </Link>
-              <Link
-                href="/help"
-                className="text-sm font-medium hover:text-primary"
-              >
-                Help
-              </Link>
-              <Link
-                href="/changelog"
-                className="text-sm font-medium hover:text-primary"
-              >
-                Changelog
-              </Link>
-              {/* Account button - now with teamId prop */}
-              <ButtonAccount teamId={teamId} />
-            </div>
+            {!hideFields && (
+              <div className="hidden md:flex items-center space-x-8">
+                <Link
+                  href="/docs"
+                  className="text-sm font-medium hover:text-primary"
+                >
+                  Docs
+                </Link>
+                <Link
+                  href="/help"
+                  className="text-sm font-medium hover:text-primary"
+                >
+                  Help
+                </Link>
+                <Link
+                  href="/changelog"
+                  className="text-sm font-medium hover:text-primary"
+                >
+                  Changelog
+                </Link>
+                {/* Account button - now with teamId prop */}
+                <ButtonAccount teamId={teamId} />
+              </div>
+            )}
 
             {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-md hover:bg-gray-100"
-              >
-                <IconMenu2 className="w-6 h-6" />
-              </button>
-            </div>
+            {!hideFields && (
+              <div className="md:hidden">
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="p-2 rounded-md hover:bg-gray-100"
+                >
+                  <IconMenu2 className="w-6 h-6" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
