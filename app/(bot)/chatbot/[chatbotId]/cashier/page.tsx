@@ -4,6 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import DashboardNav from "@/components/DashboardNav";
+import { Card } from "@/components/ui/card";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Pie,
+  PieChart,
+  Cell,
+  Line,
+  LineChart,
+} from "recharts";
+import MetricsPage from '@/components/cashier/MetricsPage';
 
 interface OrderItem {
   item_id: string;
@@ -36,6 +53,10 @@ export default function CashierPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    endDate: new Date()
+  });
 
   // Fetch orders and menu items on component mount and periodically refresh
   useEffect(() => {
@@ -177,6 +198,109 @@ export default function CashierPage() {
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
+  const calculateMetrics = () => {
+    const metrics = {
+      deliverySpeed: [] as { date: string; avgTime: number }[],
+      popularItems: [] as { name: string; count: number }[],
+      tableMetrics: [] as { table: string; totalValue: number; orderCount: number }[],
+      orderValueDistribution: [] as { range: string; count: number }[],
+    };
+
+    // Calculate delivery speed
+    const deliveryTimes = orders
+      .filter(order => order.status === 'delivered')
+      .map(order => {
+        const orderTime = new Date(order.timestamp).getTime();
+        const deliveredTime = new Date(order.updatedAt).getTime();
+        return {
+          date: new Date(order.timestamp).toISOString().split('T')[0],
+          time: (deliveredTime - orderTime) / (1000 * 60) // in minutes
+        };
+      });
+
+    // Group by date and calculate average
+    const deliveryByDate = deliveryTimes.reduce((acc, curr) => {
+      if (!acc[curr.date]) {
+        acc[curr.date] = { total: 0, count: 0 };
+      }
+      acc[curr.date].total += curr.time;
+      acc[curr.date].count += 1;
+      return acc;
+    }, {} as Record<string, { total: number; count: number }>);
+
+    metrics.deliverySpeed = Object.entries(deliveryByDate).map(([date, data]) => ({
+      date,
+      avgTime: data.total / data.count
+    }));
+
+    // Calculate popular items
+    const itemCounts = orders.reduce((acc, order) => {
+      order.items.forEach(item => {
+        if (!acc[item.name]) {
+          acc[item.name] = 0;
+        }
+        acc[item.name] += item.qty;
+      });
+      return acc;
+    }, {} as Record<string, number>);
+
+    metrics.popularItems = Object.entries(itemCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // Calculate table metrics
+    const tableStats = orders.reduce((acc, order) => {
+      if (!order.table) return acc;
+      if (!acc[order.table]) {
+        acc[order.table] = { totalValue: 0, orderCount: 0 };
+      }
+      acc[order.table].totalValue += order.subtotal;
+      acc[order.table].orderCount += 1;
+      return acc;
+    }, {} as Record<string, { totalValue: number; orderCount: number }>);
+
+    metrics.tableMetrics = Object.entries(tableStats)
+      .map(([table, stats]) => ({
+        table,
+        totalValue: stats.totalValue,
+        orderCount: stats.orderCount
+      }))
+      .sort((a, b) => b.totalValue - a.totalValue);
+
+    // Calculate order value distribution
+    const valueRanges = [
+      { min: 0, max: 20, label: '$0-20' },
+      { min: 20, max: 50, label: '$20-50' },
+      { min: 50, max: 100, label: '$50-100' },
+      { min: 100, max: Infinity, label: '$100+' }
+    ];
+
+    const valueDistribution = orders.reduce((acc, order) => {
+      const range = valueRanges.find(r => order.subtotal >= r.min && order.subtotal < r.max);
+      if (range) {
+        if (!acc[range.label]) {
+          acc[range.label] = 0;
+        }
+        acc[range.label]++;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    metrics.orderValueDistribution = Object.entries(valueDistribution)
+      .map(([range, count]) => ({ range, count }))
+      .sort((a, b) => {
+        const aMin = parseInt(a.range.replace(/[^0-9]/g, ''));
+        const bMin = parseInt(b.range.replace(/[^0-9]/g, ''));
+        return aMin - bMin;
+      });
+
+    return metrics;
+  };
+
+  const metrics = calculateMetrics();
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
+
   return (
     <div className="container mx-auto py-6 px-4">
       <DashboardNav teamId={chatbotId} hideFields={true}/>
@@ -220,16 +344,28 @@ export default function CashierPage() {
                 Web
               </button>
             </div>
-            <button
-              onClick={fetchOrders}
-              className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md"
-            >
-              Refresh
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setActiveTab('metrics')}
+                className={`px-12 py-2 rounded-md ${activeTab === 'metrics'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                  }`}
+              >
+                Metrics
+              </button>
+              <button
+                onClick={fetchOrders}
+                className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200"
+              >
+                Refresh
+              </button>
+            </div>
           </div>
 
-          {/* Orders Table */}
-          {loading ? (
+          {activeTab === 'metrics' ? (
+            <MetricsPage orders={orders} menuItems={menuItems} />
+          ) : loading ? (
             <div className="flex justify-center p-8">Loading orders...</div>
           ) : orders.length === 0 ? (
             <div className="text-center p-8">No orders found</div>
