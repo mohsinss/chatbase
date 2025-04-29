@@ -24,6 +24,11 @@ interface Chatbot {
   sources: any[];
 }
 
+interface DashboardNavProps {
+  teamId: string;
+  hideFields?: boolean;
+}
+
 // Custom toast styles
 const showErrorToast = (message: string) => {
   toast.custom(
@@ -58,8 +63,9 @@ const showErrorToast = (message: string) => {
   );
 };
 
-const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
+const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false }) => {
   const { data: session } = useSession();
+  const router = useRouter();
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [isChatbotMenuOpen, setIsChatbotMenuOpen] = useState(false);
   const [chatbots, setChatbots] = useState<Chatbot[]>([]);
@@ -67,7 +73,6 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
   const [teams, setTeams] = useState<any[]>([]);
   const [teamSearchQuery, setTeamSearchQuery] = useState("");
   const [isUpgradePlanModalOpen, setIsUpgradePlanModalOpen] = useState(false);
@@ -297,7 +302,7 @@ const DashboardNav: React.FC<{ teamId: string }> = ({ teamId }) => {
 
             {/* Always visible navigation */}
             {
-              teamId != "" &&
+              teamId != "" && !hideFields &&
               <div className="flex items-center gap-4">
                 {/* Team Selector */}
                 <div className="relative">
