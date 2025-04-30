@@ -4,7 +4,9 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, Clock, Share2, ChevronLeft, ChevronRight, Twitter, Linkedin, Facebook } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Share2, ChevronLeft, ChevronRight, Twitter, Linkedin, Facebook, Calculator } from 'lucide-react';
+import SavingsCalculator from '@/components/SavingsCalculator';
+import ChatbotDemo from '@/components/ChatbotDemo';
 
 const blogPosts = {
   'ai-chatbots-customer-support': {
@@ -19,22 +21,18 @@ const blogPosts = {
           In today's fast-paced digital world, customers expect immediate responses and 24/7 availability. Traditional customer support methods often fall short of these expectations, leading to frustrated customers and overwhelmed support teams. This is where AI chatbots are making a significant impact.
         </p>
 
-        <div class="bg-gray-50 border border-gray-200 rounded-xl p-8 my-8">
-          <h4 class="text-xl font-semibold mb-4">The Journey of Customer Support</h4>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h5 class="font-semibold text-gray-900 mb-2">Past</h5>
-              <p class="text-gray-600 text-sm mb-0">Phone-only support, long wait times, limited hours of operation</p>
-            </div>
-            <div>
-              <h5 class="font-semibold text-gray-900 mb-2">Present</h5>
-              <p class="text-gray-600 text-sm mb-0">Multi-channel support with AI chatbots, instant responses, 24/7 availability</p>
-            </div>
-            <div>
-              <h5 class="font-semibold text-gray-900 mb-2">Future</h5>
-              <p class="text-gray-600 text-sm mb-0">Predictive support, personalized experiences, advanced AI interactions</p>
-            </div>
-          </div>
+        <div class="bg-blue-50 border-l-4 border-blue-600 p-6 my-8 rounded-r-lg">
+          <p class="text-blue-800 font-medium mb-4">
+            "AI chatbots have reduced our response time by 80% and improved customer satisfaction scores by 35%. Our support team now focuses on complex issues while routine queries are handled automatically."
+          </p>
+          <p class="text-blue-600 text-sm mb-4">
+            - Sarah Chen, Customer Experience Director at TechCorp
+          </p>
+          <button onclick="openCalendar()" class="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2">
+            <span class="inline-block w-4 h-4"><svg viewBox="0 0 24 24" class="w-4 h-4"><path fill="currentColor" d="M19 4h-1V3c0-.6-.4-1-1-1s-1 .4-1 1v1H8V3c0-.6-.4-1-1-1s-1 .4-1 1v1H5C3.3 4 2 5.3 2 7v12c0 1.7 1.3 3 3 3h14c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3zm1 15c0 .6-.4 1-1 1H5c-.6 0-1-.4-1-1V10h16v9zm0-11H4V7c0-.6.4-1 1-1h1v1c0 .6.4 1 1 1s1-.4 1-1V6h8v1c0 .6.4 1 1 1s1-.4 1-1V6h1c.6 0 1 .4 1 1v1z"/></svg></span>
+            Transform Your Support Team - Schedule Demo
+            <span class="inline-block w-4 h-4"><svg viewBox="0 0 24 24" class="w-4 h-4"><path fill="currentColor" d="M9.4 18L8 16.6l4.6-4.6L8 7.4 9.4 6l6 6z"/></svg></span>
+          </button>
         </div>
 
         <h2 class="flex items-center text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
@@ -46,27 +44,15 @@ const blogPosts = {
           Unlike human agents, AI chatbots can provide instant responses around the clock. This means customers can get help whenever they need it, regardless of time zones or business hours. This constant availability has become increasingly important in our globalized economy where customers expect support at any time.
         </p>
 
-        <div class="bg-blue-50 border-l-4 border-blue-600 p-6 my-8 rounded-r-lg">
-          <p class="text-blue-800 font-medium mb-0">
-            "AI chatbots have reduced our response time by 80% and improved customer satisfaction scores by 35%. Our support team now focuses on complex issues while routine queries are handled automatically."
-          </p>
-          <p class="text-blue-600 text-sm mt-2 mb-0">
-            - Sarah Chen, Customer Experience Director at TechCorp
-          </p>
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 my-8 rounded-lg">
+          <p class="font-medium text-gray-900 mb-4">Ready to provide 24/7 support to your customers?</p>
+          <button onclick="openCalendar()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-medium hover:shadow-md transition-all duration-200 flex items-center gap-2">
+            <span class="inline-block w-4 h-4"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></span>
+            Book Your Demo Now
+          </button>
         </div>
 
-        <h3>2. Instant Response Times</h3>
-        <p>
-          AI chatbots can process and respond to customer queries in milliseconds, significantly reducing wait times and improving customer satisfaction. This rapid response capability is particularly crucial in:
-        </p>
-        <ul class="list-disc pl-6 space-y-2">
-          <li>Emergency situations requiring immediate attention</li>
-          <li>High-volume periods when human agents are overwhelmed</li>
-          <li>Simple queries that can be resolved with quick, accurate responses</li>
-          <li>Multi-language support scenarios</li>
-        </ul>
-
-        <h3>3. Cost Efficiency</h3>
+        <h3>2. Cost Efficiency</h3>
         <p>
           By handling routine inquiries, AI chatbots allow businesses to reduce support costs while maintaining high-quality service. This enables companies to allocate human resources to more complex issues that require empathy, critical thinking, and personalized attention.
         </p>
@@ -75,22 +61,19 @@ const blogPosts = {
           <div class="bg-gray-50 p-6 rounded-lg">
             <h4 class="text-xl font-semibold mb-4">Cost Reduction</h4>
             <p class="text-gray-600 mb-4">Average 30-40% reduction in customer support operational costs after implementing AI chatbots.</p>
-            <ul class="text-sm text-gray-600 space-y-2">
-              <li>• Reduced training costs</li>
-              <li>• Lower overhead expenses</li>
-              <li>• Improved agent efficiency</li>
-              <li>• Decreased response time costs</li>
-            </ul>
+            <button onclick="window.showCalculator()" class="text-blue-600 hover:text-blue-700 flex items-center gap-2 text-sm font-medium">
+              <span class="inline-block w-4 h-4"><svg viewBox="0 0 24 24" class="w-4 w-4" fill="currentColor"><path d="M4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h16V4H4zm5 2h2v2H9V6zm4 0h2v2h-2V6zM9 10h2v2H9v-2zm4 0h2v2h-2v-2zM9 14h2v2H9v-2zm4 0h2v2h-2v-2z"/></svg></span>
+              Calculate Your Savings - Get Demo
+              <span class="inline-block w-4 h-4"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="currentColor"><path d="M9.4 18L8 16.6l4.6-4.6L8 7.4 9.4 6l6 6z"/></svg></span>
+            </button>
           </div>
           <div class="bg-gray-50 p-6 rounded-lg">
             <h4 class="text-xl font-semibold mb-4">Customer Satisfaction</h4>
             <p class="text-gray-600 mb-4">92% of customers report satisfaction with chatbot interactions when seeking basic support.</p>
-            <ul class="text-sm text-gray-600 space-y-2">
-              <li>• Instant query resolution</li>
-              <li>• 24/7 availability</li>
-              <li>• Consistent responses</li>
-              <li>• Multi-language support</li>
-            </ul>
+            <button onclick="window.showChatbot()" class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+              <span class="inline-block w-4 h-4"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></span>
+              See It In Action
+            </button>
           </div>
         </div>
 
@@ -318,35 +301,10 @@ const blogPosts = {
           </div>
         </div>
 
-        <div class="bg-blue-50 rounded-xl p-8 my-12">
-          <h4 class="text-2xl font-bold mb-6">Ready to Transform Your Customer Support?</h4>
-          <p class="text-gray-700 mb-6">
-            Join thousands of businesses that have already revolutionized their customer support with AI chatbots. Get started today and see the difference for yourself.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-lg p-4 text-center">
-              <div className="font-bold text-blue-600">5000+</div>
-              <div className="text-sm text-gray-600">Businesses Served</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center">
-              <div className="font-bold text-blue-600">98%</div>
-              <div className="text-sm text-gray-600">Satisfaction Rate</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center">
-              <div className="font-bold text-blue-600">24/7</div>
-              <div className="text-sm text-gray-600">Support Available</div>
-            </div>
-          </div>
-          <div className="flex justify-center">
-            <Button 
-              onClick={openCalendar}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-full text-lg font-medium hover:shadow-lg hover:scale-105 transform transition-all duration-200 flex items-center gap-2"
-            >
-              <Calendar className="h-5 w-5" />
-              Schedule a Free Demo
-            </Button>
-          </div>
-        </div>
+
+           
+
+           
       </article>
     `,
     image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1100&q=80",
@@ -374,6 +332,8 @@ const blogPosts = {
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   const post = blogPosts[params.slug as keyof typeof blogPosts];
 
@@ -408,206 +368,246 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     window.open('https://cal.com/mohsin-alshammari-ovkk40/30min', '_blank');
   };
 
+  // Add this to expose both calculator and chatbot functions to the window object
+  React.useEffect(() => {
+    (window as any).showCalculator = () => setIsCalculatorOpen(true);
+    (window as any).showChatbot = () => setIsChatbotOpen(true);
+  }, []);
+
   return (
-    <div className="bg-white">
-      {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <Link href="/blog" className="inline-flex items-center text-white/80 hover:text-white mb-6">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Blog
-            </Link>
-            <div className="flex items-center gap-4 text-sm mb-4">
-              <span className="flex items-center">
-                <Calendar className="mr-2 h-4 w-4" />
-                {post.date}
-              </span>
-              <span className="flex items-center">
-                <Clock className="mr-2 h-4 w-4" />
-                {post.readTime}
-              </span>
-              <span className="bg-white/20 px-3 py-1 rounded-full">
-                {post.category}
-              </span>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">{post.title}</h1>
-            <p className="text-xl mb-8">{post.excerpt}</p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-white/20 mr-4">
-                  <Image
-                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80"
-                    alt={post.author}
-                    width={48}
-                    height={48}
-                    className="object-cover"
-                  />
-                </div>
-                <div className="flex items-center gap-4">
-                  <div>
-                    <div className="font-medium text-lg">{post.author}</div>
-                    <div className="text-sm text-white/80">AI Solutions Expert</div>
+    <>
+      <div className="bg-white">
+        {/* Hero Section */}
+        <section className="relative py-20 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto">
+              <Link href="/blog" className="inline-flex items-center text-white/80 hover:text-white mb-6">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Blog
+              </Link>
+              <div className="flex items-center gap-4 text-sm mb-4">
+                <span className="flex items-center">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {post.date}
+                </span>
+                <span className="flex items-center">
+                  <Clock className="mr-2 h-4 w-4" />
+                  {post.readTime}
+                </span>
+                <span className="bg-white/20 px-3 py-1 rounded-full">
+                  {post.category}
+                </span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">{post.title}</h1>
+              <p className="text-xl mb-8">{post.excerpt}</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-white/20 mr-4">
+                    <Image
+                      src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80"
+                      alt={post.author}
+                      width={48}
+                      height={48}
+                      className="object-cover"
+                    />
                   </div>
-                  <div className="relative">
-                    <Button 
-                      variant="outline" 
-                      className="bg-white/20 text-white hover:bg-white/30 flex items-center gap-2 rounded-full px-4 py-1 border-0"
-                      onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
-                    >
-                      <Share2 className="h-4 w-4" />
-                      Share
-                    </Button>
-                    {isShareMenuOpen && (
-                      <div className="absolute left-0 mt-2 w-48 rounded-lg bg-white shadow-lg py-2 z-10">
-                        <button
-                          onClick={() => handleShare('twitter')}
-                          className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <Twitter className="h-4 w-4" />
-                          Share on Twitter
-                        </button>
-                        <button
-                          onClick={() => handleShare('linkedin')}
-                          className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <Linkedin className="h-4 w-4" />
-                          Share on LinkedIn
-                        </button>
-                        <button
-                          onClick={() => handleShare('facebook')}
-                          className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <Facebook className="h-4 w-4" />
-                          Share on Facebook
-                        </button>
-                      </div>
-                    )}
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <div className="font-medium text-lg">{post.author}</div>
+                      <div className="text-sm text-white/80">AI Solutions Expert</div>
+                    </div>
+                    <div className="relative">
+                      <Button 
+                        variant="outline" 
+                        className="bg-white/20 text-white hover:bg-white/30 flex items-center gap-2 rounded-full px-4 py-1 border-0"
+                        onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
+                      >
+                        <Share2 className="h-4 w-4" />
+                        Share
+                      </Button>
+                      {isShareMenuOpen && (
+                        <div className="absolute left-0 mt-2 w-48 rounded-lg bg-white shadow-lg py-2 z-10">
+                          <button
+                            onClick={() => handleShare('twitter')}
+                            className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Twitter className="h-4 w-4" />
+                            Share on Twitter
+                          </button>
+                          <button
+                            onClick={() => handleShare('linkedin')}
+                            className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Linkedin className="h-4 w-4" />
+                            Share on LinkedIn
+                          </button>
+                          <button
+                            onClick={() => handleShare('facebook')}
+                            className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Facebook className="h-4 w-4" />
+                            Share on Facebook
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+            
           </div>
-        </div>
-      </section>
+          
+        </section>
 
-      {/* Content Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="relative h-[400px] mb-12 rounded-lg overflow-hidden shadow-xl">
-              <Image
-                src={post.image}
-                alt={post.title}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div 
-              className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Related Posts */}
-      {post.relatedPosts && (
-        <section className="py-16 bg-gray-50">
+        {/* Content Section */}
+        <section className="py-16">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold mb-8">Related Articles</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {post.relatedPosts.map((relatedPost) => (
-                  <Link key={relatedPost.id} href={`/blog/${relatedPost.id}`}>
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                      <div className="relative h-48">
-                        <Image
-                          src={relatedPost.image}
-                          alt={relatedPost.title}
-                          fill
-                          className="object-cover"
-                        />
+              <div className="relative h-[400px] mb-12 rounded-lg overflow-hidden shadow-xl">
+                <Image
+                  src={post.image}
+                  alt={post.title}
+                  fill
+                  className="object-cover object-[50%_20%]"
+                  priority
+                />
+              </div>
+              <div 
+                className="prose prose-lg max-w-none"
+                dangerouslySetInnerHTML={{ __html: post.content }}
+              />
+            </div>
+                    {/* Updated CTA Section */}
+        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-12 my-16 text-white shadow-xl">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-10">
+              <h4 className="text-4xl font-bold mb-4">Ready to Transform Your Customer Support?</h4>
+              <p className="text-xl text-blue-100 max-w-2xl mx-auto">
+                Join thousands of businesses that have already revolutionized their customer support with AI chatbots.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center transform hover:scale-105 transition-transform duration-200">
+                <div className="text-5xl font-bold mb-2 bg-gradient-to-r from-blue-200 to-white bg-clip-text text-transparent">5000+</div>
+                <div className="text-blue-100">Businesses Served</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center transform hover:scale-105 transition-transform duration-200">
+                <div className="text-5xl font-bold mb-2 bg-gradient-to-r from-blue-200 to-white bg-clip-text text-transparent">98%</div>
+                <div className="text-blue-100">Satisfaction Rate</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center transform hover:scale-105 transition-transform duration-200">
+                <div className="text-5xl font-bold mb-2 bg-gradient-to-r from-blue-200 to-white bg-clip-text text-transparent">24/7</div>
+                <div className="text-blue-100">Support Available</div>
+              </div>
+            </div>
+
+    {/* Calculator button */}
+    <div className="flex justify-center mt-8">
+          <button
+            onClick={() => setIsCalculatorOpen(true)}
+            className="text-blue-600 hover:text-blue-700 flex items-center gap-2 text-lg font-medium bg-blue-50 hover:bg-blue-100 px-6 py-3 rounded-lg transition-all duration-200"
+          >
+            <Calculator className="h-5 w-5" />
+            Calculate Your Savings - Get Demo
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+          </div>
+        </div>
+          </div>
+        </section>
+
+        {/* Related Posts */}
+        {post.relatedPosts && (
+          <section className="py-16 bg-gray-50">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="max-w-4xl mx-auto">
+                <h2 className="text-3xl font-bold mb-8">Related Articles</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {post.relatedPosts.map((relatedPost) => (
+                    <Link key={relatedPost.id} href={`/blog/${relatedPost.id}`}>
+                      <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <div className="relative h-48">
+                          <Image
+                            src={relatedPost.image}
+                            alt={relatedPost.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="p-6">
+                          <h3 className="text-xl font-semibold">{relatedPost.title}</h3>
+                        </div>
                       </div>
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold">{relatedPost.title}</h3>
-                      </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Tags Section */}
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl font-bold mb-6">Topics</h2>
+              <div className="flex flex-wrap gap-2">
+                {post.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="bg-gray-100 px-4 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
+                  >
+                    {tag}
+                  </span>
                 ))}
               </div>
             </div>
           </div>
         </section>
-      )}
 
-      {/* Tags Section */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Topics</h2>
-            <div className="flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="bg-gray-100 px-4 py-2 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
-                >
-                  {tag}
-                </span>
-              ))}
+        {/* Navigation */}
+        <section className="py-12 border-t">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex justify-between items-center">
+                <Button variant="ghost" className="text-gray-600 hover:text-blue-600">
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Previous Article
+                </Button>
+                <Button variant="ghost" className="text-gray-600 hover:text-blue-600">
+                  Next Article
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Navigation */}
-      <section className="py-12 border-t">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex justify-between items-center">
-              <Button variant="ghost" className="text-gray-600 hover:text-blue-600">
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Previous Article
-              </Button>
-              <Button variant="ghost" className="text-gray-600 hover:text-blue-600">
-                Next Article
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Updated CTA Section */}
-      <div className="bg-blue-50 rounded-xl p-8 my-12">
-        <h4 className="text-2xl font-bold mb-6">Ready to Transform Your Customer Support?</h4>
-        <p className="text-gray-700 mb-6">
-          Join thousands of businesses that have already revolutionized their customer support with AI chatbots. Get started today and see the difference for yourself.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-4 text-center">
-            <div className="font-bold text-blue-600">5000+</div>
-            <div className="text-sm text-gray-600">Businesses Served</div>
-          </div>
-          <div className="bg-white rounded-lg p-4 text-center">
-            <div className="font-bold text-blue-600">98%</div>
-            <div className="text-sm text-gray-600">Satisfaction Rate</div>
-          </div>
-          <div className="bg-white rounded-lg p-4 text-center">
-            <div className="font-bold text-blue-600">24/7</div>
-            <div className="text-sm text-gray-600">Support Available</div>
-          </div>
-        </div>
-        <div className="flex justify-center">
-          <Button 
-            onClick={openCalendar}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-full text-lg font-medium hover:shadow-lg hover:scale-105 transform transition-all duration-200 flex items-center gap-2"
-          >
-            <Calendar className="h-5 w-5" />
-            Schedule a Free Demo
-          </Button>
-        </div>
+
+    
       </div>
-    </div>
+
+      <SavingsCalculator
+        isOpen={isCalculatorOpen}
+        onClose={() => setIsCalculatorOpen(false)}
+        onScheduleDemo={() => {
+          setIsCalculatorOpen(false);
+          openCalendar();
+        }}
+      />
+
+      <ChatbotDemo
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
+        onScheduleDemo={() => {
+          setIsChatbotOpen(false);
+          openCalendar();
+        }}
+      />
+    </>
   );
 } 
