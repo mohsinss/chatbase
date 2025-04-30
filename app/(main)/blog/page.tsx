@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Calendar, Clock } from "lucide-react";
+import { blogPosts } from "@/app/data/blog/posts";
 
 const featuredPosts = [
   {
@@ -33,64 +34,17 @@ const featuredPosts = [
   }
 ];
 
-const blogPosts = [
-  {
-    id: 'implementing-ai-chatbots',
-    title: "Implementing AI Chatbots: A Step-by-Step Guide",
-    excerpt: "A comprehensive guide to implementing AI chatbots in your business operations.",
-    image: "https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=1100&q=80",
-    category: "Guide",
-    date: "March 1, 2024",
-    readTime: "10 min read"
-  },
-  {
-    id: 'measuring-ai-roi',
-    title: "Measuring ROI of AI Chatbot Implementation",
-    excerpt: "Learn how to measure and maximize the return on investment from your AI chatbot.",
-    image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=1100&q=80",
-    category: "Business",
-    date: "February 25, 2024",
-    readTime: "5 min read"
-  },
-  {
-    id: 'ai-chatbot-training',
-    title: "Best Practices for AI Chatbot Training",
-    excerpt: "Essential tips and best practices for training your AI chatbot effectively.",
-    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1100&q=80",
-    category: "Development",
-    date: "February 20, 2024",
-    readTime: "8 min read"
-  },
-  {
-    id: 'ai-vs-traditional-support',
-    title: "AI Chatbots vs Traditional Support: A Comparison",
-    excerpt: "Comparing traditional customer support methods with AI-powered solutions.",
-    image: "https://images.unsplash.com/photo-1521791055366-0d553872125f?auto=format&fit=crop&w=1100&q=80",
-    category: "Analysis",
-    date: "February 15, 2024",
-    readTime: "6 min read"
-  },
-  {
-    id: 'ai-chatbot-security',
-    title: "Security Considerations for AI Chatbots",
-    excerpt: "Important security measures to consider when implementing AI chatbots.",
-    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1100&q=80",
-    category: "Security",
-    date: "February 10, 2024",
-    readTime: "7 min read"
-  },
-  {
-    id: 'customizing-ai-chatbots',
-    title: "Customizing AI Chatbots for Your Business Needs",
-    excerpt: "How to tailor AI chatbots to meet your specific business requirements.",
-    image: "https://images.unsplash.com/photo-1607082350899-7e105aa886ae?auto=format&fit=crop&w=1100&q=80",
-    category: "Customization",
-    date: "February 5, 2024",
-    readTime: "9 min read"
-  }
-];
-
 export default function BlogPage() {
+  const allPosts = Object.entries(blogPosts).map(([id, post]) => ({
+    id,
+    title: post.title,
+    excerpt: post.excerpt,
+    image: post.image,
+    category: post.category,
+    date: post.date,
+    readTime: post.readTime
+  }));
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -152,7 +106,7 @@ export default function BlogPage() {
       <div className="max-w-7xl mx-auto px-4 py-16">
         <h2 className="text-3xl font-bold mb-8">Latest Articles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {blogPosts.map((post) => (
+          {allPosts.map((post) => (
             <Link key={post.id} href={`/blog/${post.id}`}>
               <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow h-full">
                 <div className="relative h-48">
