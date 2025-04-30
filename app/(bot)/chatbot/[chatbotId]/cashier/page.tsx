@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import DashboardNav from "@/components/DashboardNav";
@@ -44,19 +44,60 @@ interface Order {
   metadata: any;
 }
 
+type DateRange = 'last30m' | 'last1h' | 'last12h' | 'last24h' | 'last7d' | 'last30d' | 'last3m' | 'last12m' | 'last24m';
+
 export default function CashierPage() {
   const params = useParams();
   const chatbotId = params.chatbotId as string;
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    endDate: new Date()
-  });
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange>('last24h');
+  const [showDateRangeDropdown, setShowDateRangeDropdown] = useState(false);
+
+  const getDateRangeFilter = (range: DateRange): Date => {
+    const now = new Date();
+    switch (range) {
+      case 'last30m':
+        return new Date(now.getTime() - 30 * 60 * 1000);
+      case 'last1h':
+        return new Date(now.getTime() - 60 * 60 * 1000);
+      case 'last12h':
+        return new Date(now.getTime() - 12 * 60 * 60 * 1000);
+      case 'last24h':
+        return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      case 'last7d':
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case 'last30d':
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case 'last3m':
+        return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      case 'last12m':
+        return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      case 'last24m':
+        return new Date(now.getTime() - 2 * 365 * 24 * 60 * 60 * 1000);
+      default:
+        return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    }
+  };
+
+  // Add click-away listener
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDateRangeDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Fetch orders and menu items on component mount and periodically refresh
   useEffect(() => {
@@ -70,13 +111,12 @@ export default function CashierPage() {
     }, 30000);
 
     return () => clearInterval(intervalId);
-  }, [chatbotId, activeTab]);
+  }, [chatbotId, activeTab, selectedDateRange]);
 
   const fetchOrders = async () => {
     try {
-      setLoading(false);
+      setLoading(true);
 
-      // Determine portal filter based on active tab
       let portalFilter = '';
       if (activeTab === 'whatsapp') {
         portalFilter = 'whatsapp';
@@ -91,7 +131,20 @@ export default function CashierPage() {
       }
 
       const data = await response.json();
-      setOrders(data.orders);
+      const startDate = getDateRangeFilter(selectedDateRange);
+      
+      // Filter orders by date range
+      const filteredOrders = data.orders.filter((order: Order) => {
+        const orderDate = new Date(order.timestamp);
+        return orderDate >= startDate && orderDate <= new Date();
+      });
+
+      // Sort orders by timestamp in descending order (newest first)
+      const sortedOrders = filteredOrders.sort((a: Order, b: Order) => {
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      });
+
+      setOrders(sortedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Failed to load orders. Please try again.');
@@ -313,7 +366,7 @@ export default function CashierPage() {
         </div>
 
         <div className="p-6">
-          {/* Tabs */}
+          {/* Tabs and Date Range Filter */}
           <div className="flex justify-between items-center mb-4">
             <div className="flex space-x-2">
               <button
@@ -344,7 +397,63 @@ export default function CashierPage() {
                 Web
               </button>
             </div>
-            <div className="flex space-x-2">
+
+            <div className="flex space-x-2 items-center">
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowDateRangeDropdown(!showDateRangeDropdown)}
+                  className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 flex items-center space-x-2"
+                >
+                  <span>
+                    {selectedDateRange === 'last30m' ? 'Last 30 Minutes' :
+                     selectedDateRange === 'last1h' ? 'Last Hour' :
+                     selectedDateRange === 'last12h' ? 'Last 12 Hours' :
+                     selectedDateRange === 'last24h' ? 'Last 24 Hours' :
+                     selectedDateRange === 'last7d' ? 'Last 7 Days' :
+                     selectedDateRange === 'last30d' ? 'Last 30 Days' :
+                     selectedDateRange === 'last3m' ? 'Last 3 Months' :
+                     selectedDateRange === 'last12m' ? 'Last 12 Months' :
+                     'Last 24 Months'}
+                  </span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showDateRangeDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                    <div className="py-1 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                      {[
+                        { value: 'last30m', label: 'Last 30 Minutes' },
+                        { value: 'last1h', label: 'Last Hour' },
+                        { value: 'last12h', label: 'Last 12 Hours' },
+                        { value: 'last24h', label: 'Last 24 Hours' },
+                        { value: 'last7d', label: 'Last 7 Days' },
+                        { value: 'last30d', label: 'Last 30 Days' },
+                        { value: 'last3m', label: 'Last 3 Months' },
+                        { value: 'last12m', label: 'Last 12 Months' },
+                        { value: 'last24m', label: 'Last 24 Months' },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${
+                            selectedDateRange === option.value
+                              ? 'bg-gray-100 text-gray-900'
+                              : 'text-gray-700'
+                          }`}
+                          onClick={() => {
+                            setSelectedDateRange(option.value as DateRange);
+                            setShowDateRangeDropdown(false);
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={() => setActiveTab('metrics')}
                 className={`px-12 py-2 rounded-md ${activeTab === 'metrics'
