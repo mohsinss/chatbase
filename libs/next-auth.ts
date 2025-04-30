@@ -75,47 +75,47 @@ export const authOptions: NextAuthOptionsExtended = {
         };
       },
     }),
-    CredentialsProvider({
-      name: "Test User",
-      credentials: {
-        email: { label: "Email", type: "email", value: "test@test.com" }, // default value added here
-      },
-      //@ts-ignore
-      async authorize(credentials) {
-        const testUsers = [
-          "test@test.com",
-          "test2@test.com",
-          "test3@test.com", 
-          "test4@test.com",
-          "test5@test.com",
-          "test6@test.com"
-        ];
+    // CredentialsProvider({
+    //   name: "Test User",
+    //   credentials: {
+    //     email: { label: "Email", type: "email", value: "test@test.com" }, // default value added here
+    //   },
+    //   //@ts-ignore
+    //   async authorize(credentials) {
+    //     const testUsers = [
+    //       "test@test.com",
+    //       "test2@test.com",
+    //       "test3@test.com", 
+    //       "test4@test.com",
+    //       "test5@test.com",
+    //       "test6@test.com"
+    //     ];
         
-        if (credentials && credentials.email && testUsers.includes(credentials.email)) {
-          await connectMongo1();
+    //     if (credentials && credentials.email && testUsers.includes(credentials.email)) {
+    //       await connectMongo1();
 
-          let user = await User.findOne({ email: credentials.email });
+    //       let user = await User.findOne({ email: credentials.email });
 
-          if (!user) {
-            const username = credentials.email.split('@')[0];
-            user = await User.create({
-              email: credentials.email,
-              name: username.charAt(0).toUpperCase() + username.slice(1) + " User",
-              createdAt: new Date(),
-            });
-          }
+    //       if (!user) {
+    //         const username = credentials.email.split('@')[0];
+    //         user = await User.create({
+    //           email: credentials.email,
+    //           name: username.charAt(0).toUpperCase() + username.slice(1) + " User",
+    //           createdAt: new Date(),
+    //         });
+    //       }
 
-          return {
-            id: user._id,
-            email: user.email,
-            name: user.name,
-            image: user.image,
-          };
-        }
+    //       return {
+    //         id: user._id,
+    //         email: user.email,
+    //         name: user.name,
+    //         image: user.image,
+    //       };
+    //     }
 
-        throw new Error("Invalid credentials");
-      },
-    }),
+    //     throw new Error("Invalid credentials");
+    //   },
+    // }),
   ],
   // New users will be saved in Database (MongoDB Atlas). Each user (model) has some fields like name, email, image, etc..
   // Requires a MongoDB database. Set MONOGODB_URI env variable.
