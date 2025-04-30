@@ -190,6 +190,9 @@ const Header = () => {
             <Link href="/guide" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
               {isArabic ? "الدليل" : "Guide"}
             </Link>
+            <Link href="/blog" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
+              {isArabic ? "المدونة" : "Blog"}
+            </Link>
             <a href="#pricing" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
               {isArabic ? "الأسعار" : "Pricing"}
             </a>
@@ -241,6 +244,13 @@ const Header = () => {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               {isArabic ? "الدليل" : "Guide"}
+            </Link>
+            <Link 
+              href="/blog" 
+              className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              {isArabic ? "المدونة" : "Blog"}
             </Link>
             <a 
               href="#pricing" 
