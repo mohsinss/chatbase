@@ -142,7 +142,7 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
             title: "Menu Categories",
             rows: action.metadata.categories.map((category: any) => ({
               id: `om-category-{tableName}-{actionId}-${category.id}`,
-              title: category.name,
+              title: category.name.slice(0,24),
               description: ""
             }))
           }
@@ -311,7 +311,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
               // Add menu items
               ...items.map((item: any) => ({
                 id: `om-menu-{tableName}-{actionId}-${item.id}`,
-                title: item.name,
+                title: item.name.slice(0,24),
                 description: `$${item.price.toFixed(2)}`
               }))
             ]
