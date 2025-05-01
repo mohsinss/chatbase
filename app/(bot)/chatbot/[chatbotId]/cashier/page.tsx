@@ -42,6 +42,7 @@ interface Order {
   createdAt: string;
   updatedAt: string;
   metadata: any;
+  lastNotifiedStatus?: string;
 }
 
 type DateRange = 'last30m' | 'last1h' | 'last12h' | 'last24h' | 'last7d' | 'last30d' | 'last3m' | 'last12m' | 'last24m';
@@ -58,6 +59,8 @@ export default function CashierPage() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [selectedDateRange, setSelectedDateRange] = useState<DateRange>('last24h');
   const [showDateRangeDropdown, setShowDateRangeDropdown] = useState(false);
+  const [notificationStatus, setNotificationStatus] = useState<Record<string, string>>({});
+  const [loadingNotifications, setLoadingNotifications] = useState<Record<string, boolean>>({});
 
   const getDateRangeFilter = (range: DateRange): Date => {
     const now = new Date();
@@ -205,6 +208,16 @@ export default function CashierPage() {
         return;
       }
 
+      // Check if already notified for this status
+      const storageKey = `notified_${chatbotId}_${orderId}_${order.status}`;
+      if (localStorage.getItem(storageKey)) {
+        toast.error(`You already notified the user for ${order.status} status`);
+        return;
+      }
+
+      // Set loading state
+      setLoadingNotifications(prev => ({ ...prev, [orderId]: true }));
+
       const response = await fetch(`/api/chatbot/${chatbotId}/orders/${orderId}/notify`, {
         method: 'POST',
         headers: {
@@ -220,11 +233,31 @@ export default function CashierPage() {
         throw new Error('Failed to send WhatsApp notification');
       }
 
+      // Store notification status in localStorage
+      localStorage.setItem(storageKey, 'true');
+
+      // Update local state
+      const updatedOrders = orders.map(o => 
+        o.orderId === orderId 
+          ? { 
+              ...o, 
+              metadata: { 
+                ...o.metadata,
+                lastNotifiedStatus: order.status 
+              } 
+            }
+          : o
+      );
+      setOrders(updatedOrders);
+
       toast.success(`WhatsApp notification sent for order #${orderId}`);
 
     } catch (error) {
       console.error('Error sending WhatsApp notification:', error);
       toast.error('Failed to send WhatsApp notification. Please try again.');
+    } finally {
+      // Clear loading state
+      setLoadingNotifications(prev => ({ ...prev, [orderId]: false }));
     }
   };
 
@@ -249,6 +282,15 @@ export default function CashierPage() {
       cancelled: 'bg-red-100 text-red-800',
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getNotifyButtonColor = (order: Order) => {
+    const storageKey = `notified_${chatbotId}_${order.orderId}_${order.status}`;
+    // Only show status color when button is "Notified"
+    if (localStorage.getItem(storageKey)) {
+      return getStatusColor(order.status);
+    }
+    return 'bg-gray-100 text-gray-800';
   };
 
   const calculateMetrics = () => {
@@ -353,6 +395,15 @@ export default function CashierPage() {
 
   const metrics = calculateMetrics();
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
+
+  const handleNotifyClick = (order: Order) => {
+    const storageKey = `notified_${chatbotId}_${order.orderId}_${order.status}`;
+    if (localStorage.getItem(storageKey)) {
+      toast.error(`You already notified the user for ${order.status} status`);
+      return;
+    }
+    sendWhatsAppConfirmation(order.orderId);
+  };
 
   return (
     <div className="container mx-auto py-6 px-4">
@@ -567,10 +618,19 @@ export default function CashierPage() {
 
                             {order.portal === 'whatsapp' && (
                               <button
-                                className="px-2 py-1 border rounded-md text-sm"
-                                onClick={() => sendWhatsAppConfirmation(order.orderId)}
+                                className={`px-2 py-1 rounded-md text-sm ${getNotifyButtonColor(order)} flex items-center gap-1`}
+                                onClick={() => handleNotifyClick(order)}
+                                disabled={loadingNotifications[order.orderId]}
                               >
-                                Notify
+                                {loadingNotifications[order.orderId] ? (
+                                  <>
+                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Sending...
+                                  </>
+                                ) : localStorage.getItem(`notified_${chatbotId}_${order.orderId}_${order.status}`) ? 'Notified' : 'Notify'}
                               </button>
                             )}
                           </div>

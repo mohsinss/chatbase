@@ -41,8 +41,8 @@ next-env.d.ts
 
 # public
 public/robots.txt
-public/sitemap.xml
-public/sitemap-0.xml
+# public/sitemap.xml
+# public/sitemap-0.xml
 
 credentials
 package-lock.json
