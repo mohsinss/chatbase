@@ -142,7 +142,7 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
             title: "Menu Categories",
             rows: action.metadata.categories.map((category: any) => ({
               id: `om-category-{tableName}-{actionId}-${category.id}`,
-              title: category.name.slice(0, 24),
+              title: category.name.slice(0,24),
               description: ""
             }))
           }
@@ -311,7 +311,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
               // Add menu items
               ...items.map((item: any, index: number) => ({
                 id: `om-menu-{tableName}-{actionId}-${item.id}`,
-                title: index + 1,
+                title: item.name.slice(0,24),
                 description: `$${item.price.toFixed(2)} - ${item.name}`
               }))
             ]
@@ -815,7 +815,7 @@ export async function updateGoogleSheet(chatbotId: string, order: Order) {
       process.env.GOOGLE_CLIENT_SECRET,
       process.env.GOOGLE_REDIRECT_URI
     );
-
+    
     oauth2Client.setCredentials({
       access_token: googleIntegration.accessToken,
       refresh_token: googleIntegration.refreshToken,
