@@ -61,6 +61,10 @@ export default function CashierPage() {
   const [showDateRangeDropdown, setShowDateRangeDropdown] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState<Record<string, string>>({});
   const [loadingNotifications, setLoadingNotifications] = useState<Record<string, boolean>>({});
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'ascending' | 'descending';
+  } | null>(null);
 
   const getDateRangeFilter = (range: DateRange): Date => {
     const now = new Date();
@@ -269,8 +273,103 @@ export default function CashierPage() {
     }
   };
 
+  const sortData = (data: Order[], key: string, direction: 'ascending' | 'descending') => {
+    return [...data].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (key) {
+        case 'date':
+          aValue = new Date(a.timestamp).getTime();
+          bValue = new Date(b.timestamp).getTime();
+          break;
+        case 'table':
+          aValue = a.table || '';
+          bValue = b.table || '';
+          break;
+        case 'items':
+          aValue = a.items.length;
+          bValue = b.items.length;
+          break;
+        case 'total':
+          aValue = a.subtotal;
+          bValue = b.subtotal;
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        default:
+          aValue = a[key as keyof Order];
+          bValue = b[key as keyof Order];
+      }
+
+      if (direction === 'ascending') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+  };
+
+  const requestSort = (key: string) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig?.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Format the time
+    const timeString = date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit'
+    });
+
+    // Check if it's today or yesterday
+    if (date.toDateString() === today.toDateString()) {
+      return `Today, ${timeString}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday, ${timeString}`;
+    } else {
+      // Format date as MM/DD/YYYY for other dates
+      return `${date.toLocaleDateString('en-US', { 
+        month: '2-digit', 
+        day: '2-digit', 
+        year: 'numeric'
+      })}, ${timeString}`;
+    }
+  };
+
+  // Sort orders when sortConfig changes
+  const sortedOrders = React.useMemo(() => {
+    if (!sortConfig) return orders;
+    return sortData(orders, sortConfig.key, sortConfig.direction);
+  }, [orders, sortConfig]);
+
+  const getSortIcon = (key: string) => {
+    if (sortConfig?.key !== key) {
+      return (
+        <svg className="w-4 h-4 opacity-0 group-hover:opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    return sortConfig.direction === 'ascending' ? (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    ) : (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    );
   };
 
   const getStatusColor = (status: string) => {
@@ -406,23 +505,23 @@ export default function CashierPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 px-4">
+    <div className="min-h-screen bg-[#F0F2F5]">
       <DashboardNav teamId={chatbotId} hideFields={true}/>
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="p-6 border-b">
+      <div className="bg-white shadow-md">
+        <div className="p-8 border-b">
           <h1 className="text-2xl font-bold">Order Management</h1>
           <p className="text-gray-600">
             Manage and process orders from web and WhatsApp customers
           </p>
         </div>
 
-        <div className="p-6">
+        <div className="p-8">
           {/* Tabs and Date Range Filter */}
           <div className="flex justify-between items-center mb-4">
             <div className="flex space-x-2">
               <button
                 onClick={() => setActiveTab('all')}
-                className={`px-4 py-2 rounded-md ${activeTab === 'all'
+                className={`px-6 py-2 rounded-md ${activeTab === 'all'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-800'
                   }`}
@@ -431,7 +530,7 @@ export default function CashierPage() {
               </button>
               <button
                 onClick={() => setActiveTab('whatsapp')}
-                className={`px-4 py-2 rounded-md ${activeTab === 'whatsapp'
+                className={`px-6 py-2 rounded-md ${activeTab === 'whatsapp'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-800'
                   }`}
@@ -440,7 +539,7 @@ export default function CashierPage() {
               </button>
               <button
                 onClick={() => setActiveTab('web')}
-                className={`px-4 py-2 rounded-md ${activeTab === 'web'
+                className={`px-6 py-2 rounded-md ${activeTab === 'web'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-800'
                   }`}
@@ -531,78 +630,108 @@ export default function CashierPage() {
             <div className="text-center p-8">No orders found</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Order ID
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group hover:bg-gray-100"
+                      onClick={() => requestSort('date')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Date</span>
+                        {getSortIcon('date')}
+                      </div>
                     </th>
                     {activeTab === 'whatsapp' ? (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         From
                       </th>
                     ) : null}
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
                       Source
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Table
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group hover:bg-gray-100"
+                      onClick={() => requestSort('table')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Table</span>
+                        {getSortIcon('table')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Items
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group hover:bg-gray-100"
+                      onClick={() => requestSort('items')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Items</span>
+                        {getSortIcon('items')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group hover:bg-gray-100"
+                      onClick={() => requestSort('total')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Total</span>
+                        {getSortIcon('total')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
+                    <th 
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group hover:bg-gray-100"
+                      onClick={() => requestSort('status')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Status</span>
+                        {getSortIcon('status')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {orders.map((order) => (
+                  {sortedOrders.map((order) => (
                     <React.Fragment key={order.orderId}>
                       <tr
                         className="cursor-pointer hover:bg-gray-50"
                         onClick={() => toggleOrderExpand(order.orderId)}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap font-medium">
+                        <td className="px-4 py-4 whitespace-nowrap font-medium">
                           {order.orderId}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           {formatDate(order.timestamp)}
                         </td>
                         {activeTab === 'whatsapp' ? (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             {order.metadata.from}
                           </th>
                         ) : null}
-                        <td className="px-6 py-4 whitespace-nowrap hidden">
+                        <td className="px-4 py-4 whitespace-nowrap hidden">
                           <span className="px-2 py-1 text-xs rounded-full border">
                             {order.portal === 'whatsapp' ? 'WhatsApp' : 'Web'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           {order.table || 'N/A'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           {order.items.length} items
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           ${order.subtotal.toFixed(2)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}`}>
                             {order.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
                             <select
                               value={order.status}
