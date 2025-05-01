@@ -65,6 +65,7 @@ export default function CashierPage() {
     key: string;
     direction: 'ascending' | 'descending';
   } | null>(null);
+  const [updatingOrders, setUpdatingOrders] = useState<Record<string, boolean>>({});
 
   const getDateRangeFilter = (range: DateRange): Date => {
     const now = new Date();
@@ -701,10 +702,10 @@ export default function CashierPage() {
                         className="cursor-pointer hover:bg-gray-50"
                         onClick={() => toggleOrderExpand(order.orderId)}
                       >
-                        <td className="px-4 py-4 whitespace-nowrap font-medium">
+                        <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-600">
                           {order.orderId}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-600">
                           {formatDate(order.timestamp)}
                         </td>
                         {activeTab === 'whatsapp' ? (
@@ -717,13 +718,13 @@ export default function CashierPage() {
                             {order.portal === 'whatsapp' ? 'WhatsApp' : 'Web'}
                           </span>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm">
                           {order.table || 'N/A'}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm">
                           {order.items.length} items
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm">
                           ${order.subtotal.toFixed(2)}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -771,7 +772,14 @@ export default function CashierPage() {
                         <tr>
                           <td colSpan={8} className="bg-gray-50 p-4">
                             <div className="space-y-4">
-                              <h4 className="font-semibold">Order Details</h4>
+                              <div className="flex justify-between items-start">
+                                <h4 className="font-semibold">Order Details</h4>
+                                {order.metadata?.from && (
+                                  <div className="text-sm text-gray-600">
+                                    <span className="font-medium">Phone:</span> {order.metadata.from}
+                                  </div>
+                                )}
+                              </div>
                               <div className="space-y-2">
                                 {order.items.map((item, index) => (
                                   <div key={index} className="flex justify-between items-center space-x-4">
@@ -874,11 +882,14 @@ export default function CashierPage() {
                                   <span>Total</span>
                                   <span>${order.subtotal.toFixed(2)}</span>
                                 </div>
-                                <div className="pt-4 flex space-x-4">
+                                <div className="pt-4">
                                   <button
-                                    className="px-4 py-2 bg-green-600 text-white rounded-md"
+                                    className="px-4 py-2 bg-green-600 text-white rounded-md flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     onClick={async () => {
                                       try {
+                                        // Set loading state
+                                        setUpdatingOrders(prev => ({ ...prev, [order.orderId]: true }));
+
                                         // Prepare updated order data
                                         const updatedOrder = orders.find(o => o.orderId === order.orderId);
                                         if (!updatedOrder) return;
@@ -926,10 +937,24 @@ export default function CashierPage() {
                                       } catch (error) {
                                         console.error('Error updating order:', error);
                                         toast.error('Failed to update order. Please try again.');
+                                      } finally {
+                                        // Clear loading state
+                                        setUpdatingOrders(prev => ({ ...prev, [order.orderId]: false }));
                                       }
                                     }}
+                                    disabled={updatingOrders[order.orderId]}
                                   >
-                                    Update Order
+                                    {updatingOrders[order.orderId] ? (
+                                      <>
+                                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Updating...</span>
+                                      </>
+                                    ) : (
+                                      <span>Update Order</span>
+                                    )}
                                   </button>
                                 </div>
                               </div>
