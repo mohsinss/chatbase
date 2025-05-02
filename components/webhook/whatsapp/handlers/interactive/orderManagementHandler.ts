@@ -7,7 +7,6 @@ import { sendTextMessage } from '@/components/webhook/whatsapp/services/whatsapp
 import ChatbotAction from '@/models/ChatbotAction';
 import { handleCategoryButton } from './categoryHandler';
 import { handleMenuButton } from './menuHandler';
-import { handleAddToCartButton } from './cartHandler';
 
 /**
  * Handle order management button clicks
