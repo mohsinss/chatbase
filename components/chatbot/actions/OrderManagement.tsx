@@ -131,6 +131,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
       timeWindow: number;
       suggestItems: boolean;
     };
+    currency?: string; // Add currency field to metadata
   }>({
     messageTemplate: "Hello! I'm at table {table} and would like to place an order.",
     phoneNumber: "",
@@ -139,7 +140,8 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
       messageTemplate: "Thank you for your order! We hope you enjoyed your meal. Would you like to order anything else, such as dessert or drinks?",
       timeWindow: 30,
       suggestItems: true
-    }
+    },
+    currency: "USD" // Default currency
   })
 
   const [isLoading, setIsLoading] = useState(true)
@@ -175,6 +177,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             if (metadata.phoneNumber) setMetadata(prev => ({ ...prev, phoneNumber: metadata.phoneNumber }));
             if (metadata.followUpSettings) setMetadata(prev => ({ ...prev, followUpSettings: metadata.followUpSettings }));
             if (metadata.language) setLanguage(metadata.language); // Load language from metadata if present
+            if (metadata.currency) setLanguage(metadata.currency); // Load language from metadata if present
           }
 
           toast.success("Configuration loaded");
@@ -362,7 +365,8 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             Enabling this action will automatically disable other actions.
           </p>
         </div>
-        <div className="flex gap-2 items-center">
+      <div className="flex gap-4 items-center">
+        <div className="flex items-center gap-2">
           <Label htmlFor="language-select">Language</Label>
           <select
             id="language-select"
@@ -377,6 +381,29 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             ))}
           </select>
         </div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="currency-select">Currency</Label>
+          <select
+            id="currency-select"
+            value={metadata.currency || "USD"}
+            onChange={(e) => setMetadata(prev => ({ ...prev, currency: e.target.value }))}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm max-w-xs"
+          >
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="JPY">JPY</option>
+            <option value="CNY">CNY</option>
+            <option value="INR">INR</option>
+            <option value="AUD">AUD</option>
+            <option value="CAD">CAD</option>
+            <option value="CHF">CHF</option>
+            <option value="KRW">KRW</option>
+            <option value="BRL">BRL</option>
+            <option value="ZAR">ZAR</option>
+          </select>
+        </div>
+      </div>
       </div>
 
       <div className="flex justify-end mb-6">
