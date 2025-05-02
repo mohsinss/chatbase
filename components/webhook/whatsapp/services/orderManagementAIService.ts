@@ -10,6 +10,7 @@ import Dataset from "@/models/Dataset";
 import Chatbot from "@/models/Chatbot";
 import Team from "@/models/Team";
 import config from "@/config";
+import { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders, getMenuPrompt, getOrderManagementAction } from '@/components/chatbot/api/order-management';
 
 /**
  * Process a message using AI with tool calling for order management
@@ -29,11 +30,12 @@ export async function processOrderManagementWithAI(
     const chatbot = await Chatbot.findOne({ chatbotId });
     const dataset = await Dataset.findOne({ chatbotId });
     const team = await Team.findOne({ teamId: chatbot.teamId });
+    const omAction = await getOrderManagementAction(chatbotId);
 
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
-    const language = aiSettings?.language || 'en';
+    const language = omAction?.metadata?.language || 'en';
     
     let messages = filterRecentMessages(conversation.messages);
       
@@ -87,10 +89,8 @@ export async function processOrderManagementWithAI(
       relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
     }
     relevant_chunk = "";
-    let systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;
-    systemPrompt += orderManagementSystemPrompt;
+    let systemPrompt = `${orderManagementSystemPrompt}\n You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;
     // Import the order management functions
-    const { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders, getMenuPrompt } = await import('@/components/chatbot/api/order-management');
     const menuPrompt = await getMenuPrompt(chatbotId);
     systemPrompt += menuPrompt;
     

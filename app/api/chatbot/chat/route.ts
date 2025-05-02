@@ -26,13 +26,13 @@ export async function OPTIONS(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { 
-      messages, 
-      selectedOption, 
-      optionIndex, 
-      nodeId, 
-      chatbotId, 
-      mocking, 
+    const {
+      messages,
+      selectedOption,
+      optionIndex,
+      nodeId,
+      chatbotId,
+      mocking,
       mockingdata,
       dataAction,
       metadata
@@ -81,42 +81,42 @@ export async function POST(req: NextRequest) {
     }
 
     const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
-    
+
     // Handle direct actions if dataAction is provided
     if (internalModel.startsWith('gpt-') && dataAction && enabledActions?.length > 0) {
       const orderManagementAction = enabledActions.find(action => action.type === 'ordermanagement');
-      
+
       if (orderManagementAction && ['get_categories', 'get_menu', 'get_menus', 'add_to_cart', 'track_order', 'submit_order'].includes(dataAction)) {
         try {
           // Import the order management functions
           const { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders } = await import('@/components/chatbot/api/order-management');
-          
+
           let result;
-          
+
           // Call the appropriate function based on dataAction
           switch (dataAction) {
             case 'get_categories':
               result = await getCategories(chatbotId);
               break;
-              
+
             case 'get_menus':
               result = await getMenus(chatbotId, metadata?.category);
               break;
-              
+
             case 'get_menu':
               result = await getMenu(chatbotId, metadata?.itemId, metadata?.category);
               break;
-              
+
             // case 'add_to_cart':
             //   const quantity = metadata?.quantity ? parseInt(metadata.quantity, 10) : 1;
             //   result = await addToCart(chatbotId, metadata?.itemId, quantity);
             //   break;
-              
+
             case 'track_order':
               result = await getOrders(chatbotId, metadata?.orderId);
               break;
           }
-          
+
           if (result) {
             // Return the result directly
             return setCorsHeaders(new Response(
@@ -172,8 +172,8 @@ export async function POST(req: NextRequest) {
       const calComActions = enabledActions.filter(action => action.type === 'calcom');
       const orderManagementAction = enabledActions.filter(action => action.type === 'ordermanagement');
       if (orderManagementAction.length > 0) {
-        const orderManagementActionPrompt = orderManagementSystemPrompt;
-        systemPrompt += orderManagementActionPrompt;
+        const OMLanguage = orderManagementAction[0]?.metadata?.language || 'en';
+        systemPrompt = `${orderManagementSystemPrompt}\n You must respond in ${OMLanguage} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;;
       } else if (calComActions.length > 0) {
         const calComActionsPrompt = `
 When a user asks for available slots, use the "getAvailableSlots" function.
