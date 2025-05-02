@@ -52,5 +52,4 @@ export * from './buttonReplyHandler';
 export * from './orderManagementHandler';
 export * from './categoryHandler';
 export * from './menuHandler';
-export * from './cartHandler';
 export * from './utils';
