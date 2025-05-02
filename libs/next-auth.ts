@@ -20,7 +20,6 @@ export const authOptions: NextAuthOptionsExtended = {
   // Set any random key in .env.local
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
-    //comment out email privider
 //     EmailProvider({
 //       // server: {
 //       //   host: 'smtp.sendgrid.net',
@@ -58,10 +57,10 @@ export const authOptions: NextAuthOptionsExtended = {
 // `,
 //         }
 
-        // Send email
-        await sgMail.send(msg);
-      },
-    }),
+//         // Send email
+//         await sgMail.send(msg);
+//       },
+//     }),
     GoogleProvider({
       // Follow the "Login with Google" tutorial to get your credentials
       clientId: process.env.GOOGLE_ID,
