@@ -125,7 +125,7 @@ export async function processOrderManagementWithAI(
           const functionArgs = JSON.parse(toolCall.function.arguments);
           
           let result;
-          console.log(functionName);
+          console.log(functionName, functionArgs);
           
           // Execute the appropriate function
           switch (functionName) {

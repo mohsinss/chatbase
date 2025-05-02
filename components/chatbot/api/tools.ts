@@ -155,7 +155,8 @@ track_order(order_id): Returns the current status of the specified order.
 Rules to follow:
 If the user wants to browse the menu or order food, you must call the appropriate function (e.g., get_categories(), get_menus(), or get_menu()).
 If the user says something like "add 2 to the cart", you must call add_to_cart() with the correct parameters.
-If the user says "place my order" or something similar, call submit_order() with the current cart.
-If the user asks to track their order, use track_order() with the provided order_id.
+If the user says "proceed to checkout" or something similar, call submit_order() with the current cart.
+never mention about track order() to the user, just call it when the user asks for order status.
+If the user asks for the status of an order, call track_order() with the order ID.
 For all other messages, respond naturally without calling any functions.
 `;
