@@ -23,6 +23,7 @@ export async function processOrderManagementWithAI(
   actionId: string,
 ): Promise<{ success: boolean, message: string }> {
   try {
+    console.log(text)
     // Get AI settings
     const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
     const chatbot = await Chatbot.findOne({ chatbotId });
@@ -124,7 +125,7 @@ export async function processOrderManagementWithAI(
           const functionArgs = JSON.parse(toolCall.function.arguments);
           
           let result;
-          console.log(text, functionName);
+          console.log(functionName);
           
           // Execute the appropriate function
           switch (functionName) {
@@ -144,9 +145,7 @@ export async function processOrderManagementWithAI(
               const quantity = functionArgs.quantity || 1;
               // Pass cartItems if provided in functionArgs, else empty array
               const cartItems = functionArgs.cartItems || [];
-              console.log("add_to_cart called with:", { chatbotId, item_id: functionArgs.item_id, quantity, cartItems });
               result = await addToCart(chatbotId, functionArgs.item_id, quantity, cartItems, true);
-              console.log("add_to_cart result:", result);
               break;
               
             case "track_order":
