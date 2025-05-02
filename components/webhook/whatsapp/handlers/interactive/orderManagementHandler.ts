@@ -55,6 +55,23 @@ export async function handleOrderManagementButton(
         actionId = parts.pop() || ''; // Action ID
         tableName = parts.join('-'); // Table name
       }
+      else if (buttonId.startsWith('om-add-to-cart-')) {
+        // Format: om-add-to-cart-{tableName}-{actionId}-{menuId}-{quantity}
+        const parts = buttonId.replace('om-add-to-cart-', '').split('-');
+        if (parts.length < 3) {
+          throw new Error(`Invalid add to cart button ID format: ${buttonId}`);
+        }
+        const quantity = parseInt(parts.pop() || '1', 10); // Get quantity from the end
+        itemId = parts.pop() || ''; // Menu ID
+        actionId = parts.pop() || ''; // Action ID
+        tableName = parts.join('-'); // Table name
+
+        // Store quantity in conversation metadata for later use
+        if (!conversation.metadata) {
+          conversation.metadata = {};
+        }
+        conversation.metadata.cartQuantity = quantity;
+      }
       else if (buttonId.startsWith('om-back-')) {
         // Format: om-back-{tableName}-{actionId}
         const parts = buttonId.replace('om-back-', '').split('-');
