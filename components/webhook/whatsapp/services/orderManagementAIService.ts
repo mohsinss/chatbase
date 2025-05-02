@@ -141,7 +141,9 @@ export async function processOrderManagementWithAI(
               
             case "add_to_cart":
               const quantity = functionArgs.quantity || 1;
-              result = await addToCart(chatbotId, functionArgs.item_id, quantity, true);
+              // Pass cartItems if provided in functionArgs, else empty array
+              const cartItems = functionArgs.cartItems || [];
+              result = await addToCart(chatbotId, functionArgs.item_id, quantity, cartItems, true);
               break;
               
             case "track_order":

@@ -56,23 +56,6 @@ export async function handleOrderManagementButton(
         actionId = parts.pop() || ''; // Action ID
         tableName = parts.join('-'); // Table name
       }
-      else if (buttonId.startsWith('om-add-to-cart-')) {
-        // Format: om-add-to-cart-{tableName}-{actionId}-{menuId}-{quantity}
-        const parts = buttonId.replace('om-add-to-cart-', '').split('-');
-        if (parts.length < 3) {
-          throw new Error(`Invalid add to cart button ID format: ${buttonId}`);
-        }
-        const quantity = parseInt(parts.pop() || '1', 10); // Get quantity from the end
-        itemId = parts.pop() || ''; // Menu ID
-        actionId = parts.pop() || ''; // Action ID
-        tableName = parts.join('-'); // Table name
-
-        // Store quantity in conversation metadata for later use
-        if (!conversation.metadata) {
-          conversation.metadata = {};
-        }
-        conversation.metadata.cartQuantity = quantity;
-      }
       else if (buttonId.startsWith('om-back-')) {
         // Format: om-back-{tableName}-{actionId}
         const parts = buttonId.replace('om-back-', '').split('-');
@@ -163,7 +146,7 @@ export async function handleOrderManagementButton(
         tableName
       );
     }
-    else if (buttonId.startsWith('om-confirm-')) {
+    else if (buttonId.startsWith('om-confirm-') || buttonId.startsWith('om-add-to-cart-')) {
       const { processOrderManagementWithAI } = await import('@/components/webhook/whatsapp/services/orderManagementAIService');
       
       try {
@@ -207,38 +190,6 @@ export async function handleOrderManagementButton(
           message: `Error processing order with AI: ${aiError.message}`
         };
       }
-    }
-    else if (buttonId.startsWith('om-add-to-cart-')) {
-      // The quantity was already parsed from the button ID during initial parsing
-      // and stored in conversation.metadata.cartQuantity
-      const quantity = conversation.metadata?.cartQuantity || 1;
-
-      if (!itemId) {
-        await applyMessageDelay();
-        await sendTextMessage(
-          phoneNumberId,
-          from,
-          "Sorry, we couldn't identify the menu item to add to your cart. Please try again."
-        );
-        return {
-          success: false,
-          message: "Missing menu ID in add to cart button"
-        };
-      }
-
-      // Log the parsed information for debugging
-      console.log(`Adding to cart: menuId=${itemId}, quantity=${quantity}, tableName=${tableName}`);
-
-      // Handle the "Add 1 to Cart" button (format: om-add-to-cart-{tableName}-{actionId}-{menuId}-1)
-      return await handleAddToCartButton(
-        from,
-        phoneNumberId,
-        itemId, // Using the itemId parsed earlier
-        quantity,
-        action,
-        conversation,
-        tableName
-      );
     }
     else if (buttonId.startsWith('om-back-')) {
       // Handle back button - show categories again
