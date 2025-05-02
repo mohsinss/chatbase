@@ -18,6 +18,23 @@ import GoogleSheetsTab from "./OMtabs/GoogleSheetsTab"
 import CashierPageTab from "./OMtabs/CashierPageTab"
 import FollowUpTab from "./OMtabs/FollowUpTab"
 
+// Supported languages for selection
+const SUPPORTED_LANGUAGES = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'fr', label: 'French' },
+  { value: 'de', label: 'German' },
+  { value: 'it', label: 'Italian' },
+  { value: 'pt', label: 'Portuguese' },
+  { value: 'nl', label: 'Dutch' },
+  { value: 'pl', label: 'Polish' },
+  { value: 'ru', label: 'Russian' },
+  { value: 'ja', label: 'Japanese' },
+  { value: 'ko', label: 'Korean' },
+  { value: 'zh', label: 'Chinese' },
+  { value: 'ar', label: 'Arabic' }
+];
+
 interface OrderManagementProps {
   teamId: string
   chatbotId: string
@@ -78,6 +95,9 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
   // State for action name and enabled status
   const [actionName, setActionName] = useState<string>("Restaurant Order Management")
   const [isEnabled, setIsEnabled] = useState<boolean>(true)
+
+  // State for language selection, initialized from chatbot settings or default to 'en'
+  const [language, setLanguage] = useState<string>(chatbot.settings?.language ?? "en")
 
   // State for menu items
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -154,6 +174,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             if (metadata.messageTemplate) setMetadata(prev => ({ ...prev, messageTemplate: metadata.messageTemplate }));
             if (metadata.phoneNumber) setMetadata(prev => ({ ...prev, phoneNumber: metadata.phoneNumber }));
             if (metadata.followUpSettings) setMetadata(prev => ({ ...prev, followUpSettings: metadata.followUpSettings }));
+            if (metadata.language) setLanguage(metadata.language); // Load language from metadata if present
           }
 
           toast.success("Configuration loaded");
@@ -248,7 +269,8 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
         googleSheetConfig,
         messageTemplate: metadata.messageTemplate,
         phoneNumber: metadata.phoneNumber,
-        followUpSettings: metadata.followUpSettings
+        followUpSettings: metadata.followUpSettings,
+        language // Save selected language in metadata
       };
 
       // Prepare request body
@@ -325,19 +347,36 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
         </div>
       </div>
 
-      {/* Action Name Inputt */}
-      <div className="mb-6">
-        <Label htmlFor="action-name">Action Name</Label>
-        <Input
-          id="action-name"
-          value={actionName}
-          onChange={(e) => setActionName(e.target.value)}
-          placeholder="Enter a name for this action"
-          className="max-w-md"
-        />
-        <p className="text-sm text-gray-500 mt-1">
-          Enabling this action will automatically disable other actions.
-        </p>
+      {/* Action Name and Language Selection */}
+      <div className="mb-6 flex items-center gap-4">
+        <div className="flex-1">
+          <Label htmlFor="action-name">Action Name</Label>
+          <Input
+            id="action-name"
+            value={actionName}
+            onChange={(e) => setActionName(e.target.value)}
+            placeholder="Enter a name for this action"
+            className="max-w-md"
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            Enabling this action will automatically disable other actions.
+          </p>
+        </div>
+        <div className="flex gap-2 items-center">
+          <Label htmlFor="language-select">Language</Label>
+          <select
+            id="language-select"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm max-w-xs"
+          >
+            {SUPPORTED_LANGUAGES.map(lang => (
+              <option key={lang.value} value={lang.value}>
+                {lang.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="flex justify-end mb-6">
