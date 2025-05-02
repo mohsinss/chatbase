@@ -11,6 +11,7 @@ import Chatbot from "@/models/Chatbot";
 import Team from "@/models/Team";
 import config from "@/config";
 import { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders, getMenuPrompt, getOrderManagementAction } from '@/components/chatbot/api/order-management';
+import { translateText, translateJsonFields } from '@/components/chatbot/api/translation';
 
 /**
  * Process a message using AI with tool calling for order management

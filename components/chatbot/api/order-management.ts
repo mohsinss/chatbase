@@ -349,10 +349,10 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
         <h3>${categoryObj.name} Menu</h3>
         <div class="items-list">
           ${items.map((item: any) => `
-            <button class="menu-item-btn chat-option-btn" 
+            <button class="menu-item-btn chat-option-btn"
               data-action="get_menu" 
               data-category="${categoryObj.id}" 
-              data-item-id="${item.id}" 
+              data-item-id="${item.id}"
               data-index="0">
                 ${item.name} - $${item.price.toFixed(2)}
             </button>`).join('')}

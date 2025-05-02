@@ -4,6 +4,7 @@
 import { addAssistantMessageToConversation } from '@/components/webhook/whatsapp/services/conversationService';
 import { applyMessageDelay } from './utils';
 import { sendTextMessage } from '@/components/webhook/whatsapp/services/whatsappService';
+import { translateText, translateJsonFields } from '@/components/chatbot/api/translation';
 
 /**
  * Handle menu item button click
@@ -48,11 +49,33 @@ export async function handleMenuButton(
     // Check if we got a JSON response
     if (typeof menuItemResult === 'object') {
       // First send item details as a text message
+      const targetLanguage = action?.metadata?.language || 'en';
+      const currencyCode = action?.metadata?.currency || 'USD';
+      const currencySymbols: Record<string, string> = {
+        USD: '$',
+        EUR: '€',
+        GBP: '£',
+        JPY: '¥',
+        CNY: '¥',
+        INR: '₹',
+        AUD: 'A$',
+        CAD: 'C$',
+        CHF: 'CHF',
+        KRW: '₩',
+        BRL: 'R$',
+        ZAR: 'R'
+      };
+      const currencySymbol = currencySymbols[currencyCode] || currencyCode;
+
       let messageText = `*${menuItemResult.item.name}*\n\n`;
       if (menuItemResult.item.description) {
         messageText += `${menuItemResult.item.description}\n\n`;
       }
-      messageText += `Price: $${menuItemResult.item.price.toFixed(2)}`;
+      messageText += `Price: ${currencySymbol}${menuItemResult.item.price.toFixed(2)}`;
+
+      if (targetLanguage !== 'en') {
+        messageText = await translateText(messageText, targetLanguage);
+      }
 
       await applyMessageDelay();
       await sendTextMessage(

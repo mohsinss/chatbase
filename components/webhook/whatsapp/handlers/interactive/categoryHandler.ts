@@ -4,6 +4,7 @@
 import { addAssistantMessageToConversation } from '@/components/webhook/whatsapp/services/conversationService';
 import { applyMessageDelay } from './utils';
 import { sendTextMessage } from '@/components/webhook/whatsapp/services/whatsappService';
+import { translateText, translateJsonFields } from '@/components/chatbot/api/translation';
 
 /**
  * Handle category button click
@@ -60,6 +61,39 @@ export async function handleCategoryButton(
           }
         }
       };
+
+      // Translate listPayload fields before sending
+      const targetLanguage = action?.metadata?.language || 'en';
+      if (targetLanguage !== 'en') {
+        if (listPayload.interactive?.body?.text) {
+          listPayload.interactive.body.text = await translateText(listPayload.interactive.body.text, targetLanguage);
+        }
+        if (listPayload.interactive?.footer?.text) {
+          listPayload.interactive.footer.text = await translateText(listPayload.interactive.footer.text, targetLanguage);
+        }
+        if (listPayload.interactive?.action) {
+          if (listPayload.interactive.action.button) {
+            listPayload.interactive.action.button = await translateText(listPayload.interactive.action.button, targetLanguage);
+          }
+          if (listPayload.interactive.action.sections && Array.isArray(listPayload.interactive.action.sections)) {
+            for (const section of listPayload.interactive.action.sections) {
+              if (section.title) {
+                section.title = await translateText(section.title, targetLanguage);
+              }
+              if (section.rows && Array.isArray(section.rows)) {
+                for (const row of section.rows) {
+                  // if (row.title) {
+                  //   row.title = await translateText(row.title, targetLanguage);
+                  // }
+                  // if (row.description) {
+                  //   row.description = await translateText(row.description, targetLanguage);
+                  // }
+                }
+              }
+            }
+          }
+        }
+      }
 
       // Send the list message via WhatsApp API
       try {
