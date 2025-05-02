@@ -6,7 +6,7 @@ import { MODEL_MAPPING } from '@/types';
 import { getAvailableSlots } from '@/lib/calcom';
 import { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders } from './order-management';
 
-export async function handleOpenAIRequest(
+export async function  handleOpenAIRequest(
   systemPrompt: string,
   relevant_chunk: string,
   messages: any[],
@@ -21,19 +21,12 @@ export async function handleOpenAIRequest(
   
   // Format messages based on model type
   let formattedMessages;
-  if (O1_MODELS.includes(internalModel)) {
-    formattedMessages = [
-      { role: 'user', content: systemPrompt },
-      { role: 'user', content: relevant_chunk },
-      ...messages,
-    ];
-  } else {
-    formattedMessages = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: relevant_chunk },
-      ...messages,
-    ];
-  }
+  // Always pass systemPrompt as system role to enforce language instructions
+  formattedMessages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: relevant_chunk },
+    ...messages,
+  ];
 
   // Configure model-specific parameters
   const modelParams = O1_MODELS.includes(internalModel)
@@ -128,44 +121,51 @@ export async function handleOpenAIRequest(
             if (orderAction) {
               const chatbotId = orderAction.chatbotId;
               let result;
-              
+
+              // Import translation helpers from translation.ts
+              const { translateText, translateJsonFields } = await import('./translation');
+
+              // Determine target language from orderAction metadata
+              const targetLanguage = orderAction?.metadata?.language || 'en';
+
               switch (functionCallData.name) {
                 case "get_categories":
                   result = await getCategories(chatbotId);
                   break;
-                  
+
                 case "get_menus":
                   result = await getMenus(chatbotId, args.category);
                   break;
-                  
+
                 case "get_menu":
                   result = await getMenu(chatbotId, args.item_id, args.category);
                   break;
-                  
+
                 case "add_to_cart":
-                  // Extract quantity from data-quantity attribute if available
                   const quantity = args.quantity || 1;
-                  // Pass all items in cart as third parameter to addToCart
                   const cartItems = args.cartItems || [];
                   result = await addToCart(chatbotId, args.item_id, quantity, cartItems);
                   break;
-                  
+
                 case "submit_order":
                   result = await submitOrder(chatbotId, args.order);
                   break;
-                  
+
                 case "track_order":
                   result = await getOrders(chatbotId, args.orderId);
                   break;
               }
-              
+
               if (result) {
-                // const responseMessage = result.success 
-                //   ? `Here's what I found: ${JSON.stringify(result)}`
-                //   : `I'm sorry, there was an issue: ${result.message}`;
-                  
+                if (targetLanguage !== 'en') {
+                  if (typeof result === 'string') {
+                    result = await translateText(result, targetLanguage);
+                  } else if (typeof result === 'object') {
+                    result = await translateJsonFields(result, targetLanguage);
+                  }
+                }
+
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: result })}\n\n`));
-                // controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: responseMessage, orderResult: result })}\n\n`));
               }
             }
           }

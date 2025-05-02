@@ -6,6 +6,7 @@ import Dataset from "@/models/Dataset";
 import Team from '@/models/Team';
 import ChatbotAction from '@/models/ChatbotAction';
 import config from '@/config';
+import { translateText, translateJsonFields } from '@/components/chatbot/api/translation';
 
 // Import modular components
 import {
@@ -91,6 +92,8 @@ export async function POST(req: NextRequest) {
           // Import the order management functions
           const { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders } = await import('@/components/chatbot/api/order-management');
 
+          // Determine target language from orderAction metadata
+          const targetLanguage = orderManagementAction?.metadata?.language || 'en';
           let result;
 
           // Call the appropriate function based on dataAction
@@ -118,6 +121,14 @@ export async function POST(req: NextRequest) {
           }
 
           if (result) {
+            if (targetLanguage !== 'en') {
+              if (typeof result === 'string') {
+                result = await translateText(result, targetLanguage);
+              } else if (typeof result === 'object') {
+                result = await translateJsonFields(result, targetLanguage);
+              }
+            }
+            
             // Return the result directly
             return setCorsHeaders(new Response(
               JSON.stringify({ message: result }),

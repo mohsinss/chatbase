@@ -1,3 +1,10 @@
+// Simple translation helper function
+function t(text: string, lang: string): string {
+  // For demonstration, only English is supported, return original text
+  // In real implementation, integrate with i18n or translation files
+  return text;
+}
+
 import ChatbotAction, { IChatbotAction } from '@/models/ChatbotAction';
 import Order from '@/models/Order';
 import GoogleIntegration from '@/models/GoogleIntegration';
@@ -49,12 +56,12 @@ interface OrderManagementMetadata {
   };
 }
 
-export async function getMenuPrompt(chatbotId: string): Promise<string> {
+export async function getMenuPrompt(chatbotId: string, language: string = 'en'): Promise<string> {
   try {
     const action = await getOrderManagementAction(chatbotId);
 
     if (!action || !action.metadata || !action.metadata.menuItems || !action.metadata.categories) {
-      return "No menu available.";
+      return t("No menu available.", language);
     }
 
     // Build a map of categoryId -> categoryName for easy lookup
@@ -74,7 +81,7 @@ export async function getMenuPrompt(chatbotId: string): Promise<string> {
     });
 
     // Build the prompt string
-    let prompt = "Here is the menu:\n";
+    let prompt = t("Here is the menu:\n", language);
     for (const [categoryId, items] of Object.entries(itemsByCategory)) {
       prompt += `\n${categoryMap[categoryId] || categoryId}:\n`;
       items.forEach((item: any) => {
@@ -85,7 +92,7 @@ export async function getMenuPrompt(chatbotId: string): Promise<string> {
     return prompt.trim();
   } catch (error) {
     console.error('Error generating menu prompt:', error);
-    return "Failed to generate menu prompt.";
+    return t("Failed to generate menu prompt.", language);
   }
 }
 

@@ -297,7 +297,7 @@ progress::-webkit-progress-value {
 }
 
 .track-order-btn {
-  display: flex;
+  display: none !important;
   align-items: center;
   justify-content: center;
   padding: 0.5rem 1rem;
