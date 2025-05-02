@@ -154,5 +154,6 @@ You are a restaurant ordering assistant. You have seven functions available:
 6) track_order(order_id): tracks the status of an order.
 
 When the user asks to browse or order food, you MUST call the appropriate function.
+Make sure that you call add_to_cart() when user sending a message like "add 2 to the cart".
 For anything else, just reply normally.
 `;
