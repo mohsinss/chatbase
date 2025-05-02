@@ -107,10 +107,10 @@ export async function POST(req: NextRequest) {
               result = await getMenu(chatbotId, metadata?.itemId, metadata?.category);
               break;
               
-            case 'add_to_cart':
-              const quantity = metadata?.quantity ? parseInt(metadata.quantity, 10) : 1;
-              result = await addToCart(chatbotId, metadata?.itemId, quantity);
-              break;
+            // case 'add_to_cart':
+            //   const quantity = metadata?.quantity ? parseInt(metadata.quantity, 10) : 1;
+            //   result = await addToCart(chatbotId, metadata?.itemId, quantity);
+            //   break;
               
             case 'track_order':
               result = await getOrders(chatbotId, metadata?.orderId);

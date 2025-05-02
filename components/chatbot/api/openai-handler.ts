@@ -145,7 +145,9 @@ export async function handleOpenAIRequest(
                 case "add_to_cart":
                   // Extract quantity from data-quantity attribute if available
                   const quantity = args.quantity || 1;
-                  result = await addToCart(chatbotId, args.item_id, quantity);
+                  // Pass all items in cart as third parameter to addToCart
+                  const cartItems = args.cartItems || [];
+                  result = await addToCart(chatbotId, args.item_id, quantity, cartItems);
                   break;
                   
                 case "submit_order":

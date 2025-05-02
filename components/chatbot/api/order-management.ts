@@ -445,7 +445,7 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
  * Note: This is a simulated function as we don't have actual cart storage
  * In a real implementation, this would store the cart in a database or session
  */
-export async function addToCart(chatbotId: string, item_id: string, quantity: number, isWhatsApp: boolean = false) {
+export async function addToCart(chatbotId: string, item_id: string, quantity: number, cartItems: any[] = [], isWhatsApp: boolean = false) {
   // Convert quantity to number if it's passed as a string from data-quantity attribute
   quantity = typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
   try {
@@ -472,8 +472,6 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
         : `<div class="error-message"><p>Item is not available</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
 
-    // In a real implementation, we would store this in a database or session
-    // For now, we'll just return success with the item details
     // Find the category ID for the menu item's category
     const categoryObj = action.metadata.categories.find(
       (cat: any) => cat.name === menuItem.category
@@ -481,16 +479,22 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
 
     const categoryId = categoryObj ? categoryObj.id : '';
 
-    // In a real implementation, we would retrieve the full cart from a database or session
-    // For this simulation, we'll create a cart with just the current item
-    const cart: OrderItem[] = [
-      {
+    // Use the passed cartItems array, add or update the current item
+    const cart: OrderItem[] = [...cartItems];
+
+    const existingIndex = cart.findIndex(ci => ci.item_id === menuItem.id);
+    if (existingIndex >= 0) {
+      // Update quantity
+      cart[existingIndex].qty += quantity;
+    } else {
+      // Add new item
+      cart.push({
         item_id: menuItem.id,
         name: menuItem.name,
         qty: quantity,
         price: menuItem.price
-      }
-    ];
+      });
+    }
 
     // Calculate the cart total
     const cartTotal = cart.reduce(

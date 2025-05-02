@@ -72,12 +72,24 @@ export const orderTools = [
     type: "function" as const,
     function: {
       name: "add_to_cart",
-      description: "Add an item to the diner's cart",
+      description: "Add an item to the diner's cart, including current cart items",
       parameters: {
         type: "object",
         properties: {
           item_id: { type: "string" },
-          quantity: { type: "integer", minimum: 1 }
+          quantity: { type: "integer", minimum: 1 },
+          cartItems: {
+            type: "array",
+            description: "Current items in the cart",
+            items: {
+              type: "object",
+              properties: {
+                item_id: { type: "string" },
+                quantity: { type: "integer", minimum: 1 }
+              },
+              required: ["item_id", "quantity"]
+            }
+          }
         },
         required: ["item_id", "quantity"]
       }
