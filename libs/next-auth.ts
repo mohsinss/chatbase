@@ -20,6 +20,7 @@ export const authOptions: NextAuthOptionsExtended = {
   // Set any random key in .env.local
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
+    //comment out email privider
 //     EmailProvider({
 //       // server: {
 //       //   host: 'smtp.sendgrid.net',
