@@ -23,6 +23,7 @@ interface LocalizationTabProps {
       suggestItems: boolean
     }
   }
+  initialTranslations?: Translations
   onUpdateTranslations: (translations: any) => void
 }
 
@@ -54,15 +55,18 @@ const LocalizationTab = ({
   categories,
   menuItems,
   metadata,
+  initialTranslations,
   onUpdateTranslations
 }: LocalizationTabProps) => {
   const [selectedLanguage, setSelectedLanguage] = useState('en')
-  const [translations, setTranslations] = useState<Translations>({})
+  const [translations, setTranslations] = useState<Translations>(initialTranslations || {})
   const [isGenerating, setIsGenerating] = useState<{ [key: string]: boolean }>({})
 
-  // Initialize English translations
+  // Initialize English translations if no translations exist
   useEffect(() => {
+    console.log('LocalizationTab mounted with translations:', translations);
     if (!translations.en) {
+      console.log('Initializing English translations');
       const englishTranslations: Translations = {
         en: {
           categories: categories.reduce((acc, category) => ({
@@ -82,23 +86,21 @@ const LocalizationTab = ({
           }), {})
         }
       }
-      setTranslations(englishTranslations)
-      onUpdateTranslations(englishTranslations)
+      console.log('Setting initial translations:', englishTranslations);
+      setTranslations((prev: Translations) => ({
+        ...prev,
+        en: englishTranslations.en
+      }))
+      onUpdateTranslations((prev: Translations) => ({
+        ...prev,
+        en: englishTranslations.en
+      }))
     }
   }, [categories, menuItems, metadata, translations.en])
 
   const handleTranslationChange = (section: string, field: string, value: string) => {
-    setTranslations((prev: Translations) => ({
-      ...prev,
-      [selectedLanguage]: {
-        ...prev[selectedLanguage],
-        [section]: {
-          ...prev[selectedLanguage]?.[section],
-          [field]: value
-        }
-      }
-    }))
-    onUpdateTranslations({
+    console.log('Translation change:', { section, field, value, selectedLanguage });
+    const newTranslations = {
       ...translations,
       [selectedLanguage]: {
         ...translations[selectedLanguage],
@@ -107,7 +109,10 @@ const LocalizationTab = ({
           [field]: value
         }
       }
-    })
+    }
+    console.log('New translations after change:', newTranslations);
+    setTranslations(newTranslations)
+    onUpdateTranslations(newTranslations)
   }
 
   const generateTranslations = async (section: string) => {

@@ -164,6 +164,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           }
 
           const action = await res.json();
+          console.log('Fetched action data:', action);
 
           // Set action name and enabled status
           setActionName(action.name || "Restaurant Order Management");
@@ -172,6 +173,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           // Parse metadata if it exists
           if (action.metadata) {
             const metadata = action.metadata;
+            console.log('Fetched metadata:', metadata);
 
             if (metadata.menuItems) setMenuItems(metadata.menuItems);
             if (metadata.categories) setCategories(metadata.categories);
@@ -182,7 +184,10 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             if (metadata.followUpSettings) setMetadata(prev => ({ ...prev, followUpSettings: metadata.followUpSettings }));
             if (metadata.language) setLanguage(metadata.language);
             if (metadata.currency) setMetadata(prev => ({ ...prev, currency: metadata.currency }));
-            if (metadata.translations) setTranslations(metadata.translations); // Load existing translations
+            if (metadata.translations) {
+              console.log('Loading translations from metadata:', metadata.translations);
+              setTranslations(metadata.translations);
+            }
           }
 
           toast.success("Configuration loaded");
@@ -519,7 +524,9 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             categories={categories}
             menuItems={menuItems}
             metadata={metadata}
+            initialTranslations={translations}
             onUpdateTranslations={(newTranslations) => {
+              console.log('Updating translations:', newTranslations);
               setTranslations(newTranslations)
               // Update metadata with translations
               setMetadata(prev => ({

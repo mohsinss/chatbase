@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Validate metadata structure for order management
-  if (type === 'ordermanagement') {
+  if (type === 'ordermanagement' && metadata) {
     try {
       // Ensure translations are properly structured
       if (metadata.translations) {
