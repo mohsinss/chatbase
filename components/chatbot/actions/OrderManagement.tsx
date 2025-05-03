@@ -100,6 +100,46 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
   // State for language selection, initialized from chatbot settings or default to 'en'
   const [language, setLanguage] = useState<string>(chatbot.settings?.language ?? "en")
 
+  // Get translation for a key
+  const getTranslation = (key: string, section: string = 'messages') => {
+    if (translations[language]?.[section]?.[key]) {
+      return translations[language][section][key]
+    }
+    // Fallback to English if translation not found
+    return translations['en']?.[section]?.[key] || key
+  }
+
+  // Sync language with chatbot settings
+  useEffect(() => {
+    if (chatbot.settings?.language) {
+      setLanguage(chatbot.settings.language)
+    }
+  }, [chatbot.settings?.language])
+
+  // Update chatbot settings when language changes
+  const handleLanguageChange = async (newLanguage: string) => {
+    try {
+      const response = await fetch(`/api/chatbot/ai-settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatbotId,
+          language: newLanguage
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update language')
+      }
+
+      setLanguage(newLanguage)
+      toast.success('Language updated successfully')
+    } catch (error) {
+      console.error('Error updating language:', error)
+      toast.error('Failed to update language')
+    }
+  }
+
   // State for menu items
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
 
@@ -354,10 +394,10 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold">Order Management</h1>
+          <h1 className="text-2xl font-bold">{getTranslation('orderManagement', 'messages')}</h1>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Enabled</span>
+          <span className="text-sm font-medium">{getTranslation('enabled', 'messages')}</span>
           <Switch checked={isEnabled} onCheckedChange={handleToggle} />
         </div>
       </div>
@@ -365,57 +405,57 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
       {/* Action Name and Language Selection */}
       <div className="mb-6 flex items-center gap-4">
         <div className="flex-1">
-          <Label htmlFor="action-name">Action Name</Label>
+          <Label htmlFor="action-name">{getTranslation('actionName', 'messages')}</Label>
           <Input
             id="action-name"
             value={actionName}
             onChange={(e) => setActionName(e.target.value)}
-            placeholder="Enter a name for this action"
+            placeholder={getTranslation('enterActionName', 'messages')}
             className="max-w-md"
           />
           <p className="text-sm text-gray-500 mt-1">
-            Enabling this action will automatically disable other actions.
+            {getTranslation('actionWarning', 'messages')}
           </p>
         </div>
-      <div className="flex gap-4 items-center">
-        <div className="flex items-center gap-2">
-          <Label htmlFor="language-select">Language</Label>
-          <select
-            id="language-select"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm max-w-xs"
-          >
-            {SUPPORTED_LANGUAGES.map(lang => (
-              <option key={lang.value} value={lang.value}>
-                {lang.label}
-              </option>
-            ))}
-          </select>
+        <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="language-select">{getTranslation('language', 'messages')}</Label>
+            <select
+              id="language-select"
+              value={language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm max-w-xs"
+            >
+              {SUPPORTED_LANGUAGES.map(lang => (
+                <option key={lang.value} value={lang.value}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="currency-select">{getTranslation('currency', 'messages')}</Label>
+            <select
+              id="currency-select"
+              value={metadata.currency || "USD"}
+              onChange={(e) => setMetadata(prev => ({ ...prev, currency: e.target.value }))}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm max-w-xs"
+            >
+              <option value="USD">USD</option>
+              <option value="SAR">SAR</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+              <option value="CNY">CNY</option>
+              <option value="INR">INR</option>
+              <option value="AUD">AUD</option>
+              <option value="CAD">CAD</option>
+              <option value="CHF">CHF</option>
+              <option value="KRW">KRW</option>
+              <option value="BRL">BRL</option>
+            </select>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="currency-select">Currency</Label>
-          <select
-            id="currency-select"
-            value={metadata.currency || "USD"}
-            onChange={(e) => setMetadata(prev => ({ ...prev, currency: e.target.value }))}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm max-w-xs"
-          >
-            <option value="USD">USD</option>
-            <option value="SAR">SAR</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="JPY">JPY</option>
-            <option value="CNY">CNY</option>
-            <option value="INR">INR</option>
-            <option value="AUD">AUD</option>
-            <option value="CAD">CAD</option>
-            <option value="CHF">CHF</option>
-            <option value="KRW">KRW</option>
-            <option value="BRL">BRL</option>
-          </select>
-        </div>
-      </div>
       </div>
 
       <div className="flex justify-end mb-6">
@@ -427,12 +467,12 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              {getTranslation('saving', 'messages')}
             </>
           ) : (
             <>
               <Save className="mr-2 h-4 w-4" />
-              Save Configuration
+              {getTranslation('saveConfiguration', 'messages')}
             </>
           )}
         </Button>
@@ -440,13 +480,13 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
 
       <Tabs defaultValue="menu">
         <TabsList className="mb-4">
-          <TabsTrigger value="menu">Menu Management</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="tables">Table QR Codes</TabsTrigger>
-          <TabsTrigger value="follow-up">Follow-up</TabsTrigger>
-          <TabsTrigger value="sheets">Google Sheets</TabsTrigger>
-          <TabsTrigger value="cashier">Cashier</TabsTrigger>
-          <TabsTrigger value="localization">Localization</TabsTrigger>
+          <TabsTrigger value="menu">{getTranslation('menuManagement', 'messages')}</TabsTrigger>
+          <TabsTrigger value="categories">{getTranslation('categories', 'messages')}</TabsTrigger>
+          <TabsTrigger value="tables">{getTranslation('tableQRCodes', 'messages')}</TabsTrigger>
+          <TabsTrigger value="follow-up">{getTranslation('followUp', 'messages')}</TabsTrigger>
+          <TabsTrigger value="sheets">{getTranslation('googleSheets', 'messages')}</TabsTrigger>
+          <TabsTrigger value="cashier">{getTranslation('cashier', 'messages')}</TabsTrigger>
+          <TabsTrigger value="localization">{getTranslation('localization', 'messages')}</TabsTrigger>
         </TabsList>
 
         {/* Menu Management Tab */}

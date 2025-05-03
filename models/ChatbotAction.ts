@@ -1,30 +1,54 @@
 // models/ChatbotAction.ts
 import mongoose, { Document, Schema } from 'mongoose';
-import { IOrderMetadata } from './OrderMetadata';
 
 export interface IChatbotAction extends Document {
   chatbotId: string;
-  name: string;
   type: string;
-  url: string;
-  instructions: string;
   enabled: boolean;
-  metadata: IOrderMetadata | Object;
+  metadata: {
+    menuItems?: Array<{
+      id: string;
+      name: string;
+      description: string;
+      price: number;
+      category: string;
+      available: boolean;
+      images: string[];
+    }>;
+    categories?: Array<{
+      id: string;
+      name: string;
+    }>;
+    tables?: Array<{
+      id: string;
+      tableNumber: string;
+      qrCodeUrl: string;
+    }>;
+    googleSheetConfig?: {
+      sheetId: string;
+      sheetName: string;
+      connected: boolean;
+    };
+    currency?: string;
+    followUpSettings?: {
+      enabled: boolean;
+      timeWindow: number;
+      messageTemplate: string;
+    };
+    translations?: Record<string, Record<string, string>>;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
 
-const ChatbotActionSchema = new Schema<IChatbotAction>({
-  chatbotId: { type: String, required: true },
-  name: { type: String, required: true },
-  type: { type: String, required: true },
-  url: { type: String, required: false },
-  instructions: { type: String, required: true },
-  enabled: { type: Boolean, default: true },
-  metadata: {
-    type: mongoose.Schema.Types.Mixed,
-    default: {}
+const chatbotActionSchema = new Schema<IChatbotAction>(
+  {
+    chatbotId: { type: String, required: true },
+    type: { type: String, required: true },
+    enabled: { type: Boolean, default: true },
+    metadata: { type: Schema.Types.Mixed, default: {} },
   },
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-export default mongoose.models.ChatbotAction || mongoose.model<IChatbotAction>('ChatbotAction', ChatbotActionSchema);
+export default mongoose.models.ChatbotAction || mongoose.model<IChatbotAction>('ChatbotAction', chatbotActionSchema);

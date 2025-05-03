@@ -6,8 +6,9 @@ function t(text: string, lang: string): string {
 }
 
 import ChatbotAction, { IChatbotAction } from '@/models/ChatbotAction';
-import Order from '@/models/Order';
+import { Order } from '@/models/Order';
 import GoogleIntegration from '@/models/GoogleIntegration';
+import dbConnect from '@/lib/dbConnect';
 
 const currencySymbols: Record<string, string> = {
   USD: '$',

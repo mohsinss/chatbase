@@ -75,7 +75,24 @@ const LocalizationTab = ({
           }), {}),
           messages: {
             orderTemplate: metadata.messageTemplate || '',
-            followUpTemplate: metadata.followUpSettings?.messageTemplate || ''
+            followUpTemplate: metadata.followUpSettings?.messageTemplate || '',
+            // UI translations
+            orderManagement: 'Order Management',
+            enabled: 'Enabled',
+            actionName: 'Action Name',
+            enterActionName: 'Enter a name for this action',
+            actionWarning: 'Enabling this action will automatically disable other actions.',
+            language: 'Language',
+            currency: 'Currency',
+            saving: 'Saving...',
+            saveConfiguration: 'Save Configuration',
+            menuManagement: 'Menu Management',
+            categories: 'Categories',
+            tableQRCodes: 'Table QR Codes',
+            followUp: 'Follow-up',
+            googleSheets: 'Google Sheets',
+            cashier: 'Cashier',
+            localization: 'Localization'
           },
           menuItems: menuItems.reduce((acc, item) => ({
             ...acc,

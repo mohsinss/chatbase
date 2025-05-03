@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
-import Order from '@/models/Order';
+import { Order } from '@/models/Order';
 import Chatbot from '@/models/Chatbot';
 import WhatsAppNumber from '@/models/WhatsAppNumber';
 
