@@ -17,6 +17,7 @@ import TablesTab from "./OMtabs/TablesTab"
 import GoogleSheetsTab from "./OMtabs/GoogleSheetsTab"
 import CashierPageTab from "./OMtabs/CashierPageTab"
 import FollowUpTab from "./OMtabs/FollowUpTab"
+import LocalizationTab from "./OMtabs/LocalizationTab"
 
 // Supported languages for selection
 const SUPPORTED_LANGUAGES = [
@@ -143,6 +144,9 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
     },
     currency: "USD" // Default currency
   })
+
+  // Add translations state
+  const [translations, setTranslations] = useState<any>({})
 
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -390,6 +394,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             className="rounded-md border border-input bg-background px-3 py-2 text-sm max-w-xs"
           >
             <option value="USD">USD</option>
+            <option value="SAR">SAR</option>
             <option value="EUR">EUR</option>
             <option value="GBP">GBP</option>
             <option value="JPY">JPY</option>
@@ -400,7 +405,6 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             <option value="CHF">CHF</option>
             <option value="KRW">KRW</option>
             <option value="BRL">BRL</option>
-            <option value="ZAR">ZAR</option>
           </select>
         </div>
       </div>
@@ -434,6 +438,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           <TabsTrigger value="follow-up">Follow-up</TabsTrigger>
           <TabsTrigger value="sheets">Google Sheets</TabsTrigger>
           <TabsTrigger value="cashier">Cashier</TabsTrigger>
+          <TabsTrigger value="localization">Localization</TabsTrigger>
         </TabsList>
 
         {/* Menu Management Tab */}
@@ -502,6 +507,23 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           <CashierPageTab
             chatbotId={chatbotId}
             actionId={actionId}
+          />
+        </TabsContent>
+
+        {/* Localization Tab */}
+        <TabsContent value="localization">
+          <LocalizationTab
+            categories={categories}
+            menuItems={menuItems}
+            metadata={metadata}
+            onUpdateTranslations={(newTranslations) => {
+              setTranslations(newTranslations)
+              // Update metadata with translations
+              setMetadata(prev => ({
+                ...prev,
+                translations: newTranslations
+              }))
+            }}
           />
         </TabsContent>
       </Tabs>
