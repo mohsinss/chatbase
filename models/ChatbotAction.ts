@@ -1,5 +1,6 @@
 // models/ChatbotAction.ts
 import mongoose, { Document, Schema } from 'mongoose';
+import { IOrderMetadata } from './OrderMetadata';
 
 export interface IChatbotAction extends Document {
   chatbotId: string;
@@ -8,7 +9,7 @@ export interface IChatbotAction extends Document {
   url: string;
   instructions: string;
   enabled: boolean;
-  metadata: Object;
+  metadata: IOrderMetadata | Object;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -180,8 +180,9 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             if (metadata.messageTemplate) setMetadata(prev => ({ ...prev, messageTemplate: metadata.messageTemplate }));
             if (metadata.phoneNumber) setMetadata(prev => ({ ...prev, phoneNumber: metadata.phoneNumber }));
             if (metadata.followUpSettings) setMetadata(prev => ({ ...prev, followUpSettings: metadata.followUpSettings }));
-            if (metadata.language) setLanguage(metadata.language); // Load language from metadata if present
-            if (metadata.currency) setLanguage(metadata.currency); // Load language from metadata if present
+            if (metadata.language) setLanguage(metadata.language);
+            if (metadata.currency) setMetadata(prev => ({ ...prev, currency: metadata.currency }));
+            if (metadata.translations) setTranslations(metadata.translations); // Load existing translations
           }
 
           toast.success("Configuration loaded");
@@ -261,15 +262,15 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
   // Save all configuration
   const saveConfiguration = async () => {
     if (!actionName.trim()) {
-      toast.error("Action name is required");
-      return;
+      toast.error("Action name is required")
+      return
     }
 
-    setIsSaving(true);
+    setIsSaving(true)
 
     try {
       // Prepare metadata
-      const actionMetadata: any = {
+      const actionMetadata = {
         menuItems,
         categories,
         tables,
@@ -277,8 +278,10 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
         messageTemplate: metadata.messageTemplate,
         phoneNumber: metadata.phoneNumber,
         followUpSettings: metadata.followUpSettings,
-        language // Save selected language in metadata
-      };
+        language, // Save selected language in metadata
+        currency: metadata.currency,
+        translations // Add translations directly to metadata
+      }
 
       // Prepare request body
       const requestBody = actionId
@@ -299,32 +302,32 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           enabled: isEnabled,
           type: "ordermanagement",
           metadata: actionMetadata
-        };
+        }
 
       // Make API request
       const response = await fetch(`/api/chatbot/action`, {
         method: actionId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data?.error || "Failed to save configuration.");
+        throw new Error(data?.error || "Failed to save configuration.")
       }
 
-      toast.success("Configuration saved successfully");
+      toast.success("Configuration saved successfully")
 
       // Redirect to main actions page
-      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/actions/main`);
+      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/actions/main`)
     } catch (error) {
-      console.error("Error saving configuration:", error);
-      toast.error(error?.message || "Failed to save configuration");
+      console.error("Error saving configuration:", error)
+      toast.error(error?.message || "Failed to save configuration")
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   const handleBack = () => {
     router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/actions/main`);

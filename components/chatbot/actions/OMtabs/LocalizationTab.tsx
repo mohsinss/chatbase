@@ -118,7 +118,7 @@ const LocalizationTab = ({
 
     setIsGenerating(prev => ({ ...prev, [section]: true }))
     try {
-      const response = await fetch('/api/chatbot/translate', {
+      const response = await fetch('/api/chatbot/actions/localization/translate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

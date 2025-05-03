@@ -1,42 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/dbConnect';
-import Order from '@/models/Order';
+import { Order } from '@/models/Order';
+import connectMongo from '@/libs/mongoose';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { chatbotId: string } }
-) {
+export async function GET(req: NextRequest, { params }: { params: { chatbotId: string } }) {
+  await connectMongo();
+  const { searchParams } = new URL(req.url);
+  const portal = searchParams.get('portal');
+
   try {
-    await dbConnect();
-    const { chatbotId } = params;
-    
-    // Get query parameters
-    const url = new URL(request.url);
-    const portal = url.searchParams.get('portal');
-    const status = url.searchParams.get('status');
-    
-    // Build query
-    const query: any = { chatbotId };
-    
+    const query: any = { chatbotId: params.chatbotId };
     if (portal) {
       query.portal = portal;
     }
-    
-    if (status) {
-      query.status = status;
-    }
-    
-    // Fetch orders
-    const orders = await Order.find(query)
-      .sort({ timestamp: -1 })
-      .limit(100);
-    
-    return NextResponse.json({ orders }, { status: 200 });
+
+    const orders = await Order.find(query).sort({ createdAt: -1 });
+    return NextResponse.json(orders);
   } catch (error) {
     console.error('Error fetching orders:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch orders' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest, { params }: { params: { chatbotId: string } }) {
+  await connectMongo();
+  const body = await req.json();
+
+  try {
+    const order = await Order.create({
+      ...body,
+      chatbotId: params.chatbotId
+    });
+    return NextResponse.json(order, { status: 201 });
+  } catch (error) {
+    console.error('Error creating order:', error);
+    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
   }
 }

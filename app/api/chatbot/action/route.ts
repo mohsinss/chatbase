@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ChatbotAction from '@/models/ChatbotAction';
+import { IOrderMetadata } from '@/models/Order';
 import connectMongo from '@/libs/mongoose';
 
 // Create a new ChatbotAction
@@ -21,6 +22,22 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Validate metadata structure for order management
+  if (type === 'ordermanagement') {
+    try {
+      // Ensure translations are properly structured
+      if (metadata.translations) {
+        // Deep clone the translations to ensure proper serialization
+        metadata.translations = JSON.parse(JSON.stringify(metadata.translations));
+      }
+    } catch (error) {
+      console.error('Error validating metadata:', error);
+      return NextResponse.json({ 
+        error: 'Invalid metadata structure' 
+      }, { status: 400 });
+    }
+  }
+
   const action = await ChatbotAction.create({
     chatbotId,
     name,
@@ -36,34 +53,50 @@ export async function POST(req: NextRequest) {
 
 // Get all ChatbotActions for a specific chatbotId
 export async function GET(req: NextRequest) {
-    await connectMongo();
-    const actionId = req.nextUrl.searchParams.get('actionId');
-  
-    if (actionId) {
-      const action = await ChatbotAction.findById(actionId);
-  
-      if (!action) {
-        return NextResponse.json({ error: 'Action not found' }, { status: 404 });
-      }
-  
-      return NextResponse.json(action);
+  await connectMongo();
+  const actionId = req.nextUrl.searchParams.get('actionId');
+
+  if (actionId) {
+    const action = await ChatbotAction.findById(actionId);
+
+    if (!action) {
+      return NextResponse.json({ error: 'Action not found' }, { status: 404 });
     }
-  
-    const chatbotId = req.nextUrl.searchParams.get('chatbotId');
-  
-    if (!chatbotId) {
-      return NextResponse.json({ error: 'chatbotId or actionId is required' }, { status: 400 });
-    }
-  
-    const actions = await ChatbotAction.find({ chatbotId });
-  
-    return NextResponse.json(actions);
+
+    return NextResponse.json(action);
   }
+
+  const chatbotId = req.nextUrl.searchParams.get('chatbotId');
+
+  if (!chatbotId) {
+    return NextResponse.json({ error: 'chatbotId or actionId is required' }, { status: 400 });
+  }
+
+  const actions = await ChatbotAction.find({ chatbotId });
+
+  return NextResponse.json(actions);
+}
 
 // Update a ChatbotAction by actionId
 export async function PUT(req: NextRequest) {
   await connectMongo();
   const { actionId, name, url, instructions, enabled, metadata, type } = await req.json();
+
+  // Validate metadata structure for order management
+  if (type === 'ordermanagement' && metadata) {
+    try {
+      // Ensure translations are properly structured
+      if (metadata.translations) {
+        // Deep clone the translations to ensure proper serialization
+        metadata.translations = JSON.parse(JSON.stringify(metadata.translations));
+      }
+    } catch (error) {
+      console.error('Error validating metadata:', error);
+      return NextResponse.json({ 
+        error: 'Invalid metadata structure' 
+      }, { status: 400 });
+    }
+  }
 
   const action = await ChatbotAction.findByIdAndUpdate(
     actionId,
