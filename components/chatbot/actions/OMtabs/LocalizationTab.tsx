@@ -75,7 +75,24 @@ const LocalizationTab = ({
           }), {}),
           messages: {
             orderTemplate: metadata.messageTemplate || '',
-            followUpTemplate: metadata.followUpSettings?.messageTemplate || ''
+            followUpTemplate: metadata.followUpSettings?.messageTemplate || '',
+            // UI translations
+            orderManagement: 'Order Management',
+            enabled: 'Enabled',
+            actionName: 'Action Name',
+            enterActionName: 'Enter a name for this action',
+            actionWarning: 'Enabling this action will automatically disable other actions.',
+            language: 'Language',
+            currency: 'Currency',
+            saving: 'Saving...',
+            saveConfiguration: 'Save Configuration',
+            menuManagement: 'Menu Management',
+            categories: 'Categories',
+            tableQRCodes: 'Table QR Codes',
+            followUp: 'Follow-up',
+            googleSheets: 'Google Sheets',
+            cashier: 'Cashier',
+            localization: 'Localization'
           },
           menuItems: menuItems.reduce((acc, item) => ({
             ...acc,
@@ -87,14 +104,8 @@ const LocalizationTab = ({
         }
       }
       console.log('Setting initial translations:', englishTranslations);
-      setTranslations((prev: Translations) => ({
-        ...prev,
-        en: englishTranslations.en
-      }))
-      onUpdateTranslations((prev: Translations) => ({
-        ...prev,
-        en: englishTranslations.en
-      }))
+      setTranslations(englishTranslations)
+      onUpdateTranslations(englishTranslations)
     }
   }, [categories, menuItems, metadata, translations.en])
 
@@ -123,41 +134,113 @@ const LocalizationTab = ({
 
     setIsGenerating(prev => ({ ...prev, [section]: true }))
     try {
-      const response = await fetch('/api/chatbot/actions/localization/translate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sourceLanguage: 'en',
-          targetLanguage: selectedLanguage,
-          content: {
-            [section]: translations.en?.[section] || {}
+      if (section === 'menuItems') {
+        const menuItemTranslations = { ...translations[selectedLanguage]?.menuItems || {} }
+        
+        for (const item of menuItems) {
+          const response = await fetch('/api/chatbot/actions/localization/translate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sourceLanguage: 'en',
+              targetLanguage: selectedLanguage,
+              content: {
+                [section]: {
+                  [item.id]: {
+                    name: translations.en?.menuItems?.[item.id]?.name,
+                    description: translations.en?.menuItems?.[item.id]?.description
+                  }
+                }
+              },
+              stream: true // Add this flag to indicate streaming
+            }),
+          })
+
+          if (!response.ok) {
+            throw new Error('Failed to generate translations')
           }
-        }),
-      })
 
-      if (!response.ok) {
-        throw new Error('Failed to generate translations')
+          const reader = response.body?.getReader()
+          if (!reader) throw new Error('No reader available')
+
+          let result = ''
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            
+            // Convert the chunk to text
+            const chunk = new TextDecoder().decode(value)
+            result += chunk
+            
+            try {
+              // Try to parse the accumulated result
+              const parsed = JSON.parse(result)
+              if (parsed[section]?.[item.id]) {
+                menuItemTranslations[item.id] = parsed[section][item.id]
+                
+                // Update translations with the partial result
+                setTranslations(prev => ({
+                  ...prev,
+                  [selectedLanguage]: {
+                    ...prev[selectedLanguage],
+                    [section]: menuItemTranslations
+                  }
+                }))
+                
+                onUpdateTranslations({
+                  ...translations,
+                  [selectedLanguage]: {
+                    ...translations[selectedLanguage],
+                    [section]: menuItemTranslations
+                  }
+                })
+              }
+            } catch (e) {
+              // If parsing fails, continue accumulating chunks
+              continue
+            }
+          }
+        }
+      } else {
+        // For other sections, use the original bulk translation
+        const response = await fetch('/api/chatbot/actions/localization/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sourceLanguage: 'en',
+            targetLanguage: selectedLanguage,
+            content: {
+              [section]: translations.en?.[section] || {}
+            }
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to generate translations')
+        }
+
+        const generatedTranslations = await response.json()
+        
+        setTranslations(prev => ({
+          ...prev,
+          [selectedLanguage]: {
+            ...prev[selectedLanguage],
+            [section]: generatedTranslations[section]
+          }
+        }))
+        
+        onUpdateTranslations({
+          ...translations,
+          [selectedLanguage]: {
+            ...translations[selectedLanguage],
+            [section]: generatedTranslations[section]
+          }
+        })
       }
-
-      const generatedTranslations = await response.json()
-      
-      setTranslations(prev => ({
-        ...prev,
-        [selectedLanguage]: {
-          ...prev[selectedLanguage],
-          [section]: generatedTranslations[section]
-        }
-      }))
-      
-      onUpdateTranslations({
-        ...translations,
-        [selectedLanguage]: {
-          ...translations[selectedLanguage],
-          [section]: generatedTranslations[section]
-        }
-      })
 
       toast.success(`${section} translations generated successfully`)
     } catch (error) {

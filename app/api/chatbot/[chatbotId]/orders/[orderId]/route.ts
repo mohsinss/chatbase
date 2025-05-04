@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectMongo from '@/libs/mongoose';
-import Order from '@/models/Order';
+import dbConnect from '@/lib/dbConnect';
+import { Order } from '@/models/Order';
 
 export async function PUT(request: NextRequest, { params }: { params: { chatbotId: string; orderId: string } }) {
   try {
     const { chatbotId, orderId } = params;
     const body = await request.json();
 
-    await connectMongo();
+    await dbConnect();
 
     // Find the order by chatbotId and orderId
     const order = await Order.findOne({ chatbotId, orderId });

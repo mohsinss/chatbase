@@ -3,15 +3,15 @@
  * This endpoint is designed to be triggered by a cron job
  */
 import { NextRequest, NextResponse } from 'next/server';
-import connectMongo from "@/libs/mongoose";
-import Order from '@/models/Order';
+import dbConnect from '@/lib/dbConnect';
+import { Order } from '@/models/Order';
 import ChatbotAction from '@/models/ChatbotAction';
 import { sendTextMessage } from '@/components/webhook/whatsapp/services/whatsappService';
 
 export async function GET(request: NextRequest) {
   try {
     // Connect to MongoDB
-    await connectMongo();
+    await dbConnect();
 
     // Fetch all enabled order management actions
     const omActions = await ChatbotAction.find({
