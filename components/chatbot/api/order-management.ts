@@ -1,12 +1,5 @@
-// Simple translation helper function
-function t(text: string, lang: string): string {
-  // For demonstration, only English is supported, return original text
-  // In real implementation, integrate with i18n or translation files
-  return text;
-}
-
 import ChatbotAction, { IChatbotAction } from '@/models/ChatbotAction';
-import Order from '@/models/Order';
+import { Order } from '@/models/Order';
 import GoogleIntegration from '@/models/GoogleIntegration';
 
 const currencySymbols: Record<string, string> = {
@@ -23,6 +16,36 @@ const currencySymbols: Record<string, string> = {
   BRL: 'R$',
   ZAR: 'R'
 };
+
+// Helper function to get translated category name by id and language
+function getTranslatedCategoryName(action: any, categoryId: string, language: string): string {
+  if (action.metadata.translations &&
+      action.metadata.translations[language] &&
+      action.metadata.translations[language].categories &&
+      action.metadata.translations[language].categories[categoryId]) {
+    return action.metadata.translations[language].categories[categoryId];
+  }
+  // fallback to category name in metadata
+  const category = action.metadata.categories.find((cat: any) => cat.id === categoryId);
+  return category ? category.name : categoryId;
+}
+
+// Helper function to get translated menu item name and description by id and language
+function getTranslatedMenuItem(action: any, itemId: string, language: string): { name: string; description: string } {
+  if (action.metadata.translations &&
+      action.metadata.translations[language] &&
+      action.metadata.translations[language].menuItems &&
+      action.metadata.translations[language].menuItems[itemId]) {
+    const translation = action.metadata.translations[language].menuItems[itemId];
+    return {
+      name: translation.name || '',
+      description: translation.description || ''
+    };
+  }
+  // fallback to menu item in metadata
+  const menuItem = action.metadata.menuItems.find((item: any) => item.id === itemId);
+  return menuItem ? { name: menuItem.name, description: menuItem.description || '' } : { name: '', description: '' };
+}
 
 // Type definitions for order management
 interface MenuItem {
@@ -71,12 +94,15 @@ interface OrderManagementMetadata {
   };
 }
 
-export async function getMenuPrompt(chatbotId: string, language: string = 'en'): Promise<string> {
+export async function getMenuPrompt(chatbotId: string, language?: string): Promise<string> {
   try {
     const action = await getOrderManagementAction(chatbotId);
 
+    // Use language from action.metadata.language if not provided
+    const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+
     if (!action || !action.metadata || !action.metadata.menuItems || !action.metadata.categories) {
-      return t("No menu available.", language);
+      return "No menu available.";
     }
 
     // Build a map of categoryId -> categoryName for easy lookup
@@ -96,20 +122,21 @@ export async function getMenuPrompt(chatbotId: string, language: string = 'en'):
     });
 
     // Build the prompt string
-    let prompt = t("Here is the menu:\n", language);
+    let prompt = "Here is the menu:\n";
     const currencyCode = action.metadata.currency || 'USD';
     const currencySymbol = currencySymbols[currencyCode] || currencyCode;
     for (const [categoryId, items] of Object.entries(itemsByCategory)) {
-      prompt += `\n${categoryMap[categoryId] || categoryId}:\n`;
+      prompt += `\n${getTranslatedCategoryName(action, categoryId, language)}:\n`;
       items.forEach((item: any) => {
-        prompt += `- ${item.id} - ${item.name}: ${currencySymbol}${item.price.toFixed(2)}${item.description ? ` - ${item.description}` : ""}\n`;
+        const translatedItem = getTranslatedMenuItem(action, item.id, language);
+        prompt += `- ${item.id} - ${translatedItem.name}: ${currencySymbol}${item.price.toFixed(2)}${translatedItem.description ? ` - ${translatedItem.description}` : ""}\n`;
       });
     }
 
     return prompt.trim();
   } catch (error) {
     console.error('Error generating menu prompt:', error);
-    return t("Failed to generate menu prompt.", language);
+    return "Failed to generate menu prompt.";
   }
 }
 
@@ -138,6 +165,9 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
   try {
     const action = await getOrderManagementAction(chatbotId);
 
+    // Use language from action.metadata.language if not provided
+    const lang = (action && action.metadata && action.metadata.language) || 'en';
+
     if (!action || !action.metadata || !action.metadata.categories) {
       return isWhatsApp
         ? { error: "No categories found" }
@@ -147,7 +177,7 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
     // Create buttons for each category
     const categoryButtons = action.metadata.categories.map((category: any) => ({
       id: category.id,
-      text: category.name,
+      text: getTranslatedCategoryName(action, category.id, lang),
       value: category.id,
       action: "get_menu",
       params: { category: category.id }
@@ -166,7 +196,7 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
             title: "Menu Categories",
             rows: action.metadata.categories.map((category: any) => ({
               id: `om-category-{tableName}-{actionId}-${category.id}`,
-              title: category.name.slice(0,24),
+              title: getTranslatedCategoryName(action, category.id, lang).slice(0, 24),
               description: ""
             }))
           }
@@ -174,7 +204,7 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
       };
     } else {
       // Generate HTML content with buttons for web interface
-      const htmlContent = `<div class="order-categories"><h3>Menu Categories</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menus" data-category="${category.id}" data-index="0">${category.name}</button>`).join('')}</div></div>`;
+      const htmlContent = `<div class="order-categories"><h3>Menu Categories</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menus" data-category="${category.id}" data-index="0">${getTranslatedCategoryName(action, category.id, lang)}</button>`).join('')}</div></div>`;
       return htmlContent;
     }
   } catch (error) {
@@ -190,8 +220,16 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
  */
 export async function getMenus(chatbotId: string, category: string, isWhatsApp: boolean = false) {
   try {
-    console.log('getMenus', category, 'category');
     const action = await getOrderManagementAction(chatbotId);
+
+    // Use language from action.metadata.language if not provided
+    const lang = (action && action.metadata && action.metadata.language) || 'en';
+
+    if (!action || !action.metadata || !action.metadata.categories) {
+      return isWhatsApp
+        ? { error: "No categories found" }
+        : `<div class="error-message"><p>No categories found</p></div>`;
+    }
 
     if (!action || !action.metadata || !action.metadata.menuItems) {
       return `<div class="error-message"><p>No menu items found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
@@ -308,23 +346,26 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
     // Filter menu items by category
     const items = action.metadata.menuItems
       .filter((item: any) => item.category === categoryObj.id && item.available)
-      .map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        price: item.price
-      }));
+      .map((item: any) => {
+        const translatedItem = getTranslatedMenuItem(action, item.id, lang);
+        return {
+          id: item.id,
+          name: translatedItem.name,
+          price: item.price
+        };
+      });
 
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       return {
         type: "list",
-        title: `${categoryObj.name} Menu`,
-        body: `Menu items in ${categoryObj.name}:`,
+        title: `${getTranslatedCategoryName(action, categoryObj.id, lang)} Menu`,
+        body: `Menu items in ${getTranslatedCategoryName(action, categoryObj.id, lang)}:`,
         footer: "Select an item to view details or order.",
         button: "View Menu Items",
         sections: [
           {
-            title: categoryObj.name,
+            title: getTranslatedCategoryName(action, categoryObj.id, lang),
             rows: [
               // Add back option as the first item
               {
@@ -333,9 +374,9 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
                 description: "Return to menu categories"
               },
               // Add menu items
-              ...items.map((item: any, index: number) => ({
+              ...items.map((item: any) => ({
                 id: `om-menu-{tableName}-{actionId}-${item.id}`,
-                title: item.name.slice(0,24),
+                title: item.name.slice(0, 24),
                 description: `$${item.price.toFixed(2)} - ${item.name}`
               }))
             ]
@@ -346,7 +387,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
     } else {
       // Generate HTML content with menu items list for web interface
       return `<div class="menu-items">
-        <h3>${categoryObj.name} Menu</h3>
+        <h3>${getTranslatedCategoryName(action, categoryObj.id, lang)} Menu</h3>
         <div class="items-list">
           ${items.map((item: any) => `
             <button class="menu-item-btn chat-option-btn"
@@ -560,8 +601,8 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
           <h4>Cart Updated</h4>
           <div class="cart-items">
             ${cart.map((item: OrderItem) => `<p>${item.qty} x ${item.name} - ${currency} ${(
-              item.price * item.qty
-            ).toFixed(2)}</p>`).join('')}
+        item.price * item.qty
+      ).toFixed(2)}</p>`).join('')}
           </div>
           <p class="cart-total"><strong>Total: ${currency} ${cartTotal.toFixed(2)}</strong></p>
         </div>
@@ -863,7 +904,7 @@ export async function updateGoogleSheet(chatbotId: string, order: Order) {
       process.env.GOOGLE_CLIENT_SECRET,
       process.env.GOOGLE_REDIRECT_URI
     );
-    
+
     oauth2Client.setCredentials({
       access_token: googleIntegration.accessToken,
       refresh_token: googleIntegration.refreshToken,
