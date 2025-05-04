@@ -104,14 +104,8 @@ const LocalizationTab = ({
         }
       }
       console.log('Setting initial translations:', englishTranslations);
-      setTranslations((prev: Translations) => ({
-        ...prev,
-        en: englishTranslations.en
-      }))
-      onUpdateTranslations((prev: Translations) => ({
-        ...prev,
-        en: englishTranslations.en
-      }))
+      setTranslations(englishTranslations)
+      onUpdateTranslations(englishTranslations)
     }
   }, [categories, menuItems, metadata, translations.en])
 

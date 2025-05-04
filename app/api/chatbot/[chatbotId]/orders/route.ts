@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, { params }: { params: { chatbotId: s
     }
 
     const orders = await Order.find(query).sort({ createdAt: -1 });
-    return NextResponse.json(orders);
+    return NextResponse.json({ orders });
   } catch (error) {
     console.error('Error fetching orders:', error);
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });

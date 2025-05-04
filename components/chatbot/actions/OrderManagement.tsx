@@ -227,45 +227,53 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             if (metadata.translations) {
               console.log('Loading translations from metadata:', metadata.translations);
               setTranslations(metadata.translations);
+              // Also update metadata with translations to ensure consistency
+              setMetadata(prev => ({
+                ...prev,
+                translations: metadata.translations
+              }));
             }
           }
 
           toast.success("Configuration loaded");
         } else {
-          // Sample data for new action
-          setMenuItems([
-            {
-              id: "1",
-              name: "Margherita Pizza",
-              description: "Classic pizza with tomato sauce, mozzarella, and basil",
-              price: 12.99,
-              category: "1",
-              available: true,
-              images: []
-            },
-            {
-              id: "2",
-              name: "Caesar Salad",
-              description: "Fresh romaine lettuce with Caesar dressing and croutons",
-              price: 8.99,
-              category: "2",
-              available: true,
-              images: []
+          // Initialize with default translations
+          const defaultTranslations = {
+            en: {
+              categories: categories.reduce((acc, category) => ({
+                ...acc,
+                [category.id]: category.name
+              }), {}),
+              messages: {
+                orderTemplate: metadata.messageTemplate || '',
+                followUpTemplate: metadata.followUpSettings?.messageTemplate || '',
+                orderManagement: 'Order Management',
+                enabled: 'Enabled',
+                actionName: 'Action Name',
+                enterActionName: 'Enter a name for this action',
+                actionWarning: 'Enabling this action will automatically disable other actions.',
+                language: 'Language',
+                currency: 'Currency',
+                saving: 'Saving...',
+                saveConfiguration: 'Save Configuration',
+                menuManagement: 'Menu Management',
+                categories: 'Categories',
+                tableQRCodes: 'Table QR Codes',
+                followUp: 'Follow-up',
+                googleSheets: 'Google Sheets',
+                cashier: 'Cashier',
+                localization: 'Localization'
+              },
+              menuItems: menuItems.reduce((acc, item) => ({
+                ...acc,
+                [item.id]: {
+                  name: item.name,
+                  description: item.description
+                }
+              }), {})
             }
-          ]);
-
-          setTables([
-            {
-              id: "1",
-              tableNumber: "Table 1",
-              qrCodeUrl: ""
-            },
-            {
-              id: "2",
-              tableNumber: "Table 2",
-              qrCodeUrl: ""
-            }
-          ]);
+          };
+          setTranslations(defaultTranslations);
         }
       } catch (error) {
         console.error("Failed to load order management data:", error);
