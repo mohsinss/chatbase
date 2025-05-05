@@ -48,6 +48,7 @@ export async function POST(req: Request) {
             headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
         });
         const data = response1.data;
+        let hasIGUserOnFBPage = false;
 
         for (let i = 0; i < data.data.length; i++) {
             let page = data.data[i];
@@ -55,12 +56,16 @@ export async function POST(req: Request) {
             let instagram_business_account = page?.instagram_business_account?.id;
 
             if (instagram_business_account) {
+                hasIGUserOnFBPage = true;
                 // Retrive instagram user.
                 const response3 = await axios.get(`https://graph.facebook.com/v22.0/${instagram_business_account}?fields=username&access_token=${long_user_access_token}`, {
                     headers: { Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}` }
                 });
                 const igUserData = response3.data;
-                console.log(igUserData)
+                if (igUserData.error) {
+                    console.error(igUserData.error);
+                    return NextResponse.json({ error: igUserData.error.message }, { status: 500 });
+                }
 
                 // Subscribe Page to webhook
                 const response2 = await axios.post(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps?subscribed_fields=messages,messaging_postbacks,messages,conversations,feed,message_mention,group_feed&access_token=${page.access_token}`, {}, {
@@ -113,7 +118,7 @@ export async function POST(req: Request) {
             }
         }
 
-        if (data.data.length > 0) {
+        if (data.data.length > 0 && hasIGUserOnFBPage) {
             // Find the Chatbot with chatbotId and update it
             const chatbot = await Chatbot.findOneAndUpdate(
                 { chatbotId }, // find a document with chatbotId
@@ -125,9 +130,9 @@ export async function POST(req: Request) {
                     new: true, // return the new Chatbot instead of the old one
                 }
             );
+            return NextResponse.json({ success: true });
         }
-
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: false, message: "No Instagram account found on the pages." }, { status: 200 });
     } catch (error) {
         console.error(error.message || "Error saving Instagram credentials:");
         return new NextResponse(error.message || "Internal Server Error", { status: 500 });
