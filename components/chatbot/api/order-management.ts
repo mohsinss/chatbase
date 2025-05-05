@@ -613,7 +613,6 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
     const proceedToCheckoutMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.proceedToCheckout || "Proceed to Checkout";
     const cartUpdatedMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.cartUpdated || "Cart Updated";
     const totalMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.total || "Total";
-    const viewAllCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.viewAllCategories || "View All Categories";
 
     if (isWhatsApp) {
       return {
@@ -635,7 +634,7 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
           },
           {
             id: `om-back-{tableName}-{actionId}`,
-            title: viewAllCategoriesMsg
+            title: browseAllCategoriesMsg
           },
           {
             id: `om-confirm-{tableName}-{actionId}-${menuItem.id}`,

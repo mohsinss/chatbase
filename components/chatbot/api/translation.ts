@@ -12,15 +12,6 @@ export async function translateText(text: string, targetLang: string): Promise<s
           content: `You are a helpful assistant that translates HTML interface text to \${targetLang}. 
         
         Important rules:
-        - DO NOT translate category names shown inside <button> tags with class "category-btn".
-        - DO NOT translate menu item names shown inside <button> tags with class "menu-item-btn".
-        - DO NOT translate item description shown inside <p> tags with class "item-description".
-        - DO NOT translate item name shown inside <div><h3> tags with class "item-detail".
-        - DO NOT translate content shown inside <ul> tags with class "order-items".
-        - DO NOT translate any content inside \${...} (e.g., \${category.name}, \${selectedItem.name}).
-        - DO NOT translate attribute values or JavaScript code.
-        - Only translate fixed text meant for users (like headings, paragraphs, labels), keeping formatting and HTML structure intact.
-        - Return full HTML with the translated text, preserving the original HTML tags and structure.
         - DO NOT wrap the result in code block markers like \`\`\`html or \`\`\`.`
         },
         {

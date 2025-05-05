@@ -7,6 +7,7 @@ import { sendTextMessage } from '@/components/webhook/whatsapp/services/whatsapp
 import ChatbotAction from '@/models/ChatbotAction';
 import { handleCategoryButton } from './categoryHandler';
 import { handleMenuButton } from './menuHandler';
+import { translateText, translateJsonFields } from '@/components/chatbot/api/translation';
 
 /**
  * Handle order management button clicks
@@ -129,12 +130,12 @@ export async function handleOrderManagementButton(
       }
     } catch (dbError) {
       console.error('Error fetching order management action:', dbError);
-      await applyMessageDelay();
-      await sendTextMessage(
-        phoneNumberId,
-        from,
-        "Sorry, we couldn't find the restaurant information. Please scan the QR code again."
-      );
+      // await applyMessageDelay();
+      // await sendTextMessage(
+      //   phoneNumberId,
+      //   from,
+      //   "Sorry, we couldn't find the restaurant information. Please scan the QR code again."
+      // );
       return {
         success: false,
         message: `Order management action error: ${dbError.message}`
@@ -182,24 +183,24 @@ export async function handleOrderManagementButton(
         } else {
           // If AI processing was not successful but returned a result object
           // Send a message to the user about the issue
-          await applyMessageDelay();
-          await sendTextMessage(
-            phoneNumberId,
-            from,
-            result.message || "Sorry, we couldn't process your order confirmation. Please try again."
-          );
+          // await applyMessageDelay();
+          // await sendTextMessage(
+          //   phoneNumberId,
+          //   from,
+          //   result.message || "Sorry, we couldn't process your order confirmation. Please try again."
+          // );
           
           return result;
         }
       } catch (aiError) {
         // Handle any errors that might occur during AI processing
         console.error('Error processing order with AI:', aiError);
-        await applyMessageDelay();
-        await sendTextMessage(
-          phoneNumberId,
-          from,
-          "Sorry, we encountered a technical issue while processing your order. Please try again later."
-        );
+        // await applyMessageDelay();
+        // await sendTextMessage(
+        //   phoneNumberId,
+        //   from,
+        //   "Sorry, we encountered a technical issue while processing your order. Please try again later."
+        // );
         
         return {
           success: false,
@@ -285,12 +286,12 @@ export async function handleOrderManagementButton(
       } catch (apiError) {
         console.error('Error sending category menu to WhatsApp:', apiError);
         // Send a simpler fallback message if the interactive message fails
-        await applyMessageDelay();
-        await sendTextMessage(
-          phoneNumberId,
-          from,
-          `Please select a category to view our menu. If you're having trouble, please scan the QR code again.`
-        );
+        // await applyMessageDelay();
+        // await sendTextMessage(
+        //   phoneNumberId,
+        //   from,
+        //   `Please select a category to view our menu. If you're having trouble, please scan the QR code again.`
+        // );
       }
 
       // Add to conversation history
@@ -306,24 +307,24 @@ export async function handleOrderManagementButton(
     }
 
     // Unknown button type
-    await applyMessageDelay();
-    await sendTextMessage(
-      phoneNumberId,
-      from,
-      "Sorry, we couldn't process your selection. Please try again."
-    );
+    // await applyMessageDelay();
+    // await sendTextMessage(
+    //   phoneNumberId,
+    //   from,
+    //   "Sorry, we couldn't process your selection. Please try again."
+    // );
     return {
       success: false,
       message: "Unknown button type"
     };
   } catch (error) {
     console.error('Error handling order management button:', error);
-    await applyMessageDelay();
-    await sendTextMessage(
-      phoneNumberId,
-      from,
-      "Sorry, an error occurred while processing your request. Please try again."
-    );
+    // await applyMessageDelay();
+    // await sendTextMessage(
+    //   phoneNumberId,
+    //   from,
+    //   "Sorry, an error occurred while processing your request. Please try again."
+    // );
     return {
       success: false,
       message: `Error: ${error.message}`

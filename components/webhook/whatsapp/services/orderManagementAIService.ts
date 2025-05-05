@@ -286,6 +286,12 @@ export async function processOrderManagementWithAI(
                     .replace('{actionId}', actionId);
                 }
               });
+
+              let footerText = `What would you like to do next?`;
+              if( language != "en"){
+                cartDetails = await translateText(cartDetails, language);
+                footerText = await translateText(footerText, language);
+              }
           
               // Create WhatsApp button message
               const buttonPayload = {
@@ -299,7 +305,7 @@ export async function processOrderManagementWithAI(
                     text: cartDetails
                   },
                   footer: {
-                    text: `What would you like to do next?`
+                    text: footerText
                   },
                   action: {
                     buttons: result.buttons.map((button: any) => ({

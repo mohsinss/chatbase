@@ -5,6 +5,7 @@ import { addAssistantMessageToConversation } from '@/components/webhook/whatsapp
 import { applyMessageDelay } from './utils';
 import { sendTextMessage } from '@/components/webhook/whatsapp/services/whatsappService';
 import { translateText, translateJsonFields } from '@/components/chatbot/api/translation';
+import { currencySymbols } from '@/types';
 
 /**
  * Handle menu item button click
@@ -51,20 +52,6 @@ export async function handleMenuButton(
       // First send item details as a text message
       const targetLanguage = action?.metadata?.language || 'en';
       const currencyCode = action?.metadata?.currency || 'USD';
-      const currencySymbols: Record<string, string> = {
-        USD: '$',
-        EUR: '€',
-        GBP: '£',
-        JPY: '¥',
-        CNY: '¥',
-        INR: '₹',
-        AUD: 'A$',
-        CAD: 'C$',
-        CHF: 'CHF',
-        KRW: '₩',
-        BRL: 'R$',
-        ZAR: 'R'
-      };
       const currencySymbol = currencySymbols[currencyCode] || currencyCode;
 
       let messageText = `*${menuItemResult.item.name}*\n\n`;
@@ -78,11 +65,6 @@ export async function handleMenuButton(
       }
 
       await applyMessageDelay();
-      await sendTextMessage(
-        phoneNumberId,
-        from,
-        messageText
-      );
 
       // Send image if available
       if (menuItemResult.item.image) {
@@ -125,7 +107,7 @@ export async function handleMenuButton(
         interactive: {
           type: "button",
           body: {
-            text: "Would you like to order this item?"
+            text: messageText
           },
           action: {
             buttons: menuItemResult.buttons.map((button: any) => ({
