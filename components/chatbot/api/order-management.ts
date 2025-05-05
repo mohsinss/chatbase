@@ -189,12 +189,16 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
 
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
+      const menuCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.menuCategories || "Menu Categories";
+      const chooseCategoryBodyMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.chooseMenuCategoryBody || "Please choose a menu category:";
+      const selectCategoryFooterMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.selectCategoryFooter || "Select a category to continue.";
+      const selectCategoryButtonMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.selectCategoryButton || "Select Category";
       return {
         type: "list",
         title: menuCategoriesMsg,
-        body: "Please choose a menu category:",
-        footer: "Select a category to continue.",
-        button: "Select Category",
+        body: chooseCategoryBodyMsg,
+        footer: selectCategoryFooterMsg,
+        button: selectCategoryButtonMsg,
         sections: [
           {
             title: menuCategoriesMsg,

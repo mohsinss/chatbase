@@ -29,6 +29,9 @@ const defaultSystemMsgs: Record<string, string> = {
   add3ToCart: "Add 3 to cart",
   menuCategories: "Menu Categories",
   menuItems: "Menu Items",
+  chooseMenuCategoryBody: "Please choose a menu category",
+  selectCategoryFooter: "Select a category to view items",
+  selectCategoryButton: "Select Category",
 };
 interface LocalizationTabProps {
   categories: { id: string; name: string }[]
@@ -68,6 +71,9 @@ interface Translations {
       add2ToCart?: string
       add3ToCart?: string
       menuCategories?: string
+      chooseMenuCategoryBody?: string
+      selectCategoryFooter?: string
+      selectCategoryButton?: string
     }
     [section: string]: {
       [key: string]: any
