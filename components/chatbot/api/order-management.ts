@@ -170,9 +170,10 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
     const lang = language || (action && action.metadata && action.metadata.language) || 'en';
 
     if (!action || !action.metadata || !action.metadata.categories) {
+      const noCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.noitems || "No categories found";
       return isWhatsApp
-        ? { error: "No categories found" }
-        : `<div class="error-message"><p>No categories found</p></div>`;
+        ? { error: noCategoriesMsg }
+        : `<div class="error-message"><p>${noCategoriesMsg}</p></div>`;
     }
 
     // Create buttons for each category
@@ -210,9 +211,11 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
     }
   } catch (error) {
     console.error('Error getting categories:', error);
+    const lang = language || 'en';
+    const failedCategoriesMsg = `Failed to retrieve categories`;
     return isWhatsApp
-      ? { error: "Failed to retrieve categories" }
-      : `<div class="error-message"><p>Failed to retrieve categories</p></div>`;
+      ? { error: failedCategoriesMsg }
+      : `<div class="error-message"><p>${failedCategoriesMsg}</p></div>`;
   }
 }
 
@@ -220,20 +223,23 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
  * Returns a list of menu items for a specific category
  */
 export async function getMenus(chatbotId: string, category: string, isWhatsApp: boolean = false, language?: string) {
-  try {
-    const action = await getOrderManagementAction(chatbotId);
+  const action = await getOrderManagementAction(chatbotId);
 
-    // Use language from parameter or action.metadata.language if not provided
-    const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+  // Use language from parameter or action.metadata.language if not provided
+  const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+  try {
 
     if (!action || !action.metadata || !action.metadata.categories) {
+      const noCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.noitems || "No categories found";
       return isWhatsApp
-        ? { error: "No categories found" }
-        : `<div class="error-message"><p>No categories found</p></div>`;
+        ? { error: noCategoriesMsg }
+        : `<div class="error-message"><p>${noCategoriesMsg}</p></div>`;
     }
 
     if (!action || !action.metadata || !action.metadata.menuItems) {
-      return `<div class="error-message"><p>No menu items found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+      const noMenuItemsMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.menuNotFound || "No menu items found";
+      const backToCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories";
+      return `<div class="error-message"><p>${noMenuItemsMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
     }
 
     let categoryObj = null;
@@ -339,9 +345,10 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
     }
 
     if (!categoryObj) {
+      const categoryNotFoundMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.itemNotFoundOrUnavailable || `Category "${category}" not found`;
       return isWhatsApp
-        ? { error: `Category "${category}" not found` }
-        : `<div>Category "${category}" not found</div><div><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+        ? { error: categoryNotFoundMsg }
+        : `<div>${categoryNotFoundMsg}</div><div><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories"}</button></div>`;
     }
 
     // Filter menu items by category
@@ -362,7 +369,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
         type: "list",
         title: `${getTranslatedCategoryName(action, categoryObj.id, lang)} Menu`,
         body: `Menu items in ${getTranslatedCategoryName(action, categoryObj.id, lang)}:`,
-        footer: "Select an item to view details or order.",
+        footer: action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories",
         button: "View Menu Items",
         sections: [
           {
@@ -371,8 +378,8 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
               // Add back option as the first item
               {
                 id: `om-back-{tableName}-{actionId}`,
-                title: "Back to Categories",
-                description: "Return to menu categories"
+                title: action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories",
+                description: action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Return to menu categories"
               },
               // Add menu items
               ...items.map((item: any) => ({
@@ -388,7 +395,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
     } else {
       // Generate HTML content with menu items list for web interface
       return `<div class="menu-items">
-        <h3>${getTranslatedCategoryName(action, categoryObj.id, lang)} Menu</h3>
+        <h3>${getTranslatedCategoryName(action, categoryObj.id, lang)}</h3>
         <div class="items-list">
           ${items.map((item: any) => `
             <button class="menu-item-btn chat-option-btn"
@@ -401,14 +408,16 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
         </div>
         <div class="navigation">
           <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">
-            Back to Categories
+            ${action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories"}
           </button>
         </div>
       </div>`;
     }
   } catch (error) {
     console.error('Error getting menu items:', error);
-    return `<div class="error-message"><p>Failed to retrieve menu items</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+    const failedMenuItemsMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.failedToRetrieveMenuItemDetails || "Failed to retrieve menu items";
+    const backToCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories";
+    return `<div class="error-message"><p>${failedMenuItemsMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
   }
 }
 
@@ -416,27 +425,30 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
  * Returns detailed information about a specific menu item
  */
 export async function getMenu(chatbotId: string, item_id: string, category: string, isWhatsApp: boolean = false, language?: string) {
-  try {
-    const action = await getOrderManagementAction(chatbotId);
+  const action = await getOrderManagementAction(chatbotId);
 
-    if (!action || !action.metadata || !action.metadata.menuItems) {
-      return isWhatsApp
-        ? { error: "No menu items found" }
-        : `<div class="error-message"><p>No menu items found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
-    }
-
-    // Use language from parameter or action.metadata.language if not provided
+  if (!action || !action.metadata || !action.metadata.menuItems) {
     const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+    const noItemsMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.menuNotFound || "No menu items found";
+    const backToCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories";
+    return isWhatsApp
+      ? { error: noItemsMsg }
+      : `<div class="error-message"><p>${noItemsMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
+  }
 
+  // Use language from parameter or action.metadata.language if not provided
+  const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+  try {
     // Find the category by ID
     const categoryObj = action.metadata.categories.find(
       (cat: any) => cat.id === category
     );
 
     if (!categoryObj) {
+      const categoryNotFoundMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.itemNotFoundOrUnavailable || "Category not found";
       return isWhatsApp
-        ? { error: "Category not found" }
-        : `<div class="error-message"><p>Category not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+        ? { error: categoryNotFoundMsg }
+        : `<div class="error-message"><p>${categoryNotFoundMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories"}</button></div>`;
     }
 
     // Find the menu item
@@ -445,9 +457,11 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
     );
 
     if (!selectedItem) {
+      const itemNotFoundMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.itemNotFoundOrUnavailable || "Item not found or not available";
+      const backToMenuMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToMenu || "Back to Menu";
       return isWhatsApp
-        ? { error: "Item not found or not available" }
-        : `<div class="error-message"><p>Item not found or not available</p><button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">Back to Menu</button></div>`;
+        ? { error: itemNotFoundMsg }
+        : `<div class="error-message"><p>${itemNotFoundMsg}</p><button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">${backToMenuMsg}</button></div>`;
     }
 
     // Get translated menu item details
@@ -455,6 +469,11 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
 
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
+      const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+      const add1ToCartMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.add1ToCart || "Add 1 to Cart";
+      const add2ToCartMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.add2ToCart || "Add 2 to Cart";
+      const add3ToCartMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.add3ToCart || "Add 3 to Cart";
+
       const response: any = {
         type: "item_detail",
         item: {
@@ -467,16 +486,20 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
         buttons: [
           {
             id: `om-add-to-cart-{tableName}-{actionId}-${selectedItem.id}-1`,
-            title: "Add 1 to Cart"
+            title: add1ToCartMsg
           },
           {
             id: `om-add-to-cart-{tableName}-{actionId}-${selectedItem.id}-2`,
-            title: "Add 2 to Cart"
+            title: add2ToCartMsg
           },
           {
-            id: `om-category-{tableName}-{actionId}-${category}`,
-            title: "Back to Menu"
-          }
+            id: `om-add-to-cart-{tableName}-{actionId}-${selectedItem.id}-3`,
+            title: add3ToCartMsg
+          },
+      {
+        id: `om-category-{tableName}-{actionId}-${category}`,
+        title: action?.metadata?.translations?.[lang]?.systemMsgs?.backToMenu || "Back to Menu"
+      }
         ]
       };
 
@@ -488,6 +511,12 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
       return response;
     } else {
       // Generate HTML content with detailed item view for web interface
+      const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+      const add1ToCartMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.add1ToCart || "Add 1 to Cart";
+      const add2ToCartMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.add2ToCart || "Add 2 to Cart";
+      const add3ToCartMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.add3ToCart || "Add 3 to Cart";
+      const backToMenuMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToMenuMsg || "Back to Categories";
+
       return `<div class="item-detail">
         <h3>${translatedItem.name}</h3>
         ${selectedItem.images && selectedItem.images.length > 0 ?
@@ -496,19 +525,21 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
           <p class="item-price">$${selectedItem.price.toFixed(2)}</p>
           <p class="item-description">${translatedItem.description}</p>
           <div class="quantity-selector">
-            <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="1" data-index="0">Add 1 to Cart</button>
-            <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="2" data-index="0">Add 2 to Cart</button>
-            <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="3" data-index="0">Add 3 to Cart</button>
+            <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="1" data-index="0">${add1ToCartMsg}</button>
+            <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="2" data-index="0">${add2ToCartMsg}</button>
+            <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="3" data-index="0">${add3ToCartMsg}</button>
           </div>
         </div>
         <div class="navigation">
-          <button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">Back to Menu</button>
+          <button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">${backToMenuMsg}</button>
         </div>
       </div>`;
     }
   } catch (error) {
     console.error('Error getting menu item details:', error);
-    return `<div class="error-message"><p>Failed to retrieve menu item details</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+    const failedMenuItemDetailsMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.failedToRetrieveMenuItemDetails || "Failed to retrieve menu item details";
+    const backToCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories";
+    return `<div class="error-message"><p>${failedMenuItemDetailsMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
   }
 }
 
@@ -520,31 +551,35 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
 export async function addToCart(chatbotId: string, item_id: string, quantity: number, cartItems: any[] = [], isWhatsApp: boolean = false, language?: string) {
   // Convert quantity to number if it's passed as a string from data-quantity attribute
   quantity = typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
+  const action = await getOrderManagementAction(chatbotId);
+
+  if (!action || !action.metadata || !action.metadata.menuItems) {
+    const menuNotFoundMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.menuNotFound || "Menu not found";
+    const backToCategoriesMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories";
+    return `<div class="error-message"><p>${menuNotFoundMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
+  }
+
+  // Use language from parameter or action.metadata.language if not provided
+  const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+
   try {
-    const action = await getOrderManagementAction(chatbotId);
-
-    if (!action || !action.metadata || !action.metadata.menuItems) {
-      return `<div class="error-message"><p>Menu not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
-    }
-
-    // Use language from parameter or action.metadata.language if not provided
-    const lang = language || (action && action.metadata && action.metadata.language) || 'en';
-
     // Find the menu item
     const menuItem = action.metadata.menuItems.find((item: any) => item.id === item_id.split('-').pop());
 
     if (!menuItem) {
-      console.log(item_id, 'not found');
+      const itemNotFoundMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.itemNotFoundInMenu || "Item not found";
+      const backToCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories";
       return isWhatsApp
-        ? { error: "Item not found" }
-        : `<div class="error-message"><p>Item not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+        ? { error: itemNotFoundMsg }
+        : `<div class="error-message"><p>${itemNotFoundMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
     }
 
     if (!menuItem.available) {
-      console.log(item_id, 'not available')
+      const itemNotAvailableMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.itemNotAvailable || "Item is not available";
+      const backToCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories";
       return isWhatsApp
-        ? { error: "Item not available" }
-        : `<div class="error-message"><p>Item is not available</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+        ? { error: itemNotAvailableMsg }
+        : `<div class="error-message"><p>${itemNotAvailableMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
     }
 
     // Find the category ID for the menu item's category
@@ -627,22 +662,35 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
     }
   } catch (error) {
     console.error('Error adding item to cart:', error);
-    return `<div class="error-message"><p>Failed to add item to cart</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+    const failedAddToCartMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.failedToAddItemToCart || "Failed to add item to cart";
+    const backToCategoriesMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories";
+    return `<div class="error-message"><p>${failedAddToCartMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
   }
 }
 
 /**
  * Retrieves orders for a specific chatbot
  */
-export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp: boolean = false) {
+export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp: boolean = false, language?: string) {
+  const action = await getOrderManagementAction(chatbotId);
+
+  if (!action || !action.metadata || !action.metadata.menuItems) {
+    const menuNotFoundMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.menuNotFound || "Menu not found";
+    const backToCategoriesMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories";
+    return `<div class="error-message"><p>${menuNotFoundMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
+  }
+
+  // Use language from parameter or action.metadata.language if not provided
+  const lang = language || (action && action.metadata && action.metadata.language) || 'en';
   try {
     // If orderId is provided, get a specific order
     if (orderId) {
       const order = await Order.findOne({ chatbotId, orderId });
       if (!order) {
+        const orderNotFoundMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.orderNotFound || `Order #${orderId} not found`;
         return isWhatsApp
-          ? { error: `Order #${orderId} not found` }
-          : `<div class="error-message"><p>Order #${orderId} not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+          ? { error: orderNotFoundMsg }
+          : `<div class="error-message"><p>${orderNotFoundMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
       }
 
       if (isWhatsApp) {
@@ -665,7 +713,7 @@ export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp:
           buttons: [
             {
               id: `om-back-{tableName}-{actionId}`,
-              title: "Back to Categories"
+              title: action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories"
             }
           ]
         };
@@ -684,7 +732,7 @@ export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp:
             <p class="order-total">Total: $${order.subtotal.toFixed(2)}</p>
           </div>
           <div class="order-actions">
-            <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button>
+            <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories"}</button>
           </div>
         </div>`;
       }
@@ -694,9 +742,10 @@ export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp:
     const orders = await Order.find({ chatbotId }).sort({ timestamp: -1 }).limit(10);
 
     if (!orders || orders.length === 0) {
+      const noOrdersMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.failedToRetrieveOrders || "No orders found";
       return isWhatsApp
-        ? { error: "No orders found" }
-        : `<div class="error-message"><p>No orders found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+        ? { error: noOrdersMsg }
+        : `<div class="error-message"><p>${noOrdersMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories"}</button></div>`;
     }
 
     if (isWhatsApp) {
@@ -714,8 +763,8 @@ export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp:
               // Add back option as the first item
               {
                 id: `om-back-{tableName}-{actionId}`,
-                title: "Back to Categories",
-                description: "Return to menu categories"
+                title: action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories",
+                description: action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Return to menu categories"
               },
               // Add orders
               ...orders.map((order: any) => ({
@@ -746,13 +795,15 @@ export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp:
           `).join('')}
         </div>
         <div class="order-actions">
-          <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button>
+          <button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories"}</button>
         </div>
       </div>`;
     }
   } catch (error) {
     console.error('Error retrieving orders:', error);
-    return `<div class="error-message"><p>Failed to retrieve orders</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+    const failedOrdersMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.failedToRetrieveOrders || "Failed to retrieve orders";
+    const backToCategoriesMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories";
+    return `<div class="error-message"><p>${failedOrdersMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
   }
 }
 
@@ -762,17 +813,19 @@ export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp:
  * and potentially integrate with a POS system or Google Sheets
  */
 export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: boolean = false, metadata?: Object, language?: string) {
+  console.log('submitOrder', order);
+  const action = await getOrderManagementAction(chatbotId);
+
+  if (!action || !action.metadata) {
+    const orderMgmtNotConfiguredMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.orderManagementNotConfigured || "Order management not configured";
+    const backToCategoriesMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories";
+    return `<div class="error-message"><p>${orderMgmtNotConfiguredMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
+  }
+
+  // Use language from parameter or action.metadata.language if not provided
+  const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+
   try {
-    console.log('submitOrder', order);
-    const action = await getOrderManagementAction(chatbotId);
-
-    if (!action || !action.metadata) {
-      return `<div class="error-message"><p>Order management not configured</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
-    }
-
-    // Use language from parameter or action.metadata.language if not provided
-    const lang = language || (action && action.metadata && action.metadata.language) || 'en';
-
     // Validate table exists
     if (order.table) {
       const tableExists = action.metadata.tables.some(
@@ -780,7 +833,9 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
       );
 
       if (!tableExists) {
-        return `<div class="error-message"><p>Invalid table number</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+        const invalidTableMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.invalidTableNumber || "Invalid table number";
+        const backToCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories";
+        return `<div class="error-message"><p>${invalidTableMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
       }
     }
 
@@ -789,11 +844,15 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
       const menuItem = action.metadata.menuItems.find((item: any) => item.id == orderItem.item_id.split('-').pop());
 
       if (!menuItem) {
-        return `<div class="error-message"><p>Item "${orderItem.name}" not found in menu</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+        const itemNotFoundMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.itemNotFoundInMenu || `Item "${orderItem.name}" not found in menu`;
+        const backToCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories";
+        return `<div class="error-message"><p>${itemNotFoundMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
       }
 
       if (!menuItem.available) {
-        return `<div class="error-message"><p>Item "${orderItem.name}" is not available</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+        const itemNotAvailableMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.itemNotAvailable || `Item "${orderItem.name}" is not available`;
+        const backToCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories";
+        return `<div class="error-message"><p>${itemNotAvailableMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
       }
     }
 
@@ -867,11 +926,11 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
         buttons: [
           {
             id: `om-back-{tableName}-{actionId}`,
-            title: "Place Another Order"
+            title: action?.metadata?.translations?.[lang]?.systemMsgs?.orderManagementNotConfigured || "Place Another Order"
           },
           {
             id: `om-track-{tableName}-{actionId}-${orderId}`,
-            title: "Track Order Status",
+            title: action?.metadata?.translations?.[lang]?.systemMsgs?.orderManagementNotConfigured || "Track Order Status",
             orderId: orderId
           }
         ]
@@ -898,7 +957,9 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
     }
   } catch (error) {
     console.error('Error submitting order:', error);
-    return `<div class="error-message"><p>Failed to submit order</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
+    const failedSubmitOrderMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.failedToSubmitOrder || "Failed to submit order";
+    const backToCategoriesMsg = action?.metadata?.translations?.[language || 'en']?.systemMsgs?.backToCategories || "Back to Categories";
+    return `<div class="error-message"><p>${failedSubmitOrderMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
   }
 }
 

@@ -23,7 +23,10 @@ const defaultSystemMsgs: Record<string, string> = {
   itemNotFoundInMenu: "Item not found",
   itemNotAvailable: "Item is not available",
   failedToSubmitOrder: "Failed to submit order",
-  orderNotFound: "Order not found"
+  orderNotFound: "Order not found",
+  add1ToCart: "Add 1 to cart",
+  add2ToCart: "Add 2 to cart",
+  add3ToCart: "Add 3 to cart",
 };
 interface LocalizationTabProps {
   categories: { id: string; name: string }[]
@@ -59,6 +62,9 @@ interface Translations {
       invalidTableNumber?: string
       itemNotFoundInMenu?: string
       itemNotAvailable?: string
+      add1ToCart?: string
+      add2ToCart?: string
+      add3ToCart?: string
     }
     [section: string]: {
       [key: string]: any
@@ -144,7 +150,10 @@ const LocalizationTab = ({
             orderManagementNotConfigured: "Order management not configured",
             invalidTableNumber: "Invalid table number",
             itemNotFoundInMenu: "Item not found",
-            itemNotAvailable: "Item is not available"
+            itemNotAvailable: "Item is not available",
+            add1ToCart: "Add 1 to cart",
+            add2ToCart: "Add 2 to cart",
+            add3ToCart: "Add 3 to cart",
           }
         }
       }
@@ -152,7 +161,7 @@ const LocalizationTab = ({
       console.log('Setting initial translations:', englishTranslations);
       setTranslations(englishTranslations);
       onUpdateTranslations(englishTranslations);
-    } else if (!translations.en.systemMsgs) {
+    } else if (!translations.en.systemMsgs.add3ToCart) {
       translations.en.systemMsgs = { ...defaultSystemMsgs, ...translations.en.systemMsgs };
       console.log('Setting initial translations:', translations);
       setTranslations(translations);

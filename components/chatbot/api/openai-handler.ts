@@ -157,13 +157,13 @@ export async function  handleOpenAIRequest(
               }
 
               if (result) {
-                if (targetLanguage !== 'en') {
-                  if (typeof result === 'string') {
-                    result = await translateText(result, targetLanguage);
-                  } else if (typeof result === 'object') {
-                    result = await translateJsonFields(result, targetLanguage);
-                  }
-                }
+                // if (targetLanguage !== 'en') {
+                //   if (typeof result === 'string') {
+                //     result = await translateText(result, targetLanguage);
+                //   } else if (typeof result === 'object') {
+                //     result = await translateJsonFields(result, targetLanguage);
+                //   }
+                // }
 
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: result })}\n\n`));
               }
