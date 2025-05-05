@@ -21,9 +21,9 @@ const currencySymbols: Record<string, string> = {
 // Helper function to get translated category name by id and language
 function getTranslatedCategoryName(action: any, categoryId: string, language: string): string {
   if (action.metadata.translations &&
-      action.metadata.translations[language] &&
-      action.metadata.translations[language].categories &&
-      action.metadata.translations[language].categories[categoryId]) {
+    action.metadata.translations[language] &&
+    action.metadata.translations[language].categories &&
+    action.metadata.translations[language].categories[categoryId]) {
     return action.metadata.translations[language].categories[categoryId];
   }
   // fallback to category name in metadata
@@ -34,9 +34,9 @@ function getTranslatedCategoryName(action: any, categoryId: string, language: st
 // Helper function to get translated menu item name and description by id and language
 function getTranslatedMenuItem(action: any, itemId: string, language: string): { name: string; description: string } {
   if (action.metadata.translations &&
-      action.metadata.translations[language] &&
-      action.metadata.translations[language].menuItems &&
-      action.metadata.translations[language].menuItems[itemId]) {
+    action.metadata.translations[language] &&
+    action.metadata.translations[language].menuItems &&
+    action.metadata.translations[language].menuItems[itemId]) {
     const translation = action.metadata.translations[language].menuItems[itemId];
     return {
       name: translation.name || '',
@@ -500,13 +500,9 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
             title: add2ToCartMsg
           },
           {
-            id: `om-add-to-cart-{tableName}-{actionId}-${selectedItem.id}-3`,
-            title: add3ToCartMsg
-          },
-      {
-        id: `om-category-{tableName}-{actionId}-${category}`,
-        title: action?.metadata?.translations?.[lang]?.systemMsgs?.backToMenu || "Back to Menu"
-      }
+            id: `om-category-{tableName}-{actionId}-${category}`,
+            title: action?.metadata?.translations?.[lang]?.systemMsgs?.backToMenu || "Back to Menu"
+          }
         ]
       };
 
