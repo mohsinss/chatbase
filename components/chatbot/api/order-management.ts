@@ -162,12 +162,12 @@ export async function getOrderManagementAction(chatbotId: string) {
 /**
  * Returns available menu categories
  */
-export async function getCategories(chatbotId: string, isWhatsApp: boolean = false) {
+export async function getCategories(chatbotId: string, isWhatsApp: boolean = false, language?: string) {
   try {
     const action = await getOrderManagementAction(chatbotId);
 
-    // Use language from action.metadata.language if not provided
-    const lang = (action && action.metadata && action.metadata.language) || 'en';
+    // Use language from parameter or action.metadata.language if not provided
+    const lang = language || (action && action.metadata && action.metadata.language) || 'en';
 
     if (!action || !action.metadata || !action.metadata.categories) {
       return isWhatsApp
@@ -219,12 +219,12 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
 /**
  * Returns a list of menu items for a specific category
  */
-export async function getMenus(chatbotId: string, category: string, isWhatsApp: boolean = false) {
+export async function getMenus(chatbotId: string, category: string, isWhatsApp: boolean = false, language?: string) {
   try {
     const action = await getOrderManagementAction(chatbotId);
 
-    // Use language from action.metadata.language if not provided
-    const lang = (action && action.metadata && action.metadata.language) || 'en';
+    // Use language from parameter or action.metadata.language if not provided
+    const lang = language || (action && action.metadata && action.metadata.language) || 'en';
 
     if (!action || !action.metadata || !action.metadata.categories) {
       return isWhatsApp
@@ -415,7 +415,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
 /**
  * Returns detailed information about a specific menu item
  */
-export async function getMenu(chatbotId: string, item_id: string, category: string, isWhatsApp: boolean = false) {
+export async function getMenu(chatbotId: string, item_id: string, category: string, isWhatsApp: boolean = false, language?: string) {
   try {
     const action = await getOrderManagementAction(chatbotId);
 
@@ -424,6 +424,9 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
         ? { error: "No menu items found" }
         : `<div class="error-message"><p>No menu items found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
+
+    // Use language from parameter or action.metadata.language if not provided
+    const lang = language || (action && action.metadata && action.metadata.language) || 'en';
 
     // Find the category by ID
     const categoryObj = action.metadata.categories.find(
@@ -447,15 +450,18 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
         : `<div class="error-message"><p>Item not found or not available</p><button class="back-btn chat-option-btn" data-action="get_menus" data-category="${category}" data-index="0">Back to Menu</button></div>`;
     }
 
+    // Get translated menu item details
+    const translatedItem = getTranslatedMenuItem(action, selectedItem.id, lang);
+
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       const response: any = {
         type: "item_detail",
         item: {
           id: selectedItem.id,
-          name: selectedItem.name,
+          name: translatedItem.name,
           price: selectedItem.price,
-          description: selectedItem.description || "",
+          description: translatedItem.description || "",
           categoryId: category
         },
         buttons: [
@@ -483,12 +489,12 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
     } else {
       // Generate HTML content with detailed item view for web interface
       return `<div class="item-detail">
-        <h3>${selectedItem.name}</h3>
+        <h3>${translatedItem.name}</h3>
         ${selectedItem.images && selectedItem.images.length > 0 ?
-          `<img src="${selectedItem.images[0]}" alt="${selectedItem.name}" class="item-detail-image" />` : ''}
+          `<img src="${selectedItem.images[0]}" alt="${translatedItem.name}" class="item-detail-image" />` : ''}
         <div class="item-detail-info">
           <p class="item-price">$${selectedItem.price.toFixed(2)}</p>
-          <p class="item-description">${selectedItem.description}</p>
+          <p class="item-description">${translatedItem.description}</p>
           <div class="quantity-selector">
             <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="1" data-index="0">Add 1 to Cart</button>
             <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="2" data-index="0">Add 2 to Cart</button>
@@ -511,7 +517,7 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
  * Note: This is a simulated function as we don't have actual cart storage
  * In a real implementation, this would store the cart in a database or session
  */
-export async function addToCart(chatbotId: string, item_id: string, quantity: number, cartItems: any[] = [], isWhatsApp: boolean = false) {
+export async function addToCart(chatbotId: string, item_id: string, quantity: number, cartItems: any[] = [], isWhatsApp: boolean = false, language?: string) {
   // Convert quantity to number if it's passed as a string from data-quantity attribute
   quantity = typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
   try {
@@ -520,6 +526,9 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
     if (!action || !action.metadata || !action.metadata.menuItems) {
       return `<div class="error-message"><p>Menu not found</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
+
+    // Use language from parameter or action.metadata.language if not provided
+    const lang = language || (action && action.metadata && action.metadata.language) || 'en';
 
     // Find the menu item
     const menuItem = action.metadata.menuItems.find((item: any) => item.id === item_id.split('-').pop());
@@ -554,9 +563,11 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
       cart[existingIndex].qty += quantity;
     } else {
       // Add new item
+      // Use translated name for the item
+      const translatedItem = getTranslatedMenuItem(action, menuItem.id, lang);
       cart.push({
         item_id: menuItem.id,
-        name: menuItem.name,
+        name: translatedItem.name || menuItem.name,
         qty: quantity,
         price: menuItem.price
       });
@@ -750,7 +761,7 @@ export async function getOrders(chatbotId: string, orderId?: string, isWhatsApp:
  * In a real implementation, this would save the order to a database
  * and potentially integrate with a POS system or Google Sheets
  */
-export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: boolean = false, metadata?: Object) {
+export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: boolean = false, metadata?: Object, language?: string) {
   try {
     console.log('submitOrder', order);
     const action = await getOrderManagementAction(chatbotId);
@@ -758,6 +769,9 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
     if (!action || !action.metadata) {
       return `<div class="error-message"><p>Order management not configured</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">Back to Categories</button></div>`;
     }
+
+    // Use language from parameter or action.metadata.language if not provided
+    const lang = language || (action && action.metadata && action.metadata.language) || 'en';
 
     // Validate table exists
     if (order.table) {
@@ -827,6 +841,17 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
       }
     }
 
+    // Translate order item names for response
+    const translatedItems = order.items.map((orderItem: OrderItem) => {
+      const menuItem = action.metadata.menuItems.find((item: any) => item.id === orderItem.item_id);
+      if (!menuItem) return orderItem;
+      const translated = getTranslatedMenuItem(action, menuItem.id, lang);
+      return {
+        ...orderItem,
+        name: translated.name || orderItem.name
+      };
+    });
+
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
       return {
@@ -834,7 +859,7 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
         order: {
           orderId: orderId,
           table: order.table,
-          items: order.items,
+          items: translatedItems,
           total: calculatedTotal,
           status: 'received',
           timestamp: new Date()
@@ -869,7 +894,7 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
         ZAR: 'R'
       };
       const currencySymbol = currencySymbols[currencyCode] || currencyCode;
-      return `<div class="order-confirmation"><div class="order-success"><h3>Order Confirmed!</h3><p>Your order #${orderId} has been received and is being processed.</p>${order.table ? `<p>Table: ${order.table}</p>` : ''}<div class="order-details"><h4>Order Summary</h4><ul class="order-items">${order.items.map((item: OrderItem) => `<li>${item.qty} x ${item.name} - ${currencySymbol}${(item.price * item.qty).toFixed(2)}</li>`).join('')}</ul><p class="order-total">Total: ${currencySymbol}${calculatedTotal.toFixed(2)}</p></div></div><div class="after-order-actions"><button class="new-order-btn chat-option-btn" data-action="get_categories" data-index="0" >Place Another Order</button><button class="track-order-btn chat-option-btn" data-action="track_order" data-order-id="${orderId}" data-index="0">Track Order Status</button></div></div>`;
+      return `<div class="order-confirmation"><div class="order-success"><h3>Order Confirmed!</h3><p>Your order #${orderId} has been received and is being processed.</p>${order.table ? `<p>Table: ${order.table}</p>` : ''}<div class="order-details"><h4>Order Summary</h4><ul class="order-items">${translatedItems.map((item: OrderItem) => `<li>${item.qty} x ${item.name} - ${currencySymbol}${(item.price * item.qty).toFixed(2)}</li>`).join('')}</ul><p class="order-total">Total: ${currencySymbol}${calculatedTotal.toFixed(2)}</p></div></div><div class="after-order-actions"><button class="new-order-btn chat-option-btn" data-action="get_categories" data-index="0" >Place Another Order</button><button class="track-order-btn chat-option-btn" data-action="track_order" data-order-id="${orderId}" data-index="0">Track Order Status</button></div></div>`;
     }
   } catch (error) {
     console.error('Error submitting order:', error);
