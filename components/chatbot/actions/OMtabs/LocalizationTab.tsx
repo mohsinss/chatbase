@@ -8,6 +8,23 @@ import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import toast from "react-hot-toast"
 
+// For English, ensure default values are set for systemMsgs keys if missing
+const defaultSystemMsgs: Record<string, string> = {
+  noitems: "No menu items found",
+  backToCategories: "Back to Categories",
+  itemNotFoundOrUnavailable: "Item not found or not available",
+  backToMenu: "Back to Menu",
+  menuNotFound: "No menu items found",
+  failedToRetrieveMenuItemDetails: "Failed to retrieve menu item details",
+  failedToAddItemToCart: "Failed to add item to cart",
+  failedToRetrieveOrders: "Failed to retrieve orders",
+  orderManagementNotConfigured: "Order management not configured",
+  invalidTableNumber: "Invalid table number",
+  itemNotFoundInMenu: "Item not found",
+  itemNotAvailable: "Item is not available",
+  failedToSubmitOrder: "Failed to submit order",
+  orderNotFound: "Order not found"
+};
 interface LocalizationTabProps {
   categories: { id: string; name: string }[]
   menuItems: {
@@ -29,6 +46,20 @@ interface LocalizationTabProps {
 
 interface Translations {
   [language: string]: {
+    systemMsgs?: {
+      noitems?: string
+      backToCategories?: string
+      itemNotFoundOrUnavailable?: string
+      backToMenu?: string
+      menuNotFound?: string
+      failedToRetrieveMenuItemDetails?: string
+      failedToAddItemToCart?: string
+      failedToRetrieveOrders?: string
+      orderManagementNotConfigured?: string
+      invalidTableNumber?: string
+      itemNotFoundInMenu?: string
+      itemNotAvailable?: string
+    }
     [section: string]: {
       [key: string]: any
     }
@@ -100,43 +131,72 @@ const LocalizationTab = ({
               name: item.name,
               description: item.description
             }
-          }), {})
+          }), {}),
+          systemMsgs: {
+            noitems: "No menu items found",
+            backToCategories: "Back to Categories",
+            itemNotFoundOrUnavailable: "Item not found or not available",
+            backToMenu: "Back to Menu",
+            menuNotFound: "No menu items found",
+            failedToRetrieveMenuItemDetails: "Failed to retrieve menu item details",
+            failedToAddItemToCart: "Failed to add item to cart",
+            failedToRetrieveOrders: "Failed to retrieve orders",
+            orderManagementNotConfigured: "Order management not configured",
+            invalidTableNumber: "Invalid table number",
+            itemNotFoundInMenu: "Item not found",
+            itemNotAvailable: "Item is not available"
+          }
         }
       }
+      englishTranslations.en.systemMsgs = { ...defaultSystemMsgs, ...englishTranslations.en.systemMsgs };
       console.log('Setting initial translations:', englishTranslations);
-      setTranslations(englishTranslations)
-      onUpdateTranslations(englishTranslations)
+      setTranslations(englishTranslations);
+      onUpdateTranslations(englishTranslations);
+    } else if (!translations.en.systemMsgs) {
+      translations.en.systemMsgs = { ...defaultSystemMsgs, ...translations.en.systemMsgs };
+      console.log('Setting initial translations:', translations);
+      setTranslations(translations);
+      onUpdateTranslations(translations);
     }
-  }, [categories, menuItems, metadata, translations.en])
+  }, [categories, menuItems, metadata, translations.en]);
 
   const handleTranslationChange = (section: string, field: string, value: string) => {
     console.log('Translation change:', { section, field, value, selectedLanguage });
-    const newTranslations = {
-      ...translations,
-      [selectedLanguage]: {
-        ...translations[selectedLanguage],
-        [section]: {
-          ...translations[selectedLanguage]?.[section],
-          [field]: value
-        }
-      }
-    }
-
-    // Handle nested fields for menu items
+    // Support nested keys for menuItems like "itemId.name" or "itemId.description"
     if (section === 'menuItems' && field.includes('.')) {
-      const [itemId, fieldName] = field.split('.');
-      newTranslations[selectedLanguage][section] = {
-        ...newTranslations[selectedLanguage][section],
+      const [itemId, subField] = field.split('.');
+      const updatedMenuItems = {
+        ...translations[selectedLanguage]?.menuItems,
         [itemId]: {
-          ...newTranslations[selectedLanguage][section]?.[itemId],
-          [fieldName]: value
+          ...translations[selectedLanguage]?.menuItems?.[itemId],
+          [subField]: value
         }
       };
+      const newTranslations = {
+        ...translations,
+        [selectedLanguage]: {
+          ...translations[selectedLanguage],
+          [section]: updatedMenuItems
+        }
+      };
+      console.log('New translations after change:', newTranslations);
+      setTranslations(newTranslations);
+      onUpdateTranslations(newTranslations);
+    } else {
+      const newTranslations = {
+        ...translations,
+        [selectedLanguage]: {
+          ...translations[selectedLanguage],
+          [section]: {
+            ...translations[selectedLanguage]?.[section],
+            [field]: value
+          }
+        }
+      };
+      console.log('New translations after change:', newTranslations);
+      setTranslations(newTranslations);
+      onUpdateTranslations(newTranslations);
     }
-
-    console.log('New translations after change:', newTranslations);
-    setTranslations(newTranslations)
-    onUpdateTranslations(newTranslations)
   }
 
   const generateTranslations = async (section: string) => {
@@ -149,7 +209,7 @@ const LocalizationTab = ({
     try {
       if (section === 'menuItems') {
         const menuItemTranslations = { ...translations[selectedLanguage]?.menuItems || {} }
-        
+
         for (const item of menuItems) {
           const response = await fetch('/api/chatbot/actions/localization/translate', {
             method: 'POST',
@@ -182,17 +242,17 @@ const LocalizationTab = ({
           while (true) {
             const { done, value } = await reader.read()
             if (done) break
-            
+
             // Convert the chunk to text
             const chunk = new TextDecoder().decode(value)
             result += chunk
-            
+
             try {
               // Try to parse the accumulated result
               const parsed = JSON.parse(result)
               if (parsed[section]?.[item.id]) {
                 menuItemTranslations[item.id] = parsed[section][item.id]
-                
+
                 // Update translations with the partial result
                 setTranslations(prev => ({
                   ...prev,
@@ -201,7 +261,7 @@ const LocalizationTab = ({
                     [section]: menuItemTranslations
                   }
                 }))
-                
+
                 onUpdateTranslations({
                   ...translations,
                   [selectedLanguage]: {
@@ -237,7 +297,7 @@ const LocalizationTab = ({
         }
 
         const generatedTranslations = await response.json()
-        
+
         setTranslations(prev => ({
           ...prev,
           [selectedLanguage]: {
@@ -245,7 +305,7 @@ const LocalizationTab = ({
             [section]: generatedTranslations[section]
           }
         }))
-        
+
         onUpdateTranslations({
           ...translations,
           [selectedLanguage]: {
@@ -277,6 +337,52 @@ const LocalizationTab = ({
 
         <TabsContent value={selectedLanguage}>
           <div className="grid gap-6">
+
+            {/* System Messages Section */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>System Messages</CardTitle>
+                {selectedLanguage !== 'en' && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => generateTranslations('systemMsgs')}
+                    disabled={isGenerating['systemMsgs']}
+                    className="border-blue-500 text-blue-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-600"
+                  >
+                    {isGenerating['systemMsgs'] ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      'AI Translate'
+                    )}
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <>
+                  {/* Render the rest of the system messages excluding the fixed keys */}
+                  {translations.en?.systemMsgs && Object.entries(translations.en.systemMsgs)
+                    .map(([key, _]) => {
+                      const value = translations[selectedLanguage]?.systemMsgs?.[key as keyof typeof translations.en.systemMsgs] || '';
+                      const enValue = translations.en?.systemMsgs?.[key as keyof typeof translations.en.systemMsgs] || '';
+                      return (
+                        <div key={key} className="space-y-2">
+                          <Label>{key}</Label>
+                          <Input
+                            value={value}
+                            onChange={(e) => handleTranslationChange('systemMsgs', key, e.target.value)}
+                            placeholder={`Translate "${enValue}" to ${SUPPORTED_LANGUAGES.find(l => l.value === selectedLanguage)?.label}`}
+                          />
+                        </div>
+                      );
+                    })}
+                </>
+              </CardContent>
+            </Card>
+
             {/* Categories Section */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -415,4 +521,4 @@ const LocalizationTab = ({
   )
 }
 
-export default LocalizationTab 
+export default LocalizationTab
