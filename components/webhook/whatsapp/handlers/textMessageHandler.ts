@@ -12,6 +12,7 @@ import { markMessageAsRead, sendTextMessage } from '@/components/webhook/whatsap
 import { getQuestionFlow, processInitialNode } from '@/components/webhook/whatsapp/services/questionFlowService';
 import { isMessageTooOld, applyConfiguredDelay } from '@/components/webhook/whatsapp/utils/helpers';
 import ChatbotAction from '@/models/ChatbotAction';
+import { translateText } from '@/components/chatbot/api/translation';
 
 function templateToRegex(template: string): RegExp {
   // Escape all regex‑special chars except {}
@@ -141,8 +142,8 @@ export async function handleTextMessage(
       try {
         // Get categories using the tool with isWhatsApp=true
         const categoriesResult = await getCategories(chatbotId, true);
-        const template1 = enabledOMAction.metadata?.messageTemplate1 || "Welcome to our restaurant! You're at table {table}. Please select a category to view our menu";
-        
+        let template1 = enabledOMAction.metadata?.messageTemplate1 || "Welcome to our restaurant! You're at table {table}. Please select a category to view our menu";
+        template1 = await translateText(template1, enabledOMAction?.metadata?.language || 'en');
         // Send welcome message
         await sendTextMessage(
           phoneNumberId,
