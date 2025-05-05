@@ -32,6 +32,8 @@ const defaultSystemMsgs: Record<string, string> = {
   chooseMenuCategoryBody: "Please choose a menu category",
   selectCategoryFooter: "Select a category to view items",
   selectCategoryButton: "Select Category",
+  viewMenuItems: "View Menu Items",
+  // orderManagement: "Order Management",
 };
 interface LocalizationTabProps {
   categories: { id: string; name: string }[]
@@ -74,6 +76,7 @@ interface Translations {
       chooseMenuCategoryBody?: string
       selectCategoryFooter?: string
       selectCategoryButton?: string
+      viewMenuItems?: string
     }
     [section: string]: {
       [key: string]: any

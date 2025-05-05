@@ -212,6 +212,7 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
       };
     } else {
       // Generate HTML content with buttons for web interface
+      const menuCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.menuCategories || "Menu Categories";
       const htmlContent = `<div class="order-categories"><h3>${menuCategoriesMsg}</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menus" data-category="${category.id}" data-index="0">${getTranslatedCategoryName(action, category.id, lang)}</button>`).join('')}</div></div>`;
       return htmlContent;
     }
@@ -373,10 +374,10 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
       // Return JSON structure for WhatsApp
       return {
         type: "list",
-        title: `${getTranslatedCategoryName(action, categoryObj.id, lang)} Menu`,
-        body: `Menu items in ${getTranslatedCategoryName(action, categoryObj.id, lang)}:`,
+        title: `${getTranslatedCategoryName(action, categoryObj.id, lang)}`,
+        body: `${getTranslatedCategoryName(action, categoryObj.id, lang)}:`,
         footer: action?.metadata?.translations?.[lang]?.systemMsgs?.backToCategories || "Back to Categories",
-        button: "View Menu Items",
+        button: action?.metadata?.translations?.[lang]?.systemMsgs?.viewMenuItems || "View Menu Items",
         sections: [
           {
             title: getTranslatedCategoryName(action, categoryObj.id, lang),
