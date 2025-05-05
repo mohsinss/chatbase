@@ -247,22 +247,22 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
               messages: {
                 orderTemplate: metadata.messageTemplate || '',
                 followUpTemplate: metadata.followUpSettings?.messageTemplate || '',
-                orderManagement: 'Order Management',
-                enabled: 'Enabled',
-                actionName: 'Action Name',
-                enterActionName: 'Enter a name for this action',
-                actionWarning: 'Enabling this action will automatically disable other actions.',
-                language: 'Language',
-                currency: 'Currency',
-                saving: 'Saving...',
-                saveConfiguration: 'Save Configuration',
-                menuManagement: 'Menu Management',
-                categories: 'Categories',
-                tableQRCodes: 'Table QR Codes',
-                followUp: 'Follow-up',
-                googleSheets: 'Google Sheets',
-                cashier: 'Cashier',
-                localization: 'Localization'
+                'Order Management': 'Order Management',
+                'Enabled': 'Enabled',
+                'Action Name': 'Action Name',
+                'Enter a name for this action': 'Enter a name for this action',
+                'Enabling this action will automatically disable other actions.': 'Enabling this action will automatically disable other actions.',
+                'Language': 'Language',
+                'Currency': 'Currency',
+                'Saving...': 'Saving...',
+                'Save Configuration': 'Save Configuration',
+                'Menu Management': 'Menu Management',
+                'Categories': 'Categories',
+                'Table QR Codes': 'Table QR Codes',
+                'Follow-up': 'Follow-up',
+                'Google Sheets': 'Google Sheets',
+                'Cashier': 'Cashier',
+                'Localization': 'Localization'
               },
               menuItems: menuItems.reduce((acc, item) => ({
                 ...acc,
@@ -402,10 +402,10 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold">{getTranslation('orderManagement', 'messages')}</h1>
+          <h1 className="text-2xl font-bold">{getTranslation('Order Management', 'messages')}</h1>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{getTranslation('enabled', 'messages')}</span>
+          <span className="text-sm font-medium">{getTranslation('Enabled', 'messages')}</span>
           <Switch checked={isEnabled} onCheckedChange={handleToggle} />
         </div>
       </div>
@@ -413,21 +413,21 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
       {/* Action Name and Language Selection */}
       <div className="mb-6 flex items-center gap-4">
         <div className="flex-1">
-          <Label htmlFor="action-name">{getTranslation('actionName', 'messages')}</Label>
+          <Label htmlFor="action-name">{getTranslation('Action Name', 'messages')}</Label>
           <Input
             id="action-name"
             value={actionName}
             onChange={(e) => setActionName(e.target.value)}
-            placeholder={getTranslation('enterActionName', 'messages')}
+            placeholder={getTranslation('Enter a name for this action', 'messages')}
             className="max-w-md"
           />
           <p className="text-sm text-gray-500 mt-1">
-            {getTranslation('actionWarning', 'messages')}
+            {getTranslation('Enabling this action will automatically disable other actions.', 'messages')}
           </p>
         </div>
         <div className="flex gap-4 items-center">
           <div className="flex items-center gap-2">
-            <Label htmlFor="language-select">{getTranslation('language', 'messages')}</Label>
+            <Label htmlFor="language-select">{getTranslation('Language', 'messages')}</Label>
             <select
               id="language-select"
               value={language}
@@ -442,7 +442,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <Label htmlFor="currency-select">{getTranslation('currency', 'messages')}</Label>
+            <Label htmlFor="currency-select">{getTranslation('Currency', 'messages')}</Label>
             <select
               id="currency-select"
               value={metadata.currency || "USD"}
@@ -475,12 +475,12 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {getTranslation('saving', 'messages')}
+              {getTranslation('Saving...', 'messages')}
             </>
           ) : (
             <>
               <Save className="mr-2 h-4 w-4" />
-              {getTranslation('saveConfiguration', 'messages')}
+              {getTranslation('Save Configuration', 'messages')}
             </>
           )}
         </Button>
@@ -488,13 +488,13 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
 
       <Tabs defaultValue="menu">
         <TabsList className="mb-4">
-          <TabsTrigger value="menu">{getTranslation('menuManagement', 'messages')}</TabsTrigger>
-          <TabsTrigger value="categories">{getTranslation('categories', 'messages')}</TabsTrigger>
-          <TabsTrigger value="tables">{getTranslation('tableQRCodes', 'messages')}</TabsTrigger>
-          <TabsTrigger value="follow-up">{getTranslation('followUp', 'messages')}</TabsTrigger>
-          <TabsTrigger value="sheets">{getTranslation('googleSheets', 'messages')}</TabsTrigger>
-          <TabsTrigger value="cashier">{getTranslation('cashier', 'messages')}</TabsTrigger>
-          <TabsTrigger value="localization">{getTranslation('localization', 'messages')}</TabsTrigger>
+          <TabsTrigger value="menu">{getTranslation('Menu Management', 'messages')}</TabsTrigger>
+          <TabsTrigger value="categories">{getTranslation('Categories', 'messages')}</TabsTrigger>
+          <TabsTrigger value="tables">{getTranslation('Table QR Codes', 'messages')}</TabsTrigger>
+          <TabsTrigger value="follow-up">{getTranslation('Follow-up', 'messages')}</TabsTrigger>
+          <TabsTrigger value="sheets">{getTranslation('Google Sheets', 'messages')}</TabsTrigger>
+          <TabsTrigger value="cashier">{getTranslation('Cashier', 'messages')}</TabsTrigger>
+          <TabsTrigger value="localization">{getTranslation('Localization', 'messages')}</TabsTrigger>
         </TabsList>
 
         {/* Menu Management Tab */}

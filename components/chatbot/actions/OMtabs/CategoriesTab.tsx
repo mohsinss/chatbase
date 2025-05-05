@@ -112,7 +112,7 @@ const CategoriesTab = ({ categories, setCategories, menuItems, setMenuItems }: C
     <div className="grid grid-cols-1 gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>xxMenu Categories</CardTitle>
+          <CardTitle>Menu Categories</CardTitle>
           <p className="text-sm text-gray-500">
             Manage categories for organizing your menu items
           </p>
