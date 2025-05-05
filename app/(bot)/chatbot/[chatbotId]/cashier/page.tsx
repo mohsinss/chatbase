@@ -51,6 +51,7 @@ export default function CashierPage() {
   const params = useParams();
   const chatbotId = params.chatbotId as string;
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const statusFilterRef = useRef<HTMLDivElement>(null);
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -59,6 +60,14 @@ export default function CashierPage() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [selectedDateRange, setSelectedDateRange] = useState<DateRange>('last24h');
   const [showDateRangeDropdown, setShowDateRangeDropdown] = useState(false);
+  const [showStatusFilter, setShowStatusFilter] = useState(false);
+  const [selectedStatuses, setSelectedStatuses] = useState<Record<string, boolean>>({
+    received: true,
+    preparing: true,
+    ready: true,
+    delivered: true,
+    cancelled: true
+  });
   const [notificationStatus, setNotificationStatus] = useState<Record<string, string>>({});
   const [loadingNotifications, setLoadingNotifications] = useState<Record<string, boolean>>({});
   const [sortConfig, setSortConfig] = useState<{
@@ -66,6 +75,7 @@ export default function CashierPage() {
     direction: 'ascending' | 'descending';
   } | null>(null);
   const [updatingOrders, setUpdatingOrders] = useState<Record<string, boolean>>({});
+  const [isClient, setIsClient] = useState(false);
 
   const getDateRangeFilter = (range: DateRange): Date => {
     const now = new Date();
@@ -99,6 +109,9 @@ export default function CashierPage() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDateRangeDropdown(false);
       }
+      if (statusFilterRef.current && !statusFilterRef.current.contains(event.target as Node)) {
+        setShowStatusFilter(false);
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -106,6 +119,35 @@ export default function CashierPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Add effect to handle client-side initialization
+  useEffect(() => {
+    setIsClient(true);
+    // Load saved preferences
+    const savedDateRange = localStorage.getItem(`dateRange_${chatbotId}`);
+    const savedStatusFilter = localStorage.getItem(`statusFilter_${chatbotId}`);
+    
+    if (savedDateRange) {
+      setSelectedDateRange(savedDateRange as DateRange);
+    }
+    if (savedStatusFilter) {
+      setSelectedStatuses(JSON.parse(savedStatusFilter));
+    }
+  }, [chatbotId]);
+
+  // Add effect to save date range to localStorage
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem(`dateRange_${chatbotId}`, selectedDateRange);
+    }
+  }, [selectedDateRange, chatbotId, isClient]);
+
+  // Add effect to save status filter to localStorage
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem(`statusFilter_${chatbotId}`, JSON.stringify(selectedStatuses));
+    }
+  }, [selectedStatuses, chatbotId, isClient]);
 
   // Fetch orders and menu items on component mount and periodically refresh
   useEffect(() => {
@@ -350,9 +392,14 @@ export default function CashierPage() {
 
   // Sort orders when sortConfig changes
   const sortedOrders = React.useMemo(() => {
-    if (!sortConfig) return orders;
-    return sortData(orders, sortConfig.key, sortConfig.direction);
-  }, [orders, sortConfig]);
+    let filteredOrders = orders;
+    
+    // Apply status filter
+    filteredOrders = filteredOrders.filter(order => selectedStatuses[order.status]);
+    
+    if (!sortConfig) return filteredOrders;
+    return sortData(filteredOrders, sortConfig.key, sortConfig.direction);
+  }, [orders, sortConfig, selectedStatuses]);
 
   const getSortIcon = (key: string) => {
     if (sortConfig?.key !== key) {
@@ -550,21 +597,66 @@ export default function CashierPage() {
             </div>
 
             <div className="flex space-x-2 items-center">
+              <div className="relative" ref={statusFilterRef}>
+                <button
+                  onClick={() => setShowStatusFilter(!showStatusFilter)}
+                  className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 flex items-center space-x-2"
+                >
+                  <span>Status Filter</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showStatusFilter && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                    <div className="py-1">
+                      {Object.entries(selectedStatuses).map(([status, isSelected]) => (
+                        <label
+                          key={status}
+                          className="flex items-center px-4 py-2 text-sm hover:bg-gray-50 cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              setSelectedStatuses(prev => {
+                                const newStatuses = {
+                                  ...prev,
+                                  [status]: e.target.checked
+                                };
+                                return newStatuses;
+                              });
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="capitalize">{status}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDateRangeDropdown(!showDateRangeDropdown)}
                   className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 flex items-center space-x-2"
                 >
                   <span>
-                    {selectedDateRange === 'last30m' ? 'Last 30 Minutes' :
-                     selectedDateRange === 'last1h' ? 'Last Hour' :
-                     selectedDateRange === 'last12h' ? 'Last 12 Hours' :
-                     selectedDateRange === 'last24h' ? 'Last 24 Hours' :
-                     selectedDateRange === 'last7d' ? 'Last 7 Days' :
-                     selectedDateRange === 'last30d' ? 'Last 30 Days' :
-                     selectedDateRange === 'last3m' ? 'Last 3 Months' :
-                     selectedDateRange === 'last12m' ? 'Last 12 Months' :
-                     'Last 24 Months'}
+                    {isClient ? (
+                      selectedDateRange === 'last30m' ? 'Last 30 Minutes' :
+                      selectedDateRange === 'last1h' ? 'Last Hour' :
+                      selectedDateRange === 'last12h' ? 'Last 12 Hours' :
+                      selectedDateRange === 'last24h' ? 'Last 24 Hours' :
+                      selectedDateRange === 'last7d' ? 'Last 7 Days' :
+                      selectedDateRange === 'last30d' ? 'Last 30 Days' :
+                      selectedDateRange === 'last3m' ? 'Last 3 Months' :
+                      selectedDateRange === 'last12m' ? 'Last 12 Months' :
+                      'Last 24 Months'
+                    ) : 'Last 24 Hours'}
                   </span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

@@ -121,6 +121,19 @@ const LocalizationTab = ({
         }
       }
     }
+
+    // Handle nested fields for menu items
+    if (section === 'menuItems' && field.includes('.')) {
+      const [itemId, fieldName] = field.split('.');
+      newTranslations[selectedLanguage][section] = {
+        ...newTranslations[selectedLanguage][section],
+        [itemId]: {
+          ...newTranslations[selectedLanguage][section]?.[itemId],
+          [fieldName]: value
+        }
+      };
+    }
+
     console.log('New translations after change:', newTranslations);
     setTranslations(newTranslations)
     onUpdateTranslations(newTranslations)
