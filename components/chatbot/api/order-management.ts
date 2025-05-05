@@ -169,11 +169,13 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
     // Use language from parameter or action.metadata.language if not provided
     const lang = language || (action && action.metadata && action.metadata.language) || 'en';
 
+    const menuCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.menuCategories || "Menu Categories";
+
     if (!action || !action.metadata || !action.metadata.categories) {
       const noCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.noitems || "No categories found";
       return isWhatsApp
         ? { error: noCategoriesMsg }
-        : `<div class="error-message"><p>${noCategoriesMsg}</p></div>`;
+        : `<div class="error-message"><h3>${menuCategoriesMsg}</h3><p>${noCategoriesMsg}</p></div>`;
     }
 
     // Create buttons for each category
@@ -189,13 +191,13 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
       // Return JSON structure for WhatsApp
       return {
         type: "list",
-        title: "Menu Categories",
+        title: menuCategoriesMsg,
         body: "Please choose a menu category:",
         footer: "Select a category to continue.",
         button: "Select Category",
         sections: [
           {
-            title: "Menu Categories",
+            title: menuCategoriesMsg,
             rows: action.metadata.categories.map((category: any) => ({
               id: `om-category-{tableName}-{actionId}-${category.id}`,
               title: getTranslatedCategoryName(action, category.id, lang).slice(0, 24),
@@ -206,7 +208,7 @@ export async function getCategories(chatbotId: string, isWhatsApp: boolean = fal
       };
     } else {
       // Generate HTML content with buttons for web interface
-      const htmlContent = `<div class="order-categories"><h3>Menu Categories</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menus" data-category="${category.id}" data-index="0">${getTranslatedCategoryName(action, category.id, lang)}</button>`).join('')}</div></div>`;
+      const htmlContent = `<div class="order-categories"><h3>${menuCategoriesMsg}</h3><div class="category-buttons">${action.metadata.categories.map((category: any) => `<button class="category-btn chat-option-btn" data-action="get_menus" data-category="${category.id}" data-index="0">${getTranslatedCategoryName(action, category.id, lang)}</button>`).join('')}</div></div>`;
       return htmlContent;
     }
   } catch (error) {
@@ -515,7 +517,7 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
       const add1ToCartMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.add1ToCart || "Add 1 to Cart";
       const add2ToCartMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.add2ToCart || "Add 2 to Cart";
       const add3ToCartMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.add3ToCart || "Add 3 to Cart";
-      const backToMenuMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToMenuMsg || "Back to Categories";
+      const backToMenuMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.backToMenu || "Back to Menu";
 
       return `<div class="item-detail">
         <h3>${translatedItem.name}</h3>

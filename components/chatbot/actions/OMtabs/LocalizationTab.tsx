@@ -27,6 +27,8 @@ const defaultSystemMsgs: Record<string, string> = {
   add1ToCart: "Add 1 to cart",
   add2ToCart: "Add 2 to cart",
   add3ToCart: "Add 3 to cart",
+  menuCategories: "Menu Categories",
+  menuItems: "Menu Items",
 };
 interface LocalizationTabProps {
   categories: { id: string; name: string }[]
@@ -65,6 +67,7 @@ interface Translations {
       add1ToCart?: string
       add2ToCart?: string
       add3ToCart?: string
+      menuCategories?: string
     }
     [section: string]: {
       [key: string]: any
@@ -138,30 +141,14 @@ const LocalizationTab = ({
               description: item.description
             }
           }), {}),
-          systemMsgs: {
-            noitems: "No menu items found",
-            backToCategories: "Back to Categories",
-            itemNotFoundOrUnavailable: "Item not found or not available",
-            backToMenu: "Back to Menu",
-            menuNotFound: "No menu items found",
-            failedToRetrieveMenuItemDetails: "Failed to retrieve menu item details",
-            failedToAddItemToCart: "Failed to add item to cart",
-            failedToRetrieveOrders: "Failed to retrieve orders",
-            orderManagementNotConfigured: "Order management not configured",
-            invalidTableNumber: "Invalid table number",
-            itemNotFoundInMenu: "Item not found",
-            itemNotAvailable: "Item is not available",
-            add1ToCart: "Add 1 to cart",
-            add2ToCart: "Add 2 to cart",
-            add3ToCart: "Add 3 to cart",
-          }
+          systemMsgs: defaultSystemMsgs
         }
       }
       englishTranslations.en.systemMsgs = { ...defaultSystemMsgs, ...englishTranslations.en.systemMsgs };
       console.log('Setting initial translations:', englishTranslations);
       setTranslations(englishTranslations);
       onUpdateTranslations(englishTranslations);
-    } else if (!translations.en.systemMsgs.add3ToCart) {
+    } else if (!translations.en.systemMsgs.menuCategories) {
       translations.en.systemMsgs = { ...defaultSystemMsgs, ...translations.en.systemMsgs };
       console.log('Setting initial translations:', translations);
       setTranslations(translations);
