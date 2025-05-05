@@ -401,6 +401,17 @@ export default function CashierPage() {
     return sortData(filteredOrders, sortConfig.key, sortConfig.direction);
   }, [orders, sortConfig, selectedStatuses]);
 
+  // Split orders into active and completed
+  const { activeOrders, completedOrders } = React.useMemo(() => {
+    const active = sortedOrders.filter(order => 
+      ['received', 'preparing', 'ready'].includes(order.status)
+    );
+    const completed = sortedOrders.filter(order => 
+      ['delivered', 'cancelled'].includes(order.status)
+    );
+    return { activeOrders: active, completedOrders: completed };
+  }, [sortedOrders]);
+
   const getSortIcon = (key: string) => {
     if (sortConfig?.key !== key) {
       return (
@@ -788,7 +799,291 @@ export default function CashierPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {sortedOrders.map((order) => (
+                  {/* Active Orders */}
+                  {activeOrders.map((order) => (
+                    <React.Fragment key={order.orderId}>
+                      <tr
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => toggleOrderExpand(order.orderId)}
+                      >
+                        <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-600">
+                          {order.orderId}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-600">
+                          {formatDate(order.timestamp)}
+                        </td>
+                        {activeTab === 'whatsapp' ? (
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {order.metadata.from}
+                          </th>
+                        ) : null}
+                        <td className="px-4 py-4 whitespace-nowrap hidden">
+                          <span className="px-2 py-1 text-xs rounded-full border">
+                            {order.portal === 'whatsapp' ? 'WhatsApp' : 'Web'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm">
+                          {order.table || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm">
+                          {order.items.length} items
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm">
+                          ${order.subtotal.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}`}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
+                            <select
+                              value={order.status}
+                              onChange={(e) => updateOrderStatus(order.orderId, e.target.value)}
+                              className="px-2 py-1 border rounded-md text-sm"
+                            >
+                              <option value="received">Received</option>
+                              <option value="preparing">Preparing</option>
+                              <option value="ready">Ready</option>
+                              <option value="delivered">Delivered</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+
+                            {order.portal === 'whatsapp' && (
+                              <button
+                                className={`px-2 py-1 rounded-md text-sm ${getNotifyButtonColor(order)} flex items-center gap-1`}
+                                onClick={() => handleNotifyClick(order)}
+                                disabled={loadingNotifications[order.orderId]}
+                              >
+                                {loadingNotifications[order.orderId] ? (
+                                  <>
+                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Sending...
+                                  </>
+                                ) : localStorage.getItem(`notified_${chatbotId}_${order.orderId}_${order.status}`) ? 'Notified' : 'Notify'}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Expanded order details */}
+                      {expandedOrder === order.orderId && (
+                        <tr>
+                          <td colSpan={8} className="bg-gray-50 p-4">
+                            <div className="space-y-4">
+                              <div className="flex justify-between items-start">
+                                <h4 className="font-semibold">Order Details</h4>
+                                {order.metadata?.from && (
+                                  <div className="text-sm text-gray-600">
+                                    <span className="font-medium">Phone:</span> {order.metadata.from}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                {order.items.map((item, index) => (
+                                  <div key={index} className="flex justify-between items-center space-x-4">
+                                    <div className="flex-1">
+                                      <select
+                                        className="w-full border border-gray-300 rounded-md p-1"
+                                        value={item.name}
+                                        onChange={(e) => {
+                                          const newName = e.target.value;
+                                          const newItems = [...order.items];
+                                          newItems[index].name = newName;
+
+                                          // Update price based on selected menu item
+                                          const menuItem = menuItems.find(mi => mi.name === newName);
+                                          if (menuItem) {
+                                            newItems[index].price = menuItem.price;
+                                            newItems[index].item_id = menuItem.id;
+                                          }
+
+                                          const newOrders = orders.map(o => {
+                                            if (o.orderId === order.orderId) {
+                                              return { ...o, items: newItems };
+                                            }
+                                            return o;
+                                          });
+                                          setOrders(newOrders);
+                                        }}
+                                      >
+                                        <option value="">Select item</option>
+                                        {menuItems.map((menuItem) => (
+                                          <option key={menuItem.id} value={menuItem.name}>
+                                            {menuItem.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div className="w-20">
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        className="w-full border border-gray-300 rounded-md p-1"
+                                        value={item.qty}
+                                        onChange={(e) => {
+                                          const newQty = parseInt(e.target.value, 10) || 1;
+                                          const newItems = [...order.items];
+                                          newItems[index].qty = newQty;
+                                          const newOrders = orders.map(o => {
+                                            if (o.orderId === order.orderId) {
+                                              return { ...o, items: newItems };
+                                            }
+                                            return o;
+                                          });
+                                          setOrders(newOrders);
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="w-24">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        step={0.01}
+                                        className="w-full border border-gray-300 rounded-md p-1 bg-gray-100 cursor-not-allowed"
+                                        value={item.price}
+                                        readOnly
+                                      />
+                                    </div>
+                                    <button
+                                      className="text-red-600 hover:text-red-800"
+                                      onClick={() => {
+                                        const newItems = order.items.filter((_, i) => i !== index);
+                                        const newOrders = orders.map(o => {
+                                          if (o.orderId === order.orderId) {
+                                            return { ...o, items: newItems };
+                                          }
+                                          return o;
+                                        });
+                                        setOrders(newOrders);
+                                      }}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  className="mt-2 px-3 py-1 bg-blue-600 text-white rounded-md"
+                                  onClick={() => {
+                                    const newItems = [...order.items, { item_id: '', name: '', qty: 1, price: 0 }];
+                                    const newOrders = orders.map(o => {
+                                      if (o.orderId === order.orderId) {
+                                        return { ...o, items: newItems };
+                                      }
+                                      return o;
+                                    });
+                                    setOrders(newOrders);
+                                  }}
+                                >
+                                  Add Item
+                                </button>
+                                <div className="flex justify-between font-semibold border-t pt-2">
+                                  <span>Total</span>
+                                  <span>${order.subtotal.toFixed(2)}</span>
+                                </div>
+                                <div className="pt-4">
+                                  <button
+                                    className="px-4 py-2 bg-green-600 text-white rounded-md flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={async () => {
+                                      try {
+                                        // Set loading state
+                                        setUpdatingOrders(prev => ({ ...prev, [order.orderId]: true }));
+
+                                        // Prepare updated order data
+                                        const updatedOrder = orders.find(o => o.orderId === order.orderId);
+                                        if (!updatedOrder) return;
+
+                                        // Calculate new subtotal
+                                        const newSubtotal = updatedOrder.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                                        updatedOrder.subtotal = newSubtotal;
+
+                                        // Send update request to API
+                                        const response = await fetch(`/api/chatbot/${chatbotId}/orders/${order.orderId}`, {
+                                          method: 'PUT',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                          },
+                                          body: JSON.stringify(updatedOrder),
+                                        });
+
+                                        if (!response.ok) {
+                                          throw new Error('Failed to update order');
+                                        }
+
+                                        // Send detailed notification if WhatsApp order
+                                        if (updatedOrder.portal === 'whatsapp') {
+                                          // Format order details message
+                                          const orderDetailsText = `Your order #${order.orderId} has been updated. Here are the details:\n` +
+                                            updatedOrder.items.map(item => `• ${item.qty}x ${item.name} - $${(item.price * item.qty).toFixed(2)}`).join('\n') +
+                                            `\nTotal: $${updatedOrder.subtotal.toFixed(2)}`;
+
+                                          // Send the detailed message
+                                          await fetch(`/api/chatbot/${chatbotId}/orders/${order.orderId}/notify`, {
+                                            method: 'POST',
+                                            headers: {
+                                              'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                              status: updatedOrder.status,
+                                              message: orderDetailsText,
+                                            }),
+                                          });
+                                        }
+
+                                        toast.success('Order updated successfully');
+                                        // Refresh orders
+                                        fetchOrders();
+                                      } catch (error) {
+                                        console.error('Error updating order:', error);
+                                        toast.error('Failed to update order. Please try again.');
+                                      } finally {
+                                        // Clear loading state
+                                        setUpdatingOrders(prev => ({ ...prev, [order.orderId]: false }));
+                                      }
+                                    }}
+                                    disabled={updatingOrders[order.orderId]}
+                                  >
+                                    {updatingOrders[order.orderId] ? (
+                                      <>
+                                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Updating...</span>
+                                      </>
+                                    ) : (
+                                      <span>Update Order</span>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+
+                  {/* Separator */}
+                  {activeOrders.length > 0 && completedOrders.length > 0 && (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-3">
+                        <div className="border-t border-gray-300 my-2"></div>
+                        <div className="text-sm font-medium text-gray-500 text-center">
+                          Completed Orders
+                        </div>
+                        <div className="border-t border-gray-300 my-2"></div>
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* Completed Orders */}
+                  {completedOrders.map((order) => (
                     <React.Fragment key={order.orderId}>
                       <tr
                         className="cursor-pointer hover:bg-gray-50"
