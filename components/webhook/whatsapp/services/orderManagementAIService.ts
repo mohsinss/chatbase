@@ -207,6 +207,7 @@ export async function processOrderManagementWithAI(
                     }
                     
                     confirmationMessage += `You can track your order status by replying with "Track order #${orderId}"`;
+                    confirmationMessage = await translateText(confirmationMessage, language);
                     
                     // Send the formatted confirmation message
                     await sendTextMessage(phoneNumberId, from, confirmationMessage);
