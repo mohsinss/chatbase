@@ -503,6 +503,7 @@ const OrderManagement = ({ teamId, chatbotId, chatbot }: OrderManagementProps) =
             menuItems={menuItems}
             setMenuItems={setMenuItems}
             categories={categories}
+            currency={metadata.currency || "USD"}
           />
         </TabsContent>
 

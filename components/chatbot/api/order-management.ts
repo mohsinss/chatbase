@@ -2,22 +2,7 @@ import ChatbotAction, { IChatbotAction } from '@/models/ChatbotAction';
 import { Order } from '@/models/Order';
 import GoogleIntegration from '@/models/GoogleIntegration';
 import { google } from 'googleapis';
-import dbConnect from '@/lib/dbConnect';
-
-const currencySymbols: Record<string, string> = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  JPY: '¥',
-  CNY: '¥',
-  INR: '₹',
-  AUD: 'A$',
-  CAD: 'C$',
-  CHF: 'CHF',
-  KRW: '₩',
-  BRL: 'R$',
-  ZAR: 'R'
-};
+import { currencySymbols } from '@/types';
 
 // Helper function to get translated category name by id and language
 function getTranslatedCategoryName(action: any, categoryId: string, language: string): string {
@@ -235,6 +220,8 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
 
   // Use language from parameter or action.metadata.language if not provided
   const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+  const currencyCode = action.metadata.currency || 'USD';
+  const currencySymbol = currencySymbols[currencyCode] || currencyCode;
   try {
 
     if (!action || !action.metadata || !action.metadata.categories) {
@@ -393,7 +380,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
               ...items.map((item: any) => ({
                 id: `om-menu-{tableName}-{actionId}-${item.id}`,
                 title: item.name.slice(0, 24),
-                description: `$${item.price.toFixed(2)} - ${item.name}`
+                description: `${currencySymbol}${item.price.toFixed(2)} - ${item.name}`
               }))
             ]
           }
@@ -411,7 +398,7 @@ export async function getMenus(chatbotId: string, category: string, isWhatsApp: 
               data-category="${categoryObj.id}" 
               data-item-id="${item.id}"
               data-index="0">
-                ${item.name} - $${item.price.toFixed(2)}
+                ${item.name} - ${currencySymbol}${item.price.toFixed(2)}
             </button>`).join('')}
         </div>
         <div class="navigation">
@@ -446,6 +433,8 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
 
   // Use language from parameter or action.metadata.language if not provided
   const lang = language || (action && action.metadata && action.metadata.language) || 'en';
+  const currencyCode = action.metadata.currency || 'USD';
+  const currencySymbol = currencySymbols[currencyCode] || currencyCode;
   try {
     // Find the category by ID
     const categoryObj = action.metadata.categories.find(
@@ -526,7 +515,7 @@ export async function getMenu(chatbotId: string, item_id: string, category: stri
         ${selectedItem.images && selectedItem.images.length > 0 ?
           `<img src="${selectedItem.images[0]}" alt="${translatedItem.name}" class="item-detail-image" />` : ''}
         <div class="item-detail-info">
-          <p class="item-price">$${selectedItem.price.toFixed(2)}</p>
+          <p class="item-price">${currencySymbol}${selectedItem.price.toFixed(2)}</p>
           <p class="item-description">${translatedItem.description}</p>
           <div class="quantity-selector">
             <button class="quantity-btn chat-option-btn" data-action="add_to_cart" data-item-id="${selectedItem.id}" data-quantity="1" data-index="0">${add1ToCartMsg}</button>

@@ -279,3 +279,18 @@ export const sampleFlow = {
     }
   ],
 }
+
+export const currencySymbols: Record<string, string> = {
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  JPY: '¥',
+  CNY: '¥',
+  INR: '₹',
+  AUD: 'A$',
+  CAD: 'C$',
+  CHF: 'CHF',
+  KRW: '₩',
+  BRL: 'R$',
+  ZAR: 'R'
+};

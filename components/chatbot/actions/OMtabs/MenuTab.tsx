@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Plus, Trash2, Upload } from "lucide-react"
 import toast from "react-hot-toast"
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
+import { currencySymbols } from '@/types';
 
 const s3Client = new S3Client({
   region: process.env.NEXT_PUBLIC_AWS_REGION!,
@@ -46,9 +47,10 @@ interface MenuTabProps {
   menuItems: MenuItem[]
   setMenuItems: React.Dispatch<React.SetStateAction<MenuItem[]>>
   categories: Category[]
+  currency: string
 }
 
-const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
+const MenuTab = ({ menuItems, setMenuItems, categories, currency }: MenuTabProps) => {
   const [newMenuItem, setNewMenuItem] = useState<MenuItem>({
     id: "",
     name: "",
@@ -599,7 +601,7 @@ const MenuTab = ({ menuItems, setMenuItems, categories }: MenuTabProps) => {
                                   <span className="text-sm bg-gray-100 px-2 py-1 rounded">
                                     {categories.find(cat => cat.id === item.category)?.name || item.category}
                                   </span>
-                                  <span className="font-medium">${item.price.toFixed(2)}</span>
+                                  <span className="font-medium">{currencySymbols[currency]}{item.price.toFixed(2)}</span>
                                   <div className="flex items-center">
                                     <Switch
                                       checked={item.available}
