@@ -121,13 +121,13 @@ export async function POST(req: NextRequest) {
           }
 
           if (result) {
-            if (targetLanguage !== 'en') {
-              if (typeof result === 'string') {
-                result = await translateText(result, targetLanguage);
-              } else if (typeof result === 'object') {
-                result = await translateJsonFields(result, targetLanguage);
-              }
-            }
+            // if (targetLanguage !== 'en') {
+            //   if (typeof result === 'string') {
+            //     result = await translateText(result, targetLanguage);
+            //   } else if (typeof result === 'object') {
+            //     result = await translateJsonFields(result, targetLanguage);
+            //   }
+            // }
             
             // Return the result directly
             return setCorsHeaders(new Response(

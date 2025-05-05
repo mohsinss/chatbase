@@ -33,6 +33,11 @@ const defaultSystemMsgs: Record<string, string> = {
   selectCategoryFooter: "Select a category to view items",
   selectCategoryButton: "Select Category",
   viewMenuItems: "View Menu Items",
+  viewMoreItems: "View More Items",
+  browseAllCategories: "Browse All Categories",
+  proceedToCheckout: "Proceed to Checkout",
+  cartUpdated: "Cart Updated",
+  total: "Total",
   // orderManagement: "Order Management",
 };
 interface LocalizationTabProps {
@@ -77,6 +82,10 @@ interface Translations {
       selectCategoryFooter?: string
       selectCategoryButton?: string
       viewMenuItems?: string
+      browseAllCategories?: string
+      proceedToCheckout?: string
+      cartUpdated?: string
+      total?: string
     }
     [section: string]: {
       [key: string]: any

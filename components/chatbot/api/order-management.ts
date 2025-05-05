@@ -619,7 +619,13 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
 
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
+      const lang = language || (action && action.metadata && action.metadata.language) || 'en';
       const currency = action.metadata.currency || 'USD';
+      const viewMoreItemsMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.viewMoreItems || "View More Items";
+      const viewAllCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.viewAllCategories || "View All Categories";
+      const proceedToCheckoutMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.proceedToCheckout || "Proceed to Checkout";
+      const cartUpdatedMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.cartUpdated || "Cart Updated";
+
       return {
         type: "cart_confirmation",
         cart: {
@@ -628,38 +634,49 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
         },
         categoryId: categoryId,
         categoryName: menuItem.category,
+        messages: {
+          cartUpdated: cartUpdatedMsg,
+          total: action?.metadata?.translations?.[lang]?.systemMsgs?.total || "Total"
+        },
         buttons: [
           {
             id: `om-category-{tableName}-{actionId}-${categoryId}`,
-            title: `View More Items`
+            title: viewMoreItemsMsg
           },
           {
             id: `om-back-{tableName}-{actionId}`,
-            title: "View All Categories"
+            title: viewAllCategoriesMsg
           },
           {
             id: `om-confirm-{tableName}-{actionId}-${menuItem.id}`,
-            title: "Proceed to Checkout"
+            title: proceedToCheckoutMsg
           }
         ]
       };
     } else {
       // Generate HTML content with cart and buttons for web interface
+      const lang = language || (action && action.metadata && action.metadata.language) || 'en';
       const currency = action.metadata.currency || 'USD';
+      const viewMoreItemsMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.viewMoreItems || "View More Items";
+      const browseAllCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.browseAllCategories || "Browse All Categories";
+      const proceedToCheckoutMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.proceedToCheckout || "Proceed to Checkout";
+      const cartUpdatedMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.cartUpdated || "Cart Updated";
+      const totalMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.total || "Total";
+
       return `<div class="cart-confirmation">
         <div class="cart-message">
-          <h4>Cart Updated</h4>
+          <h4>${cartUpdatedMsg}</h4>
           <div class="cart-items">
             ${cart.map((item: OrderItem) => `<p>${item.qty} x ${item.name} - ${currency} ${(
         item.price * item.qty
       ).toFixed(2)}</p>`).join('')}
           </div>
-          <p class="cart-total"><strong>Total: ${currency} ${cartTotal.toFixed(2)}</strong></p>
+          <p class="cart-total"><strong>${totalMsg}: ${currency} ${cartTotal.toFixed(2)}</strong></p>
         </div>
         <div class="action-buttons">
-          <button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0">View More Items</button>
-          <button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0">Browse All Categories</button>
-          <button class="checkout-btn chat-option-btn" data-action="submit_order" data-order='${JSON.stringify({ items: cart, subtotal: cartTotal })}' data-index="0">Proceed to Checkout</button>
+          <button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0">${viewMoreItemsMsg}</button>
+          <button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0">${browseAllCategoriesMsg}</button>
+          <button class="checkout-btn chat-option-btn" data-action="submit_order" data-order='${JSON.stringify({ items: cart, subtotal: cartTotal })}' data-index="0">${proceedToCheckoutMsg}</button>
         </div>
       </div>`;
     }
