@@ -1,6 +1,7 @@
 import ChatbotAction, { IChatbotAction } from '@/models/ChatbotAction';
 import { Order } from '@/models/Order';
 import GoogleIntegration from '@/models/GoogleIntegration';
+import { google } from 'googleapis';
 import dbConnect from '@/lib/dbConnect';
 
 const currencySymbols: Record<string, string> = {
@@ -616,16 +617,16 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
       (sum: number, item: OrderItem) => sum + (item.price * item.qty),
       0
     );
+    const currency = action.metadata.currency || 'USD';
+    const currencySymbol = currencySymbols[currency] || currency;
+    const viewMoreItemsMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.viewMoreItems || "View More Items";
+    const browseAllCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.browseAllCategories || "Browse All Categories";
+    const proceedToCheckoutMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.proceedToCheckout || "Proceed to Checkout";
+    const cartUpdatedMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.cartUpdated || "Cart Updated";
+    const totalMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.total || "Total";
+    const viewAllCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.viewAllCategories || "View All Categories";
 
     if (isWhatsApp) {
-      // Return JSON structure for WhatsApp
-      const lang = language || (action && action.metadata && action.metadata.language) || 'en';
-      const currency = action.metadata.currency || 'USD';
-      const viewMoreItemsMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.viewMoreItems || "View More Items";
-      const viewAllCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.viewAllCategories || "View All Categories";
-      const proceedToCheckoutMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.proceedToCheckout || "Proceed to Checkout";
-      const cartUpdatedMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.cartUpdated || "Cart Updated";
-
       return {
         type: "cart_confirmation",
         cart: {
@@ -654,24 +655,15 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
         ]
       };
     } else {
-      // Generate HTML content with cart and buttons for web interface
-      const lang = language || (action && action.metadata && action.metadata.language) || 'en';
-      const currency = action.metadata.currency || 'USD';
-      const viewMoreItemsMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.viewMoreItems || "View More Items";
-      const browseAllCategoriesMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.browseAllCategories || "Browse All Categories";
-      const proceedToCheckoutMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.proceedToCheckout || "Proceed to Checkout";
-      const cartUpdatedMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.cartUpdated || "Cart Updated";
-      const totalMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.total || "Total";
-
       return `<div class="cart-confirmation">
         <div class="cart-message">
           <h4>${cartUpdatedMsg}</h4>
           <div class="cart-items">
-            ${cart.map((item: OrderItem) => `<p>${item.qty} x ${item.name} - ${currency} ${(
+            ${cart.map((item: OrderItem) => `<p>${item.qty} x ${item.name} - ${currencySymbol}${(
         item.price * item.qty
       ).toFixed(2)}</p>`).join('')}
           </div>
-          <p class="cart-total"><strong>${totalMsg}: ${currency} ${cartTotal.toFixed(2)}</strong></p>
+          <p class="cart-total"><strong>${totalMsg}: ${currencySymbol}${cartTotal.toFixed(2)}</strong></p>
         </div>
         <div class="action-buttons">
           <button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0">${viewMoreItemsMsg}</button>
@@ -930,6 +922,12 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
         name: translated.name || orderItem.name
       };
     });
+    const currencyCode = action.metadata.currency || 'USD';
+    const currencySymbol = currencySymbols[currencyCode] || currencyCode;
+    const orderConfirmedMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.orderConfirmed || "Order Confirmed!";
+    const orderReceivedMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.orderReceived || "Your order has been received and is being processed.";
+    const orderSummaryMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.orderSummary || "Order Summary";
+    const totalMsg = action?.metadata?.translations?.[lang]?.systemMsgs?.total || "Total";
 
     if (isWhatsApp) {
       // Return JSON structure for WhatsApp
@@ -957,23 +955,22 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
       };
     } else {
       // Generate HTML content with order confirmation for web interface
-      const currencyCode = action.metadata.currency || 'USD';
-      const currencySymbols: Record<string, string> = {
-        USD: '$',
-        EUR: '€',
-        GBP: '£',
-        JPY: '¥',
-        CNY: '¥',
-        INR: '₹',
-        AUD: 'A$',
-        CAD: 'C$',
-        CHF: 'CHF',
-        KRW: '₩',
-        BRL: 'R$',
-        ZAR: 'R'
-      };
-      const currencySymbol = currencySymbols[currencyCode] || currencyCode;
-      return `<div class="order-confirmation"><div class="order-success"><h3>Order Confirmed!</h3><p>Your order #${orderId} has been received and is being processed.</p>${order.table ? `<p>Table: ${order.table}</p>` : ''}<div class="order-details"><h4>Order Summary</h4><ul class="order-items">${translatedItems.map((item: OrderItem) => `<li>${item.qty} x ${item.name} - ${currencySymbol}${(item.price * item.qty).toFixed(2)}</li>`).join('')}</ul><p class="order-total">Total: ${currencySymbol}${calculatedTotal.toFixed(2)}</p></div></div><div class="after-order-actions"><button class="new-order-btn chat-option-btn" data-action="get_categories" data-index="0" >Place Another Order</button><button class="track-order-btn chat-option-btn" data-action="track_order" data-order-id="${orderId}" data-index="0">Track Order Status</button></div></div>`;
+
+      return `<div class="order-confirmation">
+        <div class="order-success">
+          <h3>${orderConfirmedMsg}</h3>
+          <p>${orderReceivedMsg}</p>
+          ${order.table ? `<p>Table: ${order.table}</p>` : ''}
+          <div class="order-details">
+            <h4>${orderSummaryMsg}</h4>
+            <ul class="order-items">
+              ${translatedItems.map((item: OrderItem) => `<li>${item.qty} x ${item.name} - ${currencySymbol}${(item.price * item.qty).toFixed(2)}</li>`).join('')}
+            </ul>
+            <p class="order-total">${totalMsg}: ${currencySymbol}${calculatedTotal.toFixed(2)}</p>
+          </div>
+        </div>
+        <div class="after-order-actions"></div>
+      </div>`;
     }
   } catch (error) {
     console.error('Error submitting order:', error);
@@ -982,8 +979,6 @@ export async function submitOrder(chatbotId: string, order: Order, isWhatsApp: b
     return `<div class="error-message"><p>${failedSubmitOrderMsg}</p><button class="back-btn chat-option-btn" data-action="get_categories" data-index="0">${backToCategoriesMsg}</button></div>`;
   }
 }
-
-import { google } from 'googleapis';
 
 /**
  * Updates the connected Google Sheet with the order data

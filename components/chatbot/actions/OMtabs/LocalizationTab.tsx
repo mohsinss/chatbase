@@ -38,7 +38,9 @@ const defaultSystemMsgs: Record<string, string> = {
   proceedToCheckout: "Proceed to Checkout",
   cartUpdated: "Cart Updated",
   total: "Total",
-  // orderManagement: "Order Management",
+  orderConfirmed: "Order Confirmed",
+  orderReceived: "Your order has been received and is being processed.",
+  orderSummary: "Order Summary"
 };
 interface LocalizationTabProps {
   categories: { id: string; name: string }[]
@@ -86,6 +88,9 @@ interface Translations {
       proceedToCheckout?: string
       cartUpdated?: string
       total?: string
+      orderConfirmed?: string
+      orderReceived?: string
+      orderSummary?: string
     }
     [section: string]: {
       [key: string]: any
@@ -166,7 +171,7 @@ const LocalizationTab = ({
       console.log('Setting initial translations:', englishTranslations);
       setTranslations(englishTranslations);
       onUpdateTranslations(englishTranslations);
-    } else if (!translations.en.systemMsgs.menuCategories) {
+    } else if (!translations.en.systemMsgs.orderSummary) {
       translations.en.systemMsgs = { ...defaultSystemMsgs, ...translations.en.systemMsgs };
       console.log('Setting initial translations:', translations);
       setTranslations(translations);
