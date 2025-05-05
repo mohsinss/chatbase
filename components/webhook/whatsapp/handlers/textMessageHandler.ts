@@ -101,7 +101,21 @@ export async function handleTextMessage(
         try {
           if (enabledOMAction.metadata?.messageTemplate) {
             const template = enabledOMAction.metadata?.messageTemplate;
-            if (template) {
+            if (enabledOMAction.metadata?.translations) {
+              const translations = enabledOMAction.metadata.translations;
+              for (const lang in translations) {
+                const orderTemplate = translations[lang]?.messages?.orderTemplate;
+                if (orderTemplate) {
+                  const templateRegex = templateToRegex(orderTemplate);
+                  const match = text.match(templateRegex);
+                  if (match?.groups?.table) {
+                    isTableOrder = true;
+                    tableName = match.groups.table.trim();
+                    break;
+                  }
+                }
+              }
+            } else if (template) {
               const templateRegex = templateToRegex(template);
               const match = text.match(templateRegex);
   
