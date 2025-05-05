@@ -619,7 +619,7 @@ export async function addToCart(chatbotId: string, item_id: string, quantity: nu
           <p class="cart-total"><strong>Total: ${currency} ${cartTotal.toFixed(2)}</strong></p>
         </div>
         <div class="action-buttons">
-          <button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0">View More ${menuItem.category} Items</button>
+          <button class="continue-btn chat-option-btn" data-action="get_menus" data-category="${categoryId}" data-index="0">View More Items</button>
           <button class="browse-btn chat-option-btn" data-action="get_categories" data-index="0">Browse All Categories</button>
           <button class="checkout-btn chat-option-btn" data-action="submit_order" data-order='${JSON.stringify({ items: cart, subtotal: cartTotal })}' data-index="0">Proceed to Checkout</button>
         </div>
