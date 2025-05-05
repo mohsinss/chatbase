@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import ButtonSignin from "@/components/ButtonSignin";
 
 const sidebarItems = [
   {
@@ -121,22 +122,20 @@ export default function BubbleIntegrationPage() {
 
             {/* Content */}
             <div className="prose max-w-none mb-12">
-              <h2>Step 1: Set Up Your Chatsa Chatbot</h2>
+              <h2>Step 1: Create Your Chatsa Bot</h2>
               <p>
-                To integrate your Chatsa AI chatbot into your Bubble application, begin by logging into your Chatsa account. 
-                If you haven&apos;t already created an account, you can sign up for a free account. After signing in, you can configure your bot 
-                within the Chatsa platform by uploading relevant data sources, such as files, text snippets, websites, or question-and-answer pairs, 
-                which the bot can use to build its knowledge base.
+                First, log into your Chatsa account. If you don't have one yet, sign up for free. Once logged in, 
+                you can set up your bot by adding your data sources - files, text, websites, or Q&A pairs - to build its knowledge base.
               </p>
 
               <div className="bg-blue-50 border-l-4 border-blue-400 p-4 my-6">
-                <p>Here is a step-by-step roadmap for successfully deploying your Chatsa chatbot.</p>
+                <p>Follow this roadmap to get your Chatsa bot up and running.</p>
               </div>
 
-              <h2>Step 2: Generate and Copy Your Chatsa Chatbot Embed Code</h2>
+              <h2>Step 2: Get Your Bot's Embed Code</h2>
               <ol>
                 <li>
-                  <p>Every chatbot you create on Chatsa has a unique embed code you can use to embed it on your website. Once you&apos;ve set up your chatbot on Chatsa, navigate to your Dashboard page, and select the specific bot you wish to integrate with your Bubble application.</p>
+                  <p>Go to your Chatsa Dashboard and select the bot you want to add to Bubble.</p>
                   <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                       [Image Placeholder]
@@ -144,7 +143,7 @@ export default function BubbleIntegrationPage() {
                   </div>
                 </li>
                 <li>
-                  <p>Clicking on the bot should take you to the bot&apos;s playground page. From there, proceed to the Connect tab.</p>
+                  <p>Open the bot's playground and go to the Connect tab.</p>
                   <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                       [Image Placeholder]
@@ -152,7 +151,7 @@ export default function BubbleIntegrationPage() {
                   </div>
                 </li>
                 <li>
-                  <p>Up next, a new page should come up, click on Copy Script to copy the code snippet.</p>
+                  <p>Click Copy Script to get your embed code.</p>
                   <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                       [Image Placeholder]
@@ -161,13 +160,13 @@ export default function BubbleIntegrationPage() {
                 </li>
               </ol>
 
-              <h2>Step 3: Embed Chatsa Chatbot on Your Bubble App</h2>
+              <h2>Step 3: Add Bot to Your Bubble App</h2>
               <ol>
                 <li>
-                  <p>Once you&apos;ve copied your Chatsa embed code, sign into your Bubble account and head to your account dashboard.</p>
+                  <p>Log into your Bubble account and open your dashboard.</p>
                 </li>
                 <li>
-                  <p>On your dashboard, pick out the Bubble app or website you wish to embed the chatbot on and click the Launch Editor button next to it.</p>
+                  <p>Select your app and click Launch Editor.</p>
                   <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                       [Image Placeholder]
@@ -175,10 +174,10 @@ export default function BubbleIntegrationPage() {
                   </div>
                 </li>
                 <li>
-                  <p>Once your Bubble Editor comes up, scroll down to the section of the page you want to add the embed code.</p>
+                  <p>Go to the page section where you want the bot to appear.</p>
                 </li>
                 <li>
-                  <p>On the left sidebar of the editor, locate the HTML component and drag it to the section of the page.</p>
+                  <p>Find the HTML element in the left sidebar and drag it to your page.</p>
                   <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                       [Image Placeholder]
@@ -186,10 +185,10 @@ export default function BubbleIntegrationPage() {
                   </div>
                 </li>
                 <li>
-                  <p>Double-click on the HTML component to reveal the code editor.</p>
+                  <p>Double-click the HTML element to open the editor.</p>
                 </li>
                 <li>
-                  <p>Paste the embed code on the editor and you should automatically see a floating chatbot icon on the bottom left corner of the editing canvas.</p>
+                  <p>Paste your embed code - you'll see the bot icon appear in the bottom left corner.</p>
                   <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                       [Image Placeholder]
@@ -197,7 +196,7 @@ export default function BubbleIntegrationPage() {
                   </div>
                 </li>
                 <li>
-                  <p>You can now preview your Bubble app to test your chatbot.</p>
+                  <p>Preview your app to test the bot.</p>
                   <div className="bg-gray-100 rounded-lg p-4 my-4 aspect-video relative">
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                       [Image Placeholder]
@@ -208,32 +207,25 @@ export default function BubbleIntegrationPage() {
 
               <div className="bg-green-50 border-l-4 border-green-400 p-4 my-8">
                 <p className="text-green-700">
-                  Congratulations, your Chatsa chatbot is now live on your Bubble app!
+                  Your Chatsa bot is now live on your Bubble app!
                 </p>
               </div>
 
               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-6">
                 <p className="text-yellow-700">
-                  <strong>Note:</strong> You can customize the appearance and colors of your bot on your Chatsa dashboard. 
-                  To do this, go to your dashboard, choose a bot, click the Settings tab on the top of the page, and then click Chat Interface 
-                  on the left sidebar to reveal the chatbot customization options.
+                  <strong>Pro Tip:</strong> Customize your bot's look in Chatsa's dashboard. Go to Settings → Chat Interface to change colors and appearance.
                 </p>
               </div>
             </div>
 
             {/* Connect Button */}
             <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-              <h2 className="text-2xl font-semibold mb-4">Get Embed Code</h2>
-              <p className="text-gray-600 mb-6">Copy the embed code to add your Chatsa chatbot to your Bubble application</p>
-              <button 
-                onClick={() => window.open('https://bubble.io', '_blank')}
-                className="inline-flex items-center gap-2 bg-[#2C2C2C] text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
-              >
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Get Embed Code
-              </button>
+              <h2 className="text-2xl font-semibold mb-4">Get Started with Chatsa</h2>
+              <p className="text-gray-600 mb-6">Create your free account and start building your bot</p>
+              <ButtonSignin 
+                text="Sign Up Free"
+                extraStyle="inline-flex items-center gap-2 bg-[#2C2C2C] hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              />
             </div>
           </div>
         </div>
