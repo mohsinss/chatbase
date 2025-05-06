@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import NotionIntegration from '@/models/NotionIntegration';
 import { scrapeNotionPages } from '@/libs/notionScraper';
-import { addToTrieve } from '@/libs/trieve';
 
 mongoose.connect(process.env.MONGODB_URI || '');
 
@@ -23,9 +22,6 @@ export async function POST(request: NextRequest) {
 
     // Scrape Notion pages using access token
     const pagesContent = await scrapeNotionPages(accessToken);
-
-    // Add scraped content to Trieve vector store
-    await addToTrieve(chatbotId, pagesContent);
 
     // Update lastSyncTime
     notionIntegration.lastSyncTime = new Date();
