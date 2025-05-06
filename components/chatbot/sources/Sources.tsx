@@ -63,6 +63,7 @@ const Sources = ({
   const [qFlowEnabled, setQFlowEnabled] = useState(false);
   const [qFlowAIEnabled, setQFlowAIEnabled] = useState(true);
   const [restartQFTimeoutMins, setRestartQFTimeoutMins] = useState(60);
+  const [notionData, setNotionData] = useState<any>(null);
 
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
@@ -105,6 +106,28 @@ const Sources = ({
     };
 
     fetchDataset();
+
+    // Fetch Notion data
+    const fetchNotion = async () => {
+      try {
+        const response = await fetch(`/api/chatbot/sources/notion?chatbotId=${chatbotId}`);
+        if (!response.ok) {
+          if (response.status === 403) {
+            // Not connected, ignore or handle accordingly
+            setNotionData(null);
+            return;
+          }
+          throw new Error('Failed to fetch Notion data');
+        }
+        const data = await response.json();
+        setNotionData(data);
+      } catch (error) {
+        console.error("Error fetching Notion data:", error);
+        toast.error("Failed to load Notion data: " + error.message);
+      }
+    };
+
+    fetchNotion();
   }, [chatbotId]);
 
   const handleTabChange = (tabId: string) => {
@@ -129,7 +152,8 @@ const Sources = ({
           text,
           qaPairs,
           links,
-          questionFlow: qFlow
+          questionFlow: qFlow,
+          notionData, // Include Notion data in retrain payload
         }),
       });
 
@@ -176,8 +200,8 @@ const Sources = ({
         </ReactFlowProvider>;
       case "notion":
         return <NotionInput
-          onConnect={() => {
-            console.log('Connecting to Notion...');
+          onConnect={(code: string) => {
+            console.log('Connecting to Notion...', code);
           }}
         />;
       default:
@@ -248,4 +272,4 @@ const Sources = ({
   );
 };
 
-export default Sources; 
+export default Sources;

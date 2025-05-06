@@ -11,15 +11,47 @@ import {
 } from '@/components/ui/dialog';
 
 interface NotionInputProps {
-  onConnect: () => void;
+  onConnect: (code: string) => void;
 }
 
 const NotionInput = ({ onConnect }: NotionInputProps) => {
   const [showDialog, setShowDialog] = useState(false);
 
   const handleConnect = () => {
-    setShowDialog(true);
-    // Add your Notion OAuth flow here
+    // Open Notion OAuth in a popup window
+    const width = 600;
+    const height = 700;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2.5;
+
+    const popup = window.open(
+      '/api/auth/notion',
+      'Notion OAuth',
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+
+    if (!popup) {
+      alert('Failed to open popup window. Please allow popups for this site.');
+      return;
+    }
+
+    // Listen for message from popup
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'notion-auth-callback') {
+        const { code, error } = event.data;
+        if (code) {
+          // Handle successful auth with code
+          onConnect(code);
+        } else if (error) {
+          alert(`Notion authentication failed: ${error}`);
+        }
+        popup.close();
+        window.removeEventListener('message', handleMessage);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
   };
 
   return (
@@ -28,7 +60,7 @@ const NotionInput = ({ onConnect }: NotionInputProps) => {
 
       <div className="flex justify-center items-center h-[400px]">
         <Button
-          onClick={handleConnect}
+          onClick={() => setShowDialog(true)}
           className="flex items-center gap-2 bg-white border hover:bg-gray-50 text-gray-800 px-6 py-4 h-auto text-base"
         >
           <IconBrandNotion className="w-6 h-6" />
@@ -49,7 +81,7 @@ const NotionInput = ({ onConnect }: NotionInputProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 hidden"
                 onClick={() => setShowDialog(false)}
               >
                 <IconX className="h-4 w-4" />
@@ -87,7 +119,7 @@ const NotionInput = ({ onConnect }: NotionInputProps) => {
             <Button
               className="bg-purple-500 hover:bg-purple-600 text-white"
               onClick={() => {
-                onConnect();
+                handleConnect();
                 setShowDialog(false);
               }}
             >
@@ -100,4 +132,4 @@ const NotionInput = ({ onConnect }: NotionInputProps) => {
   );
 };
 
-export default NotionInput; 
+export default NotionInput;
