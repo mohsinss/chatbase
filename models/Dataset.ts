@@ -15,6 +15,14 @@ interface ILink {
   chars: number;
 }
 
+interface IYouTubeLink {
+  id: string;
+  link: string;
+  chars: number;
+  transcript?: string;
+  status?: "pending" | "training" | "trained" | "error";
+}
+
 interface IFile {
     trieveId: string;
     trieveTaskId: string;
@@ -32,6 +40,7 @@ interface IDataset {
   text: string;
   qaPairs?: IQAPair[];
   links?: ILink[];
+  youtubeLinks?: IYouTubeLink[];
   files?: IFile[];
   createdAt: Date;
   updatedAt: Date;
@@ -79,6 +88,14 @@ const datasetSchema = new mongoose.Schema<IDataset>({
             chars: { type: Number, required: false },
         }],
         default: []
+    },
+    youtubeLinks: {
+      type: [{ 
+          id: { type: String, required: true },
+          link: { type: String, required: true },
+          chars: { type: Number, required: false },
+      }],
+      default: []
     },
     metadata: {
       type: mongoose.Schema.Types.Mixed,

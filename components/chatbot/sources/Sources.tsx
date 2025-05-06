@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { IconFile, IconAlignLeft, IconGlobe, IconAdjustmentsSpark, IconMessageQuestion, IconBrandNotion } from "@tabler/icons-react";
+import { IconFile, IconAlignLeft, IconGlobe, IconAdjustmentsSpark, IconMessageQuestion, IconBrandNotion, IconBrandYoutube } from "@tabler/icons-react";
 import { FileUpload } from "./FileUpload";
 import SourceStats from './SourceStats';
 import TextInput from './TextInput';
@@ -13,23 +13,13 @@ import toast, { Toaster } from 'react-hot-toast';
 import config from "@/config";
 import ChatflowV1 from "./ChatflowV1";
 import { ReactFlowProvider } from "reactflow";
-
-interface IFile {
-  trieveId: string;
-  trieveTaskId: string;
-  url: string;
-  name: string;
-  text: string;
-  charCount: number;
-  status: string;
-  trained: boolean;
-  _id: string;
-}
+import YouTubeInput from "./YouTubeInput";
 
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
   { id: "text", label: "Text", icon: <IconAlignLeft className="w-5 h-5" /> },
   { id: "website", label: "Website", icon: <IconGlobe className="w-5 h-5" /> },
+  { id: "youtube", label: "YouTube", icon: <IconBrandYoutube className="w-5 h-5" /> },
   { id: "qa", label: "Q&A", icon: <IconMessageQuestion className="w-5 h-5" /> },
   { id: "qf", label: "QFlow", icon: <IconAdjustmentsSpark className="w-5 h-5" /> },
   { id: "notion", label: "Notion", icon: <IconBrandNotion className="w-5 h-5" /> },
@@ -59,6 +49,7 @@ const Sources = ({
   const [text, setText] = useState<string>('');
   const [qaPairs, setQaPairs] = useState<{ id: string; question: string; answer: string }[]>([]);
   const [links, setLinks] = useState<{ id: string; link: string, chars: number }[]>([]);
+  const [youtubeLinks, setYoutubeLinks] = useState<{ id: string; link: string, chars: number }[]>([]);
   const [qFlow, setQFlow] = useState(null);
   const [qFlowEnabled, setQFlowEnabled] = useState(false);
   const [qFlowAIEnabled, setQFlowAIEnabled] = useState(true);
@@ -84,6 +75,8 @@ const Sources = ({
           setText(data.text)
         if (data.links)
           setLinks(data.links)
+        if (data.youtubeLinks)
+          setYoutubeLinks(data.youtubeLinks)
         if (data.files) {
           // @ts-ignore
           setFileCount(data.files.length);
@@ -157,6 +150,7 @@ const Sources = ({
           text,
           qaPairs,
           links,
+          youtubeLinks,
           questionFlow: qFlow,
           notionData, // Include Notion data in retrain payload
         }),
@@ -184,6 +178,28 @@ const Sources = ({
       setIsTraining(false);
     }
   }
+
+  const updateDatasetYouTubeLinks = async (updatedLinks: any) => {
+    try {
+      const response = await fetch('/api/chatbot/sources/dataset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chatbotId,
+          youtubeLinks: updatedLinks,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update YouTube links in dataset');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update YouTube links in dataset');
+    }
+  };
 
   const saveNotionIntegrationSettings = async (chatbotId: string, code: string) => {
     try {
@@ -217,6 +233,11 @@ const Sources = ({
         return <TextInput text={text} setText={setText} />;
       case "website":
         return <WebsiteInput links={links} setLinks={setLinks} />;
+      case "youtube":
+        return <YouTubeInput links={youtubeLinks} setLinks={(newLinks) => {
+          setYoutubeLinks(newLinks);
+          updateDatasetYouTubeLinks(newLinks);
+        }} />;
       case "qa":
         return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs} />;
       case "qf":
@@ -292,9 +313,9 @@ const Sources = ({
             isTraining={isTraining}
             qaInputCount={qaPairs.length}
             qaInputChars={qaPairs.reduce((total, pair) => total + pair.question.length + pair.answer.length, 0)}
-            linkInputCount={links.length}
-            linkInputChars={links.reduce((total, link) => total + link.chars, 0)}
-          />
+          linkInputCount={links.length}
+          linkInputChars={links.reduce((total, link) => total + link.chars, 0)}
+        />
         </div>
       </div>
     </div>

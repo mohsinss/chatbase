@@ -4,7 +4,7 @@ import DatasetModel from "@/models/Dataset";
 
 export async function POST(req: Request) {
   try {
-    const { chatbotId, name } = await req.json();
+    const { chatbotId, name, youtubeLinks } = await req.json();
 
     if (!chatbotId) {
       return NextResponse.json(
@@ -20,6 +20,11 @@ export async function POST(req: Request) {
     let existingDataset = await DatasetModel.findOne({ chatbotId });
 
     if (existingDataset) {
+      // Update youtubeLinks if provided
+      if (youtubeLinks) {
+        existingDataset.youtubeLinks = youtubeLinks;
+        await existingDataset.save();
+      }
       // If a dataset exists, return its ID
       return NextResponse.json({ id: existingDataset.datasetId });
     }
@@ -76,4 +81,3 @@ export async function GET(req: Request) {
     );
   }
 }
-
