@@ -1,23 +1,33 @@
 import { NextResponse } from 'next/server';
 
-// TODO: Implement token retrieval from database for the chatbot/user
+import mongoose from 'mongoose';
+import NotionIntegration from '@/models/NotionIntegration';
+
+// Retrieve Notion access token from database for the chatbot
 const getNotionAccessToken = async (chatbotId: string): Promise<string | null> => {
-  // Placeholder: return null or a dummy token
-  return null;
+  const notionIntegration = await NotionIntegration.findOne({ chatbotId });
+  if (!notionIntegration) {
+    return null;
+  }
+  return notionIntegration.accessToken;
 };
 
-// TODO: Implement actual Notion API calls to fetch pages/databases content
+// Fetch Notion pages content using Notion API
 const fetchNotionData = async (accessToken: string) => {
-  // Placeholder: return dummy data
+  // Implement actual Notion API calls to fetch pages/databases content
+  // For simplicity, reuse the libs/notionScraper function if possible
+  const { scrapeNotionPages } = await import('@/libs/notionScraper');
+  const pages = await scrapeNotionPages(accessToken);
+
+  // Format the data as needed for frontend consumption
   return {
-    pages: [
-      {
-        id: 'dummy-page-1',
-        title: 'Sample Notion Page',
-        content: 'This is sample content from Notion page.',
-        charCount: 35,
-      },
-    ],
+    pages: pages.map((page: any) => ({
+      id: page.id,
+      title: `Notion Page ${page?.title}`, // Placeholder, ideally fetch title from Notion API
+      content: '', // Placeholder, ideally fetch content from Notion API
+      charCount: 0, // Placeholder, calculate actual char count
+      ...page
+    })),
   };
 };
 

@@ -11,10 +11,19 @@ import {
 } from '@/components/ui/dialog';
 
 interface NotionInputProps {
+  connected?: boolean;
+  pages?: {
+    id: string;
+    title?: string;
+    content?: string;
+    charCount?: number;
+    url?: string;
+    properties?: any;
+  }[];
   onConnect: (code: string) => void;
 }
 
-const NotionInput = ({ onConnect }: NotionInputProps) => {
+const NotionInput = ({ connected = false, pages = [], onConnect }: NotionInputProps) => {
   const [showDialog, setShowDialog] = useState(false);
 
   const handleConnect = () => {
@@ -58,15 +67,60 @@ const NotionInput = ({ onConnect }: NotionInputProps) => {
     <div className="w-full min-h-[600px]">
       <h2 className="text-2xl font-semibold mb-8">Notion</h2>
 
-      <div className="flex justify-center items-center h-[400px]">
-        <Button
-          onClick={() => setShowDialog(true)}
-          className="flex items-center gap-2 bg-white border hover:bg-gray-50 text-gray-800 px-6 py-4 h-auto text-base"
-        >
-          <IconBrandNotion className="w-6 h-6" />
-          Connect Notion
-        </Button>
-      </div>
+      {connected ? (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Connected Notion Pages</h3>
+          <div className="overflow-auto max-h-96 mb-4">
+            {pages.length > 0 ? (
+              <table className="min-w-full border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 px-4 py-2 text-left">Category</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">Title</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">Char Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pages.map((page) => {
+                    const category = page.properties?.Category?.multi_select?.map((cat: any) => cat.name).join(', ') || 'Uncategorized';
+                    const title = page.properties?.['Doc name']?.title?.[0]?.plain_text || page.title || 'Untitled';
+                    const charCount = page.charCount || 0;
+                    return (
+                      <tr key={page.id} className="border border-gray-300">
+                        <td className="border border-gray-300 px-4 py-2">{category}</td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          <a href={page.url ?? '#'} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                            {title}
+                          </a>
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">{charCount}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <p>No pages found.</p>
+            )}
+          </div>
+          <Button
+            className="bg-yellow-500 hover:bg-yellow-600 text-white"
+            onClick={handleConnect}
+          >
+            Reconnect Notion
+          </Button>
+        </div>
+      ) : (
+        <div className="flex justify-center items-center h-[400px]">
+          <Button
+            onClick={() => setShowDialog(true)}
+            className="flex items-center gap-2 bg-white border hover:bg-gray-50 text-gray-800 px-6 py-4 h-auto text-base"
+          >
+            <IconBrandNotion className="w-6 h-6" />
+            Connect Notion
+          </Button>
+        </div>
+      )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-[500px]">
@@ -94,7 +148,7 @@ const NotionInput = ({ onConnect }: NotionInputProps) => {
               A Notion popup will now appear.
             </h3>
             <p className="text-lg font-semibold mb-6">
-              Please don&apos;t unselect already selected pages.
+              Please don't unselect already selected pages.
             </p>
             <DialogDescription className="text-gray-600 space-y-4">
               <p>

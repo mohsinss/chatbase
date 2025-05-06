@@ -64,6 +64,7 @@ const Sources = ({
   const [qFlowAIEnabled, setQFlowAIEnabled] = useState(true);
   const [restartQFTimeoutMins, setRestartQFTimeoutMins] = useState(60);
   const [notionData, setNotionData] = useState<any>(null);
+  const [notionPages, setNotionPages] = useState<any[]>([]);
 
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
@@ -115,12 +116,16 @@ const Sources = ({
           if (response.status === 403) {
             // Not connected, ignore or handle accordingly
             setNotionData(null);
+            setNotionPages([]);
             return;
           }
           throw new Error('Failed to fetch Notion data');
         }
         const data = await response.json();
         setNotionData(data);
+        if (data.pages) {
+          setNotionPages(data.pages);
+        }
       } catch (error) {
         console.error("Error fetching Notion data:", error);
         toast.error("Failed to load Notion data: " + error.message);
@@ -180,6 +185,28 @@ const Sources = ({
     }
   }
 
+  const saveNotionIntegrationSettings = async (chatbotId: string, code: string) => {
+    try {
+      const response = await fetch('/api/chatbot/integrations/notion/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ chatbotId, code }),
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || `Failed to save Notion integration settings`);
+      }
+
+      toast.success('Notion integration saved successfully');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save Notion integration settings');
+      throw error;
+    }
+  }
+
   const renderContent = () => {
     switch (currentTab) {
       case "files":
@@ -200,8 +227,10 @@ const Sources = ({
         </ReactFlowProvider>;
       case "notion":
         return <NotionInput
-          onConnect={(code: string) => {
-            console.log('Connecting to Notion...', code);
+          connected={!!notionData}
+          pages={notionPages}
+          onConnect={async (code: string) => {
+            await saveNotionIntegrationSettings(chatbotId, code);
           }}
         />;
       default:
