@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import axios from "axios";
 import connectMongo from "@/libs/mongoose";
 import DatasetModel from "@/models/Dataset";
+import ChatbotModel from "@/models/Chatbot";
 
 async function extractVideoId(url: string): Promise<string | null> {
   // Extract YouTube video ID from URL
@@ -8,8 +10,6 @@ async function extractVideoId(url: string): Promise<string | null> {
   const match = url.match(regex);
   return match ? match[1] : null;
 }
-
-import axios from "axios";
 
 export async function POST(req: Request) {
   try {
@@ -63,8 +63,8 @@ export async function POST(req: Request) {
       }
     }
 
-    // Update status to transcripting
-    existingLink.status = "transcripting";
+    // Update status to processing
+    existingLink.status = "processing";
     await dataset.save();
 
     // Call Gladia API to start transcription
@@ -97,12 +97,120 @@ export async function POST(req: Request) {
     existingLink.transcriptionResultUrl = resultUrl;
     await dataset.save();
 
-    return NextResponse.json({ resultUrl, status: "transcripting" });
+    return NextResponse.json({ resultUrl, status: "processing" });
 
   } catch (error) {
     console.error("YouTube transcription error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to transcribe YouTube video" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  const url = new URL(req.url);
+  const datasetId = url.searchParams.get("datasetId");
+  const youtubeLinkId = url.searchParams.get("youtubeLinkId");
+  const chatbotId = url.searchParams.get("chatbotId");
+
+  if (!datasetId) {
+    return NextResponse.json(
+      { error: "datasetId is required" },
+      { status: 400 }
+    );
+  }
+
+  if (!youtubeLinkId) {
+    return NextResponse.json(
+      { error: "youtubeLinkId is required" },
+      { status: 400 }
+    );
+  }
+
+  if (!chatbotId) {
+    return NextResponse.json(
+      { error: "chatbotId is required" },
+      { status: 400 }
+    );
+  }
+
+  await connectMongo();
+
+  try {
+    // Remove the YouTube link from dataset
+    await DatasetModel.findOneAndUpdate(
+      { datasetId: datasetId },
+      { $pull: { youtubeLinks: { id: youtubeLinkId } } }
+    );
+
+    if (youtubeLinkId !== undefined && youtubeLinkId !== "undefined") {
+      // Fetch the YouTube link metadata before deletion
+      const response1 = await fetch(`https://api.trieve.ai/api/file/${youtubeLinkId}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+          "TR-Organization": process.env.TRIEVE_ORG_ID!,
+          "TR-Dataset": datasetId,
+        }
+      });
+
+      if (!response1.ok) {
+        throw new Error(`Failed to fetch YouTube link metadata: ${response1.statusText}`);
+      }
+
+      const data = await response1.json();
+
+      // Delete the YouTube link file
+      const response = await fetch(`https://api.trieve.ai/api/file/${youtubeLinkId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+          "TR-Organization": process.env.TRIEVE_ORG_ID!,
+          "TR-Dataset": datasetId,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete YouTube link file: ${response.statusText}`);
+      }
+
+      // Delete associated chunks using the uniqueTag from the metadata
+      const response3 = await fetch(`https://api.trieve.ai/api/chunk`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+          "TR-Dataset": datasetId,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          filter: {
+            must: [
+              {
+                field: "metadata.uniqueTag",
+                match_all: [data.metadata.uniqueTag]
+              }
+            ]
+          }
+        })
+      });
+
+      if (!response3.ok) {
+        throw new Error(`Failed to delete YouTube link chunks: ${response3.statusText}`);
+      }
+
+      // Decrement sourcesCount in chatbot
+      await ChatbotModel.findOneAndUpdate(
+        { chatbotId },
+        { $inc: { sourcesCount: -1 } }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("YouTube link deletion error:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to delete YouTube link" },
       { status: 500 }
     );
   }

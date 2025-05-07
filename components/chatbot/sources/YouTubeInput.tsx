@@ -35,14 +35,6 @@ const YouTubeInput: React.FC<YouTubeInputProps> = ({ chatbotId, links, setLinks 
       toast.error("This link is already added");
       return;
     }
-    const newLink: YouTubeLink = {
-      id: Date.now().toString(),
-      link: trimmed,
-      chars: 0,
-      status: "pending",
-    };
-    setLinks([...links, newLink], 'create');
-    setInputValue("");
 
     try {
       // Call backend API to start transcription
@@ -57,6 +49,15 @@ const YouTubeInput: React.FC<YouTubeInputProps> = ({ chatbotId, links, setLinks 
       if (!response.ok) {
         const errorData = await response.json();
         toast.error(errorData.error || "Failed to start transcription");
+      
+        const newLink: YouTubeLink = {
+          id: Date.now().toString(),
+          link: trimmed,
+          chars: 0,
+          status: "pending",
+        };
+        setLinks([...links, newLink], 'create');
+        setInputValue("");
         return;
       }
 
@@ -64,6 +65,16 @@ const YouTubeInput: React.FC<YouTubeInputProps> = ({ chatbotId, links, setLinks 
 
       // Save the resultUrl for polling
       const resultUrl = data.resultUrl;
+      
+      const newLink: YouTubeLink = {
+        id: Date.now().toString(),
+        link: trimmed,
+        chars: 0,
+        status: "processing",
+        transcriptionResultUrl: resultUrl, // Placeholder for the result URL
+      };
+      setLinks([...links, newLink], 'create');
+      setInputValue("");
 
       // No immediate polling here; polling will be handled globally in useEffect
     } catch (error) {
@@ -71,7 +82,7 @@ const YouTubeInput: React.FC<YouTubeInputProps> = ({ chatbotId, links, setLinks 
     }
   };
 
-  // Polling for all links with status "transcripting" and transcriptionResultUrl
+  // Polling for all links with status "processing" and transcriptionResultUrl
   useEffect(() => {
     const pollForResult = async (link: YouTubeLink) => {
       const headers = {
@@ -112,7 +123,7 @@ const YouTubeInput: React.FC<YouTubeInputProps> = ({ chatbotId, links, setLinks 
 
     const intervalId = setInterval(() => {
       links.forEach((link) => {
-        if (link.status === "transcripting" && link.transcriptionResultUrl) {
+        if (link.status === "processing" && link.transcriptionResultUrl) {
           pollForResult(link);
         }
       });

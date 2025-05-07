@@ -121,7 +121,7 @@ async function clearVectorStore(vectorStoreId) {
 
 export async function POST(req: Request) {
   try {
-    const { chatbotId, text, qaPairs, links, questionFlow } = await req.json();
+    const { chatbotId, text, qaPairs, links, questionFlow, youtubeLinks } = await req.json();
 
     if (!chatbotId) {
       return NextResponse.json({ error: "chatbotId is required" }, { status: 400 });
@@ -217,6 +217,7 @@ export async function POST(req: Request) {
       throw new Error("Dataset not found during update");
     }
 
+    // clear all chunks in the dataset
     const clear_dataset_response = await fetch(`https://api.trieve.ai/api/dataset/clear/${existingDataset.datasetId}`, {
       method: "PUT",
       headers: {
@@ -373,6 +374,50 @@ export async function POST(req: Request) {
         // Mark the file as trained
         file.trieveId = responseData.file_metadata.id;
         file.trained = true;
+      }
+    }
+
+    // Process YouTube links similarly
+    for (let ytLink of youtubeLinks) {
+      if (!ytLink.transcript || ytLink.status !== "trained") {
+        continue; // Skip if no transcript or not trained
+      }
+
+      const transcriptText = ytLink.transcript;
+      const base64Transcript = Buffer.from(transcriptText, 'utf-8').toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+      const metadata = {
+        uniqueTag: `youtube-${ytLink.id}-${Date.now()}`
+      };
+
+      const add_yt_response = await fetch("https://api.trieve.ai/api/file", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+          "TR-Dataset": existingDataset.datasetId,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          base64_file: base64Transcript,
+          file_name: `youtube-${ytLink.id}.txt`,
+          metadata
+        })
+      });
+
+      const ytResponseData = await add_yt_response.json();
+
+      if (!add_yt_response.ok) {
+        throw new Error(`Failed to update YouTube transcript: ${add_yt_response.statusText} - ${JSON.stringify(ytResponseData)}`);
+      }
+
+      // Mark YouTube link as trained in dataset
+      const ytIndex = existingDataset.youtubeLinks.findIndex((l: any) => l.id === ytLink.id);
+      if (ytIndex !== -1) {
+        existingDataset.youtubeLinks[ytIndex].trieveId = ytResponseData.file_metadata.id;
+        existingDataset.youtubeLinks[ytIndex].status = 'trained';
       }
     }
 

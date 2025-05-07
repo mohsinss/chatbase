@@ -13,7 +13,7 @@ interface YouTubeListProps {
 
 const statusLabels: Record<string, string> = {
   pending: "Pending",
-  transcripting: "Transcripting",
+  processing: "Processing",
   transcripted: "Transcripted",
   trained: "Trained",
   error: "Error",
