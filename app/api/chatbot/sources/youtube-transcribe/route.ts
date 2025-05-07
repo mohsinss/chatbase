@@ -146,6 +146,9 @@ export async function DELETE(req: Request) {
   }
   
   try {
+    const youtubeLink = dataset.youtubeLinks.find((l: any) => l.id === youtubeLinkId);
+    const trieveId = youtubeLink?.trieveId;
+
     // Remove the YouTube link from dataset
     await DatasetModel.findOneAndUpdate(
       { chatbotId },
@@ -153,7 +156,7 @@ export async function DELETE(req: Request) {
     );
     if (youtubeLinkId !== undefined && youtubeLinkId !== "undefined") {
       // Fetch the YouTube link metadata before deletion
-      const response1 = await fetch(`https://api.trieve.ai/api/file/${youtubeLinkId}`, {
+      const response1 = await fetch(`https://api.trieve.ai/api/file/${trieveId}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
@@ -169,7 +172,7 @@ export async function DELETE(req: Request) {
       const data = await response1.json();
 
       // Delete the YouTube link file
-      const response = await fetch(`https://api.trieve.ai/api/file/${youtubeLinkId}`, {
+      const response = await fetch(`https://api.trieve.ai/api/file/${trieveId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
