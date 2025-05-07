@@ -73,7 +73,7 @@ const SourceStats = ({
         onClick={onRetrain}
         disabled={isTraining}
       >
-        {isTraining ? (<><span className="loading loading-spinner loading-xs"></span> contructing...</>) : 'construct the index'}
+        {isTraining ? (<><span className="loading loading-spinner loading-xs"></span>&nbsp;contructing...</>) : 'construct the index'}
       </Button>
     </div>
   );

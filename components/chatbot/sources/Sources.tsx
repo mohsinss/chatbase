@@ -190,6 +190,7 @@ const Sources = ({
         body: JSON.stringify({
           chatbotId,
           youtubeLinks: updatedLinks,
+          mode, // Pass mode to backend for handling
         }),
       });
 

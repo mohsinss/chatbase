@@ -67,6 +67,7 @@ export interface ChatContainerProps {
   config: ChatConfig;
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setCurrentNodeId: React.Dispatch<React.SetStateAction<Number>>;
   input: string;
   chatbotId: string;
@@ -88,4 +89,7 @@ export interface ChatContainerProps {
   availableSlots: Record<string, { time: string }[]>;
   handleSendMessage: (message: string) => Promise<void>;
   meetingUrl?: string;
+  setLoadingSources: React.Dispatch<React.SetStateAction<boolean>>;
+  loadingSources: boolean;
+  loadSources: () => Promise<void>;
 }

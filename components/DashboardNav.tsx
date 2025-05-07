@@ -313,7 +313,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                     }}
                     className={`flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
                       brandingSettings.secondaryColor 
-                        ? 'hover:bg-opacity-10' 
+                        ? 'hover:bg-base-200' 
                         : 'hover:bg-base-200'
                     }`}
                     style={{
@@ -337,8 +337,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                   </button>
                   {isTeamMenuOpen && (
                     <div 
-                      className="absolute z-10 mt-2 w-72 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5"
-                      style={dynamicStyles.dropdown}
+                      className="absolute z-10 mt-2 w-72 rounded-lg shadow-lg bg-base-100 ring-1 ring-black ring-opacity-5"
                     >
                       {/* Search */}
                       <div className="p-2">

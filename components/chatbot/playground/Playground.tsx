@@ -41,7 +41,7 @@ const Playground: React.FC<PlaygroundProps> = ({
   if (team) {
     team = JSON.parse(team);
   }
-  
+
   const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -159,7 +159,7 @@ const Playground: React.FC<PlaygroundProps> = ({
         const optionIndex = target.getAttribute('data-index');
         const nodeId = target.getAttribute('data-node');
         const dataAction = target.getAttribute('data-action');
-        
+
         // Create user message and update UI
         const userMessage: Message = { role: 'user', content: option };
         setMessages(prev => [...prev, userMessage]);
@@ -574,7 +574,7 @@ const Playground: React.FC<PlaygroundProps> = ({
       setLoadingSources(false);
       return;
     }
-    
+
     const data = await response.json();
     const datasetId = data.datasetId;
 
@@ -644,6 +644,10 @@ const Playground: React.FC<PlaygroundProps> = ({
             availableSlots={availableSlots}
             handleSendMessage={handleSendMessage}
             meetingUrl={meetingUrl}
+            setIsModalOpen={setIsModalOpen}
+            setLoadingSources={setLoadingSources}
+            loadingSources={loadingSources}
+            loadSources={loadSources}
           />
 
           {/* Upgrade Plan Modal - also available in embed view */}
@@ -768,16 +772,20 @@ const Playground: React.FC<PlaygroundProps> = ({
               availableSlots={availableSlots}
               handleSendMessage={handleSendMessage}
               meetingUrl={meetingUrl}
+              setIsModalOpen={setIsModalOpen}
+              setLoadingSources={setLoadingSources}
+              loadingSources={loadingSources}
+              loadSources={loadSources}
             />
           </div>
         </div>
 
         {/* Sources Modal */}
         {isModalOpen && (
-          <SourcesModal 
-            isOpen={isModalOpen} 
-            onClose={() => setIsModalOpen(false)} 
-            sources={sources} 
+          <SourcesModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            sources={sources}
           />
         )}
 

@@ -110,16 +110,8 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   const url = new URL(req.url);
-  const datasetId = url.searchParams.get("datasetId");
   const youtubeLinkId = url.searchParams.get("youtubeLinkId");
   const chatbotId = url.searchParams.get("chatbotId");
-
-  if (!datasetId) {
-    return NextResponse.json(
-      { error: "datasetId is required" },
-      { status: 400 }
-    );
-  }
 
   if (!youtubeLinkId) {
     return NextResponse.json(
@@ -137,13 +129,28 @@ export async function DELETE(req: Request) {
 
   await connectMongo();
 
+  const dataset = await DatasetModel.findOne({ chatbotId });
+  if (!dataset) {
+    return NextResponse.json(
+      { error: "No dataset found for this chatbot" },
+      { status: 404 }
+    );
+  }
+
+  const datasetId = dataset.datasetId;
+  if (!datasetId) {
+    return NextResponse.json(
+      { error: "No dataset ID found for this chatbot" },
+      { status: 404 }
+    );
+  }
+  
   try {
     // Remove the YouTube link from dataset
     await DatasetModel.findOneAndUpdate(
-      { datasetId: datasetId },
+      { chatbotId },
       { $pull: { youtubeLinks: { id: youtubeLinkId } } }
     );
-
     if (youtubeLinkId !== undefined && youtubeLinkId !== "undefined") {
       // Fetch the YouTube link metadata before deletion
       const response1 = await fetch(`https://api.trieve.ai/api/file/${youtubeLinkId}`, {

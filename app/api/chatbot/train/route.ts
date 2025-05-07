@@ -379,8 +379,8 @@ export async function POST(req: Request) {
 
     // Process YouTube links similarly
     for (let ytLink of youtubeLinks) {
-      if (!ytLink.transcript || ytLink.status !== "trained") {
-        continue; // Skip if no transcript or not trained
+      if (!ytLink.transcript || ytLink.status !== "transcripted") {
+        continue; // Skip if no transcript or not transcripted
       }
 
       const transcriptText = ytLink.transcript;

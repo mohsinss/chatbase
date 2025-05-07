@@ -132,8 +132,8 @@ const YouTubeInput: React.FC<YouTubeInputProps> = ({ chatbotId, links, setLinks 
     return () => clearInterval(intervalId);
   }, [links]);
 
-  const handleRemoveLink = (id: string) => {
-    setLinks(links.filter(link => link.id !== id), 'delete');
+  const handleRemoveLink = async (id: string) => {
+    await setLinks(links.filter(link => link.id !== id), 'delete');
   };
 
   return (
@@ -154,7 +154,7 @@ const YouTubeInput: React.FC<YouTubeInputProps> = ({ chatbotId, links, setLinks 
             Add
           </button>
         </div>
-        <YouTubeList links={links} onRemove={handleRemoveLink} />
+        <YouTubeList links={links} onRemove={handleRemoveLink} chatbotId={chatbotId} />
       </div>
     </div>
   );

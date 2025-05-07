@@ -17,6 +17,7 @@ export async function  handleOpenAIRequest(
   enabledActions: any[],
 ) {
   console.log('Using OpenAI Model:', MODEL_MAPPING[internalModel] || 'gpt-3.5-turbo');
+  console.log(systemPrompt)
   const encoder = new TextEncoder();
   
   // Format messages based on model type

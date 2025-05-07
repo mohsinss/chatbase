@@ -2,11 +2,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { IconTrash, IconRefresh, IconFile, IconDownload, IconEye, IconImageInPicture, IconPdf } from "@tabler/icons-react";
+import { IconTrash, IconRefresh, IconLoader, IconDownload, IconEye, IconImageInPicture, IconPdf } from "@tabler/icons-react";
 import toast from "react-hot-toast";
 import { YouTubeLink } from "./types";
 
 interface YouTubeListProps {
+  chatbotId: string;
   links: YouTubeLink[];
   onRemove: (id: string) => void;
 }
@@ -19,9 +20,10 @@ const statusLabels: Record<string, string> = {
   error: "Error",
 };
 
-const YouTubeList: React.FC<YouTubeListProps> = ({ links, onRemove }) => {
+const YouTubeList: React.FC<YouTubeListProps> = ({ links, onRemove, chatbotId }) => {
   const [localLinks, setLocalLinks] = useState<YouTubeLink[]>([]);
   const [viewTranscriptId, setViewTranscriptId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalLinks(links);
@@ -34,6 +36,31 @@ const YouTubeList: React.FC<YouTubeListProps> = ({ links, onRemove }) => {
       setViewTranscriptId(id);
     }
   };
+
+  const handleDelete = async (id: string) => {
+    const linkToDelete = localLinks.find(link => link.id === id);
+
+    if (!linkToDelete) {
+      return;
+    }
+    setDeletingId(id);
+
+    try {
+      const response = await fetch(`/api/chatbot/sources/youtube-transcribe?youtubeLinkId=${id}&datasetId=${linkToDelete.trieveId ?? ''}&chatbotId=${chatbotId ?? ''}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete YouTube link');
+      }
+
+      await onRemove(id);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete YouTube link');
+    }
+    setDeletingId(null);
+  }
 
   return (
     <div className="mt-4">
@@ -82,11 +109,12 @@ const YouTubeList: React.FC<YouTubeListProps> = ({ links, onRemove }) => {
                     </button>
                   )}
                   <button
-                    onClick={() => onRemove(id)}
+                    onClick={() => handleDelete(id)}
                     className="text-red-600 hover:text-red-800 font-bold"
                     aria-label="Remove video"
+                    disabled={deletingId === id}
                   >
-                    <IconTrash className="w-5 h-5" />
+                    {deletingId == id ? <IconLoader className="w-5 h-5 animate-spin"/> : <IconTrash className="w-5 h-5" />}
                   </button>
                 </div>
               </div>

@@ -37,15 +37,17 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   setShowCalendar,
   handleSendMessage,
   availableSlots,
-  meetingUrl
+  meetingUrl,
+  setIsModalOpen,
+  setLoadingSources,
+  loadingSources,
+  loadSources
 }) => {
-  const [loadingSources, setLoadingSources] = useState(false);
   const [sources, setSources] = useState([]);
   const [showLead, setShowLead] = useState(true);
   const { settings: globalSettings } = useAISettingsProvider();
   const isMobile = typeof window !== 'undefined' ? /iPhone|iPad|iPod|Android/i.test(window?.navigator?.userAgent) : false;
   const [disableInput, setDisableInput] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     setDisableInput(isLoading || !!currentNodeId || showCalendar);
@@ -86,36 +88,6 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
     } catch (error) {
       console.error("Error fetching dataset:", error);
     }
-  };
-
-  const loadSources = async () => {
-    setLoadingSources(true);
-    const datasetId = await fetchDataset();
-
-    // Find the last user message
-    const lastUserMessage = [...messages].reverse().find(msg => msg.role === 'user');
-
-    const options = {
-      method: 'POST',
-      headers: {
-        'TR-Dataset': datasetId,
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TRIEVE_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        query: lastUserMessage?.content || " ",
-        search_type: 'semantic',
-        page_size: aiSettings?.chunkCount || 4,
-      })
-    };
-
-    fetch('https://api.trieve.ai/api/chunk/search', options)
-      .then(response => response.json())
-      .then(response => {
-        setSources(response.chunks);
-      })
-      .catch(err => console.error(err))
-      .finally(() => setLoadingSources(false));
   };
 
   const toggleChatWindow = () => {
