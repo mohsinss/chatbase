@@ -4,15 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { IconTrash, IconRefresh, IconFile, IconDownload, IconEye, IconImageInPicture, IconPdf } from "@tabler/icons-react";
 import toast from "react-hot-toast";
-
-interface YouTubeLink {
-  id: string;
-  link: string;
-  chars: number;
-  transcript?: string;
-  status?: "pending" | "transcripting" | "training" | "trained" | "error";
-  trained?: boolean;
-}
+import { YouTubeLink } from "./types";
 
 interface YouTubeListProps {
   links: YouTubeLink[];
@@ -22,7 +14,7 @@ interface YouTubeListProps {
 const statusLabels: Record<string, string> = {
   pending: "Pending",
   transcripting: "Transcripting",
-  training: "Training",
+  transcripted: "Transcripted",
   trained: "Trained",
   error: "Error",
 };
@@ -34,26 +26,6 @@ const YouTubeList: React.FC<YouTubeListProps> = ({ links, onRemove }) => {
   useEffect(() => {
     setLocalLinks(links);
   }, [links]);
-
-  // Simulate status updates for transcripting and training (this should be replaced with real API polling)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLocalLinks((prevLinks) =>
-        prevLinks.map((link) => {
-          if (link.status === "pending") {
-            return { ...link, status: "transcripting" };
-          } else if (link.status === "transcripting") {
-            return { ...link, status: "training" };
-          } else if (link.status === "training") {
-            return { ...link, status: "trained", trained: true };
-          }
-          return link;
-        })
-      );
-    }, 10000); // Update every 10 seconds
-
-    return () => clearInterval(interval);
-  }, []);
 
   const toggleViewTranscript = (id: string) => {
     if (viewTranscriptId === id) {
@@ -69,7 +41,7 @@ const YouTubeList: React.FC<YouTubeListProps> = ({ links, onRemove }) => {
         <p className="text-gray-500">No YouTube videos added yet.</p>
       ) : (
         <ul className="divide-y divide-gray-200 rounded border border-gray-200 bg-white">
-          {localLinks.map(({ id, link, chars, transcript, status, trained }) => (
+          {localLinks.map(({ id, link, chars, transcript, status }) => (
             <li key={id} className="flex flex-col p-4 hover:bg-gray-50">
               <div className="flex items-center justify-between">
                 <div>
@@ -85,16 +57,13 @@ const YouTubeList: React.FC<YouTubeListProps> = ({ links, onRemove }) => {
                     <span className="text-gray-500 text-xs">
                       {chars} chars
                     </span>
-                    <span className={`rounded-md p-1 text-sm text-black ${trained ? 'bg-green-300' : 'bg-red-300'}`}>
-                      {trained ? 'Trained' : 'Not Trained'}
-                    </span>
                     {status && (
                       <span
-                        className={`text-sm font-medium ${status === "error"
-                          ? "text-red-600"
+                        className={`text-sm font-medium px-2 py-1 rounded ${status === "error"
+                          ? "bg-red-200 text-red-800"
                           : status === "trained"
-                            ? "text-green-600"
-                            : "text-yellow-600"
+                            ? "bg-green-200 text-green-800"
+                            : "bg-yellow-200 text-yellow-800"
                           }`}
                       >
                         {statusLabels[status] || status}

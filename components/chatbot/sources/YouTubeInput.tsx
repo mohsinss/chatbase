@@ -1,23 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import YouTubeList from "./YouTubeList";
 
-interface YouTubeLink {
-  id: string;
-  link: string;
-  chars: number;
-  transcript?: string;
-  status?: "pending" | "training" | "trained" | "error";
-}
+import { YouTubeLink } from "./types";
 
 interface YouTubeInputProps {
+  chatbotId: string;
   links: YouTubeLink[];
-  setLinks: React.Dispatch<React.SetStateAction<YouTubeLink[]>>;
+  setLinks: (newLinks: YouTubeLink[], mode?: string) => void;
 }
 
-const YouTubeInput: React.FC<YouTubeInputProps> = ({ links, setLinks }) => {
+const YouTubeInput: React.FC<YouTubeInputProps> = ({ chatbotId, links, setLinks }) => {
   const [inputValue, setInputValue] = useState("");
 
   const isValidYouTubeUrl = (url: string) => {
@@ -26,7 +21,7 @@ const YouTubeInput: React.FC<YouTubeInputProps> = ({ links, setLinks }) => {
     return pattern.test(url);
   };
 
-  const handleAddLink = () => {
+  const handleAddLink = async () => {
     const trimmed = inputValue.trim();
     if (!trimmed) {
       toast.error("Please enter a YouTube link");
@@ -46,12 +41,88 @@ const YouTubeInput: React.FC<YouTubeInputProps> = ({ links, setLinks }) => {
       chars: 0,
       status: "pending",
     };
-    setLinks([...links, newLink]);
+    setLinks([...links, newLink], 'create');
     setInputValue("");
+
+    try {
+      // Call backend API to start transcription
+      const response = await fetch("/api/chatbot/sources/youtube-transcribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ chatbotId, link: trimmed }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to start transcription");
+        return;
+      }
+
+      const data = await response.json();
+
+      // Save the resultUrl for polling
+      const resultUrl = data.resultUrl;
+
+      // No immediate polling here; polling will be handled globally in useEffect
+    } catch (error) {
+      toast.error("Error starting transcription");
+    }
   };
 
+  // Polling for all links with status "transcripting" and transcriptionResultUrl
+  useEffect(() => {
+    const pollForResult = async (link: YouTubeLink) => {
+      const headers = {
+        "x-gladia-key": process.env.NEXT_PUBLIC_GLADIA_API_KEY || "",
+      };
+      try {
+        const pollResponse = await fetch(link.transcriptionResultUrl || "", { headers });
+        if (!pollResponse.ok) {
+          toast.error("Failed to poll transcription result");
+          return false;
+        }
+        const pollData = await pollResponse.json();
+        if (pollData.status === "done") {
+          const transcript = pollData.result.transcription.full_transcript;
+          setLinks(
+            links.map((l: YouTubeLink) =>
+              l.link === link.link
+                ? { ...l, transcript, status: "transcripted", chars: transcript.length }
+                : l
+            ), 'update'
+          );
+          return true;
+        } else {
+          setLinks(
+            links.map((l) =>
+              l.link === link.link
+                ? { ...l, status: pollData.status }
+                : l
+            ), 'update'
+          );
+          return false;
+        }
+      } catch {
+        toast.error("Error polling transcription result");
+        return false;
+      }
+    };
+
+    const intervalId = setInterval(() => {
+      links.forEach((link) => {
+        if (link.status === "transcripting" && link.transcriptionResultUrl) {
+          pollForResult(link);
+        }
+      });
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [links]);
+
   const handleRemoveLink = (id: string) => {
-    setLinks(links.filter(link => link.id !== id));
+    setLinks(links.filter(link => link.id !== id), 'delete');
   };
 
   return (

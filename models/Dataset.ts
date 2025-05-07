@@ -20,7 +20,8 @@ interface IYouTubeLink {
   link: string;
   chars: number;
   transcript?: string;
-  status?: "pending" | "training" | "trained" | "error";
+  transcriptionResultUrl?: string;
+  status: "pending" | "transcripting" | "transcripted" | "trained" | "error";
 }
 
 interface IFile {
@@ -93,7 +94,10 @@ const datasetSchema = new mongoose.Schema<IDataset>({
       type: [{ 
           id: { type: String, required: true },
           link: { type: String, required: true },
-          chars: { type: Number, required: false },
+          chars: { type: String, required: false },
+          status: { type: String, required: true },
+          transcript: { type: String, required: false },
+          transcriptionResultUrl: { type: String, required: false },
       }],
       default: []
     },

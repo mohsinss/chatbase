@@ -179,7 +179,7 @@ const Sources = ({
     }
   }
 
-  const updateDatasetYouTubeLinks = async (updatedLinks: any) => {
+  const updateDatasetYouTubeLinks = async (updatedLinks: any, mode: string) => {
     try {
       const response = await fetch('/api/chatbot/sources/dataset', {
         method: 'POST',
@@ -196,8 +196,16 @@ const Sources = ({
         const data = await response.json();
         throw new Error(data.error || 'Failed to update YouTube links in dataset');
       }
+
+      if (mode === 'create') {
+        toast.success('YouTube link created successfully');
+      } else if (mode === 'delete') {
+        toast.success('YouTube link deleted successfully');
+      }
+      return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to update YouTube links in dataset');
+      return false;
     }
   };
 
@@ -210,7 +218,7 @@ const Sources = ({
         },
         body: JSON.stringify({ chatbotId, code }),
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || `Failed to save Notion integration settings`);
@@ -234,10 +242,15 @@ const Sources = ({
       case "website":
         return <WebsiteInput links={links} setLinks={setLinks} />;
       case "youtube":
-        return <YouTubeInput links={youtubeLinks} setLinks={(newLinks) => {
-          setYoutubeLinks(newLinks);
-          updateDatasetYouTubeLinks(newLinks);
-        }} />;
+        return <YouTubeInput
+          chatbotId={chatbotId}
+          links={youtubeLinks}
+          setLinks={async (newLinks: any, mode = 'update') => {
+            const result = await updateDatasetYouTubeLinks(newLinks, mode);
+            if (result) {
+              setYoutubeLinks(newLinks);
+            }
+          }} />;
       case "qa":
         return <QAInput qaPairs={qaPairs} setQaPairs={setQaPairs} />;
       case "qf":
@@ -313,9 +326,9 @@ const Sources = ({
             isTraining={isTraining}
             qaInputCount={qaPairs.length}
             qaInputChars={qaPairs.reduce((total, pair) => total + pair.question.length + pair.answer.length, 0)}
-          linkInputCount={links.length}
-          linkInputChars={links.reduce((total, link) => total + link.chars, 0)}
-        />
+            linkInputCount={links.length}
+            linkInputChars={links.reduce((total, link) => total + link.chars, 0)}
+          />
         </div>
       </div>
     </div>
