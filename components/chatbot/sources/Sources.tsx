@@ -14,6 +14,7 @@ import config from "@/config";
 import ChatflowV1 from "./ChatflowV1";
 import { ReactFlowProvider } from "reactflow";
 import YouTubeInput from "./YouTubeInput";
+import { YouTubeLink } from "./types";
 
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
@@ -49,7 +50,7 @@ const Sources = ({
   const [text, setText] = useState<string>('');
   const [qaPairs, setQaPairs] = useState<{ id: string; question: string; answer: string }[]>([]);
   const [links, setLinks] = useState<{ id: string; link: string, chars: number }[]>([]);
-  const [youtubeLinks, setYoutubeLinks] = useState<{ id: string; link: string, chars: number }[]>([]);
+  const [youtubeLinks, setYoutubeLinks] = useState<YouTubeLink[]>([]);
   const [qFlow, setQFlow] = useState(null);
   const [qFlowEnabled, setQFlowEnabled] = useState(false);
   const [qFlowAIEnabled, setQFlowAIEnabled] = useState(true);
@@ -328,6 +329,8 @@ const Sources = ({
             qaInputChars={qaPairs.reduce((total, pair) => total + pair.question.length + pair.answer.length, 0)}
             linkInputCount={links.length}
             linkInputChars={links.reduce((total, link) => total + link.chars, 0)}
+            youtubeLinkCount={youtubeLinks.length}
+            youtubeLinkChars={youtubeLinks.reduce((total, link) => total + link.chars, 0)}
           />
         </div>
       </div>

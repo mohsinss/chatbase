@@ -94,7 +94,7 @@ const datasetSchema = new mongoose.Schema<IDataset>({
       type: [{ 
           id: { type: String, required: true },
           link: { type: String, required: true },
-          chars: { type: String, required: false },
+          chars: { type: Number, required: false },
           status: { type: String, required: true },
           transcript: { type: String, required: false },
           transcriptionResultUrl: { type: String, required: false },

@@ -11,6 +11,8 @@ interface SourceStatsProps {
   qaInputChars: number;
   linkInputCount: number;
   linkInputChars: number;
+  youtubeLinkCount: number;
+  youtubeLinkChars: number;
   onRetrain: () => void;
   setTotalChars: (totalChars: number) => void;
   isTraining: boolean;
@@ -24,6 +26,8 @@ const SourceStats = ({
   qaInputChars,
   linkInputCount,
   linkInputChars,
+  youtubeLinkCount,
+  youtubeLinkChars,
   charLimit,
   onRetrain,
   isTraining,
@@ -31,9 +35,8 @@ const SourceStats = ({
   totalChars,
 }: SourceStatsProps) => {
   useEffect(() => {
-    setTotalChars(fileChars + textInputChars + linkInputChars + qaInputChars);
-  }, [fileChars, textInputChars, linkInputChars, qaInputChars, setTotalChars]);
-  // console.log('charLimit', charLimit)
+    setTotalChars(fileChars + textInputChars + linkInputChars + qaInputChars + youtubeLinkChars);
+  }, [fileChars, textInputChars, linkInputChars, qaInputChars, youtubeLinkChars, setTotalChars]);
 
   return (
     <div className="w-[300px] bg-white rounded-lg p-6 border shadow-sm">
@@ -44,10 +47,13 @@ const SourceStats = ({
           {fileCount} File{fileCount == 1 ? '' : 's'} ({fileChars} chars)
         </p>}
         {textInputChars > 0 && <p className="text-gray-700">
-          {textInputChars} text input chars
+          Text Input ({textInputChars} chars)
         </p>}
         {linkInputCount > 0 && <p className="text-gray-700">
           {linkInputCount} Links ({linkInputChars} chars)
+        </p>}
+        {youtubeLinkCount > 0 && <p className="text-gray-700">
+          {youtubeLinkCount} YouTube Video{youtubeLinkCount == 1 ? '' : 's'} ({youtubeLinkChars} chars)
         </p>}
         {qaInputCount > 0 && <p className="text-gray-700">
           {qaInputCount} Q&A ({qaInputChars} chars)
@@ -73,4 +79,4 @@ const SourceStats = ({
   );
 };
 
-export default SourceStats; 
+export default SourceStats;
