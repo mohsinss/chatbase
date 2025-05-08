@@ -100,8 +100,8 @@ const Sources = ({
       }
       const data = await response.json();
       setDataset(data); // Assuming the API returns the dataset directly
-      if (dataset?.lastTrained) {
-        setLastTrained(new Date(dataset.lastTrained));
+      if (data?.lastTrained) {
+        setLastTrained(new Date(data.lastTrained));
       }
       if (data.qaPairs)
         setQaPairs(data.qaPairs)
