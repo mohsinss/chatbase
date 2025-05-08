@@ -86,9 +86,6 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
       ? pathname.split('/settings/branding')[0]?.split('/').pop() 
       : null;
 
-  console.log('Current pathname:', pathname); // Debug log
-  console.log('Extracted chatbotId:', currentChatbotId); // Debug log
-
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" });
   };

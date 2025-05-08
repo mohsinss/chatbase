@@ -71,6 +71,8 @@ export const authOptions: NextAuthOptionsExtended = {
           name: profile.given_name ? profile.given_name : profile.name,
           email: profile.email,
           image: profile.picture,
+          plan: 'Free', // Default plan for new users
+          new: true,    // Mark as new user by default
           createdAt: new Date(),
         };
       },
@@ -101,6 +103,8 @@ export const authOptions: NextAuthOptionsExtended = {
             user = await User.create({
               email: credentials.email,
               name: username.charAt(0).toUpperCase() + username.slice(1) + " User",
+              plan: 'Free', // Default plan for new users
+              new: true,    // Mark as new user by default
               createdAt: new Date(),
             });
           }
@@ -110,6 +114,7 @@ export const authOptions: NextAuthOptionsExtended = {
             email: user.email,
             name: user.name,
             image: user.image,
+            plan: user.plan,
             new: user.new,
           };
         }
@@ -127,7 +132,15 @@ export const authOptions: NextAuthOptionsExtended = {
     session: async ({ session, token }) => {
       // console.log("session Callback:", { session, token });
       if (session?.user) {
+        // Add user ID from token
         session.user.id = token.sub;
+        
+        // Add additional user properties from token
+        session.user.plan = token.plan;
+        session.user.new = token.new;
+        
+        // Add any other custom fields you want to include
+        // session.user.customField = token.customField;
       }
       return session;
     },
@@ -168,6 +181,8 @@ export const authOptions: NextAuthOptionsExtended = {
               email: user.email,
               name: user.name,
               image: user.image,
+              plan: 'Free', // Default plan for new users
+              new: true,    // Mark as new user by default
               createdAt: new Date(),
             });
             await newUser.save();
@@ -202,7 +217,15 @@ export const authOptions: NextAuthOptionsExtended = {
       // console.log("JWT Callback:", { token, user });
       // Ensure `user` or `account` are not undefined before using them
       if (user) {
-        token.id = user.id;  // <-- Could be undefined if not checked
+        // Add user properties to token
+        token.id = user.id;
+        
+        // Add additional properties from user
+        token.plan = user.plan;
+        token.new = user.new;
+        
+        // If there are any other fields you want to add from the user object
+        // token.customField = user.customField;
       }
       return token;
     },
