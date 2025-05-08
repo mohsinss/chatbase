@@ -4,16 +4,12 @@ import React, { useState, useEffect, ChangeEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { AI_MODELS } from "@/types";
+import toast from "react-hot-toast";
 
 interface AISettingsProps {
   chatbotId: string;
   team: TeamData;
 }
-
-type NotificationType = {
-  message: string;
-  type: 'success' | 'error';
-};
 
 export const SUPPORTED_LANGUAGES = [
   { value: 'en', label: 'English' },
@@ -37,21 +33,6 @@ interface TeamData {
 
 type Provider = keyof typeof AI_MODELS;
 
-const CustomNotification = ({ message, type, onClose }: NotificationType & { onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-    }`}>
-    <div className="flex justify-between items-center">
-      <p>{message}</p>
-      <button
-        onClick={onClose}
-        className="ml-4 text-gray-500 hover:text-gray-700"
-      >
-        ×
-      </button>
-    </div>
-  </div>
-);
-
 const AISettings = ({ chatbotId, team }: AISettingsProps) => {
   const [temperature, setTemperature] = useState(0.7)
   const [chunkCount, setChunkCount] = useState<number>(5)
@@ -61,7 +42,6 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
   const [maxTokens, setMaxTokens] = useState<number>(500)
   const [contextWindow, setContextWindow] = useState<number>(16000)
   const [loading, setLoading] = useState(false)
-  const [notification, setNotification] = useState<NotificationType | null>(null);
   const [language, setLanguage] = useState("en")
   const [lastTrained, setLastTrained] = useState('')
 
@@ -88,10 +68,7 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
       }
     } catch (error) {
       console.error("Fetch error:", error);
-      setNotification({
-        message: "Failed to load settings",
-        type: "error"
-      });
+      toast.error("Failed to load settings");
     }
   };
 
@@ -129,17 +106,11 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
 
       const savedData = await response.json();
       console.log("Saved data:", savedData);
-
-      setNotification({
-        message: "Settings saved successfully",
-        type: "success"
-      });
+      
+      toast.success("Settings saved successfully");
     } catch (error) {
       console.error("Save error:", error);
-      setNotification({
-        message: "Failed to save settings",
-        type: "error"
-      });
+      toast.error("Failed to save settings");
     }
     setLoading(false);
   };
@@ -156,14 +127,6 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
 
   return (
     <>
-      {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
-      )}
-
       <div className="w-full max-w-3xl mx-auto space-y-8">
         <Card className="p-6 space-y-6">
           <div className="space-y-4">
