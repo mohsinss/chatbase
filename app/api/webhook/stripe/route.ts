@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
-    console.error(`Webhook signature verification failed. ${err.message}`);
+    console.error(`Webhook construction failed. ${err.message}`);
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
   eventType = event.type;
 
   console.log("eventType :", eventType)
+  console.log("event :", event)
 
   try {
     switch (eventType) {
