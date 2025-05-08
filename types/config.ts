@@ -292,5 +292,6 @@ export const currencySymbols: Record<string, string> = {
   CHF: 'CHF',
   KRW: '₩',
   BRL: 'R$',
-  ZAR: 'R'
+  ZAR: 'R',
+  SAR: '﷼'
 };
