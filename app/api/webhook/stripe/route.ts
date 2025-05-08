@@ -19,8 +19,6 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 // By default, it'll store the user in the database
 // See more: https://chatsa.co/docs/features/payments
 export async function POST(req: NextRequest) {
-  await connectMongo();
-
   const body = await req.text();
 
   const signature = headers().get("stripe-signature");
@@ -41,6 +39,8 @@ export async function POST(req: NextRequest) {
 
   console.log("eventType :", eventType)
   console.log("event :", event)
+
+  await connectMongo();
 
   try {
     switch (eventType) {
