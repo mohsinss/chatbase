@@ -135,9 +135,25 @@ export async function POST(req: NextRequest) {
         const stripeObject: Stripe.Subscription = event.data
           .object as Stripe.Subscription;
 
-        const subscription = await stripe.subscriptions.retrieve(
-          stripeObject.id
-        );
+        const customerId = stripeObject.customer as string;
+        
+        // Find the team associated with this customer
+        const team = await Team.findOne({ customerId });
+        
+        if (team) {
+          // Downgrade the team to the free plan
+          team.plan = "Free";
+          
+          // Reset credits to free plan limit
+          //@ts-ignore
+          team.credits = config.stripe.plans.Free.credits;
+          
+          // Save the updated team
+          await team.save();
+          console.log(`Subscription canceled for team ${team.teamId}, downgraded to Free plan`);
+        } else {
+          console.error(`Team not found for customer ${customerId}`);
+        }
 
         break;
       }
@@ -145,44 +161,156 @@ export async function POST(req: NextRequest) {
       case "invoice.paid": {
         // Customer just paid an invoice (for instance, a recurring payment for a subscription)
         // ✅ Grant access to the product
-
-        const stripeObject: Stripe.Invoice = event.data
-          .object as Stripe.Invoice;
+        const stripeObject: Stripe.Invoice = event.data.object as Stripe.Invoice;
+        
+        // Get the customer ID from the invoice
+        const customerId = stripeObject.customer as string;
+        
+        // Get the subscription ID from the invoice
+        const subscriptionId = stripeObject.subscription as string;
+        
+        if (subscriptionId) {
+          try {
+            // Retrieve the subscription to get the plan details
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+            
+            // Get the plan ID from the subscription
+            const priceId = subscription.items.data[0].price.id;
+            
+            // Get the plan and yearly status from the price ID
+            //@ts-ignore
+            const { plan, isYearly } = getPlanAndYearlyFromPriceId(priceId);
+            
+            // Find the team associated with this customer
+            const team = await Team.findOne({ customerId });
+            
+            if (team) {
+              // Update the team's plan
+              team.plan = plan;
+              
+              // Calculate new due date based on whether it's yearly or monthly
+              let dueDate = isYearly 
+                ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) 
+                : new Date(new Date().setMonth(new Date().getMonth() + 1));
+              dueDate.setHours(0, 0, 0, 0);
+              
+              // Calculate next renewal date (always one month ahead for billing purposes)
+              let nextRenewalDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
+              nextRenewalDate.setHours(0, 0, 0, 0);
+              
+              // Update team with new dates
+              team.dueDate = dueDate;
+              team.nextRenewalDate = nextRenewalDate;
+              
+              // Reset credits to plan limit
+              //@ts-ignore
+              team.credits = config.stripe.plans[team.plan].credits;
+              
+              // Save the updated team
+              await team.save();
+              console.log(`Invoice paid for team ${team.teamId}, plan: ${plan}, credits reset to ${team.credits}`);
+            } else {
+              console.error(`Team not found for customer ${customerId}`);
+            }
+          } catch (error) {
+            console.error(`Error processing invoice payment: ${error.message}`);
+          }
+        }
+        
         break;
       }
 
-      case "invoice.payment_failed":
+      case "invoice.payment_failed": {
         // A payment failed (for instance the customer does not have a valid payment method)
-        // ❌ Revoke access to the product
-        // ⏳ OR wait for the customer to pay (more friendly):
-        //      - Stripe will automatically email the customer (Smart Retries)
-        //      - We will receive a "customer.subscription.deleted" when all retries were made and the subscription has expired
-
+        // We'll log the failure but not immediately revoke access
+        // Stripe will automatically email the customer (Smart Retries)
+        // We will receive a "customer.subscription.deleted" when all retries were made and the subscription has expired
+        const stripeObject: Stripe.Invoice = event.data.object as Stripe.Invoice;
+        
+        // Get the customer ID from the invoice
+        const customerId = stripeObject.customer as string;
+        
+        // Find the team associated with this customer
+        const team = await Team.findOne({ customerId });
+        
+        if (team) {
+          // Add a flag to indicate payment failure
+          team.billingInfo = {
+            ...team.billingInfo,
+            paymentFailed: true,
+            lastPaymentFailure: new Date()
+          };
+          
+          // Save the updated team
+          await team.save();
+          console.log(`Payment failed for team ${team.teamId}, flagged in database`);
+          
+          // Here you could also send a custom email notification to the team admin
+          // Or implement a notification system in your app
+        } else {
+          console.error(`Team not found for customer ${customerId}`);
+        }
+        
         break;
+      }
 
       case 'payment_method.attached': {
         const paymentMethod: Stripe.PaymentMethod = event.data.object as Stripe.PaymentMethod;
 
         // Extract the necessary information from the paymentMethod object
-        // const paymentMethodId = paymentMethod.id;
+        const paymentMethodId = paymentMethod.id;
         const customerId = paymentMethod.customer;
         const card = paymentMethod.card;
-        // const billingDetails = paymentMethod.billing_details;
+        const billingDetails = paymentMethod.billing_details;
 
         // Find the team associated with this customer
         const team = await Team.findOne({ customerId: customerId as string });
 
         if (team) {
+          // Initialize paymentMethod array if it doesn't exist
+          if (!team.billingInfo) {
+            team.billingInfo = {
+              email: billingDetails?.email || '',
+              address: {
+                line1: billingDetails?.address?.line1 || '',
+                country: billingDetails?.address?.country || ''
+              },
+              paymentMethod: []
+            };
+          } else if (!team.billingInfo.paymentMethod) {
+            team.billingInfo.paymentMethod = [];
+          }
+
           // Update the paymentMethods field with the new card and billing details
           team.billingInfo.paymentMethod.push({
-            brand: card.brand,
-            last4: card.last4,
-            exp_month: card.exp_month,
-            exp_year: card.exp_year,
+            type: {
+              brand: card.brand,
+              last4: card.last4,
+              exp_month: card.exp_month,
+              exp_year: card.exp_year,
+            }
           });
+
+          // Update billing details if available
+          if (billingDetails) {
+            if (billingDetails.email) {
+              team.billingInfo.email = billingDetails.email;
+            }
+            
+            if (billingDetails.address) {
+              team.billingInfo.address = {
+                ...team.billingInfo.address,
+                line1: billingDetails.address.line1 || team.billingInfo.address.line1,
+                country: billingDetails.address.country || team.billingInfo.address.country
+              };
+            }
+          }
 
           // Save the updated team
           await team.save();
+          console.log(`Payment method ${paymentMethodId} attached to team ${team.teamId}`);
+        } else {
+          console.error(`Team not found for customer ${customerId}`);
         }
 
         break;
