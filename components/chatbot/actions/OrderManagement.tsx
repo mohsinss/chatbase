@@ -18,23 +18,7 @@ import GoogleSheetsTab from "./OMtabs/GoogleSheetsTab"
 import CashierPageTab from "./OMtabs/CashierPageTab"
 import FollowUpTab from "./OMtabs/FollowUpTab"
 import LocalizationTab from "./OMtabs/LocalizationTab"
-
-// Supported languages for selection
-const SUPPORTED_LANGUAGES = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'it', label: 'Italian' },
-  { value: 'pt', label: 'Portuguese' },
-  { value: 'nl', label: 'Dutch' },
-  { value: 'pl', label: 'Polish' },
-  { value: 'ru', label: 'Russian' },
-  { value: 'ja', label: 'Japanese' },
-  { value: 'ko', label: 'Korean' },
-  { value: 'zh', label: 'Chinese' },
-  { value: 'ar', label: 'Arabic' }
-];
+import { SUPPORTED_LANGUAGES } from "@/types"
 
 interface OrderManagementProps {
   teamId: string

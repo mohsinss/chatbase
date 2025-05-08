@@ -4,6 +4,7 @@ import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
 import Team from "@/models/Team";
 import crypto from "crypto";
+import User from "@/models/User";
 
 export async function POST() {
   try {
@@ -23,6 +24,10 @@ export async function POST() {
       teamId,
       createdBy: session.user.id
     });
+
+    await User.findByIdAndUpdate(session.user.id, {
+      $set: { new: false },
+    })
 
     // Return just the teamId directly
     return NextResponse.json({ teamId: team.teamId });

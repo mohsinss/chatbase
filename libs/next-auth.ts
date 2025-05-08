@@ -110,6 +110,7 @@ export const authOptions: NextAuthOptionsExtended = {
             email: user.email,
             name: user.name,
             image: user.image,
+            new: user.new,
           };
         }
 

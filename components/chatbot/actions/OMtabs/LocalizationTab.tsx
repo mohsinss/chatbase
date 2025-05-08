@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import toast from "react-hot-toast"
+import { SUPPORTED_LANGUAGES } from "@/types"
 
 // For English, ensure default values are set for systemMsgs keys if missing
 const defaultSystemMsgs: Record<string, string> = {
@@ -97,22 +98,6 @@ interface Translations {
     }
   }
 }
-
-const SUPPORTED_LANGUAGES = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'it', label: 'Italian' },
-  { value: 'pt', label: 'Portuguese' },
-  { value: 'nl', label: 'Dutch' },
-  { value: 'pl', label: 'Polish' },
-  { value: 'ru', label: 'Russian' },
-  { value: 'ja', label: 'Japanese' },
-  { value: 'ko', label: 'Korean' },
-  { value: 'zh', label: 'Chinese' },
-  { value: 'ar', label: 'Arabic' }
-]
 
 const LocalizationTab = ({
   categories,

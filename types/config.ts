@@ -280,6 +280,23 @@ export const sampleFlow = {
   ],
 }
 
+// Supported languages for selection
+export const SUPPORTED_LANGUAGES = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'fr', label: 'French' },
+  { value: 'de', label: 'German' },
+  { value: 'it', label: 'Italian' },
+  { value: 'pt', label: 'Portuguese' },
+  { value: 'nl', label: 'Dutch' },
+  { value: 'pl', label: 'Polish' },
+  { value: 'ru', label: 'Russian' },
+  { value: 'ja', label: 'Japanese' },
+  { value: 'ko', label: 'Korean' },
+  { value: 'zh', label: 'Chinese' },
+  { value: 'ar', label: 'Arabic' }
+];
+
 export const currencySymbols: Record<string, string> = {
   USD: '$',
   EUR: '€',
@@ -293,5 +310,5 @@ export const currencySymbols: Record<string, string> = {
   KRW: '₩',
   BRL: 'R$',
   ZAR: 'R',
-  SAR: '﷼'
+  SAR: '﷼',
 };
