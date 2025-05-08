@@ -78,12 +78,10 @@ const teamSchema = new mongoose.Schema(
         country: { type: String },
       },
       paymentMethod: [{
-        type: {
-          brand: { type: String },
-          last4: { type: String },
-          exp_month: { type: Number },
-          exp_year: { type: Number },
-        },
+        brand: { type: String },
+        last4: { type: String },
+        exp_month: { type: Number },
+        exp_year: { type: Number },
       }],
     },
     createdBy: {
@@ -100,7 +98,7 @@ const teamSchema = new mongoose.Schema(
 
 teamSchema.plugin(toJSON);
 
-teamSchema.methods.toJSON = function() {
+teamSchema.methods.toJSON = function () {
   const team = this.toObject();
   //@ts-ignore
   team.members = team.members.map(member => ({

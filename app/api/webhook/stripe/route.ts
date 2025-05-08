@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
           nextRenewalDate.setHours(0, 0, 0, 0);
           team.dueDate = dueDate;
           team.nextRenewalDate = nextRenewalDate;
-          team.billingInfo = {...team.billingInfo, ...stripeObject?.customer_details};
+          team.billingInfo = { ...team.billingInfo, ...stripeObject?.customer_details };
           //@ts-ignore
           team.credits = config.stripe.plans[team.plan].credits;
 
@@ -104,11 +104,11 @@ export async function POST(req: NextRequest) {
 
       case "customer.subscription.updated": {
         //@ts-ignore
-        const {plan, isYearly} = getPlanAndYearlyFromPriceId(event.data.object.plan.id);
+        const { plan, isYearly } = getPlanAndYearlyFromPriceId(event.data.object.plan.id);
         //@ts-ignore
         const customerId = event.data.object.customer;
         console.log(plan, isYearly, customerId)
-        let team = await Team.findOne({customerId});
+        let team = await Team.findOne({ customerId });
         if (team) {
           team.plan = plan;
           team.customerId = customerId;
@@ -136,18 +136,18 @@ export async function POST(req: NextRequest) {
           .object as Stripe.Subscription;
 
         const customerId = stripeObject.customer as string;
-        
+
         // Find the team associated with this customer
         const team = await Team.findOne({ customerId });
-        
+
         if (team) {
           // Downgrade the team to the free plan
           team.plan = "Free";
-          
+
           // Reset credits to free plan limit
           //@ts-ignore
           team.credits = config.stripe.plans.Free.credits;
-          
+
           // Save the updated team
           await team.save();
           console.log(`Subscription canceled for team ${team.teamId}, downgraded to Free plan`);
@@ -162,50 +162,50 @@ export async function POST(req: NextRequest) {
         // Customer just paid an invoice (for instance, a recurring payment for a subscription)
         // ✅ Grant access to the product
         const stripeObject: Stripe.Invoice = event.data.object as Stripe.Invoice;
-        
+
         // Get the customer ID from the invoice
         const customerId = stripeObject.customer as string;
-        
+
         // Get the subscription ID from the invoice
         const subscriptionId = stripeObject.subscription as string;
-        
+
         if (subscriptionId) {
           try {
             // Retrieve the subscription to get the plan details
             const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-            
+
             // Get the plan ID from the subscription
             const priceId = subscription.items.data[0].price.id;
-            
+
             // Get the plan and yearly status from the price ID
             //@ts-ignore
             const { plan, isYearly } = getPlanAndYearlyFromPriceId(priceId);
-            
+
             // Find the team associated with this customer
             const team = await Team.findOne({ customerId });
-            
+
             if (team) {
               // Update the team's plan
               team.plan = plan;
-              
+
               // Calculate new due date based on whether it's yearly or monthly
-              let dueDate = isYearly 
-                ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)) 
+              let dueDate = isYearly
+                ? new Date(new Date().setFullYear(new Date().getFullYear() + 1))
                 : new Date(new Date().setMonth(new Date().getMonth() + 1));
               dueDate.setHours(0, 0, 0, 0);
-              
+
               // Calculate next renewal date (always one month ahead for billing purposes)
               let nextRenewalDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
               nextRenewalDate.setHours(0, 0, 0, 0);
-              
+
               // Update team with new dates
               team.dueDate = dueDate;
               team.nextRenewalDate = nextRenewalDate;
-              
+
               // Reset credits to plan limit
               //@ts-ignore
               team.credits = config.stripe.plans[team.plan].credits;
-              
+
               // Save the updated team
               await team.save();
               console.log(`Invoice paid for team ${team.teamId}, plan: ${plan}, credits reset to ${team.credits}`);
@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
             console.error(`Error processing invoice payment: ${error.message}`);
           }
         }
-        
+
         break;
       }
 
@@ -226,13 +226,13 @@ export async function POST(req: NextRequest) {
         // Stripe will automatically email the customer (Smart Retries)
         // We will receive a "customer.subscription.deleted" when all retries were made and the subscription has expired
         const stripeObject: Stripe.Invoice = event.data.object as Stripe.Invoice;
-        
+
         // Get the customer ID from the invoice
         const customerId = stripeObject.customer as string;
-        
+
         // Find the team associated with this customer
         const team = await Team.findOne({ customerId });
-        
+
         if (team) {
           // Add a flag to indicate payment failure
           team.billingInfo = {
@@ -240,17 +240,17 @@ export async function POST(req: NextRequest) {
             paymentFailed: true,
             lastPaymentFailure: new Date()
           };
-          
+
           // Save the updated team
           await team.save();
           console.log(`Payment failed for team ${team.teamId}, flagged in database`);
-          
+
           // Here you could also send a custom email notification to the team admin
           // Or implement a notification system in your app
         } else {
           console.error(`Team not found for customer ${customerId}`);
         }
-        
+
         break;
       }
 
@@ -283,12 +283,10 @@ export async function POST(req: NextRequest) {
 
           // Update the paymentMethods field with the new card and billing details
           team.billingInfo.paymentMethod.push({
-            type: {
-              brand: card.brand,
-              last4: card.last4,
-              exp_month: card.exp_month,
-              exp_year: card.exp_year,
-            }
+            brand: card.brand,
+            last4: card.last4,
+            exp_month: card.exp_month,
+            exp_year: card.exp_year,
           });
 
           // Update billing details if available
@@ -296,7 +294,7 @@ export async function POST(req: NextRequest) {
             if (billingDetails.email) {
               team.billingInfo.email = billingDetails.email;
             }
-            
+
             if (billingDetails.address) {
               team.billingInfo.address = {
                 ...team.billingInfo.address,
