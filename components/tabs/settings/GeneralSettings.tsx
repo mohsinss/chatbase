@@ -2,6 +2,16 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { IconLoader2 } from "@tabler/icons-react";
 
 interface GeneralSettingsProps {
   teamId: string;
@@ -19,7 +29,8 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [chatbots, setChatbots] = useState<{chatbotId: string}[]>([]);
+  const [chatbots, setChatbots] = useState<{ chatbotId: string }[]>([]);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchTeamData = async () => {
@@ -66,11 +77,11 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
       });
 
       if (!response.ok) throw new Error('Failed to update team data');
-      
+
       const data = await response.json();
       // toast.success('team')
       // if (data.teamId !== teamId) {
-        // window.location.href = `/dashboard/${teamData.url}/settings/general`;
+      // window.location.href = `/dashboard/${teamData.url}/settings/general`;
       // }
     } catch (error) {
       console.error("Error updating team data:", error);
@@ -79,10 +90,6 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
   };
 
   const handleDeleteTeam = async () => {
-    if (!confirm('Are you sure you want to delete this team? All chatbots and data will be permanently deleted. This action cannot be undone.')) {
-      return;
-    }
-
     setIsDeleting(true);
     try {
       // Fetch latest chatbot list before deletion
@@ -96,7 +103,7 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           teamId,
           chatbotIds: latestChatbotIds
         }),
@@ -120,11 +127,11 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
   return (
     <div>
       <h2 className="text-2xl">General</h2>
-      
+
       <div className="mt-6 rounded-xl border border-gray-200 p-8">
         <div>
           <label className="text-lg">Team Name</label>
-          <input 
+          <input
             type="text"
             className="mt-2 w-full rounded-lg border p-3"
             placeholder="My team"
@@ -135,7 +142,7 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
 
         <div className="mt-6">
           <label className="text-lg">Team URL</label>
-          <input 
+          <input
             type="text"
             className="mt-2 w-full rounded-lg border p-3"
             placeholder="team-cb2360fc"
@@ -148,12 +155,12 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
         </div>
 
         <div className="mt-6 flex justify-end">
-          <button 
+          <button
             onClick={handleSave}
             className="rounded-lg bg-gray-800 px-6 py-2 text-white"
             disabled={isSaving}
           >
-            {isSaving? <span className="loading loading-spinner loading-xs"></span> : 'Save'}
+            {isSaving ? <span className="loading loading-spinner loading-xs"></span> : 'Save'}
           </button>
         </div>
       </div>
@@ -163,12 +170,12 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
       <div className="mt-6 rounded-xl border border-red-200 p-8">
         <h3 className="text-2xl text-red-500">Delete Team</h3>
         <p className="mt-4">
-          Once you delete your team account, there is no going back. Please be certain.<br/>
+          Once you delete your team account, there is no going back. Please be certain.<br />
           All your uploaded data and trained chatbots will be deleted. <span className="font-bold">This action is not reversible</span>
         </p>
         <div className="mt-6 flex justify-end">
-          <button 
-            onClick={handleDeleteTeam}
+          <button
+            onClick={() => setIsDeleteDialogOpen(true)}
             className="rounded-lg bg-red-500 px-6 py-2 text-white"
             disabled={isDeleting}
           >
@@ -176,6 +183,32 @@ const GeneralSettings = ({ teamId }: GeneralSettingsProps) => {
           </button>
         </div>
       </div>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Team</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this team? All chatbots and data will be permanently deleted. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteTeam}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <IconLoader2 className="w-4 h-4 animate-spin" /> : 'Delete Permanently'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
