@@ -26,9 +26,9 @@ const config = {
         // A friendly description of the plan, displayed on the pricing page. Tip: explain why this plan and not others
         description: "Perfect for small businesses and startups",
         // The price you want to display, the one user will be charged on Stripe.
-        price: 99,
+        price: 0,
         // If you have an anchor price (i.e. $29) that you want to display crossed out, put it here. Otherwise, leave it empty
-        priceAnchor: 149,
+        priceAnchor: 0,
         features: [
           { name: "Custom trained AI chatbot" },
           { name: "Knowledge base integration" },
@@ -46,8 +46,8 @@ const config = {
         // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
         isFeatured: true,
         description: "For growing teams needing more power",
-        price: 149,
-        priceAnchor: 299,
+        price: 19,
+        priceAnchor: 0,
         features: [],
         name: "Hobby",
         credits: 2000,
@@ -61,8 +61,8 @@ const config = {
         // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
         isFeatured: true,
         description: "For growing teams needing more power",
-        price: 149,
-        priceAnchor: 299,
+        price: 199,
+        priceAnchor: 0,
         features: [],
         name: "Standard",
         credits: 10000,
@@ -76,8 +76,8 @@ const config = {
         // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
         isFeatured: true,
         description: "For growing teams needing more power",
-        price: 149,
-        priceAnchor: 299,
+        price: 399,
+        priceAnchor: 0,
         features: [],
         name: "unlimited",
         credits: 40000,
