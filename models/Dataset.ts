@@ -45,6 +45,7 @@ interface IDataset {
   files?: IFile[];
   createdAt: Date;
   updatedAt: Date;
+  lastTrained?: Date;
   questionFlow?: {};
   metadata?: {};
   questionFlowEnable?: boolean;
@@ -142,6 +143,10 @@ const datasetSchema = new mongoose.Schema<IDataset>({
   updatedAt: {
     type: Date,
     default: Date.now, // Automatically set the date when updated
+  },
+  lastTrained: {
+    type: Date,
+    default: null,
   }
 });
 

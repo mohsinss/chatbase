@@ -1,12 +1,15 @@
 import React from 'react';
+import { IconLoader2 } from '@tabler/icons-react';
+import { Icon } from 'lucide-react';
 
 interface SourcesModalProps {
   isOpen: boolean;
   onClose: () => void;
   sources: any[];
+  loadingSources: boolean;
 }
 
-const SourcesModal: React.FC<SourcesModalProps> = ({ isOpen, onClose, sources }) => {
+const SourcesModal: React.FC<SourcesModalProps> = ({ isOpen, onClose, sources, loadingSources }) => {
   if (!isOpen) return null; // Don't render if not open
 
   return (
@@ -16,7 +19,12 @@ const SourcesModal: React.FC<SourcesModalProps> = ({ isOpen, onClose, sources })
           ✖️
         </button>
         <h1 className="font-bold text-2xl">Sources</h1>
-        {sources.map((chunk, index) => (
+        {loadingSources && (
+          <div className="flex items-center justify-center h-[100px]">
+            <IconLoader2 className="animate-spin h-6 w-6 text-gray-500" />
+          </div>
+        )}
+        {!loadingSources && sources.map((chunk, index) => (
           <div key={'chunk-' + chunk.chunk.id} className="border-b-[1px] pt-2">
             {chunk.chunk.chunk_html}
           </div>

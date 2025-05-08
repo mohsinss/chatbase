@@ -9,6 +9,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import toast from 'react-hot-toast';
 
 interface NotionInputProps {
   connected?: boolean;
@@ -19,12 +20,35 @@ interface NotionInputProps {
     charCount?: number;
     url?: string;
     properties?: any;
+    last_edited_time?: string;
   }[];
   onConnect: (code: string) => void;
+  loading?: boolean;
+  lastTrained?: Date;
 }
 
-const NotionInput = ({ connected = false, pages = [], onConnect }: NotionInputProps) => {
+const NotionInput = ({
+  connected = false,
+  pages = [],
+  onConnect,
+  loading,
+  lastTrained
+}: NotionInputProps) => {
   const [showDialog, setShowDialog] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  // Determine if retrain is needed by comparing lastTrained with pages' last edit time
+  const mostRecentEditTime = pages.reduce((latest, page) => {
+    const pageEditTime = page.last_edited_time ? new Date(page.last_edited_time) : null;
+    if (pageEditTime && (!latest || pageEditTime > latest)) {
+      return pageEditTime;
+    }
+    return latest;
+  }, null as Date | null);
+  console.log('mostRecentEditTime', mostRecentEditTime);
+  console.log('lastTrained', lastTrained);
+
+  const retrainNeeded = !lastTrained || (mostRecentEditTime ? lastTrained < mostRecentEditTime : false);
 
   const handleConnect = () => {
     // Open Notion OAuth in a popup window
@@ -44,24 +68,74 @@ const NotionInput = ({ connected = false, pages = [], onConnect }: NotionInputPr
       return;
     }
 
+    setIsConnecting(true);
+
+    // Polling to detect popup close
+    const popupTick = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(popupTick);
+        toast.error('Notion OAuth popup closed unexpectedly. Please try again.');
+        setIsConnecting(false);
+        // Add any additional logic for popup close here
+      }
+    }, 500);
+
     // Listen for message from popup
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
       if (event.data?.type === 'notion-auth-callback') {
+        clearInterval(popupTick);
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Optional delay for better UX
+        // Handle the message from the popup
         const { code, error } = event.data;
         if (code) {
           // Handle successful auth with code
-          onConnect(code);
+          await onConnect(code);
         } else if (error) {
-          alert(`Notion authentication failed: ${error}`);
+          toast.error(`Notion authentication failed: ${error}`);
         }
         popup.close();
         window.removeEventListener('message', handleMessage);
+        setIsConnecting(false);
       }
     };
 
     window.addEventListener('message', handleMessage);
   };
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-[600px]">
+        <h2 className="text-2xl font-semibold mb-8">Notion</h2>
+        <div className="flex justify-center items-center h-[400px]">
+          <Button
+            disabled
+            className="flex items-center gap-2 bg-white border hover:bg-gray-50 text-gray-800 px-6 py-4 h-auto text-base"
+          >
+            <IconBrandNotion className="w-6 h-6" />
+            Loading Notion pages...
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isConnecting) {
+    return (
+      <div className="w-full min-h-[600px]">
+        <h2 className="text-2xl font-semibold mb-8">Notion</h2>
+        <div className="flex justify-center items-center h-[400px]">
+          <Button
+            disabled
+            className="flex items-center gap-2 bg-white border hover:bg-gray-50 text-gray-800 px-6 py-4 h-auto text-base"
+          >
+            <IconBrandNotion className="w-6 h-6" />
+            Connecting to Notion...
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-[600px]">
@@ -69,6 +143,11 @@ const NotionInput = ({ connected = false, pages = [], onConnect }: NotionInputPr
 
       {connected ? (
         <div>
+          {retrainNeeded && (
+            <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-400 rounded">
+              Retrain is needed: Notion pages have been updated since last training.
+            </div>
+          )}
           <h3 className="text-lg font-semibold mb-4">Connected Notion Pages</h3>
           <div className="overflow-auto max-h-96 mb-4">
             {pages.length > 0 ? (
@@ -78,6 +157,7 @@ const NotionInput = ({ connected = false, pages = [], onConnect }: NotionInputPr
                     <th className="border border-gray-300 px-4 py-2 text-left">Category</th>
                     <th className="border border-gray-300 px-4 py-2 text-left">Title</th>
                     <th className="border border-gray-300 px-4 py-2 text-left">Char Count</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">Last Updated</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -85,6 +165,7 @@ const NotionInput = ({ connected = false, pages = [], onConnect }: NotionInputPr
                     const category = page.properties?.Category?.multi_select?.map((cat: any) => cat.name).join(', ') || 'Uncategorized';
                     const title = page.properties?.['Doc name']?.title?.[0]?.plain_text || page.title || 'Untitled';
                     const charCount = page.charCount || 0;
+                    const lastUpdated = (page as any).last_edited_time ? new Date((page as any).last_edited_time).toLocaleString() : 'N/A';
                     return (
                       <tr key={page.id} className="border border-gray-300">
                         <td className="border border-gray-300 px-4 py-2">{category}</td>
@@ -94,6 +175,7 @@ const NotionInput = ({ connected = false, pages = [], onConnect }: NotionInputPr
                           </a>
                         </td>
                         <td className="border border-gray-300 px-4 py-2">{charCount}</td>
+                        <td className="border border-gray-300 px-4 py-2">{lastUpdated}</td>
                       </tr>
                     );
                   })}
@@ -105,7 +187,7 @@ const NotionInput = ({ connected = false, pages = [], onConnect }: NotionInputPr
           </div>
           <Button
             className="bg-yellow-500 hover:bg-yellow-600 text-white"
-            onClick={handleConnect}
+            onClick={() => setShowDialog(true)}
           >
             Reconnect Notion
           </Button>

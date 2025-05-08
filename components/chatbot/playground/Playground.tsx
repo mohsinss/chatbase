@@ -786,6 +786,7 @@ const Playground: React.FC<PlaygroundProps> = ({
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             sources={sources}
+            loadingSources={loadingSources}
           />
         )}
 

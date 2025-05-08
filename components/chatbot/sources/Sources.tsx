@@ -19,10 +19,10 @@ import { YouTubeLink } from "./types";
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
   { id: "text", label: "Text", icon: <IconAlignLeft className="w-5 h-5" /> },
-  { id: "website", label: "Website", icon: <IconGlobe className="w-5 h-5" /> },
   { id: "youtube", label: "YouTube", icon: <IconBrandYoutube className="w-5 h-5" /> },
   { id: "qa", label: "Q&A", icon: <IconMessageQuestion className="w-5 h-5" /> },
   { id: "qf", label: "QFlow", icon: <IconAdjustmentsSpark className="w-5 h-5" /> },
+  { id: "website", label: "Website", icon: <IconGlobe className="w-5 h-5" /> },
   { id: "notion", label: "Notion", icon: <IconBrandNotion className="w-5 h-5" /> },
 ];
 
@@ -57,75 +57,84 @@ const Sources = ({
   const [restartQFTimeoutMins, setRestartQFTimeoutMins] = useState(60);
   const [notionData, setNotionData] = useState<any>(null);
   const [notionPages, setNotionPages] = useState<any[]>([]);
+  const [showRetrainAlert, setShowRetrainAlert] = useState(false);
+  const [lastTrained, setLastTrained] = useState<Date | null>(null);
+  const [notionPagesLoading, setNotionPagesLoading] = useState(false);
 
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
 
+  // Fetch Notion data
+  const fetchNotion = async () => {
+    try {
+      setNotionPagesLoading(true);
+      const response = await fetch(`/api/chatbot/sources/notion?chatbotId=${chatbotId}`);
+      if (!response.ok) {
+        if (response.status === 403) {
+          // Not connected, ignore or handle accordingly
+          setNotionData(null);
+          setNotionPages([]);
+          setShowRetrainAlert(false);
+          return;
+        }
+        throw new Error('Failed to fetch Notion data');
+      }
+      const data = await response.json();
+      setNotionData(data);
+      if (data.pages) {
+        setNotionPages(data.pages);
+      }
+    } catch (error) {
+      console.error("Error fetching Notion data:", error);
+      toast.error("Failed to load Notion data: " + error.message);
+    } finally {
+      setNotionPagesLoading(false);
+    }
+  };
+
+  const fetchDataset = async () => {
+    try {
+      const response = await fetch(`/api/chatbot/sources/dataset?chatbotId=${chatbotId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch dataset');
+      }
+      const data = await response.json();
+      setDataset(data); // Assuming the API returns the dataset directly
+      if (dataset?.lastTrained) {
+        setLastTrained(new Date(dataset.lastTrained));
+      }
+      if (data.qaPairs)
+        setQaPairs(data.qaPairs)
+      if (data.text)
+        setText(data.text)
+      if (data.links)
+        setLinks(data.links)
+      if (data.youtubeLinks)
+        setYoutubeLinks(data.youtubeLinks)
+      if (data.files) {
+        // @ts-ignore
+        setFileCount(data.files.length);
+        //@ts-ignore
+        setFileChars(data.files.reduce((size, file) => {
+          return size + file.charCount;
+        }, 0))
+      }
+      if (data.questionFlow) {
+        setQFlow(data.questionFlow)
+      }
+      setQFlowEnabled(!!data.questionFlowEnable);
+      setQFlowAIEnabled(!!data.questionAIResponseEnable)
+      if (data.restartQFTimeoutMins) {
+        setRestartQFTimeoutMins(data.restartQFTimeoutMins)
+      }
+    } catch (error) {
+      console.error("Error fetching dataset:", error);
+      toast.error("Failed to load dataset" + error.message);
+    }
+  };
+
   useEffect(() => {
-    const fetchDataset = async () => {
-      try {
-        const response = await fetch(`/api/chatbot/sources/dataset?chatbotId=${chatbotId}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch dataset');
-        }
-        const data = await response.json();
-        setDataset(data); // Assuming the API returns the dataset directly
-        if (data.qaPairs)
-          setQaPairs(data.qaPairs)
-        if (data.text)
-          setText(data.text)
-        if (data.links)
-          setLinks(data.links)
-        if (data.youtubeLinks)
-          setYoutubeLinks(data.youtubeLinks)
-        if (data.files) {
-          // @ts-ignore
-          setFileCount(data.files.length);
-          //@ts-ignore
-          setFileChars(data.files.reduce((size, file) => {
-            return size + file.charCount;
-          }, 0))
-        }
-        if (data.questionFlow) {
-          setQFlow(data.questionFlow)
-        }
-        setQFlowEnabled(!!data.questionFlowEnable);
-        setQFlowAIEnabled(!!data.questionAIResponseEnable)
-        if (data.restartQFTimeoutMins) {
-          setRestartQFTimeoutMins(data.restartQFTimeoutMins)
-        }
-      } catch (error) {
-        console.error("Error fetching dataset:", error);
-        toast.error("Failed to load dataset" + error.message);
-      }
-    };
-
     fetchDataset();
-
-    // Fetch Notion data
-    const fetchNotion = async () => {
-      try {
-        const response = await fetch(`/api/chatbot/sources/notion?chatbotId=${chatbotId}`);
-        if (!response.ok) {
-          if (response.status === 403) {
-            // Not connected, ignore or handle accordingly
-            setNotionData(null);
-            setNotionPages([]);
-            return;
-          }
-          throw new Error('Failed to fetch Notion data');
-        }
-        const data = await response.json();
-        setNotionData(data);
-        if (data.pages) {
-          setNotionPages(data.pages);
-        }
-      } catch (error) {
-        console.error("Error fetching Notion data:", error);
-        toast.error("Failed to load Notion data: " + error.message);
-      }
-    };
-
     fetchNotion();
   }, [chatbotId]);
 
@@ -153,7 +162,7 @@ const Sources = ({
           links,
           youtubeLinks,
           questionFlow: qFlow,
-          notionData, // Include Notion data in retrain payload
+          notionPages, // Include Notion data in retrain payload
         }),
       });
 
@@ -227,6 +236,7 @@ const Sources = ({
       }
 
       toast.success('Notion integration saved successfully');
+      fetchNotion();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save Notion integration settings');
       throw error;
@@ -263,11 +273,13 @@ const Sources = ({
         </ReactFlowProvider>;
       case "notion":
         return <NotionInput
+          loading={notionPagesLoading}
           connected={!!notionData}
           pages={notionPages}
           onConnect={async (code: string) => {
             await saveNotionIntegrationSettings(chatbotId, code);
           }}
+          lastTrained={lastTrained}
         />;
       default:
         return <div>Content for {currentTab}</div>;
@@ -277,6 +289,12 @@ const Sources = ({
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8">
       <h1 className="text-2xl font-bold mb-8">Sources</h1>
+
+      {showRetrainAlert && (
+        <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+          Some Notion pages have been updated since the last training. Please retrain your chatbot to include the latest content.
+        </div>
+      )}
 
       {/* Responsive Layout Container */}
       <div className="flex flex-col md:flex-row gap-6">
@@ -332,6 +350,7 @@ const Sources = ({
             linkInputChars={links.reduce((total, link) => total + link.chars, 0)}
             youtubeLinkCount={youtubeLinks.length}
             youtubeLinkChars={youtubeLinks.reduce((total, link) => total + link.chars, 0)}
+            notionPages={notionPages}
           />
         </div>
       </div>

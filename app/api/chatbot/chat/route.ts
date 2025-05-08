@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
             //     result = await translateJsonFields(result, targetLanguage);
             //   }
             // }
-            
+
             // Return the result directly
             return setCorsHeaders(new Response(
               JSON.stringify({ message: result }),
@@ -201,6 +201,8 @@ ${calComActions.map((action, index) => `          ${index + 1}. "${action.url}" 
     const todayData = "\nToday is " + Date().toString();
 
     systemPrompt += todayData + confidencePrompt;
+    systemPrompt += `\n        Important rules:
+        - DO NOT wrap the result in code block markers like \`\`\`html or \`\`\`.`;
 
     // Check model provider and handle accordingly
     if (internalModel.startsWith('claude-')) {

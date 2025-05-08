@@ -2,20 +2,21 @@ import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 
 interface SourceStatsProps {
+  totalChars: number;
   fileCount: number;
   fileChars: number;
   textInputChars: number;
   charLimit: number;
+  setTotalChars: React.Dispatch<React.SetStateAction<number>>;
+  onRetrain: () => Promise<void>;
+  isTraining: boolean;
   qaInputCount: number;
-  totalChars: number;
   qaInputChars: number;
   linkInputCount: number;
   linkInputChars: number;
   youtubeLinkCount: number;
   youtubeLinkChars: number;
-  onRetrain: () => void;
-  setTotalChars: (totalChars: number) => void;
-  isTraining: boolean;
+  notionPages: any[];
 }
 
 const SourceStats = ({
@@ -33,10 +34,12 @@ const SourceStats = ({
   isTraining,
   setTotalChars,
   totalChars,
+  notionPages,
 }: SourceStatsProps) => {
   useEffect(() => {
-    setTotalChars(fileChars + textInputChars + linkInputChars + qaInputChars + youtubeLinkChars);
-  }, [fileChars, textInputChars, linkInputChars, qaInputChars, youtubeLinkChars, setTotalChars]);
+    const notionChars = notionPages.reduce((total: number, page: any) => total + (page.charCount || 0), 0);
+    setTotalChars(fileChars + textInputChars + linkInputChars + qaInputChars + youtubeLinkChars + notionChars);
+  }, [fileChars, textInputChars, linkInputChars, qaInputChars, youtubeLinkChars, notionPages, setTotalChars]);
 
   return (
     <div className="w-[300px] bg-white rounded-lg p-6 border shadow-sm">
@@ -55,10 +58,13 @@ const SourceStats = ({
         {youtubeLinkCount > 0 && <p className="text-gray-700">
           {youtubeLinkCount} YouTube Video{youtubeLinkCount == 1 ? '' : 's'} ({youtubeLinkChars} chars)
         </p>}
-        {qaInputCount > 0 && <p className="text-gray-700">
-          {qaInputCount} Q&A ({qaInputChars} chars)
-        </p>}
-      </div>
+      {qaInputCount > 0 && <p className="text-gray-700">
+        {qaInputCount} Q&A ({qaInputChars} chars)
+      </p>}
+      {notionPages.length > 0 && <p className="text-gray-700">
+        {notionPages.length} Notion Page{notionPages.length === 1 ? '' : 's'} ({notionPages.reduce((total, page) => total + (page.charCount || 0), 0)} chars)
+      </p>}
+    </div>
 
       <div className="space-y-2">
         <p className="font-medium">Total detected characters</p>
