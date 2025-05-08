@@ -171,7 +171,7 @@ const LocalizationTab = ({
       console.log('Setting initial translations:', englishTranslations);
       setTranslations(englishTranslations);
       onUpdateTranslations(englishTranslations);
-    } else if (!translations.en.systemMsgs.orderSummary) {
+    } else if (!translations.en.systemMsgs?.orderSummary) {
       translations.en.systemMsgs = { ...defaultSystemMsgs, ...translations.en.systemMsgs };
       console.log('Setting initial translations:', translations);
       setTranslations(translations);
