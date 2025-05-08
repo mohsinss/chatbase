@@ -3,58 +3,28 @@
 import { useState } from "react";
 import { Info, Pencil, X } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 interface OpenAISettingsProps {
   teamId: string;
 }
 
-type NotificationType = {
-  message: string;
-  type: 'success' | 'error';
-};
-
-const CustomNotification = ({ message, type, onClose }: NotificationType & { onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg ${
-    type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-  }`}>
-    <div className="flex justify-between items-center">
-      <p>{message}</p>
-      <button onClick={onClose} className="ml-4 text-gray-500 hover:text-gray-700">×</button>
-    </div>
-  </div>
-);
-
 export function OpenAISettings({ teamId }: OpenAISettingsProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [openAIKey, setOpenAIKey] = useState("");
-  const [notification, setNotification] = useState<NotificationType | null>(null);
 
   const handleSave = async () => {
     try {
       // Here you would make an API call to save the OpenAI key
       setIsEditing(false);
-      setNotification({
-        message: "OpenAI key saved successfully",
-        type: "success"
-      });
+      toast.success("OpenAI key saved successfully");
     } catch (error) {
-      setNotification({
-        message: "Failed to save OpenAI key",
-        type: "error"
-      });
+      toast.error("Failed to save OpenAI key");
     }
   };
 
   return (
     <>
-      {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
-      )}
-
       <div>
         <h2 className="text-2xl">OpenAI Key</h2>
 

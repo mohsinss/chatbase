@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CustomNotification } from './GeneralSettings'
 import { Card } from "@/components/ui/card";
+import toast from "react-hot-toast";
 
 interface NotificationsSettingsProps {
   chatbotId: string;
@@ -13,10 +13,6 @@ export default function NotificationsSettings({ chatbotId }: NotificationsSettin
   const [dailyLeads, setDailyLeads] = useState(false);
   const [dailyConversations, setDailyConversations] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState<{
-    message: string;
-    type: 'success' | 'error';
-  } | null>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -32,10 +28,7 @@ export default function NotificationsSettings({ chatbotId }: NotificationsSettin
         setDailyConversations(data.dailyConversations || false);
       }
     } catch (error) {
-      setNotification({
-        message: "Failed to load settings",
-        type: "error"
-      });
+      toast.error("Failed to load settings");
     }
   };
 
@@ -53,29 +46,16 @@ export default function NotificationsSettings({ chatbotId }: NotificationsSettin
       });
 
       if (!response.ok) throw new Error();
-
-      setNotification({
-        message: "Settings saved successfully",
-        type: "success"
-      });
+      
+      toast.success("Settings saved successfully");
     } catch (error) {
-      setNotification({
-        message: "Failed to save settings",
-        type: "error"
-      });
+      toast.error("Failed to save settings");
     }
     setLoading(false);
   };
 
   return (
     <>
-      {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
-      )}
       <Card className="p-6 space-y-6 max-w-3xl mx-auto">
         <div className="space-y-6">
           {/* Daily Leads Email */}

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { RefreshCcw, Bold, Italic, Underline, Link2, Undo2, Redo2, AlignLeft, AlignCenter, AlignRight, Send } from 'lucide-react'
 import { HexColorPicker } from "react-colorful"
-import { CustomNotification } from './GeneralSettings'
 import { Input } from "@/components/ui/input"
 import toast from 'react-hot-toast'
 import { Slider } from "../../../components/ui/slider"
@@ -63,10 +62,6 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
     chatBackgroundOpacity: 0.1
   })
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState<{
-    message: string;
-    type: 'success' | 'error';
-  } | null>(null);
   const [profilePicture, setProfilePicture] = useState<string>("");
   const [chatIcon, setChatIcon] = useState<string>("");
   const profileInputRef = useRef<HTMLInputElement>(null);

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CustomNotification } from './GeneralSettings';
 import { Card } from "@/components/ui/card";
 import toast from "react-hot-toast";
 import { IconTrash, IconRefresh, IconFile, IconDownload, IconEye, IconImageInPicture, IconPdf } from "@tabler/icons-react";
@@ -17,10 +16,6 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [phoneEnabled, setPhoneEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState<{
-    message: string;
-    type: 'success' | 'error';
-  } | null>(null);
   const [delay, setDelay] = useState(1);
   const [enableLead, setEnableLead] = useState('never');
   const [leads, setLeads] = useState([]);
@@ -66,10 +61,7 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
   const handleSave = async () => {
     // Check if at least one setting is enabled
     if (!nameEnabled && !emailEnabled && !phoneEnabled) {
-      setNotification({
-        message: "At least one setting must be enabled in Name, Email, Phone",
-        type: "error"
-      });
+      toast.error("At least one setting must be enabled in Name, Email, Phone")
       return;
     }
 
@@ -136,13 +128,6 @@ export default function LeadsSettings({ chatbotId }: LeadsSettingsProps) {
 
   return (
     <>
-      {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
-      )}
       <Card className="p-6 space-y-6 max-w-3xl mx-auto">
         <div className="space-y-6">
           <p className="text-sm text-gray-500">

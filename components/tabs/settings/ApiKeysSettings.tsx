@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Eye, EyeOff, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface ApiKey {
   id: string;
@@ -9,64 +10,30 @@ interface ApiKey {
   lastFour: string;
 }
 
-type NotificationType = {
-  message: string;
-  type: 'success' | 'error';
-};
-
-const CustomNotification = ({ message, type, onClose }: NotificationType & { onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 p-4 rounded-md shadow-lg ${
-    type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-  }`}>
-    <div className="flex justify-between items-center">
-      <p>{message}</p>
-      <button 
-        onClick={onClose}
-        className="ml-4 text-gray-500 hover:text-gray-700"
-      >
-        ×
-      </button>
-    </div>
-  </div>
-);
-
 export function ApiKeysSettings({ teamId }: { teamId: string }) {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([
     { id: "1", key: "f807••••••••c737", lastFour: "c737" }
   ]);
   const [showKey, setShowKey] = useState<string | null>(null);
-  const [notification, setNotification] = useState<NotificationType | null>(null);
 
   const handleCopyKey = async (key: string) => {
     try {
       await navigator.clipboard.writeText(key);
-      setNotification({
-        message: "API key copied to clipboard",
-        type: "success"
-      });
+      toast.success("API key copied to clipboard");
     } catch (error) {
-      setNotification({
-        message: "Failed to copy API key",
-        type: "error"
-      });
+      toast.error("Failed to copy API key");
     }
   };
 
   const handleCreateKey = () => {
     // Here you would typically make an API call to create a new key
-    setNotification({
-      message: "New API key created",
-      type: "success"
-    });
+    toast.success("New API key created");
   };
 
   const handleDeleteKey = (id: string) => {
     // Here you would typically make an API call to delete the key
     setApiKeys(apiKeys.filter(key => key.id !== id));
-    setNotification({
-      message: "API key deleted",
-      type: "success"
-    });
+    toast.success("API key deleted");
   };
 
   const toggleKeyVisibility = (id: string) => {
@@ -75,14 +42,6 @@ export function ApiKeysSettings({ teamId }: { teamId: string }) {
 
   return (
     <>
-      {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
-      )}
-      
       <div>
         <div className="flex items-center justify-between">
           <div>

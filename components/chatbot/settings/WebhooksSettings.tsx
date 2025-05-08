@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CustomNotification } from './GeneralSettings'
 import { Card } from "@/components/ui/card";
+import toast from "react-hot-toast";
 
 interface WebhooksSettingsProps {
   chatbotId: string;
@@ -13,10 +13,6 @@ export default function WebhooksSettings({ chatbotId }: WebhooksSettingsProps) {
   const [leadsSubmitted, setLeadsSubmitted] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState<{
-    message: string;
-    type: 'success' | 'error';
-  } | null>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -32,26 +28,17 @@ export default function WebhooksSettings({ chatbotId }: WebhooksSettingsProps) {
         setWebhookUrl(data.webhookUrl || "");
       }
     } catch (error) {
-      setNotification({
-        message: "Failed to load settings",
-        type: "error"
-      });
+      toast.error("Failed to load settings");
     }
   };
 
   const handleCreateWebhook = async () => {
     if (!leadsSubmitted) {
-      setNotification({
-        message: "At least one event must be selected",
-        type: "error"
-      });
+      toast.error("At least one event must be selected");
       return;
     }
     if (!webhookUrl) {
-      setNotification({
-        message: "URL is required",
-        type: "error"
-      });
+      toast.error("URL is required");
       return;
     }
 
@@ -68,29 +55,16 @@ export default function WebhooksSettings({ chatbotId }: WebhooksSettingsProps) {
       });
 
       if (!response.ok) throw new Error();
-
-      setNotification({
-        message: "Webhook created successfully",
-        type: "success"
-      });
+      
+      toast.success("Webhook created successfully");
     } catch (error) {
-      setNotification({
-        message: "Failed to create webhook",
-        type: "error"
-      });
+      toast.error("Failed to create webhook");
     }
     setLoading(false);
   };
 
   return (
     <>
-      {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
-      )}
       <Card className="p-6 space-y-6 max-w-3xl mx-auto">
         <div className="space-y-8">
           {/* Events Section */}
