@@ -6,7 +6,7 @@ import Team from "@/models/Team";
 import DashboardTabs from "@/components/DashboardTabs";
 import DashboardNav from "@/components/DashboardNav";
 
-const VALID_TABS = ["chatbots", "usage", "settings"];
+const VALID_TABS = ["chatbots", "usage", "settings", "billing"];
 
 export default async function TeamTabPage({
   params
@@ -41,4 +41,4 @@ export default async function TeamTabPage({
       </main>
     </>
   );
-} 
+}

@@ -3,6 +3,9 @@ import { headers } from "next/headers";
 import Stripe from "stripe";
 import connectMongo from "@/libs/mongoose";
 import Team from "@/models/Team";
+import Payment from "@/models/Payment";
+import Invoice from "@/models/Invoice";
+import Subscription from "@/models/Subscription";
 import { findCheckoutSession, getPlanAndYearlyFromPriceId } from "@/libs/stripe";
 import config from "@/config";
 
@@ -69,7 +72,8 @@ export async function POST(req: NextRequest) {
         const plan = metadata.plan;
         const teamId = metadata.teamId;
         const isYearly = metadata.isYearly;
-        const paymentIntendId = stripeObject.payment_intent
+        const paymentIntendId = stripeObject.payment_intent;
+        const subscriptionId = stripeObject.subscription;
 
         if (!plan) break;
 
@@ -122,7 +126,91 @@ export async function POST(req: NextRequest) {
                 : [],
             };
 
+            // Create a payment record
+            if (paymentIntent.amount > 0) {
+              // Create an invoice first
+              const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+              const invoice = new Invoice({
+                teamId: team._id,
+                stripeInvoiceId: `manual_${sessionId}`, // Since this is from checkout, not a regular invoice
+                invoiceNumber,
+                amount: paymentIntent.amount / 100, // Convert from cents
+                currency: paymentIntent.currency,
+                status: 'paid',
+                dueDate: new Date(),
+                paidAt: new Date(),
+                billingReason: 'subscription_create',
+                description: `Subscription to ${plan} plan`,
+                periodStart: new Date(),
+                periodEnd: team.dueDate,
+                subscriptionId: subscriptionId,
+                plan: plan,
+                lineItems: [{
+                  description: `${plan} plan ${isYearly ? 'yearly' : 'monthly'} subscription`,
+                  amount: paymentIntent.amount / 100,
+                  quantity: 1,
+                  priceId: metadata.priceId,
+                }],
+                subtotal: paymentIntent.amount / 100,
+                total: paymentIntent.amount / 100,
+                billingDetails: {
+                  email: billingDetails.email,
+                  address: {
+                    line1: billingDetails.address?.line1 || '',
+                    line2: billingDetails.address?.line2 || '',
+                    city: billingDetails.address?.city || '',
+                    state: billingDetails.address?.state || '',
+                    postal_code: billingDetails.address?.postal_code || '',
+                    country: billingDetails.address?.country || '',
+                  },
+                },
+              });
+              
+              await invoice.save();
+
+              // Create payment record
+              const payment = new Payment({
+                teamId: team._id,
+                stripePaymentId: paymentIntent.id,
+                invoiceId: invoice._id,
+                amount: paymentIntent.amount / 100, // Convert from cents
+                currency: paymentIntent.currency,
+                status: 'succeeded',
+                paymentMethod: {
+                  type: 'card',
+                  brand: card?.brand,
+                  last4: card?.last4,
+                  exp_month: card?.exp_month,
+                  exp_year: card?.exp_year,
+                },
+                metadata: paymentIntent.metadata,
+              });
+              
+              await payment.save();
+            }
           }
+        }
+
+        // If this is a subscription, create a subscription record
+        if (subscriptionId) {
+          const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId as string);
+          
+          const subscription = new Subscription({
+            teamId: team._id,
+            stripeSubscriptionId: subscriptionId,
+            status: stripeSubscription.status,
+            plan: plan,
+            isYearly: isYearly === 'true',
+            currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
+            currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+            cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+            startDate: new Date(stripeSubscription.start_date * 1000),
+            priceId: metadata.priceId,
+            quantity: stripeSubscription.items.data[0].quantity,
+            metadata: stripeSubscription.metadata,
+          });
+          
+          await subscription.save();
         }
 
         await team.save();
@@ -143,10 +231,13 @@ export async function POST(req: NextRequest) {
       }
 
       case "customer.subscription.updated": {
+        const stripeSubscription = event.data.object as Stripe.Subscription;
         //@ts-ignore
-        const { plan, isYearly } = getPlanAndYearlyFromPriceId(event.data.object.plan.id);
+        const { plan, isYearly } = getPlanAndYearlyFromPriceId(stripeSubscription.plan.id);
         //@ts-ignore
-        const customerId = event.data.object.customer;
+        const customerId = stripeSubscription.customer;
+        const subscriptionId = stripeSubscription.id;
+        
         let team = await Team.findOne({ customerId });
         if (team) {
           team.plan = plan;
@@ -159,6 +250,46 @@ export async function POST(req: NextRequest) {
           team.nextRenewalDate = nextRenewalDate;
           //@ts-ignore
           team.credits = config.stripe.plans[team.plan].credits;
+
+          // Update or create subscription record
+          const subscription = await Subscription.findOne({ stripeSubscriptionId: subscriptionId });
+          
+          if (subscription) {
+            subscription.status = stripeSubscription.status;
+            subscription.plan = plan;
+            subscription.isYearly = isYearly;
+            subscription.currentPeriodStart = new Date(stripeSubscription.current_period_start * 1000);
+            subscription.currentPeriodEnd = new Date(stripeSubscription.current_period_end * 1000);
+            subscription.cancelAtPeriodEnd = stripeSubscription.cancel_at_period_end;
+            if (stripeSubscription.canceled_at) {
+              subscription.canceledAt = new Date(stripeSubscription.canceled_at * 1000);
+            }
+            //@ts-ignore
+            subscription.priceId = stripeSubscription.plan.id;
+            subscription.quantity = stripeSubscription.items.data[0].quantity;
+            subscription.metadata = stripeSubscription.metadata;
+            
+            await subscription.save();
+          } else {
+            // Create new subscription record if it doesn't exist
+            const newSubscription = new Subscription({
+              teamId: team._id,
+              stripeSubscriptionId: subscriptionId,
+              status: stripeSubscription.status,
+              plan: plan,
+              isYearly: isYearly,
+              currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
+              currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+              cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+              startDate: new Date(stripeSubscription.start_date * 1000),
+              //@ts-ignore
+              priceId: stripeSubscription.plan.id,
+              quantity: stripeSubscription.items.data[0].quantity,
+              metadata: stripeSubscription.metadata,
+            });
+            
+            await newSubscription.save();
+          }
 
           await team.save();
         }
@@ -175,6 +306,7 @@ export async function POST(req: NextRequest) {
           .object as Stripe.Subscription;
 
         const customerId = stripeObject.customer as string;
+        const subscriptionId = stripeObject.id;
 
         // Find the team associated with this customer
         const team = await Team.findOne({ customerId });
@@ -186,6 +318,16 @@ export async function POST(req: NextRequest) {
           // Reset credits to free plan limit
           //@ts-ignore
           team.credits = config.stripe.plans.Free.credits;
+
+          // Update subscription record
+          const subscription = await Subscription.findOne({ stripeSubscriptionId: subscriptionId });
+          
+          if (subscription) {
+            subscription.status = 'canceled';
+            subscription.endedAt = new Date();
+            
+            await subscription.save();
+          }
 
           // Save the updated team
           await team.save();
@@ -199,13 +341,13 @@ export async function POST(req: NextRequest) {
       case "invoice.paid": {
         // Customer just paid an invoice (for instance, a recurring payment for a subscription)
         // ✅ Grant access to the product
-        const stripeObject: Stripe.Invoice = event.data.object as Stripe.Invoice;
+        const stripeInvoice: Stripe.Invoice = event.data.object as Stripe.Invoice;
 
         // Get the customer ID from the invoice
-        const customerId = stripeObject.customer as string;
+        const customerId = stripeInvoice.customer as string;
 
         // Get the subscription ID from the invoice
-        const subscriptionId = stripeObject.subscription as string;
+        const subscriptionId = stripeInvoice.subscription as string;
 
         if (subscriptionId) {
           try {
@@ -244,6 +386,81 @@ export async function POST(req: NextRequest) {
               //@ts-ignore
               team.credits = config.stripe.plans[team.plan].credits;
 
+              // Create or update invoice record
+              const existingInvoice = await Invoice.findOne({ stripeInvoiceId: stripeInvoice.id });
+              
+              if (!existingInvoice) {
+                // Create new invoice record
+                const invoice = new Invoice({
+                  teamId: team._id,
+                  stripeInvoiceId: stripeInvoice.id,
+                  invoiceNumber: stripeInvoice.number,
+                  amount: stripeInvoice.amount_paid / 100, // Convert from cents
+                  currency: stripeInvoice.currency,
+                  status: 'paid',
+                  dueDate: new Date(stripeInvoice.due_date * 1000),
+                  paidAt: new Date(),
+                  billingReason: stripeInvoice.billing_reason,
+                  description: stripeInvoice.description,
+                  periodStart: new Date(stripeInvoice.period_start * 1000),
+                  periodEnd: new Date(stripeInvoice.period_end * 1000),
+                  subscriptionId: subscriptionId,
+                  plan: plan,
+                  lineItems: stripeInvoice.lines.data.map(item => ({
+                    description: item.description,
+                    amount: item.amount / 100,
+                    quantity: item.quantity,
+                    priceId: item.price?.id,
+                  })),
+                  subtotal: stripeInvoice.subtotal / 100,
+                  tax: stripeInvoice.tax ? stripeInvoice.tax / 100 : undefined,
+                  discount: stripeInvoice.discount ? (stripeInvoice.discount as any).amount_off / 100 : undefined,
+                  total: stripeInvoice.total / 100,
+                  billingDetails: {
+                    email: team.billingInfo?.email || '',
+                    address: team.billingInfo?.address || {},
+                  },
+                  pdf: stripeInvoice.invoice_pdf,
+                });
+                
+                await invoice.save();
+
+                // Create payment record if there's a charge
+                if (stripeInvoice.charge) {
+                  const charge = await stripe.charges.retrieve(stripeInvoice.charge as string);
+                  
+                  const payment = new Payment({
+                    teamId: team._id,
+                    stripePaymentId: charge.id,
+                    invoiceId: invoice._id,
+                    amount: charge.amount / 100,
+                    currency: charge.currency,
+                    status: charge.status,
+                    paymentMethod: {
+                      type: charge.payment_method_details?.type,
+                      brand: charge.payment_method_details?.card?.brand,
+                      last4: charge.payment_method_details?.card?.last4,
+                      exp_month: charge.payment_method_details?.card?.exp_month,
+                      exp_year: charge.payment_method_details?.card?.exp_year,
+                    },
+                    metadata: charge.metadata,
+                  });
+                  
+                  await payment.save();
+                }
+              }
+
+              // Update subscription record
+              const subscriptionRecord = await Subscription.findOne({ stripeSubscriptionId: subscriptionId });
+              
+              if (subscriptionRecord) {
+                subscriptionRecord.status = subscription.status;
+                subscriptionRecord.currentPeriodStart = new Date(subscription.current_period_start * 1000);
+                subscriptionRecord.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+                
+                await subscriptionRecord.save();
+              }
+
               // Save the updated team
               await team.save();
             } else {
@@ -262,10 +479,10 @@ export async function POST(req: NextRequest) {
         // We'll log the failure but not immediately revoke access
         // Stripe will automatically email the customer (Smart Retries)
         // We will receive a "customer.subscription.deleted" when all retries were made and the subscription has expired
-        const stripeObject: Stripe.Invoice = event.data.object as Stripe.Invoice;
+        const stripeInvoice: Stripe.Invoice = event.data.object as Stripe.Invoice;
 
         // Get the customer ID from the invoice
-        const customerId = stripeObject.customer as string;
+        const customerId = stripeInvoice.customer as string;
 
         // Find the team associated with this customer
         const team = await Team.findOne({ customerId });
@@ -277,6 +494,59 @@ export async function POST(req: NextRequest) {
             paymentFailed: true,
             lastPaymentFailure: new Date()
           };
+
+          // Create or update invoice record
+          const existingInvoice = await Invoice.findOne({ stripeInvoiceId: stripeInvoice.id });
+          
+          if (existingInvoice) {
+            existingInvoice.status = 'uncollectible';
+            await existingInvoice.save();
+          } else {
+            // Create new invoice record
+            const invoice = new Invoice({
+              teamId: team._id,
+              stripeInvoiceId: stripeInvoice.id,
+              invoiceNumber: stripeInvoice.number,
+              amount: stripeInvoice.amount_due / 100,
+              currency: stripeInvoice.currency,
+              status: 'uncollectible',
+              dueDate: new Date(stripeInvoice.due_date * 1000),
+              billingReason: stripeInvoice.billing_reason,
+              description: stripeInvoice.description,
+              periodStart: new Date(stripeInvoice.period_start * 1000),
+              periodEnd: new Date(stripeInvoice.period_end * 1000),
+              subscriptionId: stripeInvoice.subscription,
+              lineItems: stripeInvoice.lines.data.map(item => ({
+                description: item.description,
+                amount: item.amount / 100,
+                quantity: item.quantity,
+                priceId: item.price?.id,
+              })),
+              subtotal: stripeInvoice.subtotal / 100,
+              tax: stripeInvoice.tax ? stripeInvoice.tax / 100 : undefined,
+              discount: stripeInvoice.discount ? (stripeInvoice.discount as any).amount_off / 100 : undefined,
+              total: stripeInvoice.total / 100,
+              billingDetails: {
+                email: team.billingInfo?.email || '',
+                address: team.billingInfo?.address || {},
+              },
+              pdf: stripeInvoice.invoice_pdf,
+            });
+            
+            await invoice.save();
+          }
+
+          // Update subscription status if applicable
+          if (stripeInvoice.subscription) {
+            const subscription = await Subscription.findOne({ 
+              stripeSubscriptionId: stripeInvoice.subscription 
+            });
+            
+            if (subscription) {
+              subscription.status = 'past_due';
+              await subscription.save();
+            }
+          }
 
           // Save the updated team
           await team.save();

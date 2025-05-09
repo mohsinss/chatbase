@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import ChatbotsTab from "@/components/tabs/chatbot/ChatbotsTab";
 import UsageTab from "@/components/tabs/usage/UsageTab";
 import SettingsTab from "@/components/tabs/settings/SettingsTab";
+import BillingTab from "@/components/tabs/billing/BillingTab";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Team from "@/models/Team";
@@ -31,6 +32,12 @@ const TABS = [
     label: "Settings",
     href: (teamId: string) => `/dashboard/${teamId}/settings`,
     component: (props: TabComponentProps) => <SettingsTab {...props} />,
+  },
+  {
+    id: "billing",
+    label: "Billing",
+    href: (teamId: string) => `/dashboard/${teamId}/billing`,
+    component: (props: TabComponentProps) => <BillingTab {...props} />,
   },
 ] as const;
 
@@ -75,4 +82,4 @@ const DashboardTabs = ({ teamId, team }: TabComponentProps) => {
   );
 };
 
-export default DashboardTabs; 
+export default DashboardTabs;
