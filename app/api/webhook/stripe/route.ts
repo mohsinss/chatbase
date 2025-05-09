@@ -86,6 +86,7 @@ export async function POST(req: NextRequest) {
           if (team && charge) {
             const billingDetails = charge.billing_details;
             const card = charge.payment_method_details?.card;
+            console.log('charge', charge)
 
             team.billingInfo = {
               email: billingDetails.email,
