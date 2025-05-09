@@ -13,18 +13,246 @@ type MessageType = {
   isBot: boolean;
 };
 
+type ChatState = {
+  [key in PlatformType]: {
+    [key in LanguageType]: MessageType[];
+  };
+};
+
 // Domain configuration
 const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
 const ARABIC_DOMAIN = process.env.NEXT_PUBLIC_ARABIC_DOMAIN || 'chat.sa';
 const DEFAULT_DOMAIN = process.env.NEXT_PUBLIC_DEFAULT_DOMAIN || 'chatsa.co';
 
+// Add this CSS animation at the top of the file, after the imports
+const styles = `
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+}
+
+@keyframes glow-whatsapp {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(37, 211, 102, 0.2);
+  }
+}
+
+@keyframes glow-twitter {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(29, 161, 242, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(29, 161, 242, 0.2);
+  }
+}
+
+@keyframes glow-instagram {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(225, 48, 108, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(225, 48, 108, 0.2);
+  }
+}
+
+@keyframes glow-facebook {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(24, 119, 242, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(24, 119, 242, 0.2);
+  }
+}
+
+@keyframes glow-snapchat {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 252, 0, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 252, 0, 0.2);
+  }
+}
+
+@keyframes glow-web {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.animate-glow-whatsapp {
+  animation: glow-whatsapp 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-glow-twitter {
+  animation: glow-twitter 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-glow-instagram {
+  animation: glow-instagram 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-glow-facebook {
+  animation: glow-facebook 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-glow-snapchat {
+  animation: glow-snapchat 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-glow-web {
+  animation: glow-web 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Stop animation when focused */
+textarea:focus {
+  animation: none !important;
+  box-shadow: none !important;
+}
+`;
+
+// Add this right after the imports
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
+
 const Hero = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
+  const chatContainerRefs = useRef<{ [key in PlatformType]: HTMLDivElement | null }>({
+    whatsapp: null,
+    twitter: null,
+    facebook: null,
+    instagram: null,
+    snapchat: null,
+    web: null
+  });
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
   const [language, setLanguage] = useState<LanguageType>("english");
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isArabic, setIsArabic] = useState(false);
+  const [isLoading, setIsLoading] = useState<{ [key in PlatformType]: boolean }>({
+    whatsapp: false,
+    twitter: false,
+    facebook: false,
+    instagram: false,
+    snapchat: false,
+    web: false
+  });
+  const [chatState, setChatState] = useState<ChatState>({
+    whatsapp: {
+      english: [
+        { text: "👋 Hello! Welcome to Golden Gym. How can I assist you today?", isBot: true },
+        { text: "Hi! I'm interested in your membership options.", isBot: false },
+        { text: "We offer several plans: Basic ($29/month), Premium ($49/month), and VIP ($79/month). Each includes different amenities. Would you like more details on any specific plan?", isBot: true }
+      ],
+      arabic: [
+        { text: "👋 مرحبًا! مرحبًا بك في جولدن جيم. كيف يمكنني مساعدتك اليوم؟", isBot: true },
+        { text: "مرحبًا! أنا مهتم بخيارات العضوية لديكم.", isBot: false },
+        { text: "نقدم عدة خطط: الأساسية (29 دولارًا/شهريًا)، المتميزة (49 دولارًا/شهريًا)، وكبار الشخصيات (79 دولارًا/شهريًا). يشمل كل منها وسائل راحة مختلفة. هل ترغب في مزيد من التفاصيل حول أي خطة محددة؟", isBot: true }
+      ],
+      spanish: [
+        { text: "👋 ¡Hola! Bienvenido a Golden Gym. ¿Cómo puedo ayudarte hoy?", isBot: true },
+        { text: "¡Hola! Estoy interesado en sus opciones de membresía.", isBot: false },
+        { text: "Ofrecemos varios planes: Básico (29$/mes), Premium (49$/mes) y VIP (79$/mes). Cada uno incluye diferentes comodidades. ¿Te gustaría más detalles sobre algún plan específico?", isBot: true }
+      ]
+    },
+    twitter: {
+      english: [
+        { text: "Welcome to Golden Gym! How can we help you today?", isBot: true },
+        { text: "Do you offer any special classes?", isBot: false },
+        { text: "Yes! We have HIIT, Yoga, Spin, Zumba, and Boxing classes daily. Our most popular is the 6PM HIIT class with trainer Mike!", isBot: true }
+      ],
+      arabic: [
+        { text: "مرحبًا بك في جولدن جيم! كيف يمكننا مساعدتك اليوم؟", isBot: true },
+        { text: "هل تقدمون أي دروس خاصة؟", isBot: false },
+        { text: "نعم! لدينا دروس HIIT، واليوغا، والدراجات، والزومبا، والملاكمة يوميًا. أكثرها شعبية هو درس HIIT الساعة 6 مساءً مع المدرب مايك!", isBot: true }
+      ],
+      spanish: [
+        { text: "¡Bienvenido a Golden Gym! ¿Cómo podemos ayudarte hoy?", isBot: true },
+        { text: "¿Ofrecen clases especiales?", isBot: false },
+        { text: "¡Sí! Tenemos clases diarias de HIIT, Yoga, Spinning, Zumba y Boxeo. ¡La más popular es la clase HIIT de las 6PM con el entrenador Mike!", isBot: true }
+      ]
+    },
+    facebook: {
+      english: [
+        { text: "Hi there! Welcome to Golden Gym's Facebook chat. How may I help you today?", isBot: true },
+        { text: "Do you have personal trainers available?", isBot: false },
+        { text: "Absolutely! We have 12 certified personal trainers specializing in different areas like weight loss, muscle building, rehabilitation, and sports performance. Each trainer offers a free consultation to new members.", isBot: true }
+      ],
+      arabic: [
+        { text: "مرحبًا! مرحبًا بك في دردشة فيسبوك الخاصة بجولدن جيم. كيف يمكنني مساعدتك اليوم؟", isBot: true },
+        { text: "هل لديكم مدربين شخصيين متاحين؟", isBot: false },
+        { text: "بالتأكيد! لدينا 12 مدربًا شخصيًا معتمدًا متخصصين في مجالات مختلفة مثل فقدان الوزن، وبناء العضلات، وإعادة التأهيل، والأداء الرياضي. يقدم كل مدرب استشارة مجانية للأعضاء الجدد.", isBot: true }
+      ],
+      spanish: [
+        { text: "¡Hola! Bienvenido al chat de Facebook de Golden Gym. ¿Cómo puedo ayudarte hoy?", isBot: true },
+        { text: "¿Tienen entrenadores personales disponibles?", isBot: false },
+        { text: "¡Absolutamente! Tenemos 12 entrenadores personales certificados especializados en diferentes áreas como pérdida de peso, construcción muscular, rehabilitación y rendimiento deportivo. Cada entrenador ofrece una consulta gratuita a los nuevos miembros.", isBot: true }
+      ]
+    },
+    instagram: {
+      english: [
+        { text: "✨ Welcome to Golden Gym's Instagram! How can we help you?", isBot: true },
+        { text: "I saw your post about the new equipment. What did you get?", isBot: false },
+        { text: "We've just added brand new Technogym equipment including treadmills with immersive screens, a full cable machine section, and a functional training area with smart tracking capabilities. Come check it out!", isBot: true }
+      ],
+      arabic: [
+        { text: "✨ مرحبًا بك في إنستغرام جولدن جيم! كيف يمكننا مساعدتك؟", isBot: true },
+        { text: "رأيت منشورك عن المعدات الجديدة. ماذا حصلت؟", isBot: false },
+        { text: "لقد أضفنا للتو معدات Technogym جديدة تمامًا بما في ذلك أجهزة المشي مع شاشات غامرة، وقسم كامل لآلات الكابل، ومنطقة تدريب وظيفي مع إمكانيات تتبع ذكية. تعال وتحقق من ذلك!", isBot: true }
+      ],
+      spanish: [
+        { text: "✨ ¡Bienvenido al Instagram de Golden Gym! ¿Cómo podemos ayudarte?", isBot: true },
+        { text: "Vi tu publicación sobre el nuevo equipamiento. ¿Qué han adquirido?", isBot: false },
+        { text: "¡Acabamos de añadir equipamiento nuevo de Technogym que incluye cintas de correr con pantallas inmersivas, una sección completa de máquinas de cable y un área de entrenamiento funcional con capacidades de seguimiento inteligente. ¡Ven a verlo!", isBot: true }
+      ]
+    },
+    snapchat: {
+      english: [
+        { text: "👋 Thanks for connecting with Golden Gym on Snapchat! Our bot is coming soon.", isBot: true },
+        { text: "When will it be ready?", isBot: false },
+        { text: "We're launching our full Snapchat service next month with daily workout snaps, exclusive behind-the-scenes content, and member spotlights. Stay tuned!", isBot: true }
+      ],
+      arabic: [
+        { text: "👋 شكرًا لتواصلك مع جولدن جيم على سناب شات! الروبوت الخاص بنا قادم قريبًا.", isBot: true },
+        { text: "متى سيكون جاهزًا؟", isBot: false },
+        { text: "سنطلق خدمة سناب شات الكاملة الخاصة بنا الشهر المقبل مع لقطات تمرين يومية، ومحتوى حصري من وراء الكواليس، وتسليط الضوء على الأعضاء. ترقبوا!", isBot: true }
+      ],
+      spanish: [
+        { text: "👋 ¡Gracias por conectarte con Golden Gym en Snapchat! Nuestro bot estará disponible pronto.", isBot: true },
+        { text: "¿Cuándo estará listo?", isBot: false },
+        { text: "Lanzaremos nuestro servicio completo de Snapchat el próximo mes con snaps diarios de entrenamiento, contenido exclusivo tras bastidores y destacados de miembros. ¡Mantente atento!", isBot: true }
+      ]
+    },
+    web: {
+      english: [
+        { text: "👋 Hi there! How can I assist you today?", isBot: true },
+        { text: "I need help with my order", isBot: false },
+        { text: "I'd be happy to help you with your order. Could you please provide your order number?", isBot: true }
+      ],
+      arabic: [
+        { text: "👋 مرحباً! كيف يمكنني مساعدتك اليوم؟", isBot: true },
+        { text: "أحتاج مساعدة بخصوص طلبي", isBot: false },
+        { text: "يسعدني مساعدتك بخصوص طلبك. هل يمكنك تزويدي برقم الطلب؟", isBot: true }
+      ],
+      spanish: [
+        { text: "👋 ¡Hola! ¿Cómo puedo ayudarte hoy?", isBot: true },
+        { text: "Necesito ayuda con mi pedido", isBot: false },
+        { text: "Me encantaría ayudarte con tu pedido. ¿Podrías proporcionarme el número de pedido?", isBot: true }
+      ]
+    }
+  });
   
   // Language options with flags
   const languages = [
@@ -101,6 +329,16 @@ const Hero = () => {
       carouselRef.current.scrollBy({ left: 370, behavior: 'smooth' });
     }
   };
+
+  // Scroll chat to bottom when messages change
+  useEffect(() => {
+    Object.keys(chatState).forEach((platform) => {
+      const container = chatContainerRefs.current[platform as PlatformType];
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
+  }, [chatState]);
 
   // Messages for different platforms and languages
   const getMessages = (platform: PlatformType): MessageType[] => {
@@ -218,23 +456,17 @@ const Hero = () => {
         english: [
           { text: "👋 Hi there! How can I assist you today?", isBot: true },
           { text: "I need help with my order", isBot: false },
-          { text: "I'd be happy to help you with your order. Could you please provide your order number?", isBot: true },
-          { text: "#ORD-12345", isBot: false },
-          { text: "Thanks! I can see your order was placed yesterday. It's currently being processed and will ship within 24 hours. Would you like tracking updates via email?", isBot: true }
+          { text: "I'd be happy to help you with your order. Could you please provide your order number?", isBot: true }
         ],
         arabic: [
           { text: "👋 مرحباً! كيف يمكنني مساعدتك اليوم؟", isBot: true },
           { text: "أحتاج مساعدة بخصوص طلبي", isBot: false },
-          { text: "يسعدني مساعدتك بخصوص طلبك. هل يمكنك تزويدي برقم الطلب؟", isBot: true },
-          { text: "#ORD-12345", isBot: false },
-          { text: "شكراً! أرى أن طلبك تم تقديمه بالأمس. يتم معالجته حالياً وسيتم شحنه خلال 24 ساعة. هل تريد تحديثات التتبع عبر البريد الإلكتروني؟", isBot: true }
+          { text: "يسعدني مساعدتك بخصوص طلبك. هل يمكنك تزويدي برقم الطلب؟", isBot: true }
         ],
         spanish: [
           { text: "👋 ¡Hola! ¿Cómo puedo ayudarte hoy?", isBot: true },
           { text: "Necesito ayuda con mi pedido", isBot: false },
-          { text: "Me encantaría ayudarte con tu pedido. ¿Podrías proporcionarme el número de pedido?", isBot: true },
-          { text: "#ORD-12345", isBot: false },
-          { text: "¡Gracias! Veo que tu pedido se realizó ayer. Actualmente está siendo procesado y se enviará dentro de 24 horas. ¿Te gustaría recibir actualizaciones de seguimiento por correo electrónico?", isBot: true }
+          { text: "Me encantaría ayudarte con tu pedido. ¿Podrías proporcionarme el número de pedido?", isBot: true }
         ]
       }
     };
@@ -283,6 +515,75 @@ const Hero = () => {
   };
 
   const currentContent = isArabic ? content.ar : content.en;
+
+  // Handle sending a message
+  const handleSendMessage = async (platform: PlatformType, message: string) => {
+    if (!message.trim() || platform === 'snapchat') return;
+
+    // Add user message to chat
+    const newMessages = [...chatState[platform][language], { text: message, isBot: false }];
+    setChatState(prev => ({
+      ...prev,
+      [platform]: {
+        ...prev[platform],
+        [language]: newMessages
+      }
+    }));
+
+    // Set loading state
+    setIsLoading(prev => ({ ...prev, [platform]: true }));
+
+    try {
+      const response = await fetch('/api/chatbot/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          platform,
+          message,
+          language
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
+      
+      // Add bot response to chat
+      setChatState(prev => ({
+        ...prev,
+        [platform]: {
+          ...prev[platform],
+          [language]: [...prev[platform][language], { text: data.response, isBot: true }]
+        }
+      }));
+    } catch (error) {
+      console.error('Error in chat:', error);
+      // Add error message to chat
+      setChatState(prev => ({
+        ...prev,
+        [platform]: {
+          ...prev[platform],
+          [language]: [...prev[platform][language], { text: "Sorry, I encountered an error. Please try again.", isBot: true }]
+        }
+      }));
+    } finally {
+      setIsLoading(prev => ({ ...prev, [platform]: false }));
+    }
+  };
+
+  // Handle key press in textarea
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>, platform: PlatformType) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const message = (e.target as HTMLTextAreaElement).value;
+      handleSendMessage(platform, message);
+      (e.target as HTMLTextAreaElement).value = '';
+    }
+  };
 
   return (
     <section className="pt-32 pb-2 px-4 relative overflow-hidden" dir={isArabic ? 'rtl' : 'ltr'}>
@@ -450,26 +751,57 @@ const Hero = () => {
                           </div>
                         </div>
                         
-                        <div className={`flex-1 overflow-y-auto space-y-3 ${bot.isComingSoon ? "opacity-50" : ""} z-10`}>
-                          {bot.messages.map((message, msgIndex) => (
+                        <div 
+                          ref={(el) => {
+                            chatContainerRefs.current[bot.name.toLowerCase().split(' ')[0] as PlatformType] = el;
+                          }}
+                          className={`flex-1 overflow-y-auto space-y-3 ${bot.isComingSoon ? "opacity-50" : ""} z-10`}
+                        >
+                          {chatState[bot.name.toLowerCase().split(' ')[0] as PlatformType][language].map((message, msgIndex) => (
                             <div key={msgIndex} className={`${message.isBot ? (bot.name === "Web Widget" ? "bg-gray-100 text-gray-900" : "bg-gray-100") : bot.bgColor} ${!message.isBot && !bot.isComingSoon ? "text-white" : ""} rounded-lg p-3 max-w-[80%] ${!message.isBot ? "ml-auto" : ""}`}>
                               <p className="text-sm">{message.text}</p>
                             </div>
                           ))}
+                          {isLoading[bot.name.toLowerCase().split(' ')[0] as PlatformType] && (
+                            <div className="flex items-center space-x-2 text-gray-500">
+                              <div className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                              <div className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                              <div className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                            </div>
+                          )}
                         </div>
                         
                         <div className={`mt-4 border-t ${bot.name === "Web Widget" ? "border-gray-200" : ""} pt-4 ${bot.isComingSoon ? "opacity-50" : ""} z-10`}>
                           <div className="flex gap-2">
                             <textarea 
-                              className={`flex-1 resize-none rounded-lg ${bot.name === "Web Widget" ? "bg-white border-gray-200 text-gray-900 placeholder-gray-500" : "border border-gray-200"} p-2 text-sm focus:outline-none focus:ring-2 focus:ring-${bot.bgColor.split("bg-")[1]}`}
+                              className={`flex-1 resize-none rounded-lg ${bot.name === "Web Widget" ? "bg-white border-gray-200 text-gray-900 placeholder-gray-500" : "border border-gray-200"} p-2 text-sm focus:outline-none focus:ring-2 focus:ring-${bot.bgColor.split("bg-")[1]} animate-glow-${bot.name.toLowerCase().split(' ')[0]} placeholder:text-gray-400 hover:border-${bot.bgColor.split("bg-")[1]}/50 transition-all duration-300`}
                               placeholder={bot.isComingSoon ? "Coming soon..." : "Type your message..."}
                               rows={1}
                               disabled={bot.isComingSoon}
+                              onKeyDown={(e) => handleKeyPress(e, bot.name.toLowerCase().split(' ')[0] as PlatformType)}
                             />
-                            <button className={`${bot.bgColor} ${bot.name === "Snapchat Bot" ? "text-black" : "text-white"} p-2 rounded-lg ${bot.isComingSoon ? "opacity-50 cursor-not-allowed" : "hover:opacity-90 transition-opacity"}`}>
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                              </svg>
+                            <button 
+                              className={`${bot.bgColor} ${bot.name === "Snapchat Bot" ? "text-black" : "text-white"} p-2 rounded-lg ${bot.isComingSoon ? "opacity-50 cursor-not-allowed" : "hover:opacity-90 transition-opacity"}`}
+                              onClick={(e) => {
+                                const textarea = e.currentTarget.parentElement?.querySelector('textarea');
+                                if (textarea) {
+                                  const message = textarea.value;
+                                  handleSendMessage(bot.name.toLowerCase().split(' ')[0] as PlatformType, message);
+                                  textarea.value = '';
+                                }
+                              }}
+                              disabled={bot.isComingSoon || isLoading[bot.name.toLowerCase().split(' ')[0] as PlatformType]}
+                            >
+                              {isLoading[bot.name.toLowerCase().split(' ')[0] as PlatformType] ? (
+                                <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                              ) : (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                              )}
                             </button>
                           </div>
                         </div>
@@ -501,12 +833,12 @@ const Hero = () => {
         </div>
         
         {/* Custom Knowledge Base Section */}
-        <div className="mt-1 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+        {/* <div className="mt-1 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
             <h2 className="text-2xl font-bold">{isArabic ? "جربه اليوم: أضف قاعدة معرفتك المخصصة" : "Try It Today: Add Your Custom Knowledge Base"}</h2>
             <KnowledgeBaseUploader isArabic={isArabic} content={currentContent} />
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

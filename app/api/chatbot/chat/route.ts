@@ -21,255 +21,168 @@ import {
   orderManagementSystemPrompt
 } from '@/components/chatbot/api';
 
+// Define platform-specific prompts
+const PLATFORM_PROMPTS = {
+  whatsapp: `You are a friendly and helpful WhatsApp chatbot for Golden Gym. 
+  Your tone is casual, warm, and conversational. 
+  You provide information about gym memberships, classes, trainers, and facilities.
+  You use emojis occasionally to make the conversation more engaging.
+  You're knowledgeable about fitness, nutrition, and wellness.
+  You're designed to help potential members learn about Golden Gym and encourage them to visit.`,
+  
+  twitter: `You are a concise and engaging Twitter chatbot for Golden Gym.
+  Your responses are short, to the point, and under 280 characters when possible.
+  You use hashtags occasionally and have a slightly more casual, trendy tone.
+  You provide quick information about gym promotions, classes, and events.
+  You're designed to be informative while maintaining Twitter's fast-paced nature.`,
+  
+  facebook: `You are a friendly and informative Facebook chatbot for Golden Gym.
+  Your tone is warm, community-focused, and slightly more formal than Twitter but still conversational.
+  You provide detailed information about gym facilities, classes, trainers, and community events.
+  You're designed to build a sense of community and encourage engagement with Golden Gym's Facebook page.`,
+  
+  instagram: `You are a trendy and visually-oriented Instagram chatbot for Golden Gym.
+  Your tone is energetic, motivational, and uses emojis frequently.
+  You focus on fitness inspiration, workout tips, and the visual aspects of the gym.
+  You occasionally mention Instagram-specific features like stories, reels, and highlights.
+  You're designed to be engaging and inspire followers to visit Golden Gym.`,
+  
+  web: `You are a professional and helpful web chatbot for Golden Gym.
+  Your tone is friendly but more formal and business-oriented than social media platforms.
+  You provide comprehensive information about memberships, classes, trainers, and facilities.
+  You're designed to answer customer inquiries efficiently and encourage website visitors to sign up for memberships or schedule tours.`
+};
+
+// Golden Gym information
+const GYM_INFO = {
+  name: "Golden Gym",
+  description: "A premium fitness center offering state-of-the-art equipment, expert trainers, and a variety of classes.",
+  membershipPlans: [
+    { name: "Basic", price: "$29/month", features: ["Access to gym floor", "Basic equipment usage", "Locker room access"] },
+    { name: "Premium", price: "$49/month", features: ["Unlimited gym access", "2 free personal training sessions monthly", "Group classes", "Sauna access", "Nutritional guidance"] },
+    { name: "VIP", price: "$79/month", features: ["All Premium features", "Unlimited personal training", "Priority class booking", "Exclusive VIP lounge", "Monthly massage session"] }
+  ],
+  classes: [
+    { name: "HIIT", description: "High-intensity interval training for maximum calorie burn", schedule: "Mon-Fri 6PM, Sat 10AM" },
+    { name: "Yoga", description: "Improve flexibility and reduce stress", schedule: "Mon, Wed, Fri 7AM, Tue, Thu 6PM" },
+    { name: "Spin", description: "Indoor cycling for cardio fitness", schedule: "Mon-Fri 5PM, Sat 9AM" },
+    { name: "Zumba", description: "Dance-based fitness class", schedule: "Tue, Thu 7PM, Sat 11AM" },
+    { name: "Boxing", description: "Boxing techniques for fitness and strength", schedule: "Mon, Wed 6PM, Fri 5PM" }
+  ],
+  trainers: [
+    { name: "Mike", specialty: "HIIT and Strength Training", experience: "10+ years" },
+    { name: "Sarah", specialty: "Yoga and Pilates", experience: "8 years" },
+    { name: "David", specialty: "Weight Loss and Nutrition", experience: "12 years" },
+    { name: "Emma", specialty: "Rehabilitation and Injury Prevention", experience: "7 years" }
+  ],
+  facilities: [
+    "State-of-the-art cardio equipment",
+    "Free weights and resistance machines",
+    "Indoor swimming pool",
+    "Sauna and steam room",
+    "Basketball court",
+    "Indoor track",
+    "Café with healthy food options",
+    "Childcare services"
+  ],
+  hours: {
+    weekdays: "5AM-11PM",
+    saturday: "7AM-10PM",
+    sunday: "8AM-8PM"
+  },
+  location: "123 Fitness Avenue, Health City",
+  contact: {
+    phone: "(555) 123-4567",
+    email: "info@goldengym.com"
+  }
+};
+
 export async function OPTIONS(req: NextRequest) {
   return handleOptionsRequest();
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const {
-      messages,
-      selectedOption,
-      optionIndex,
-      nodeId,
-      chatbotId,
-      mocking,
-      mockingdata,
-      dataAction,
-      metadata
-    } = await req.json();
-
-    await connectMongo();
-
-    // Measure time for fetching AI settings and dataset
-    const fetchStart = Date.now();
-    const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
-    const chatbot = await Chatbot.findOne({ chatbotId });
-    const dataset = await Dataset.findOne({ chatbotId });
-    const enabledActions = await ChatbotAction.find({ chatbotId, enabled: true });
-
-    console.log(`Fetching AI settings and dataset took ${Date.now() - fetchStart}ms`);
-
-    const team = await Team.findOne({ teamId: chatbot.teamId });
-
-    if (team) {
-      //@ts-ignore
-      const creditLimit = config.stripe.plans[team.plan].credits;
-      if (team.credits >= creditLimit) {
-        return setCorsHeaders(new Response(
-          JSON.stringify({
-            error: 'limit reached, upgrade for more messages.',
-          }),
-          {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        ));
-      }
+    const { platform, message, language } = await req.json();
+    
+    if (!platform || !message) {
+      return NextResponse.json(
+        { error: 'Platform and message are required' },
+        { status: 400 }
+      );
     }
-
-    if (!dataset) {
-      return setCorsHeaders(NextResponse.json(
-        { error: "No dataset found for this chatbot" },
-        { status: 404 }
-      ));
-    }
-
-    // Handle question flow logic
-    const questionFlowResponse = await handleQuestionFlow(dataset, nodeId, optionIndex, messages);
-    if (questionFlowResponse) {
-      return questionFlowResponse;
-    }
-
-    const internalModel = aiSettings?.model || 'gpt-3.5-turbo';
-
-    // Handle direct actions if dataAction is provided
-    if (internalModel.startsWith('gpt-') && dataAction && enabledActions?.length > 0) {
-      const orderManagementAction = enabledActions.find(action => action.type === 'ordermanagement');
-
-      if (orderManagementAction && ['get_categories', 'get_menu', 'get_menus', 'add_to_cart', 'track_order', 'submit_order'].includes(dataAction)) {
-        try {
-          // Import the order management functions
-          const { getCategories, getMenus, getMenu, addToCart, submitOrder, getOrders } = await import('@/components/chatbot/api/order-management');
-
-          // Determine target language from orderAction metadata
-          const targetLanguage = orderManagementAction?.metadata?.language || 'en';
-          let result;
-
-          // Call the appropriate function based on dataAction
-          switch (dataAction) {
-            case 'get_categories':
-              result = await getCategories(chatbotId);
-              break;
-
-            case 'get_menus':
-              result = await getMenus(chatbotId, metadata?.category);
-              break;
-
-            case 'get_menu':
-              result = await getMenu(chatbotId, metadata?.itemId, metadata?.category);
-              break;
-
-            // case 'add_to_cart':
-            //   const quantity = metadata?.quantity ? parseInt(metadata.quantity, 10) : 1;
-            //   result = await addToCart(chatbotId, metadata?.itemId, quantity);
-            //   break;
-
-            case 'track_order':
-              result = await getOrders(chatbotId, metadata?.orderId);
-              break;
-          }
-
-          if (result) {
-            // if (targetLanguage !== 'en') {
-            //   if (typeof result === 'string') {
-            //     result = await translateText(result, targetLanguage);
-            //   } else if (typeof result === 'object') {
-            //     result = await translateJsonFields(result, targetLanguage);
-            //   }
-            // }
-
-            // Return the result directly
-            return setCorsHeaders(new Response(
-              JSON.stringify({ message: result }),
-              {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-              }
-            ));
-          }
-        } catch (error) {
-          console.error('Direct action error:', error);
-          // Continue with AI processing if direct action fails
-        }
-      }
-    }
-
-    const options = {
+    
+    // Get the appropriate prompt for the platform
+    const platformPrompt = PLATFORM_PROMPTS[platform as keyof typeof PLATFORM_PROMPTS] || PLATFORM_PROMPTS.web;
+    
+    // Create a system prompt that includes both platform-specific instructions and gym information
+    const systemPrompt = `${platformPrompt}
+    
+    Here is information about Golden Gym that you can use to answer questions:
+    
+    Name: ${GYM_INFO.name}
+    Description: ${GYM_INFO.description}
+    
+    Membership Plans:
+    ${GYM_INFO.membershipPlans.map(plan => 
+      `- ${plan.name} (${plan.price}): ${plan.features.join(', ')}`
+    ).join('\n')}
+    
+    Classes:
+    ${GYM_INFO.classes.map(cls => 
+      `- ${cls.name}: ${cls.description}. Schedule: ${cls.schedule}`
+    ).join('\n')}
+    
+    Trainers:
+    ${GYM_INFO.trainers.map(trainer => 
+      `- ${trainer.name}: ${trainer.specialty} (${trainer.experience} experience)`
+    ).join('\n')}
+    
+    Facilities:
+    ${GYM_INFO.facilities.map(facility => `- ${facility}`).join('\n')}
+    
+    Hours:
+    - Weekdays: ${GYM_INFO.hours.weekdays}
+    - Saturday: ${GYM_INFO.hours.saturday}
+    - Sunday: ${GYM_INFO.hours.sunday}
+    
+    Location: ${GYM_INFO.location}
+    Contact: ${GYM_INFO.contact.phone}, ${GYM_INFO.contact.email}
+    
+    Respond to the user's message in a helpful, informative way that matches the platform's style.
+    If the user asks about something not covered in the information provided, politely explain that you don't have that information but can help with what you do know about Golden Gym.`;
+    
+    // Call the AI API to generate a response
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'TR-Dataset': dataset.datasetId,
-        Authorization: `Bearer ${process.env.TRIEVE_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        query: messages[messages.length - 1].content,
-        search_type: 'semantic',
-        page_size: 1
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message }
+        ],
+        temperature: 0.7,
+        max_tokens: 500
       })
-    };
-
-    const chunk_response = await fetch('https://api.trieve.ai/api/chunk/search', options)
-    const chunk_response_data = await chunk_response.json();
-
-    if (!chunk_response.ok) {
-      console.error("semantic search failed:", chunk_response_data);
-      throw new Error(chunk_response_data.message || "semantic search failed.");
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to generate response');
     }
-
-    let relevant_chunk = "Please use the following information for answering.\n";
-    for (let i = 0; i < chunk_response_data.chunks.length; i++) {
-      relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
-    }
-    relevant_chunk = "";
-
-    const temperature = aiSettings?.temperature ?? 0.7;
-    const maxTokens = aiSettings?.maxTokens ?? 500;
-    const language = aiSettings?.language || 'en';
-
-    let systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;
-
-    if (internalModel.startsWith('gpt-') && enabledActions?.length > 0) {
-      const calComActions = enabledActions.filter(action => action.type === 'calcom');
-      const orderManagementAction = enabledActions.filter(action => action.type === 'ordermanagement');
-      if (orderManagementAction.length > 0) {
-        const OMLanguage = orderManagementAction[0]?.metadata?.language || 'en';
-        systemPrompt = `${orderManagementSystemPrompt}\n You must respond in ${OMLanguage} language only. Please provide the result in HTML format that can be embedded in a <div> tag.`;;
-      } else if (calComActions.length > 0) {
-        const calComActionsPrompt = `
-When a user asks for available slots, use the "getAvailableSlots" function.
-Choose the correct "calUrl" from the available actions list:
-  Meeting Actions List:
-${calComActions.map((action, index) => `          ${index + 1}. "${action.url}" for '${action.instructions}'`).join('\n')}
-        Match the user's request to the correct "calUrl" before calling the function.
-    `;
-        systemPrompt += calComActionsPrompt;
-      }
-    }
-
-    const confidencePrompt = "\nFor your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value at the very end of your response, formatted as ':::100' with no extra text following it.";
-    const todayData = "\nToday is " + Date().toString();
-
-    systemPrompt += todayData + confidencePrompt;
-    systemPrompt += `\n        Important rules:
-        - DO NOT wrap the result in code block markers like \`\`\`html or \`\`\`.`;
-
-    // Check model provider and handle accordingly
-    if (internalModel.startsWith('claude-')) {
-      return await handleAnthropicRequest(
-        systemPrompt,
-        relevant_chunk,
-        messages,
-        'user-1',
-        maxTokens,
-        temperature,
-        internalModel,
-        team
-      );
-    } else if (internalModel.startsWith('gemini-')) {
-      return await handleGeminiRequest(
-        systemPrompt,
-        relevant_chunk,
-        messages,
-        'user-1',
-        maxTokens,
-        temperature,
-        internalModel,
-        team
-      );
-    } else if (internalModel.startsWith('deepseek-')) {
-      return await handleDeepseekRequest(
-        systemPrompt,
-        relevant_chunk,
-        messages,
-        maxTokens,
-        temperature,
-        internalModel,
-        team
-      );
-    } else if (internalModel.startsWith('grok-')) {
-      return await handleGrokRequest(
-        systemPrompt,
-        relevant_chunk,
-        messages,
-        maxTokens,
-        temperature,
-        internalModel,
-        team
-      );
-    } else {
-      return await handleOpenAIRequest(
-        systemPrompt,
-        relevant_chunk,
-        messages,
-        maxTokens,
-        temperature,
-        internalModel,
-        team,
-        enabledActions
-      );
-    }
+    
+    const data = await response.json();
+    const aiResponse = data.choices[0].message.content;
+    
+    return NextResponse.json({ response: aiResponse });
   } catch (error) {
-    console.error('Streaming error:', error);
-    return setCorsHeaders(new Response(
-      JSON.stringify({
-        error: 'Streaming failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    ));
+    console.error('Error in chat API:', error);
+    return NextResponse.json(
+      { error: 'Failed to process request' },
+      { status: 500 }
+    );
   }
 }
