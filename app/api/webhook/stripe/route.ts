@@ -6,6 +6,7 @@ import Team from "@/models/Team";
 import Payment from "@/models/Payment";
 import Invoice from "@/models/Invoice";
 import Subscription from "@/models/Subscription";
+import Customer from "@/models/Customer";
 import { findCheckoutSession, getPlanAndYearlyFromPriceId } from "@/libs/stripe";
 import config from "@/config";
 
@@ -308,8 +309,17 @@ export async function POST(req: NextRequest) {
         const customerId = stripeObject.customer as string;
         const subscriptionId = stripeObject.id;
 
-        // Find the team associated with this customer
-        const team = await Team.findOne({ customerId });
+        // Try to find the team directly
+        let team = await Team.findOne({ customerId });
+        
+        // If team not found directly, try to find via Customer model
+        if (!team) {
+          const customerRecord = await Customer.findOne({ stripeCustomerId: customerId });
+          
+          if (customerRecord) {
+            team = await Team.findById(customerRecord.teamId);
+          }
+        }
 
         if (team) {
           // Downgrade the team to the free plan
@@ -332,7 +342,7 @@ export async function POST(req: NextRequest) {
           // Save the updated team
           await team.save();
         } else {
-          console.error(`Team not found for customer ${customerId}`);
+          console.error(`Team not found for customer ${customerId}. Consider manual intervention.`);
         }
 
         break;
@@ -361,111 +371,155 @@ export async function POST(req: NextRequest) {
             //@ts-ignore
             const { plan, isYearly } = getPlanAndYearlyFromPriceId(priceId);
 
-            // Find the team associated with this customer
-            const team = await Team.findOne({ customerId });
-
-            if (team) {
-              // Update the team's plan
-              team.plan = plan;
-
-              // Calculate new due date based on whether it's yearly or monthly
-              let dueDate = isYearly
-                ? new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-                : new Date(new Date().setMonth(new Date().getMonth() + 1));
-              dueDate.setHours(0, 0, 0, 0);
-
-              // Calculate next renewal date (always one month ahead for billing purposes)
-              let nextRenewalDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
-              nextRenewalDate.setHours(0, 0, 0, 0);
-
-              // Update team with new dates
-              team.dueDate = dueDate;
-              team.nextRenewalDate = nextRenewalDate;
-
-              // Reset credits to plan limit
-              //@ts-ignore
-              team.credits = config.stripe.plans[team.plan].credits;
-
-              // Create or update invoice record
-              const existingInvoice = await Invoice.findOne({ stripeInvoiceId: stripeInvoice.id });
+        // Try to find the team directly
+        let team = await Team.findOne({ customerId });
+        
+        // If team not found directly, try to find via Customer model
+        if (!team) {
+          const customerRecord = await Customer.findOne({ stripeCustomerId: customerId });
+          
+          if (customerRecord) {
+            team = await Team.findById(customerRecord.teamId);
+          } else {
+            // Try to get customer details from Stripe
+            try {
+              const stripeCustomer = await stripe.customers.retrieve(customerId as string) as Stripe.Customer;
               
-              if (!existingInvoice) {
-                // Create new invoice record
-                const invoice = new Invoice({
-                  teamId: team._id,
-                  stripeInvoiceId: stripeInvoice.id,
-                  invoiceNumber: stripeInvoice.number,
-                  amount: stripeInvoice.amount_paid / 100, // Convert from cents
-                  currency: stripeInvoice.currency,
-                  status: 'paid',
-                  dueDate: new Date(stripeInvoice.due_date * 1000),
-                  paidAt: new Date(),
-                  billingReason: stripeInvoice.billing_reason,
-                  description: stripeInvoice.description,
-                  periodStart: new Date(stripeInvoice.period_start * 1000),
-                  periodEnd: new Date(stripeInvoice.period_end * 1000),
-                  subscriptionId: subscriptionId,
-                  plan: plan,
-                  lineItems: stripeInvoice.lines.data.map(item => ({
-                    description: item.description,
-                    amount: item.amount / 100,
-                    quantity: item.quantity,
-                    priceId: item.price?.id,
-                  })),
-                  subtotal: stripeInvoice.subtotal / 100,
-                  tax: stripeInvoice.tax ? stripeInvoice.tax / 100 : undefined,
-                  discount: stripeInvoice.discount ? (stripeInvoice.discount as any).amount_off / 100 : undefined,
-                  total: stripeInvoice.total / 100,
-                  billingDetails: {
-                    email: team.billingInfo?.email || '',
-                    address: team.billingInfo?.address || {},
-                  },
-                  pdf: stripeInvoice.invoice_pdf,
-                });
-                
-                await invoice.save();
-
-                // Create payment record if there's a charge
-                if (stripeInvoice.charge) {
-                  const charge = await stripe.charges.retrieve(stripeInvoice.charge as string);
+              if (stripeCustomer && !('deleted' in stripeCustomer)) {
+                // Look for a team with a matching email
+                const email = stripeCustomer.email;
+                if (email) {
+                  // Try to find a team where any member has this email
+                  const teamByEmail = await Team.findOne({ "members.email": email });
                   
-                  const payment = new Payment({
-                    teamId: team._id,
-                    stripePaymentId: charge.id,
-                    invoiceId: invoice._id,
-                    amount: charge.amount / 100,
-                    currency: charge.currency,
-                    status: charge.status,
-                    paymentMethod: {
-                      type: charge.payment_method_details?.type,
-                      brand: charge.payment_method_details?.card?.brand,
-                      last4: charge.payment_method_details?.card?.last4,
-                      exp_month: charge.payment_method_details?.card?.exp_month,
-                      exp_year: charge.payment_method_details?.card?.exp_year,
-                    },
-                    metadata: charge.metadata,
-                  });
-                  
-                  await payment.save();
+                  if (teamByEmail) {
+                    team = teamByEmail;
+                    
+                    // Update the team with the customer ID
+                    team.customerId = customerId;
+                    
+                    // Create a Customer record for future lookups
+                    const newCustomer = new Customer({
+                      stripeCustomerId: customerId,
+                      teamId: team._id,
+                      email: email,
+                      name: stripeCustomer.name || '',
+                      metadata: stripeCustomer.metadata || {},
+                    });
+                    
+                    await newCustomer.save();
+                    console.log(`Created new Customer record for ${customerId} linked to team ${team._id}`);
+                  }
                 }
               }
-
-              // Update subscription record
-              const subscriptionRecord = await Subscription.findOne({ stripeSubscriptionId: subscriptionId });
-              
-              if (subscriptionRecord) {
-                subscriptionRecord.status = subscription.status;
-                subscriptionRecord.currentPeriodStart = new Date(subscription.current_period_start * 1000);
-                subscriptionRecord.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
-                
-                await subscriptionRecord.save();
-              }
-
-              // Save the updated team
-              await team.save();
-            } else {
-              console.error(`Team not found for customer ${customerId}`);
+            } catch (error) {
+              console.error(`Error retrieving customer from Stripe: ${error.message}`);
             }
+          }
+        }
+
+        if (team) {
+          // Update the team's plan
+          team.plan = plan;
+
+          // Calculate new due date based on whether it's yearly or monthly
+          let dueDate = isYearly
+            ? new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+            : new Date(new Date().setMonth(new Date().getMonth() + 1));
+          dueDate.setHours(0, 0, 0, 0);
+
+          // Calculate next renewal date (always one month ahead for billing purposes)
+          let nextRenewalDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
+          nextRenewalDate.setHours(0, 0, 0, 0);
+
+          // Update team with new dates
+          team.dueDate = dueDate;
+          team.nextRenewalDate = nextRenewalDate;
+
+          // Reset credits to plan limit
+          //@ts-ignore
+          team.credits = config.stripe.plans[team.plan].credits;
+
+          // Create or update invoice record
+          const existingInvoice = await Invoice.findOne({ stripeInvoiceId: stripeInvoice.id });
+          
+          if (!existingInvoice) {
+            // Create new invoice record
+            const invoice = new Invoice({
+              teamId: team._id,
+              stripeInvoiceId: stripeInvoice.id,
+              invoiceNumber: stripeInvoice.number,
+              amount: stripeInvoice.amount_paid / 100, // Convert from cents
+              currency: stripeInvoice.currency,
+              status: 'paid',
+              dueDate: new Date(stripeInvoice.due_date * 1000),
+              paidAt: new Date(),
+              billingReason: stripeInvoice.billing_reason,
+              description: stripeInvoice.description,
+              periodStart: new Date(stripeInvoice.period_start * 1000),
+              periodEnd: new Date(stripeInvoice.period_end * 1000),
+              subscriptionId: subscriptionId,
+              plan: plan,
+              lineItems: stripeInvoice.lines.data.map(item => ({
+                description: item.description,
+                amount: item.amount / 100,
+                quantity: item.quantity,
+                priceId: item.price?.id,
+              })),
+              subtotal: stripeInvoice.subtotal / 100,
+              tax: stripeInvoice.tax ? stripeInvoice.tax / 100 : undefined,
+              discount: stripeInvoice.discount ? (stripeInvoice.discount as any).amount_off / 100 : undefined,
+              total: stripeInvoice.total / 100,
+              billingDetails: {
+                email: team.billingInfo?.email || '',
+                address: team.billingInfo?.address || {},
+              },
+              pdf: stripeInvoice.invoice_pdf,
+            });
+            
+            await invoice.save();
+
+            // Create payment record if there's a charge
+            if (stripeInvoice.charge) {
+              const charge = await stripe.charges.retrieve(stripeInvoice.charge as string);
+              
+              const payment = new Payment({
+                teamId: team._id,
+                stripePaymentId: charge.id,
+                invoiceId: invoice._id,
+                amount: charge.amount / 100,
+                currency: charge.currency,
+                status: charge.status,
+                paymentMethod: {
+                  type: charge.payment_method_details?.type,
+                  brand: charge.payment_method_details?.card?.brand,
+                  last4: charge.payment_method_details?.card?.last4,
+                  exp_month: charge.payment_method_details?.card?.exp_month,
+                  exp_year: charge.payment_method_details?.card?.exp_year,
+                },
+                metadata: charge.metadata,
+              });
+              
+              await payment.save();
+            }
+          }
+
+          // Update subscription record
+          const subscriptionRecord = await Subscription.findOne({ stripeSubscriptionId: subscriptionId });
+          
+          if (subscriptionRecord) {
+            subscriptionRecord.status = subscription.status;
+            subscriptionRecord.currentPeriodStart = new Date(subscription.current_period_start * 1000);
+            subscriptionRecord.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+            
+            await subscriptionRecord.save();
+          }
+
+          // Save the updated team
+          await team.save();
+        } else {
+          console.error(`Team not found for customer ${customerId}. Consider manual intervention.`);
+        }
           } catch (error) {
             console.error(`Error processing invoice payment: ${error.message}`);
           }
@@ -484,8 +538,17 @@ export async function POST(req: NextRequest) {
         // Get the customer ID from the invoice
         const customerId = stripeInvoice.customer as string;
 
-        // Find the team associated with this customer
-        const team = await Team.findOne({ customerId });
+        // Try to find the team directly
+        let team = await Team.findOne({ customerId });
+        
+        // If team not found directly, try to find via Customer model
+        if (!team) {
+          const customerRecord = await Customer.findOne({ stripeCustomerId: customerId });
+          
+          if (customerRecord) {
+            team = await Team.findById(customerRecord.teamId);
+          }
+        }
 
         if (team) {
           // Add a flag to indicate payment failure
@@ -554,7 +617,7 @@ export async function POST(req: NextRequest) {
           // Here you could also send a custom email notification to the team admin
           // Or implement a notification system in your app
         } else {
-          console.error(`Team not found for customer ${customerId}`);
+          console.error(`Team not found for customer ${customerId}. Consider manual intervention.`);
         }
 
         break;
@@ -569,8 +632,17 @@ export async function POST(req: NextRequest) {
         const card = paymentMethod.card;
         const billingDetails = paymentMethod.billing_details;
 
-        // Find the team associated with this customer
-        const team = await Team.findOne({ customerId: customerId as string });
+        // Try to find the team directly
+        let team = await Team.findOne({ customerId: customerId as string });
+        
+        // If team not found directly, try to find via Customer model
+        if (!team) {
+          const customerRecord = await Customer.findOne({ stripeCustomerId: customerId as string });
+          
+          if (customerRecord) {
+            team = await Team.findById(customerRecord.teamId);
+          }
+        }
 
         if (team) {
           // Initialize paymentMethod array if it doesn't exist
@@ -613,7 +685,7 @@ export async function POST(req: NextRequest) {
           // Save the updated team
           await team.save();
         } else {
-          console.error(`Team not found for customer ${customerId}`);
+          console.error(`Team not found for customer ${customerId}. Consider manual intervention.`);
         }
 
         break;

@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
           teamId: team._id.toString(),
           isYearly,
           plan,
+          priceId
         }
         // If you send coupons from the frontend, you can pass it here
         // couponId: body.couponId,
