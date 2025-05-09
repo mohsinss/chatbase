@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import apiClient from "@/libs/api";
+import { toast } from "react-hot-toast";
 import { formatDate, formatCurrency } from "@/libs/utils-payment";
 
 interface PaymentManagementProps {
@@ -99,12 +99,28 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ teamId }) => {
     const fetchPaymentHistory = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get(`/payments/history?teamId=${teamId}`);
-        setData(response.data);
+        const response = await fetch(`/api/payments/history?teamId=${teamId}`);
+        
+        if (!response.ok) {
+          // Handle non-2xx responses
+          if (response.status === 401) {
+            toast.error("Please login to access your chatbot settings");
+            return;
+          } else if (response.status === 403) {
+            toast.error("Please upgrade your plan to access this chatbot feature");
+            throw new Error("Unauthorized");
+          }
+          
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setData(data);
         setError(null);
       } catch (err) {
         console.error("Error fetching payment history:", err);
         setError("Failed to load payment history. Please try again later.");
+        toast.error("Something went wrong with your chatbot request");
       } finally {
         setLoading(false);
       }
@@ -120,19 +136,35 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ teamId }) => {
 
     try {
       setActionLoading(true);
-      await apiClient.post("/payments/subscription", {
-        teamId,
-        action: "cancel",
+      const response = await fetch("/api/payments/subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          teamId,
+          action: "cancel",
+        }),
       });
       
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       // Refresh data
-      const response = await apiClient.get(`/payments/history?teamId=${teamId}`);
-      setData(response.data);
+      const historyResponse = await fetch(`/api/payments/history?teamId=${teamId}`);
+      if (!historyResponse.ok) {
+        throw new Error(`HTTP error! status: ${historyResponse.status}`);
+      }
+      
+      const data = await historyResponse.json();
+      setData(data);
       
       alert("Your subscription has been canceled and will end at the end of the current billing period.");
     } catch (err) {
       console.error("Error canceling subscription:", err);
       alert("Failed to cancel subscription. Please try again later.");
+      toast.error("Something went wrong with your request");
     } finally {
       setActionLoading(false);
     }
@@ -141,19 +173,35 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ teamId }) => {
   const handleReactivateSubscription = async () => {
     try {
       setActionLoading(true);
-      await apiClient.post("/payments/subscription", {
-        teamId,
-        action: "reactivate",
+      const response = await fetch("/api/payments/subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          teamId,
+          action: "reactivate",
+        }),
       });
       
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       // Refresh data
-      const response = await apiClient.get(`/payments/history?teamId=${teamId}`);
-      setData(response.data);
+      const historyResponse = await fetch(`/api/payments/history?teamId=${teamId}`);
+      if (!historyResponse.ok) {
+        throw new Error(`HTTP error! status: ${historyResponse.status}`);
+      }
+      
+      const data = await historyResponse.json();
+      setData(data);
       
       alert("Your subscription has been reactivated successfully.");
     } catch (err) {
       console.error("Error reactivating subscription:", err);
       alert("Failed to reactivate subscription. Please try again later.");
+      toast.error("Something went wrong with your request");
     } finally {
       setActionLoading(false);
     }
@@ -162,16 +210,29 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ teamId }) => {
   const handleUpdatePaymentMethod = async () => {
     try {
       setActionLoading(true);
-      const response = await apiClient.post("/payments/customer-portal", {
-        teamId,
-        returnUrl: window.location.href,
+      const response = await fetch("/api/payments/customer-portal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          teamId,
+          returnUrl: window.location.href,
+        }),
       });
       
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
       // Redirect to Stripe Customer Portal
-      window.location.href = response.data.url;
+      window.location.href = data.url;
     } catch (err) {
       console.error("Error accessing customer portal:", err);
       alert("Failed to access customer portal. Please try again later.");
+      toast.error("Something went wrong with your request");
       setActionLoading(false);
     }
   };

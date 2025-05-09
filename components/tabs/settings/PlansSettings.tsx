@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
-import apiClient from "@/libs/api";
 import toast, { Toaster } from 'react-hot-toast';
 
 interface PlanFeature {
@@ -33,22 +32,42 @@ export function PlansSettings({ teamId }: { teamId: string }) {
     console.log(planName, isYearly, priceId)
     await new Promise(resolve => setTimeout(resolve, 3000));
     try {
-      const res = await apiClient.post("/stripe/create-checkout", {
-        priceId,
-        plan: planName,
-        teamId,
-        isYearly,
-        mode: "subscription",
-        successUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=1&plan=" + planName,
-        cancelUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=2&plan=" + planName,
+      const response = await fetch("/api/stripe/create-checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          priceId,
+          plan: planName,
+          teamId,
+          isYearly,
+          mode: "subscription",
+          successUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=1&plan=" + planName,
+          cancelUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=2&plan=" + planName,
+        }),
       });
-      console.log(res)
-      // @ts-ignore
-      if(res.url)
-        // @ts-ignore
-        window.location.href = res.url;
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error("Please login to access this feature");
+          throw new Error("Unauthorized");
+        } else if (response.status === 403) {
+          toast.error("Please upgrade your plan to access this feature");
+          throw new Error("Forbidden");
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log(data);
+      
+      if(data.url) {
+        window.location.href = data.url;
+      }
     } catch (e) {
-      console.log(e)
+      console.log(e);
+      toast.error("Something went wrong with your request");
     }
     setIsLoading(false);
   }
@@ -269,4 +288,4 @@ export function PlansSettings({ teamId }: { teamId: string }) {
       </div>
     </div>
   );
-} 
+}

@@ -2,7 +2,6 @@
 
 import React, { useState, useRef } from "react";
 import { toast } from "react-hot-toast";
-import apiClient from "@/libs/api";
 
 // This component is used to collect the emails from the landing page
 // You'd use this if your product isn't ready yet or you want to collect leads
@@ -19,7 +18,24 @@ const ButtonLead = ({ extraStyle }: { extraStyle?: string }) => {
 
     setIsLoading(true);
     try {
-      await apiClient.post("/lead", { email });
+      const response = await fetch("/api/lead", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error("Please login to access this feature");
+          throw new Error("Unauthorized");
+        } else if (response.status === 403) {
+          toast.error("Please upgrade your plan to access this feature");
+          throw new Error("Forbidden");
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       toast.success("Thanks for joining the waitlist!");
 
@@ -29,6 +45,7 @@ const ButtonLead = ({ extraStyle }: { extraStyle?: string }) => {
       setIsDisabled(true);
     } catch (error) {
       console.log(error);
+      toast.error("Something went wrong with your request");
     } finally {
       setIsLoading(false);
     }
