@@ -600,6 +600,12 @@ const Hero = () => {
     setCustomData(data);
     setIsUsingCustomData(true);
     
+    // Include both description and data in the training
+    const trainingData = {
+      description: customDataDescription,
+      content: data
+    };
+    
     // Simulate training delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
