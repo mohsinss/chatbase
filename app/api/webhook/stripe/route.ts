@@ -32,11 +32,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
+  // Log webhook data if enabled
+  if (process.env.ENABLE_WEBHOOK_LOGGING_STRIPE == "1") {
+    try {
+      const response = await fetch(process.env.ENDPOINT_LOGGING_STRIPE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+      });
+
+      if (!response.ok) {
+        console.error(`Webhook logging error: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Webhook logging error:', JSON.stringify(event));
+      // Continue execution even if logging fails
+    }
+  }
 
   eventType = event.type;
-
-  console.log("eventType :", eventType)
-  console.log("event :", event)
 
   await connectMongo();
 
@@ -86,7 +100,6 @@ export async function POST(req: NextRequest) {
           if (team && charge) {
             const billingDetails = charge.billing_details;
             const card = charge.payment_method_details?.card;
-            console.log('charge', charge)
 
             team.billingInfo = {
               email: billingDetails.email,
@@ -133,7 +146,6 @@ export async function POST(req: NextRequest) {
         const { plan, isYearly } = getPlanAndYearlyFromPriceId(event.data.object.plan.id);
         //@ts-ignore
         const customerId = event.data.object.customer;
-        console.log(plan, isYearly, customerId)
         let team = await Team.findOne({ customerId });
         if (team) {
           team.plan = plan;
@@ -176,7 +188,6 @@ export async function POST(req: NextRequest) {
 
           // Save the updated team
           await team.save();
-          console.log(`Subscription canceled for team ${team.teamId}, downgraded to Free plan`);
         } else {
           console.error(`Team not found for customer ${customerId}`);
         }
@@ -234,7 +245,6 @@ export async function POST(req: NextRequest) {
 
               // Save the updated team
               await team.save();
-              console.log(`Invoice paid for team ${team.teamId}, plan: ${plan}, credits reset to ${team.credits}`);
             } else {
               console.error(`Team not found for customer ${customerId}`);
             }
@@ -269,7 +279,6 @@ export async function POST(req: NextRequest) {
 
           // Save the updated team
           await team.save();
-          console.log(`Payment failed for team ${team.teamId}, flagged in database`);
 
           // Here you could also send a custom email notification to the team admin
           // Or implement a notification system in your app
@@ -332,7 +341,6 @@ export async function POST(req: NextRequest) {
 
           // Save the updated team
           await team.save();
-          console.log(`Payment method ${paymentMethodId} attached to team ${team.teamId}`);
         } else {
           console.error(`Team not found for customer ${customerId}`);
         }
