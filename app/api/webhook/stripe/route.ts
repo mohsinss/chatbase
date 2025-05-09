@@ -51,7 +51,8 @@ export async function POST(req: NextRequest) {
   }
 
   eventType = event.type;
-
+  console.log('eventType', eventType)
+  
   await connectMongo();
 
   try {
