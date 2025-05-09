@@ -2,8 +2,6 @@ import { NextResponse, NextRequest } from "next/server";
 import { headers } from "next/headers";
 import Stripe from "stripe";
 import connectMongo from "@/libs/mongoose";
-import configFile from "@/config";
-import User from "@/models/User";
 import Team from "@/models/Team";
 import { findCheckoutSession, getPlanAndYearlyFromPriceId } from "@/libs/stripe";
 import config from "@/config";
@@ -58,14 +56,7 @@ export async function POST(req: NextRequest) {
         const isYearly = metadata.isYearly;
         const paymentIntendId = stripeObject.payment_intent
 
-        // const paymetIntend = stripe.paymentIntents.retrieve(paymentIntendId as string, {expand:['latest_charge']})
-        // console.log(stripeObject)
-
         if (!plan) break;
-
-        const customer = (await stripe.customers.retrieve(
-          customerId as string
-        )) as Stripe.Customer;
 
         let team: any;
 
@@ -83,10 +74,43 @@ export async function POST(req: NextRequest) {
           team.billingInfo = { ...team.billingInfo, ...stripeObject?.customer_details };
           //@ts-ignore
           team.credits = config.stripe.plans[team.plan].credits;
-
-          await team.save();
         }
 
+        if (paymentIntendId) {
+          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntendId as string, {
+            expand: ['latest_charge'],
+          });
+
+          const charge = paymentIntent.latest_charge as Stripe.Charge;
+
+          if (team && charge) {
+            const billingDetails = charge.billing_details;
+            const card = charge.payment_method_details?.card;
+
+            team.billingInfo = {
+              email: billingDetails.email,
+              address: {
+                line1: billingDetails.address?.line1 || '',
+                line2: billingDetails.address?.line2 || '',
+                city: billingDetails.address?.city || '',
+                state: billingDetails.address?.state || '',
+                postal_code: billingDetails.address?.postal_code || '',
+                country: billingDetails.address?.country || '',
+              },
+              paymentMethod: card
+                ? [{
+                  brand: card.brand,
+                  last4: card.last4,
+                  exp_month: card.exp_month,
+                  exp_year: card.exp_year,
+                }]
+                : [],
+            };
+
+          }
+        }
+
+        await team.save();
         // Extra: send email with user link, product page, etc...
         // try {
         //   await sendEmail(...);
