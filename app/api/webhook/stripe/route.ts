@@ -2,8 +2,6 @@ import { NextResponse, NextRequest } from "next/server";
 import { headers } from "next/headers";
 import Stripe from "stripe";
 import connectMongo from "@/libs/mongoose";
-import configFile from "@/config";
-import User from "@/models/User";
 import Team from "@/models/Team";
 import { findCheckoutSession, getPlanAndYearlyFromPriceId } from "@/libs/stripe";
 import config from "@/config";
@@ -19,8 +17,6 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 // By default, it'll store the user in the database
 // See more: https://chatsa.co/docs/features/payments
 export async function POST(req: NextRequest) {
-  await connectMongo();
-
   const body = await req.text();
 
   const signature = headers().get("stripe-signature");
@@ -32,14 +28,32 @@ export async function POST(req: NextRequest) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
-    console.error(`Webhook signature verification failed. ${err.message}`);
+    console.error(`Webhook construction failed. ${err.message}`);
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
+  // Log webhook data if enabled
+  if (process.env.ENABLE_WEBHOOK_LOGGING_STRIPE == "1") {
+    try {
+      const response = await fetch(process.env.ENDPOINT_LOGGING_STRIPE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+      });
+
+      if (!response.ok) {
+        console.error(`Webhook logging error: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Webhook logging error:', JSON.stringify(event));
+      // Continue execution even if logging fails
+    }
+  }
 
   eventType = event.type;
-
-  console.log("eventType :", eventType)
+  console.log('eventType', eventType)
+  
+  await connectMongo();
 
   try {
     switch (eventType) {
@@ -57,14 +71,7 @@ export async function POST(req: NextRequest) {
         const isYearly = metadata.isYearly;
         const paymentIntendId = stripeObject.payment_intent
 
-        // const paymetIntend = stripe.paymentIntents.retrieve(paymentIntendId as string, {expand:['latest_charge']})
-        // console.log(stripeObject)
-
         if (!plan) break;
-
-        const customer = (await stripe.customers.retrieve(
-          customerId as string
-        )) as Stripe.Customer;
 
         let team: any;
 
@@ -82,10 +89,43 @@ export async function POST(req: NextRequest) {
           team.billingInfo = { ...team.billingInfo, ...stripeObject?.customer_details };
           //@ts-ignore
           team.credits = config.stripe.plans[team.plan].credits;
-
-          await team.save();
         }
 
+        if (paymentIntendId) {
+          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntendId as string, {
+            expand: ['latest_charge'],
+          });
+
+          const charge = paymentIntent.latest_charge as Stripe.Charge;
+
+          if (team && charge) {
+            const billingDetails = charge.billing_details;
+            const card = charge.payment_method_details?.card;
+
+            team.billingInfo = {
+              email: billingDetails.email,
+              address: {
+                line1: billingDetails.address?.line1 || '',
+                line2: billingDetails.address?.line2 || '',
+                city: billingDetails.address?.city || '',
+                state: billingDetails.address?.state || '',
+                postal_code: billingDetails.address?.postal_code || '',
+                country: billingDetails.address?.country || '',
+              },
+              paymentMethod: card
+                ? [{
+                  brand: card.brand,
+                  last4: card.last4,
+                  exp_month: card.exp_month,
+                  exp_year: card.exp_year,
+                }]
+                : [],
+            };
+
+          }
+        }
+
+        await team.save();
         // Extra: send email with user link, product page, etc...
         // try {
         //   await sendEmail(...);
@@ -107,7 +147,6 @@ export async function POST(req: NextRequest) {
         const { plan, isYearly } = getPlanAndYearlyFromPriceId(event.data.object.plan.id);
         //@ts-ignore
         const customerId = event.data.object.customer;
-        console.log(plan, isYearly, customerId)
         let team = await Team.findOne({ customerId });
         if (team) {
           team.plan = plan;
@@ -150,7 +189,6 @@ export async function POST(req: NextRequest) {
 
           // Save the updated team
           await team.save();
-          console.log(`Subscription canceled for team ${team.teamId}, downgraded to Free plan`);
         } else {
           console.error(`Team not found for customer ${customerId}`);
         }
@@ -208,7 +246,6 @@ export async function POST(req: NextRequest) {
 
               // Save the updated team
               await team.save();
-              console.log(`Invoice paid for team ${team.teamId}, plan: ${plan}, credits reset to ${team.credits}`);
             } else {
               console.error(`Team not found for customer ${customerId}`);
             }
@@ -243,7 +280,6 @@ export async function POST(req: NextRequest) {
 
           // Save the updated team
           await team.save();
-          console.log(`Payment failed for team ${team.teamId}, flagged in database`);
 
           // Here you could also send a custom email notification to the team admin
           // Or implement a notification system in your app
@@ -306,7 +342,6 @@ export async function POST(req: NextRequest) {
 
           // Save the updated team
           await team.save();
-          console.log(`Payment method ${paymentMethodId} attached to team ${team.teamId}`);
         } else {
           console.error(`Team not found for customer ${customerId}`);
         }
