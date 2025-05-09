@@ -32,38 +32,43 @@ export function PlansSettings({ teamId }: { teamId: string }) {
     console.log(planName, isYearly, priceId)
     await new Promise(resolve => setTimeout(resolve, 3000));
     try {
-      const response = await fetch("/api/stripe/create-checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          priceId,
-          plan: planName,
-          teamId,
-          isYearly,
-          mode: "subscription",
-          successUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=1&plan=" + planName,
-          cancelUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=2&plan=" + planName,
-        }),
-      });
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error("Please login to access this feature");
-          throw new Error("Unauthorized");
-        } else if (response.status === 403) {
-          toast.error("Please upgrade your plan to access this feature");
-          throw new Error("Forbidden");
+      // Only run on the client side
+      if (typeof window !== 'undefined') {
+        const response = await fetch("/api/stripe/create-checkout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            priceId,
+            plan: planName,
+            teamId,
+            isYearly,
+            mode: "subscription",
+            successUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=1&plan=" + planName,
+            cancelUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=2&plan=" + planName,
+          }),
+          // Add cache: 'no-store' to prevent static generation issues
+          cache: 'no-store',
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            toast.error("Please login to access this feature");
+            throw new Error("Unauthorized");
+          } else if (response.status === 403) {
+            toast.error("Please upgrade your plan to access this feature");
+            throw new Error("Forbidden");
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log(data);
-      
-      if(data.url) {
-        window.location.href = data.url;
+        
+        const data = await response.json();
+        console.log(data);
+        
+        if(data.url) {
+          window.location.href = data.url;
+        }
       }
     } catch (e) {
       console.log(e);

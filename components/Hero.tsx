@@ -120,11 +120,7 @@ textarea:focus {
 }
 `;
 
-// Add this right after the imports
-const styleSheet = document.createElement("style");
-styleSheet.type = "text/css";
-styleSheet.innerText = styles;
-document.head.appendChild(styleSheet);
+// We'll add the styles in a useEffect hook instead of at the module level
 
 const Hero = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -267,8 +263,15 @@ const Hero = () => {
     { id: "spanish" as LanguageType, name: "Español", flag: "🇪🇸" },
   ];
 
-  // Monitor scroll position to detect start/end
+  // Add styles to document and monitor scroll position
   useEffect(() => {
+    // Add the stylesheet to the document
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.innerText = styles;
+    document.head.appendChild(styleSheet);
+    
+    // Set up scroll monitoring
     const handleScroll = () => {
       if (!carouselRef.current) return;
       
@@ -293,9 +296,14 @@ const Hero = () => {
     
     checkDomain();
     
+    // Cleanup function
     return () => {
       if (carousel) {
         carousel.removeEventListener('scroll', handleScroll);
+      }
+      // Remove the stylesheet when component unmounts
+      if (styleSheet.parentNode) {
+        styleSheet.parentNode.removeChild(styleSheet);
       }
     };
   }, []);

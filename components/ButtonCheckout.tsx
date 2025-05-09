@@ -20,25 +20,30 @@ const ButtonCheckout = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/stripe/create-checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          priceId,
-          successUrl: window.location.href,
-          cancelUrl: window.location.href,
-          mode,
-        }),
-      });
+      // Only run on the client side
+      if (typeof window !== 'undefined') {
+        const response = await fetch("/api/stripe/create-checkout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            priceId,
+            successUrl: window.location.href,
+            cancelUrl: window.location.href,
+            mode,
+          }),
+          // Add cache: 'no-store' to prevent static generation issues
+          cache: 'no-store',
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        window.location.href = data.url;
       }
-
-      const data = await response.json();
-      window.location.href = data.url;
     } catch (e) {
       console.error(e);
     }

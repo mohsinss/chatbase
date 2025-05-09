@@ -18,31 +18,36 @@ const ButtonLead = ({ extraStyle }: { extraStyle?: string }) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/lead", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
+      // Only run on the client side
+      if (typeof window !== 'undefined') {
+        const response = await fetch("/api/lead", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+          // Add cache: 'no-store' to prevent static generation issues
+          cache: 'no-store',
+        });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          toast.error("Please login to access this feature");
-          throw new Error("Unauthorized");
-        } else if (response.status === 403) {
-          toast.error("Please upgrade your plan to access this feature");
-          throw new Error("Forbidden");
+        if (!response.ok) {
+          if (response.status === 401) {
+            toast.error("Please login to access this feature");
+            throw new Error("Unauthorized");
+          } else if (response.status === 403) {
+            toast.error("Please upgrade your plan to access this feature");
+            throw new Error("Forbidden");
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+        toast.success("Thanks for joining the waitlist!");
+
+        // just remove the focus on the input
+        inputRef.current.blur();
+        setEmail("");
+        setIsDisabled(true);
       }
-
-      toast.success("Thanks for joining the waitlist!");
-
-      // just remove the focus on the input
-      inputRef.current.blur();
-      setEmail("");
-      setIsDisabled(true);
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong with your request");

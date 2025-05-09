@@ -96,37 +96,46 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ teamId }) => {
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    const fetchPaymentHistory = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/payments/history?teamId=${teamId}`);
-        
-        if (!response.ok) {
-          // Handle non-2xx responses
-          if (response.status === 401) {
-            toast.error("Please login to access your chatbot settings");
-            return;
-          } else if (response.status === 403) {
-            toast.error("Please upgrade your plan to access this chatbot feature");
-            throw new Error("Unauthorized");
+    // Only run on the client side
+    if (typeof window !== 'undefined') {
+      const fetchPaymentHistory = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch(`/api/payments/history?teamId=${teamId}`, {
+            // Add cache: 'no-store' to prevent static generation issues
+            cache: 'no-store',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (!response.ok) {
+            // Handle non-2xx responses
+            if (response.status === 401) {
+              toast.error("Please login to access your chatbot settings");
+              return;
+            } else if (response.status === 403) {
+              toast.error("Please upgrade your plan to access this chatbot feature");
+              throw new Error("Unauthorized");
+            }
+            
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
           
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          setData(data);
+          setError(null);
+        } catch (err) {
+          console.error("Error fetching payment history:", err);
+          setError("Failed to load payment history. Please try again later.");
+          toast.error("Something went wrong with your chatbot request");
+        } finally {
+          setLoading(false);
         }
-        
-        const data = await response.json();
-        setData(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching payment history:", err);
-        setError("Failed to load payment history. Please try again later.");
-        toast.error("Something went wrong with your chatbot request");
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    fetchPaymentHistory();
+      fetchPaymentHistory();
+    }
   }, [teamId]);
 
   const handleCancelSubscription = async () => {
@@ -145,6 +154,8 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ teamId }) => {
           teamId,
           action: "cancel",
         }),
+        // Add cache: 'no-store' to prevent static generation issues
+        cache: 'no-store',
       });
       
       if (!response.ok) {
@@ -152,7 +163,13 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ teamId }) => {
       }
       
       // Refresh data
-      const historyResponse = await fetch(`/api/payments/history?teamId=${teamId}`);
+      const historyResponse = await fetch(`/api/payments/history?teamId=${teamId}`, {
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
       if (!historyResponse.ok) {
         throw new Error(`HTTP error! status: ${historyResponse.status}`);
       }
@@ -182,6 +199,8 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ teamId }) => {
           teamId,
           action: "reactivate",
         }),
+        // Add cache: 'no-store' to prevent static generation issues
+        cache: 'no-store',
       });
       
       if (!response.ok) {
@@ -189,7 +208,13 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ teamId }) => {
       }
       
       // Refresh data
-      const historyResponse = await fetch(`/api/payments/history?teamId=${teamId}`);
+      const historyResponse = await fetch(`/api/payments/history?teamId=${teamId}`, {
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
       if (!historyResponse.ok) {
         throw new Error(`HTTP error! status: ${historyResponse.status}`);
       }
@@ -219,6 +244,8 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ teamId }) => {
           teamId,
           returnUrl: window.location.href,
         }),
+        // Add cache: 'no-store' to prevent static generation issues
+        cache: 'no-store',
       });
       
       if (!response.ok) {
