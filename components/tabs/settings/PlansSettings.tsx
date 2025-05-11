@@ -47,6 +47,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
             mode: "subscription",
             successUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=1&plan=" + planName,
             cancelUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots') + "?checkout=2&plan=" + planName,
+            returnUrl: window.location.href.split('?')[0].replace('settings/plans', 'chatbots'),
           }),
           // Add cache: 'no-store' to prevent static generation issues
           cache: 'no-store',

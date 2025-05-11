@@ -31,6 +31,7 @@ const ButtonCheckout = ({
             priceId,
             successUrl: window.location.href,
             cancelUrl: window.location.href,
+            returnUrl: window.location.href,
             mode,
           }),
           // Add cache: 'no-store' to prevent static generation issues

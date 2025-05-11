@@ -42,18 +42,18 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    const { priceId, mode, successUrl, cancelUrl, teamId, isYearly, plan } = body;
+    const { priceId, mode, successUrl, cancelUrl, teamId, isYearly, plan, returnUrl } = body;
 
     await connectMongo();
 
     const user = await User.findById(session?.user?.id);
     const team = await Team.findOne({teamId});
-    let returnUrl;
+    let returnUrl1;
 
     if(team?.customerId && team?.plan !== "Free") {
-      returnUrl = await createCustomerPortal({ customerId: team.customerId, returnUrl: successUrl})
+      returnUrl1 = await createCustomerPortal({ customerId: team.customerId, returnUrl})
     } else {
-      returnUrl = await createCheckout({
+      returnUrl1 = await createCheckout({
         priceId,
         mode,
         successUrl,
@@ -75,8 +75,8 @@ export async function POST(req: NextRequest) {
         // couponId: body.couponId,
       });
     }
-    console.log('returnUrl', returnUrl)
-    return NextResponse.json({ url: returnUrl });
+    console.log('returnUrl', returnUrl1)
+    return NextResponse.json({ url: returnUrl1 });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: e?.message }, { status: 500 });
