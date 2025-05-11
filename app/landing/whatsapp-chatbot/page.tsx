@@ -47,7 +47,15 @@ const HeroSection = ({ getUTMQueryString }: UTMProps) => (
           <div className="mt-8 flex items-center gap-4">
             <div className="flex -space-x-2">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200"></div>
+                <div key={i} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden">
+                  <Image
+                    src={`/testimonials/company-${i}.png`}
+                    alt={`Company ${i}`}
+                    width={40}
+                    height={40}
+                    className="object-cover"
+                  />
+                </div>
               ))}
             </div>
             <p className="text-sm text-gray-600">
@@ -61,15 +69,55 @@ const HeroSection = ({ getUTMQueryString }: UTMProps) => (
           transition={{ duration: 0.5, delay: 0.2 }}
           className="relative"
         >
-          <div className="relative w-full h-[600px] rounded-2xl overflow-hidden shadow-2xl">
+          <div className="relative w-full h-[600px] rounded-2xl overflow-hidden shadow-2xl bg-white">
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-blue-500/20"></div>
-            <Image
-              src="/chatbot-demo.png"
-              alt="Chatsa Dashboard"
-              fill
-              className="object-cover"
-              priority
-            />
+            <div className="p-4 h-full flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                  <span className="text-white text-xl">C</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Chatsa Bot</h3>
+                  <p className="text-sm text-gray-500">Online</p>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-4">
+                <div className="flex items-start gap-2">
+                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                    <span className="text-white text-sm">C</span>
+                  </div>
+                  <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
+                    <p>Hi! I'm your Chatsa assistant. How can I help you today?</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 justify-end">
+                  <div className="bg-green-500 text-white rounded-lg p-3 max-w-[80%]">
+                    <p>I'd like to schedule an appointment for tomorrow</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                    <span className="text-white text-sm">C</span>
+                  </div>
+                  <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
+                    <p>I'll help you schedule that. What time works best for you?</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 justify-end">
+                  <div className="bg-green-500 text-white rounded-lg p-3 max-w-[80%]">
+                    <p>Around 2 PM if possible</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                    <span className="text-white text-sm">C</span>
+                  </div>
+                  <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
+                    <p>Great! I've scheduled your appointment for tomorrow at 2:00 PM. You'll receive a confirmation shortly. Is there anything else I can help you with?</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -129,12 +177,57 @@ const IntegrationSection = () => (
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
             viewport={{ once: true }}
-            className="flex flex-col items-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow"
+            className="group flex flex-col items-center p-6 bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300"
           >
-            <div className="w-16 h-16 mb-4">{integration.icon}</div>
+            <div className="w-20 h-20 mb-4 relative transition-transform duration-300 group-hover:scale-110">
+              <Image
+                src={integration.logo}
+                alt={integration.name}
+                fill
+                className="object-contain p-2"
+              />
+            </div>
             <h3 className="text-lg font-medium text-gray-900">{integration.name}</h3>
           </motion.div>
         ))}
+      </div>
+      <div className="mt-16 relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl"></div>
+        <div className="relative p-8 md:p-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                One Platform, Endless Possibilities
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Chatsa seamlessly connects with your favorite tools, making it easy to manage all your customer interactions in one place.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  'Real-time synchronization across platforms',
+                  'Unified inbox for all conversations',
+                  'Automated workflows and responses',
+                  'Detailed analytics and reporting',
+                ].map((feature, index) => (
+                  <li key={index} className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                      <span className="text-green-600 text-sm">✓</span>
+                    </div>
+                    <span className="text-gray-600">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="relative h-[400px] rounded-xl overflow-hidden">
+              <Image
+                src="/integrations/dashboard-preview.png"
+                alt="Integration Dashboard"
+                fill
+                className="object-cover"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -162,7 +255,14 @@ const TestimonialsSection = () => (
             className="p-8 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center mb-6">
-              <div className="w-12 h-12 bg-gray-200 rounded-full mr-4"></div>
+              <div className="w-16 h-16 rounded-full overflow-hidden mr-4 relative">
+                <Image
+                  src={`/testimonials/${testimonial.name.toLowerCase().replace(' ', '-')}.png`}
+                  alt={testimonial.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
               <div>
                 <h3 className="font-semibold text-gray-900">{testimonial.name}</h3>
                 <p className="text-gray-600">{testimonial.role}</p>
@@ -333,35 +433,35 @@ const features = [
 const integrations = [
   {
     name: 'WhatsApp',
-    icon: '📱',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png',
   },
   {
     name: 'Facebook',
-    icon: '👥',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/512px-Facebook_Logo_%282019%29.png',
   },
   {
     name: 'Instagram',
-    icon: '📸',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/512px-Instagram_icon.png',
   },
   {
     name: 'Telegram',
-    icon: '📨',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Telegram_logo.svg/512px-Telegram_logo.svg.png',
   },
   {
     name: 'Slack',
-    icon: '💬',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Slack_icon_2019.svg/512px-Slack_icon_2019.svg.png',
   },
   {
     name: 'Email',
-    icon: '📧',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/512px-Gmail_icon_%282020%29.svg.png',
   },
   {
     name: 'CRM',
-    icon: '📋',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Salesforce_logo.svg/512px-Salesforce_logo.svg.png',
   },
   {
     name: 'Payment',
-    icon: '💳',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/512px-PayPal.svg.png',
   },
 ];
 
