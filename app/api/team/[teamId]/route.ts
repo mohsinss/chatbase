@@ -25,8 +25,7 @@ export async function GET(
     }
 
     return NextResponse.json({
-      name: team.name,
-      url: team.teamId,
+      ...team
     });
 
   } catch (error) {
