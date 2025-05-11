@@ -40,7 +40,7 @@ const SettingsTab = ({ teamId, team }: SettingsTabProps) => {
   return (
     <div className="flex gap-8">
       <SettingsMenu />
-      <div className="flex-1">
+      <div className="flex-1 mb-4">
         {getSettingsComponent()}
       </div>
     </div>
