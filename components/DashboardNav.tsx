@@ -308,14 +308,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                       setIsTeamMenuOpen(!isTeamMenuOpen);
                       setIsChatbotMenuOpen(false);
                     }}
-                    className={`flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out ${
-                      brandingSettings.secondaryColor 
-                        ? 'hover:bg-base-200' 
-                        : 'hover:bg-base-200'
-                    }`}
-                    style={{
-                      backgroundColor: isTeamMenuOpen ? (brandingSettings.secondaryColor || 'var(--base-200)') : 'transparent'
-                    }}
+                    className={`flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out hover:bg-gray-800 ${isTeamMenuOpen ? 'bg-gray-800' : ''}`}
                   >
                     My Team
                     <svg
@@ -363,7 +356,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                             onClick={() => router.push(`/dashboard/${team.id}`)}
                             className="w-full px-2 py-2 text-left rounded-md hover:bg-base-200 flex items-center justify-between group"
                           >
-                            <span className="text-sm font-medium">{team.name}</span>
+                            <span className="text-sm font-medium text-black">{team.name}</span>
                             {teamId === team.teamId && (
                               <svg className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -397,7 +390,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                         setIsChatbotMenuOpen(!isChatbotMenuOpen);
                         setIsTeamMenuOpen(false);
                       }}
-                      className="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md hover:bg-base-200"
+                      className="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md hover:bg-gray-800"
                     >
                       Select Chatbot
                       <svg
