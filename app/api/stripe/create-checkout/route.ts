@@ -48,10 +48,9 @@ export async function POST(req: NextRequest) {
 
     const user = await User.findById(session?.user?.id);
     const team = await Team.findOne({teamId});
-    console.log(team._id)
     let returnUrl;
 
-    if(team?.customerId){
+    if(team?.customerId && team?.plan !== "Free") {
       returnUrl = await createCustomerPortal({ customerId: team.customerId, returnUrl: successUrl})
     } else {
       returnUrl = await createCheckout({
