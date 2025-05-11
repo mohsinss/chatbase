@@ -86,7 +86,7 @@ const teamSchema = new mongoose.Schema(
       taxId: {
         type: String,
       },
-      taxIdType: {
+      taxType: {
         type: String,
         enum: ["None", "EIN", "SSN", "VAT", "GST", "ABN", "ITIN", "TIN", "EORI"],
         default: "None",
