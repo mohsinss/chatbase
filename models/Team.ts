@@ -83,6 +83,14 @@ const teamSchema = new mongoose.Schema(
         exp_month: { type: Number },
         exp_year: { type: Number },
       }],
+      taxId: {
+        type: String,
+      },
+      taxIdType: {
+        type: String,
+        enum: ["None", "EIN", "SSN", "VAT", "GST", "ABN", "ITIN", "TIN", "EORI"],
+        default: "None",
+      },
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
