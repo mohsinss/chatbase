@@ -93,7 +93,8 @@ export async function POST(req: NextRequest) {
           team.nextRenewalDate = nextRenewalDate;
           team.billingInfo = { ...team.billingInfo, ...stripeObject?.customer_details };
           //@ts-ignore
-          team.credits = config.stripe.plans[team.plan].credits;
+          // team.credits = config.stripe.plans[team.plan].credits;
+          team.credits = 0;
         }
 
         if (paymentIntendId) {
@@ -250,7 +251,8 @@ export async function POST(req: NextRequest) {
           team.dueDate = dueDate;
           team.nextRenewalDate = nextRenewalDate;
           //@ts-ignore
-          team.credits = config.stripe.plans[team.plan].credits;
+          team.credits = 0;
+          // team.credits = config.stripe.plans[team.plan].credits;
 
           // Update or create subscription record
           const subscription = await Subscription.findOne({ stripeSubscriptionId: subscriptionId });
@@ -327,7 +329,8 @@ export async function POST(req: NextRequest) {
 
           // Reset credits to free plan limit
           //@ts-ignore
-          team.credits = config.stripe.plans.Free.credits;
+          // team.credits = 0;
+          // team.credits = config.stripe.plans.Free.credits;
 
           // Update subscription record
           const subscription = await Subscription.findOne({ stripeSubscriptionId: subscriptionId });
@@ -438,7 +441,8 @@ export async function POST(req: NextRequest) {
 
           // Reset credits to plan limit
           //@ts-ignore
-          team.credits = config.stripe.plans[team.plan].credits;
+          team.credits = 0;
+          // team.credits = config.stripe.plans[team.plan].credits;
 
           // Create or update invoice record
           const existingInvoice = await Invoice.findOne({ stripeInvoiceId: stripeInvoice.id });
