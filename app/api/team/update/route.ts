@@ -11,12 +11,13 @@ export async function PUT(req: Request) {
       { teamId: body.teamId },
       { 
         name: body.name,
-        description: body.description 
+        description: body.description,
+        billingInfo: body.billingInfo,
       },
       { new: true }
     );
 
-    return NextResponse.json(team);
+    return NextResponse.json(team._doc);
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to update team settings" }, 

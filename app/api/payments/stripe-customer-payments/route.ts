@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
           createdAt: pm.created ? new Date(pm.created * 1000).toISOString() : undefined,
         }));
 
-        return NextResponse.json({ paymentMethods });
+        return NextResponse.json({ payments });
     } catch (error: any) {
         console.error("Error fetching Stripe customer payments:", error);
         return NextResponse.json({ error: "Failed to fetch payments from Stripe" }, { status: 500 });
