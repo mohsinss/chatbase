@@ -119,7 +119,7 @@ const ChatbotTabs = ({
   return (
     <div className="border-b">
       <div className="max-w-6xl mx-auto px-8">
-        <div className="flex justify-center space-x-1 overflow-x-auto scrollbar-hide">
+        <div className="flex justify-start space-x-1 overflow-x-auto scrollbar-hide">
           {TABS.map((tab) => (
             <Link
               key={tab.id}
