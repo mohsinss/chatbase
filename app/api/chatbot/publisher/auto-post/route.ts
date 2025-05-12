@@ -19,6 +19,24 @@ export async function POST() {
 
     let postedCount = 0;
 
+    // Log webhook data if enabled
+    if (process.env.ENABLE_WEBHOOK_LOGGING_CRON == "1") {
+      try {
+        const response = await fetch(process.env.ENDPOINT_LOGGING_CRON, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'auto-post', now }),
+        });
+
+        if (!response.ok) {
+          console.error(`Webhook logging error: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('Webhook logging error:', JSON.stringify(event));
+        // Continue execution even if logging fails
+      }
+    }
+
     for (const post of scheduledPosts) {
       try {
         if (post.platform == "messenger" && post.status === "scheduled") {
