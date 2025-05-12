@@ -20,7 +20,7 @@
       "schedule": "0 0 * * *"
     },
     {
-      "path": "/api/chatbot/publisher/auto-post",
+      "path": "https://chatsa.co/api/chatbot/publisher/auto-post",
       "schedule": "0 * * * *"
     }
   ]
