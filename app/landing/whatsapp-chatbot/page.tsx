@@ -1,10 +1,10 @@
 'use client';
 
+import React, { Suspense, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
 
 type UTMProps = {
   getUTMQueryString: () => string;
@@ -300,34 +300,34 @@ const PricingSection = ({ getUTMQueryString }: UTMProps) => (
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
             viewport={{ once: true }}
-            className={`p-8 rounded-2xl ${
-              plan.featured ? 'bg-green-600 text-white' : 'bg-white text-gray-900'
-            } border border-gray-100 hover:shadow-xl transition-shadow`}
+          className={`p-8 rounded-2xl ${
+            plan.featured ? 'bg-green-600 text-white' : 'bg-white text-gray-900'
+          } border border-gray-100 hover:shadow-xl transition-shadow`}
+        >
+          <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
+          <div className="mb-6">
+            <span className="text-4xl font-bold">${plan.price}</span>
+            <span className="text-gray-600">/month</span>
+          </div>
+          <ul className="space-y-4 mb-8">
+            {plan.features.map((feature, i) => (
+              <li key={i} className="flex items-center">
+                <span className="mr-2">✓</span>
+                {feature}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href={`/contact${getUTMQueryString()}`}
+            className={`block w-full text-center px-6 py-3 rounded-lg font-medium ${
+              plan.featured
+                ? 'bg-white text-green-600 hover:bg-gray-50'
+                : 'bg-green-600 text-white hover:bg-green-700'
+            } transition-colors`}
           >
-            <h3 className="text-2xl font-bold mb-4">{plan.name}</h3>
-            <div className="mb-6">
-              <span className="text-4xl font-bold">${plan.price}</span>
-              <span className="text-gray-600">/month</span>
-            </div>
-            <ul className="space-y-4 mb-8">
-              {plan.features.map((feature, i) => (
-                <li key={i} className="flex items-center">
-                  <span className="mr-2">✓</span>
-                  {feature}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href={`/contact${getUTMQueryString()}`}
-              className={`block w-full text-center px-6 py-3 rounded-lg font-medium ${
-                plan.featured
-                  ? 'bg-white text-green-600 hover:bg-gray-50'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              } transition-colors`}
-            >
-              Get Started
-            </Link>
-          </motion.div>
+            Get Started
+          </Link>
+        </motion.div>
         ))}
       </div>
     </div>
@@ -345,7 +345,7 @@ const CTASection = ({ getUTMQueryString }: UTMProps) => (
       </p>
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Link
-          href={`/contact${getUTMQueryString()}`}
+          href={`/contact\${getUTMQueryString()}`}
           className="inline-flex items-center justify-center px-8 py-4 border-2 border-white text-base font-medium rounded-lg text-white hover:bg-white hover:text-green-600 transition-colors"
         >
           Start Free Trial
@@ -361,13 +361,14 @@ const CTASection = ({ getUTMQueryString }: UTMProps) => (
   </section>
 );
 
-export default function WhatsAppChatbotPage() {
+// New component that uses useSearchParams and provides getUTMQueryString
+const SearchParamsWrapper = ({ children }: { children: (getUTMQueryString: () => string) => React.ReactNode }) => {
   const searchParams = useSearchParams();
-  
+
   useEffect(() => {
     const utmSource = searchParams.get('utm_source');
     const utmCampaign = searchParams.get('utm_campaign');
-    
+
     if (utmSource || utmCampaign) {
       console.log('UTM Source:', utmSource);
       console.log('UTM Campaign:', utmCampaign);
@@ -378,26 +379,38 @@ export default function WhatsAppChatbotPage() {
     const params = new URLSearchParams();
     const utmSource = searchParams.get('utm_source');
     const utmCampaign = searchParams.get('utm_campaign');
-    
+
     if (utmSource) params.append('utm_source', utmSource);
     if (utmCampaign) params.append('utm_campaign', utmCampaign);
-    
-    return params.toString() ? `?${params.toString()}` : '';
+
+    return params.toString() ? `?\${params.toString()}` : '';
   };
 
+  return <>{children(getUTMQueryString)}</>;
+};
+
+export default function WhatsAppChatbotPage() {
   return (
     <div className="min-h-screen">
-      <HeroSection getUTMQueryString={getUTMQueryString} />
-      <FeaturesSection />
-      <IntegrationSection />
-      <TestimonialsSection />
-      <PricingSection getUTMQueryString={getUTMQueryString} />
-      <CTASection getUTMQueryString={getUTMQueryString} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <SearchParamsWrapper>
+          {(getUTMQueryString) => (
+            <>
+              <HeroSection getUTMQueryString={getUTMQueryString} />
+              <FeaturesSection />
+              <IntegrationSection />
+              <TestimonialsSection />
+              <PricingSection getUTMQueryString={getUTMQueryString} />
+              <CTASection getUTMQueryString={getUTMQueryString} />
+            </>
+          )}
+        </SearchParamsWrapper>
+      </Suspense>
     </div>
   );
 }
 
-const features = [
+export const features = [
   {
     title: 'AI-Powered Conversations',
     description: 'Train your chatbot on your knowledge base for accurate, context-aware responses.',
@@ -430,7 +443,7 @@ const features = [
   },
 ];
 
-const integrations = [
+export const integrations = [
   {
     name: 'WhatsApp',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png',
@@ -465,7 +478,7 @@ const integrations = [
   },
 ];
 
-const testimonials = [
+export const testimonials = [
   {
     name: 'Sarah Johnson',
     role: 'CEO, TechStart Inc.',
@@ -483,7 +496,7 @@ const testimonials = [
   },
 ];
 
-const pricingPlans = [
+export const pricingPlans = [
   {
     name: 'Starter',
     price: '49',
@@ -523,4 +536,4 @@ const pricingPlans = [
     ],
     featured: false,
   },
-]; 
+];
