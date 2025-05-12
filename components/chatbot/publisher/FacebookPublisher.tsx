@@ -186,7 +186,7 @@ const FacebookPublisher = ({ chatbotId }: FacebookPublisherProps) => {
           <div className="flex justify-end space-x-3">
             <button
               onClick={handleSaveDraft}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-slate-600 disabled:cursor-not-allowed"
               disabled={isSavingDraft || isPublishing || isScheduling}
             >
               {isSavingDraft ? "Saving Draft..." : "Save Draft"}
@@ -194,7 +194,7 @@ const FacebookPublisher = ({ chatbotId }: FacebookPublisherProps) => {
 
             <button
               onClick={handleSchedule}
-              className="flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/5"
+              className="flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/5 disabled:bg-slate-600 disabled:cursor-not-allowed"
               disabled={isSavingDraft || isPublishing || isScheduling}
             >
               {isScheduling ? "Scheduling..." : "Schedule"}
@@ -202,7 +202,7 @@ const FacebookPublisher = ({ chatbotId }: FacebookPublisherProps) => {
 
             <button
               onClick={handlePublish}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:bg-slate-600 disabled:cursor-not-allowed"
               disabled={isSavingDraft || isPublishing || isScheduling}
             >
               {isPublishing ? "Publishing..." : "Publish Now"}
