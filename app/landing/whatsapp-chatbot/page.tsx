@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { Suspense, useEffect } from 'react';
@@ -383,7 +384,7 @@ const SearchParamsWrapper = ({ children }: { children: (getUTMQueryString: () =>
     if (utmSource) params.append('utm_source', utmSource);
     if (utmCampaign) params.append('utm_campaign', utmCampaign);
 
-    return params.toString() ? `?\${params.toString()}` : '';
+    return params.toString() ? `?${params.toString()}` : '';
   };
 
   return <>{children(getUTMQueryString)}</>;
@@ -410,7 +411,7 @@ export default function WhatsAppChatbotPage() {
   );
 }
 
-export const features = [
+const features = [
   {
     title: 'AI-Powered Conversations',
     description: 'Train your chatbot on your knowledge base for accurate, context-aware responses.',
@@ -443,7 +444,7 @@ export const features = [
   },
 ];
 
-export const integrations = [
+const integrations = [
   {
     name: 'WhatsApp',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/512px-WhatsApp.svg.png',
@@ -478,7 +479,7 @@ export const integrations = [
   },
 ];
 
-export const testimonials = [
+const testimonials = [
   {
     name: 'Sarah Johnson',
     role: 'CEO, TechStart Inc.',
@@ -496,7 +497,7 @@ export const testimonials = [
   },
 ];
 
-export const pricingPlans = [
+const pricingPlans = [
   {
     name: 'Starter',
     price: '49',
