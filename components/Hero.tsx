@@ -548,7 +548,7 @@ const Hero = () => {
     setIsLoading(prev => ({ ...prev, [platform]: true }));
 
     try {
-      const response = await fetch('/api/chatbot/chat', {
+      const response = await fetch('/api/chatbot/chat/hero', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
