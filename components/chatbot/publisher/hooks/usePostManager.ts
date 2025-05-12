@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import toast from "react-hot-toast";
+import { set } from "mongoose";
 
 interface PostManagerProps {
   chatbotId: string;
@@ -17,7 +18,12 @@ export const usePostManager = ({ chatbotId, platform, platformId }: PostManagerP
   const [postContent, setPostContent] = useState("");
   const [scheduleDate, setScheduleDate] = useState("");
   const [showScheduler, setShowScheduler] = useState(false);
+
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [isPublishing, setIsPublishing] = useState<boolean>(false);
+  const [isScheduling, setIsScheduling] = useState<boolean>(false);
+  const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
+  const [isAttaching, setIsAttaching] = useState<boolean>(false);
 
   const s3Client = new S3Client({
     region: process.env.NEXT_PUBLIC_AWS_REGION!,
@@ -127,6 +133,7 @@ export const usePostManager = ({ chatbotId, platform, platformId }: PostManagerP
   };
 
   const handlePublish = async () => {
+    setIsPublishing(true);
     try {
       const response = await fetch("/api/chatbot/publisher/posts", {
         method: "POST",
@@ -146,7 +153,8 @@ export const usePostManager = ({ chatbotId, platform, platformId }: PostManagerP
       });
 
       if (!response.ok) {
-        throw new Error("Failed to publish post");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to publish post");
       }
 
       toast.success("Post published successfully!");
@@ -155,7 +163,9 @@ export const usePostManager = ({ chatbotId, platform, platformId }: PostManagerP
       setAttachments([]);
     } catch (error) {
       console.error("Error publishing post:", error);
-      toast.error("Failed to publish post");
+      toast.error(error?.message || "Failed to publish post");
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -165,6 +175,7 @@ export const usePostManager = ({ chatbotId, platform, platformId }: PostManagerP
       return;
     }
     try {
+      setIsScheduling(true);
       const response = await fetch("/api/chatbot/publisher/posts", {
         method: "POST",
         headers: {
@@ -196,10 +207,12 @@ export const usePostManager = ({ chatbotId, platform, platformId }: PostManagerP
       console.error("Error scheduling post:", error);
       toast.error("Failed to schedule post");
     }
+    setIsScheduling(false);
   };
 
   const handleSaveDraft = async () => {
     try {
+      setIsSavingDraft(true);
       const response = await fetch("/api/chatbot/publisher/posts", {
         method: "POST",
         headers: {
@@ -229,6 +242,7 @@ export const usePostManager = ({ chatbotId, platform, platformId }: PostManagerP
       console.error("Error saving draft:", error);
       toast.error("Failed to save draft");
     }
+    setIsSavingDraft(false);
   };
 
   return {
@@ -249,5 +263,8 @@ export const usePostManager = ({ chatbotId, platform, platformId }: PostManagerP
     handlePublish,
     handleSchedule,
     handleSaveDraft,
+    isPublishing,
+    isScheduling,
+    isSavingDraft,
   };
 };

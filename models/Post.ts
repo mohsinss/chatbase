@@ -17,7 +17,7 @@ const PostSchema: Schema<IPost> = new Schema(
     chatbotId: { type: String, required: true, index: true },
     platform: { type: String, required: true, index: true },
     platformId: { type: String, required: true, index: true },
-    title: { type: String, required: true },
+    title: { type: String, required: false },
     content: { type: String, required: true },
     status: { type: String, enum: ["scheduled", "draft", "published"], required: true },
     date: { type: Date, required: true },

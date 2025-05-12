@@ -39,6 +39,9 @@ const FacebookPublisher = ({ chatbotId }: FacebookPublisherProps) => {
     handlePublish,
     handleSchedule,
     handleSaveDraft,
+    isPublishing,
+    isScheduling,
+    isSavingDraft,
   } = usePostManager({ chatbotId, platform: "messenger" });
 
   const [posts, setPosts] = useState<any[]>([]);
@@ -93,7 +96,7 @@ const FacebookPublisher = ({ chatbotId }: FacebookPublisherProps) => {
         </div>
 
         <div className="space-y-4">
-          <div>
+          <div className="hidden">
             <label
               htmlFor="post-title"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -127,7 +130,7 @@ const FacebookPublisher = ({ chatbotId }: FacebookPublisherProps) => {
             />
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4 hidden">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Attachments
             </label>
@@ -135,6 +138,7 @@ const FacebookPublisher = ({ chatbotId }: FacebookPublisherProps) => {
               type="button"
               onClick={handleAttach}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+              disabled={isSavingDraft || isPublishing || isScheduling}
             >
               Attach Files
             </button>
@@ -183,22 +187,25 @@ const FacebookPublisher = ({ chatbotId }: FacebookPublisherProps) => {
             <button
               onClick={handleSaveDraft}
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              disabled={isSavingDraft || isPublishing || isScheduling}
             >
-              Save Draft
+              {isSavingDraft ? "Saving Draft..." : "Save Draft"}
             </button>
 
             <button
               onClick={handleSchedule}
               className="flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/5"
+              disabled={isSavingDraft || isPublishing || isScheduling}
             >
-              Schedule
+              {isScheduling ? "Scheduling..." : "Schedule"}
             </button>
 
             <button
               onClick={handlePublish}
               className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+              disabled={isSavingDraft || isPublishing || isScheduling}
             >
-              Publish Now
+              {isPublishing ? "Publishing..." : "Publish Now"}
             </button>
           </div>
         </div>
