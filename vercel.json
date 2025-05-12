@@ -18,6 +18,10 @@
     {
       "path": "/api/dailyCron",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/chatbot/publisher/auto-post",
+      "schedule": "0 * * * *"
     }
   ]
 }
