@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { chatbotId, platform, title, content, status, date, platformId } = body;
 
-    if (!chatbotId || !platform || !title || !content || !status || !date || !platformId) {
+    if (!chatbotId || !platform || !content || !status || !date || !platformId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
