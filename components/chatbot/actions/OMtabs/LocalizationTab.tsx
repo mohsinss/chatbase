@@ -215,7 +215,7 @@ const LocalizationTab = ({
         const menuItemTranslations = { ...translations[selectedLanguage]?.menuItems || {} }
 
         for (const item of menuItems) {
-          const response = await fetch('/api/chatbot/actions/localization/translate', {
+          const response = await fetch('/api/chatbot/action/localization/translate', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -282,7 +282,7 @@ const LocalizationTab = ({
         }
       } else {
         // For other sections, use the original bulk translation
-        const response = await fetch('/api/chatbot/actions/localization/translate', {
+        const response = await fetch('/api/chatbot/action/localization/translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
