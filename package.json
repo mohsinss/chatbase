@@ -52,6 +52,7 @@
     "eslint-config-next": "13.4.19",
     "express": "^4.21.2",
     "form-data": "^4.0.0",
+    "framer-motion": "^12.10.5",
     "googleapis": "^148.0.0",
     "http": "^0.0.1-security",
     "icons-react": "^3.7.1",
