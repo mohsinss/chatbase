@@ -23,7 +23,7 @@ export default async function PublisherPage({
   const { teamId, chatbotId, platform } = params;
   
   // Validate platform
-  const validPlatforms = ["whatsapp", "facebook", "twitter", "instagram", "snapchat"];
+  const validPlatforms = ["whatsapp", "messenger", "twitter", "instagram", "snapchat"];
   if (!validPlatforms.includes(platform)) {
     notFound();
   }
