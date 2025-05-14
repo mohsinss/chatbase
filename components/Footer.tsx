@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { motion } from 'framer-motion';
 
 // Domain configuration
 const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
@@ -111,10 +112,23 @@ export default function Footer() {
   const content = isArabic ? footerContent.ar : footerContent.en;
 
   return (
-    <footer className="bg-gray-50 border-t border-gray-200" dir={isArabic ? 'rtl' : 'ltr'}>
+    <motion.footer
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7 }}
+      viewport={{ once: true }}
+      className="bg-gray-50 border-t border-gray-200"
+      dir={isArabic ? 'rtl' : 'ltr'}
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-2">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            viewport={{ once: true }}
+            className="lg:col-span-2"
+          >
             <Link href="/" className="flex items-center mb-4">
               <Image 
                 src="/chatbase-icon.png" 
@@ -150,10 +164,15 @@ export default function Footer() {
                 </svg>
               </a>
             </div>
-          </div>
-          
+          </motion.div>
           {content.links.map((column, i) => (
-            <div key={i}>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.15 + i * 0.12 }}
+              viewport={{ once: true }}
+            >
               <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">
                 {column.title}
               </h3>
@@ -166,11 +185,17 @@ export default function Footer() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           ))}
         </div>
         
-        <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          viewport={{ once: true }}
+          className="mt-12 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center"
+        >
           <p className="text-gray-500 text-sm">
             © {currentYear} ChatSa. {content.copyright}
           </p>
@@ -181,8 +206,8 @@ export default function Footer() {
               </Link>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
-    </footer>
+    </motion.footer>
   );
 }

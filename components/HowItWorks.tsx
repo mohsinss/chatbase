@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Check, ArrowRight } from "lucide-react";
+import { motion } from 'framer-motion';
 
 // Domain configuration
 const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
@@ -99,8 +100,20 @@ const HowItWorks = () => {
   return (
     <section id="how-it-works" className="py-8 px-4 bg-white" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-6">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-6"
+        >
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold mb-4"
+          >
             {isArabic 
               ? "كيف يعمل شاتسا"
               : "How ChatSa "
@@ -108,31 +121,44 @@ const HowItWorks = () => {
             <span className="text-gradient">
               {isArabic ? "يعمل" : "Works"}
             </span>
-          </h2>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-lg text-gray-600 max-w-3xl mx-auto"
+          >
             {isArabic 
               ? "احصل على روبوت المحادثة الذكي الخاص بك جاهزًا للعمل في دقائق مع هذه الخطوات البسيطة."
               : "Get your AI chatbot up and running in minutes with these simple steps."
             }
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
         
         <div className="space-y-24">
           {currentSteps.map((step, index) => (
-            <div 
-              key={index} 
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.15 }}
+              viewport={{ once: true }}
               className={`flex flex-col ${index % 2 === 1 ? 'md:flex-row-reverse' : 'md:flex-row'} gap-8 items-center`}
             >
-              <div className="w-full md:w-1/2">
+              <motion.div
+                className="w-full md:w-1/2"
+                whileHover={{ scale: 1.04, y: -6 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+              >
                 <div className="overflow-hidden rounded-2xl shadow-lg">
                   <img 
                     src={step.image}
                     alt={step.title}
-                    className="w-full h-auto hover:scale-105 transition-transform duration-500"
+                    className="w-full h-auto transition-transform duration-500"
                   />
                 </div>
-              </div>
-              
+              </motion.div>
               <div className="w-full md:w-1/2 space-y-4">
                 <div className="inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
                   {isArabic ? "خطوة" : "Step"} {step.number}
@@ -148,7 +174,7 @@ const HowItWorks = () => {
                   ))}
                 </ul>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

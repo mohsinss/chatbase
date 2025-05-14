@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { motion } from 'framer-motion';
 
 // Domain configuration
 const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
@@ -136,27 +137,48 @@ export default function AIModels() {
   return (
     <section id="ai-models" className="py-20 bg-gradient-to-r from-indigo-50 to-violet-50" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16" data-aos="fade-up">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold mb-4"
+          >
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
               {isArabic ? "مدعوم بنماذج الذكاء الاصطناعي المتقدمة" : "Powered by Advanced AI Models"}
             </span>
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-xl text-gray-600 max-w-3xl mx-auto"
+          >
             {isArabic 
               ? "اختر من بين أحدث نماذج الذكاء الاصطناعي في العالم لتشغيل تجربة روبوت المحادثة الخاص بك."
               : "Choose from the world's most sophisticated AI models to power your chatbot experience."
             }
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {currentModels.slice(0, showAll ? currentModels.length : 3).map((model, index) => (
-            <div 
-              key={index} 
+            <motion.div 
+              key={index}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.12 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.04, y: -6 }}
               className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300"
-              data-aos="fade-up"
-              data-aos-delay={100 + (index * 100)}
             >
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 mr-4">
@@ -175,7 +197,7 @@ export default function AIModels() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           ))}
         </div>
         {!showAll && currentModels.length > 3 && (

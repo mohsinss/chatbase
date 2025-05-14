@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { motion } from 'framer-motion';
 
 // Domain configuration
 const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
@@ -119,19 +120,37 @@ export default function UseCases() {
   return (
     <section id="use-cases" className="py-20 bg-white" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16" data-aos="fade-up">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold mb-4"
+          >
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
               {isArabic ? "حالات استخدام متعددة" : "Versatile Use Cases"}
             </span>
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-xl text-gray-600 max-w-3xl mx-auto"
+          >
             {isArabic 
               ? "اكتشف الطرق العديدة التي يمكن لـ ChatSa من خلالها تحويل عمليات عملك وتجربة عملائك."
               : "Discover the many ways ChatSa can transform your business operations and customer experience."
             }
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {currentUseCases.map((useCase, index) => (
@@ -139,36 +158,43 @@ export default function UseCases() {
               key={index}
               href={`/use-cases/${useCase.title.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and')}`}
               className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 cursor-pointer"
-              data-aos="fade-up"
-              data-aos-delay={100 + (index * 100)}
             >
-              <div className="h-48 relative">
-                <img
-                  src={useCase.image}
-                  alt={useCase.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 p-4">
-                  <h3 className="text-xl font-bold text-white">{useCase.title}</h3>
+              <motion.div
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.12 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.04, y: -6 }}
+                className="flex flex-col h-full"
+              >
+                <div className="h-48 relative">
+                  <img
+                    src={useCase.image}
+                    alt={useCase.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 p-4">
+                    <h3 className="text-xl font-bold text-white">{useCase.title}</h3>
+                  </div>
                 </div>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-600 mb-4">{useCase.description}</p>
-                <ul className="space-y-2 mb-4">
-                  {useCase.benefits.map((benefit, i) => (
-                    <li key={i} className="flex items-start">
-                      <svg className={`h-5 w-5 text-indigo-500 ${isArabic ? 'ml-2' : 'mr-2'} flex-shrink-0 mt-0.5`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="w-full text-indigo-600 border border-indigo-600 rounded-md py-2 px-4 text-center hover:bg-indigo-50 transition-colors">
-                  {isArabic ? "معرفة المزيد" : "Learn more"}
+                <div className="p-6 flex-1 flex flex-col">
+                  <p className="text-gray-600 mb-4">{useCase.description}</p>
+                  <ul className="space-y-2 mb-4">
+                    {useCase.benefits.map((benefit, i) => (
+                      <li key={i} className="flex items-start">
+                        <svg className={`h-5 w-5 text-indigo-500 ${isArabic ? 'ml-2' : 'mr-2'} flex-shrink-0 mt-0.5`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="w-full text-indigo-600 border border-indigo-600 rounded-md py-2 px-4 text-center hover:bg-indigo-50 transition-colors mt-auto">
+                    {isArabic ? "معرفة المزيد" : "Learn more"}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             </Link>
           ))}
         </div>
