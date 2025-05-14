@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         query: messages[messages.length - 1].content,
-        search_type: 'semantic',
+        search_type: 'fulltext',
         page_size: 1
       })
     };
