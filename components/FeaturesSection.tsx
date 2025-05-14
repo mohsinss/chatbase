@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Bot, Zap, Database, File, Clock, Globe, Code, Lock } from "lucide-react";
+import { motion } from 'framer-motion';
 
 // Domain configuration
 const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
@@ -273,6 +274,7 @@ const features = {
 
 const FeaturesSection = () => {
   const [isArabic, setIsArabic] = useState(false);
+  const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
 
   useEffect(() => {
     const checkDomain = () => {
@@ -289,35 +291,82 @@ const FeaturesSection = () => {
   return (
     <section id="features" className="py-4 px-4 bg-gradient-to-b from-white to-gray-50" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-20"
+        >
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600"
+          >
             {isArabic 
               ? "كل ما تحتاجه لبناء روبوتات محادثة ذكية"
               : "Everything You Need to Build Intelligent Chatbots"
             }
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-xl text-gray-600 max-w-3xl mx-auto"
+          >
             {isArabic 
               ? "أنشئ روبوتات محادثة ذكية تتفاعل مع زوارك، وتجيب على الأسئلة، وتعزز التحويلات، كل ذلك دون كتابة سطر برمجي واحد."
               : "Create AI chatbots that engage your visitors, answer questions, and boost conversions, all without writing a single line of code."
             }
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {currentFeatures.map((feature, index) => (
-            <div 
-              key={index} 
-              className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 hover:rotate-2 transform-gpu"
+            <motion.div 
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
+              whileHover={{ 
+                scale: 1.05,
+                rotate: 2,
+                transition: { duration: 0.2 }
+              }}
+              onHoverStart={() => setHoveredFeature(index)}
+              onHoverEnd={() => setHoveredFeature(null)}
+              className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group"
             >
-              {feature.illustration}
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-3 text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+              <motion.div 
+                animate={hoveredFeature === index ? { scale: 1.1 } : { scale: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                {feature.illustration}
+              </motion.div>
+              <motion.div 
+                className="p-6"
+                animate={hoveredFeature === index ? { y: -5 } : { y: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <motion.h3 
+                  className="text-xl font-semibold mb-3 text-gray-900 group-hover:text-blue-600 transition-colors duration-300"
+                  animate={hoveredFeature === index ? { color: "#2563eb" } : { color: "#111827" }}
+                >
                   {feature.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-              </div>
-            </div>
+                </motion.h3>
+                <motion.p 
+                  className="text-gray-600 leading-relaxed"
+                  animate={hoveredFeature === index ? { y: -2 } : { y: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {feature.description}
+                </motion.p>
+              </motion.div>
+            </motion.div>
           ))}
         </div>
       </div>

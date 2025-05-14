@@ -1,0 +1,140 @@
+# Cursor Development Rules & AI Collaboration Guide
+
+## 📋 Role Definitions
+
+**Software Architect Role**: When asked to act as a "software architect," this specifically means an extremely experienced Next.js senior staff architect who ONLY provides high-level guidance, suggestions, understanding of root causes, and strategic ideas. A software architect NEVER writes code directly, but instead offers architectural direction, design patterns, and best practices. This role focuses on system structure, component relationships, and long-term maintainability rather than implementation details. When answering as an architect you NEVER write code. Present 2-3 viable architectural approaches for complex problems, outlining the pros, cons, and tradeoffs of each approach, and conclude with a clear recommendation that best aligns with Authentic's priorities and long-term architectural goals.
+
+**Software Developer Role**: When acting as a software developer, provide 2-3 viable implementation options for non-trivial tasks, outlining the pros and cons of each approach. Include sufficient implementation details and conclude with a clear recommendation that aligns with Authentic's priorities of simplicity, maintainability, and established patterns. Skip multiple options only when requirements explicitly specify an approach or for trivial changes with only one reasonable implementation.
+
+## 🔑 Quick Reference
+- **Documentation**: Find all project specs in `documentation/`
+- **Key Files**: `02_Technical_Architecture.md`, `Neomorphic_Design_System.md`
+- **Database**: Always refer to `03_Database_Architecture.md` when working with database code
+- **Testing**: Follow TDD principles, write tests before implementation
+- **Code Style**: TypeScript with strict typing, small components, follow existing patterns
+- **Media Handling**: Use patterns in `04_Media_Storage_Architecture.md` and `05_Profile_Photo_Handling.md`
+- **Utilities**: Use the separate utilities project for network visualization and database inspection
+- **Working Notes**: Document bugs, issues, and implementation details in the `/notes` directory
+
+## 📜 Core Philosophy
+
+1. **Simplicity:** Prioritize simple, clear, and maintainable solutions. Avoid unnecessary complexity.
+2. **Quality:** Write clean, well-tested, secure code using Test Driven Design principles.
+3. **Focus:** Concentrate on the specific task assigned. Avoid scope creep.
+4. **Feedback:** Ask clarifying questions and provide expert perspective when needed.
+5. **Iterate:** Improve existing code rather than rebuilding from scratch unless necessary.
+
+## Project Context & Documentation
+- **Always review documentation before starting tasks**:
+  - `documentation/` contains all project specifications
+  - `documentation/02_Technical_Architecture.md` for system architecture
+  - `documentation/03_Database_Architecture.md` for complete database schema and relationships
+  - `documentation/Neomorphic_Design_System.md` for UI design guidelines
+- **Database-Related Work**: 
+  - **Always consult** `03_Database_Architecture.md` before modifying any code that interacts with the database
+  - Understand entity relationships and constraints before adding or modifying database operations
+  - Follow established patterns for Prisma queries and data transformations
+  - Consider performance implications of any database changes
+  - Use the database inspection tool in the utilities project for direct database examination
+- **Development Tools**:
+  - The separate utilities project provides tools for:
+    - Visualizing the complete network topology
+    - Inspecting and querying the database directly
+- **Working Notes**:
+  - Use the `/notes` directory to document:
+    - Bug details and reproduction steps
+    - Implementation challenges and solutions
+    - Design decisions and rationales
+    - Performance observations
+    - Working theories during debugging
+  - Name files descriptively (e.g., `notes/auth-token-expiry-issue.md`)
+  - Include timestamps and relevant context
+- **Request clarification** if documentation conflicts with requirements
+
+## Key Documentation Files
+
+1. **00_Project_Overview.md** - Core concept and project values
+2. **02_Technical_Architecture.md** - System architecture and technical specs
+3. **03_Database_Architecture.md** - Comprehensive database schema, relationships, indexes, and query patterns
+4. **04_Media_Storage_Architecture.md** - Wasabi media storage implementation
+5. **05_Profile_Photo_Handling.md** - Profile photo processing
+6. **Neomorphic_Design_System.md** - UI design specifications
+7. **07_Testing_Strategy.md** - Testing approach and priorities
+
+## Code Quality Guidelines
+
+1. **TypeScript Practices:** Use strict typing, avoid `any`, document with JSDoc.
+2. **Component Design:** Create small, single-responsibility components.
+3. **DRY Principle:** Reuse existing functionality, refactor to eliminate duplication.
+4. **Pattern Consistency:** Follow established project patterns.
+5. **Database Operations:** Follow Prisma patterns documented in `03_Database_Architecture.md` for consistent, optimized queries.
+6. **Testing Priority:** Unit tests for critical paths, especially media handling and auth.
+
+## State Management Guidelines
+
+1. **Client-Side State Management:**
+   - **Use React Context** for global state shared across multiple components (theme, user session, preferences)
+   - **Use component state (useState)** for local component state with no need for sharing
+   - **Avoid prop drilling** more than 2-3 levels; refactor to use context when needed
+   - **Prefer composition over inheritance** when defining component relationships
+   - **Keep state as close as possible** to where it's used to minimize unnecessary re-renders
+
+2. **Server State Management:**
+   - **Use SWR** for data fetching and caching (preferable for most cases)
+   - **Follow SWR patterns** for optimistic updates, revalidation, and error handling
+   - **Implement proper loading states** while data is being fetched
+   - **Cache server state** appropriately to reduce unnecessary network requests
+   - **Handle stale data scenarios** with appropriate revalidation strategies
+
+3. **API Data Interactions:**
+   - **Centralize API calls** in dedicated service files within `/lib/services`
+   - **Use TypeScript interfaces** for API request/response types
+   - **Handle loading, error, and success states** consistently across components
+   - **Implement retry logic** for transient failures
+   - **Add appropriate error boundaries** around components dependent on API data
+
+4. **Data Transformation:**
+   - **Transform API responses** to component-friendly formats at the service layer
+   - **Avoid manipulating API response data** directly in components
+   - **Create reusable hooks** for common data transformation patterns
+   - **Document data flow** for complex state interactions
+
+## Development Workflow
+
+1. **Before Making Changes:**
+   - Identify impact on components and dependencies
+   - Plan logical steps and test strategy
+   - Add tests before implementation (TDD)
+   - For database changes, review the schema in `03_Database_Architecture.md`
+2. **Progress Tracking:**
+   - Update `documentation/status.md` with task progress
+   - Update `tasks/tasks.md` when requirements change
+   - Create detailed notes in `/notes` for bugs and implementation details
+3. **Refactoring Guidelines:**
+   - Refactor for clarity, not novelty
+   - Edit files directly, don't duplicate with new versions
+   - Verify all integration points after changes
+
+## AI Collaboration
+
+1. **Provide Clear Instructions:** Define outcome, constraints, and context.
+2. **Leverage AI Strengths:** Use for boilerplate, refactoring, tests, with human oversight.
+3. **Incremental Approach:** Break complex tasks into smaller steps.
+4. **Review AI Output:** Verify logic and avoid hallucinations.
+5. **Document Insights:** Record valuable AI insights and solutions in the `/notes` directory for future reference.
+
+## Environment & Deployment
+
+1. **Environment Variables:** Use `.env` (local), `.env.dev` (dev.authentic.tech), `.env.production` (authentic.tech)
+2. **Never commit `.env` files** - Use `.env.example` for templates
+3. **PWA Optimizations:** Design for offline capabilities and push notifications
+4. **Vercel Integration:** Optimize for serverless environment when applicable
+
+## Documentation Maintenance
+
+1. **Keep Docs Updated:** When changing architecture or patterns, update relevant documentation
+2. **Database Changes:** When modifying schema or query patterns, update `03_Database_Architecture.md`
+3. **Feature Documentation:** When building new features, create or update documentation to reflect changes
+4. **Working Notes:** Maintain detailed notes on bugs, issues, and implementation details in `/notes` directory
+5. **Regularly Review:** This `.cursorrules` file should be updated as patterns evolve
+

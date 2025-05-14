@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useState } from "react";
+import { motion } from 'framer-motion';
 
 // Domain configuration
 const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
@@ -124,45 +125,74 @@ export default function Dashboard() {
   return (
     <section className="py-20 bg-white" data-aos="fade-up" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16" data-aos="fade-up">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold mb-4"
+          >
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
               {isArabic ? "لوحة تحكم قوية" : "Powerful Dashboard"}
             </span>{" "}
             {isArabic ? "للتحكم الكامل" : "for Complete Control"}
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-xl text-gray-600 max-w-3xl mx-auto"
+          >
             {isArabic 
               ? "قم بإدارة روبوتات المحادثة الخاصة بك بسهولة باستخدام لوحة التحكم البديهية المليئة بالميزات القوية."
               : "Manage your chatbots with ease using our intuitive dashboard packed with powerful features."
             }
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {mounted && (
           <Tabs defaultValue={currentFeatures[0].title.toLowerCase().replace(/\s+/g, '-')} className="w-full">
             <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4 mb-12">
               {currentFeatures.map((feature, index) => (
-                <TabsTrigger 
-                  key={index} 
-                  value={feature.title.toLowerCase().replace(/\s+/g, '-')}
-                  data-aos="fade-up"
-                  data-aos-delay={100 + (index * 50)}
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="contents"
                 >
-                  {isArabic ? feature.title.split(' ')[0] : feature.title.split(' ')[0]}
-                </TabsTrigger>
+                  <TabsTrigger 
+                    value={feature.title.toLowerCase().replace(/\s+/g, '-')}
+                  >
+                    {isArabic ? feature.title.split(' ')[0] : feature.title.split(' ')[0]}
+                  </TabsTrigger>
+                </motion.div>
               ))}
             </TabsList>
-            
             {currentFeatures.map((feature, index) => (
-              <TabsContent key={index} value={feature.title.toLowerCase().replace(/\s+/g, '-')}>
-                <div className="flex flex-col lg:flex-row items-center gap-12">
-                  <div className="lg:w-1/2" data-aos="fade-right">
+              <TabsContent key={index} value={feature.title.toLowerCase().replace(/\s+/g, '-')}> 
+                <motion.div
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  viewport={{ once: true }}
+                  className="flex flex-col lg:flex-row items-center gap-12"
+                >
+                  <div className="lg:w-1/2">
                     <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
                     <p className="text-lg text-gray-600 mb-6">{feature.description}</p>
                     <ul className="space-y-3">
                       {feature.features.map((item, i) => (
-                        <li key={i} className="flex items-start" data-aos="fade-up" data-aos-delay={100 + (i * 50)}>
+                        <li key={i} className="flex items-start">
                           <svg className={`h-5 w-5 text-indigo-500 ${isArabic ? 'ml-2' : 'mr-2'} flex-shrink-0 mt-0.5`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
@@ -171,7 +201,11 @@ export default function Dashboard() {
                       ))}
                     </ul>
                   </div>
-                  <div className="lg:w-1/2" data-aos="fade-left">
+                  <motion.div
+                    className="lg:w-1/2"
+                    whileHover={{ scale: 1.04, y: -6 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                  >
                     <div className="relative rounded-xl overflow-hidden shadow-xl border border-gray-200">
                       <img
                         src={feature.image}
@@ -180,8 +214,8 @@ export default function Dashboard() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/5 to-violet-600/5"></div>
                     </div>
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
               </TabsContent>
             ))}
           </Tabs>

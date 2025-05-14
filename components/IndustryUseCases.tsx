@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { motion } from 'framer-motion';
 
 // Domain configuration
 const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
@@ -163,19 +164,37 @@ export default function IndustryUseCases() {
   return (
     <section id="industry-use-cases" className="py-20 bg-gray-50" data-aos="fade-up" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16" data-aos="fade-up">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold mb-4"
+          >
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
               {isArabic ? "حلول القطاعات" : "Industry Solutions"}
             </span>
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-xl text-gray-600 max-w-3xl mx-auto"
+          >
             {isArabic 
               ? "يتكيف شاتسا مع احتياجات قطاعك الفريدة مع حلول روبوتات محادثة ذكية متخصصة."
               : "ChatSa adapts to your industry's unique needs with specialized AI chatbot solutions."
             }
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {currentIndustries.map((industry, index) => (
@@ -183,10 +202,13 @@ export default function IndustryUseCases() {
               href={`/industries/${industry.name.toLowerCase().replace(/\s+/g, '-')}`} 
               key={index}
             >
-              <div 
+              <motion.div 
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.12 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.04, y: -6 }}
                 className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 h-full cursor-pointer"
-                data-aos="fade-up"
-                data-aos-delay={100 + (index * 100)}
               >
                 <div className="h-48 relative">
                   <Image
@@ -222,7 +244,7 @@ export default function IndustryUseCases() {
                     {isArabic ? "اعرف المزيد" : "Learn more"}
                   </Button>
                 </div>
-              </div>
+              </motion.div>
             </Link>
           ))}
         </div>
