@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         query: messages[messages.length - 1].content,
-        search_type: 'semantic',
+        search_type: 'fulltext',
         page_size: 1
       })
     };
@@ -171,7 +171,6 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < chunk_response_data.chunks.length; i++) {
       relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
     }
-    relevant_chunk = "";
 
     const temperature = aiSettings?.temperature ?? 0.7;
     const maxTokens = aiSettings?.maxTokens ?? 500;
