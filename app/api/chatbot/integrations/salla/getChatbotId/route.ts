@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectMongo from "@/libs/mongoose";
 import SallaIntegration from "@/models/SallaIntegration";
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const body = await request.json();
     const merchantId = body?.merchant;
