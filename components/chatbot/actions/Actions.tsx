@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import Calcom from "./Calcom"
+import LinkButton from "./LinkButton"
 import OrderManagement from "./OrderManagement"
 import {
   Dialog,
@@ -55,6 +56,15 @@ const actionsData = [
     active: true,
   },
   {
+    id: "button",
+    title: "Custom button",
+    description: "Custom button to trigger your own links",
+    icon: <LayoutGrid className="h-5 w-5" />,
+    bgColor: "bg-blue-100",
+    textColor: "text-blue-600",
+    active: true,
+  },
+  {
     id: "custom",
     title: "Custom action",
     description: "Custom action to execute your own workflows",
@@ -70,15 +80,6 @@ const actionsData = [
     icon: <Users className="h-5 w-5" />,
     bgColor: "bg-pink-100",
     textColor: "text-pink-600",
-    active: false,
-  },
-  {
-    id: "button",
-    title: "Custom button",
-    description: "Custom button to trigger your own links",
-    icon: <LayoutGrid className="h-5 w-5" />,
-    bgColor: "bg-blue-100",
-    textColor: "text-blue-600",
     active: false,
   },
   {
@@ -245,6 +246,14 @@ const Actions = (
       </div>
     )
   }
+  
+  if (currentTab == "button") {
+    return (
+      <div>
+        <LinkButton teamId={params.teamId} chatbotId={params.chatbotId} chatbot={params.chatbot} />
+      </div>
+    )
+  }
 
   //@ts-ignore
   const ActionButton = ({ id, title, description, icon, bgColor, textColor, active, onClick }) => (
@@ -312,14 +321,15 @@ const Actions = (
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
                           {
-                            action.type == "calcom" && <div className="flex items-center justify-center w-10 h-10 rounded-full bg-black text-white">
-                              Cal
-                            </div>
-                          }
-                          {
-                            action.type == "ordermanagement" && <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-600">
-                              <LayoutGrid className="h-5 w-5" />
-                            </div>
+                            (() => {
+                              const actionInfo = actionsData.find(a => a.id === action.type);
+                              if (!actionInfo) return null;
+                              return (
+                                <div className={`flex items-center justify-center w-10 h-10 rounded-full ${actionInfo.bgColor} ${actionInfo.textColor}`}>
+                                  {actionInfo.icon}
+                                </div>
+                              );
+                            })()
                           }
                         </div>
                         <div className="flex gap-1">
