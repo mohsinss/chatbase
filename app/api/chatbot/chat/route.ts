@@ -180,6 +180,7 @@ export async function POST(req: NextRequest) {
 
     if (internalModel.startsWith('gpt-') && enabledActions?.length > 0) {
       const calComActions = enabledActions.filter(action => action.type === 'calcom');
+      const buttonActions = enabledActions.filter(action => action.type === 'button');
       const orderManagementAction = enabledActions.filter(action => action.type === 'ordermanagement');
       if (orderManagementAction.length > 0) {
         const OMLanguage = orderManagementAction[0]?.metadata?.language || 'en';
@@ -194,7 +195,37 @@ ${calComActions.map((action, index) => `          ${index + 1}. "${action.url}" 
     `;
         systemPrompt += calComActionsPrompt;
       }
+      if (buttonActions.length > 0) {
+        const buttonActionsPrompt = `
+        Display a button or text link when the user asks something for each use case.
+        Choose the correct button action from the list:
+        
+        Button Actions List:
+        ${buttonActions.map((action, index) => {
+          const type = action.metadata.buttonType || 'button';
+          const text = action.metadata.buttonText || '';
+          const url = action.url;
+          const instructions = action.instructions;
+        
+          const html =
+            type === 'button'
+              ? `<a href="${url}" class="link" target="_blank" rel="noopener"><button class="link-btn">${text}</button></a>`
+              : `<a href="${url}" class="link" target="_blank" rel="noopener">${url}</a>`;
+        
+          return `  ${index + 1}. Type: "${type}", Text: "${text}", URL: "${url}", When to use: "${instructions}"
+              HTML: ${html}`;
+        }).join('\n')}
+        
+        Please respond in HTML format that can be embedded in a <div> tag.
+        Use a <button> only if the action's buttonType is "button" and wrap it in an <a> tag with the URL as href.
+        Otherwise, use a plain <a> tag with the URL and the buttonText (or the URL itself if buttonText is empty).
+        Do not call any function; only use the given button text and URL for the appropriate use case.
+        And put it after some description text.
+        `;
+        systemPrompt += buttonActionsPrompt;
+      }
     }
+    console.log(systemPrompt)
 
     const confidencePrompt = "\nFor your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value at the very end of your response, formatted as ':::100' with no extra text following it.";
     const todayData = "\nToday is " + Date().toString();

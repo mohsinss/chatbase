@@ -17,6 +17,8 @@ const calComTemplate = {
   url: "https://news.com",
   instructions:
     'Use when user ask about the news',
+  buttonType: "button", // default to "button"
+  buttonText: "Click me", // default button text
 }
 
 export default function LinkButton(
@@ -56,7 +58,9 @@ export default function LinkButton(
           }
           const action = await res.json();
           setFormData({
-            ...action
+            ...action,
+            buttonText: action.metadata?.buttonText || "",
+            buttonType: action.metadata?.buttonType || "button",
           });
           setIsEnabled(action.enabled);
         } catch (error) {
@@ -111,28 +115,32 @@ export default function LinkButton(
     }
     setIsSaving(true);
     try {
+      const payload = actionId
+        ? {
+            actionId,
+            name: formData.name,
+            url: formData.url,
+            instructions: formData.instructions,
+            enabled: isEnabled,
+            type: 'button',
+            buttonType: formData.buttonType,
+            buttonText: formData.buttonType === 'button' ? formData.buttonText : undefined,
+          }
+        : {
+            chatbotId: params.chatbotId,
+            name: formData.name,
+            url: formData.url,
+            instructions: formData.instructions,
+            enabled: isEnabled,
+            type: 'button',
+            buttonType: formData.buttonType,
+            buttonText: formData.buttonType === 'button' ? formData.buttonText : undefined,
+          };
+
       const response = await fetch(`/api/chatbot/action`, {
         method: actionId ? "PUT" : "POST", // Use POST if creating new, PUT if updating existing
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          actionId
-            ? {
-              actionId,
-              name: formData.name,
-              url: formData.url,
-              instructions: formData.instructions,
-              enabled: isEnabled,
-              type: 'button',
-            }
-            : {
-              chatbotId: params.chatbotId,
-              name: formData.name,
-              url: formData.url,
-              instructions: formData.instructions,
-              enabled: isEnabled,
-              type: 'button',
-            }
-        ),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -180,7 +188,7 @@ export default function LinkButton(
               <h2 className="font-medium text-lg">General</h2>
             </div>
 
-            <div className="space-y-6">
+              <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-1">Action Name</label>
                 <p className="text-xs text-gray-500 mb-2">
@@ -193,6 +201,46 @@ export default function LinkButton(
                 <label className="block text-sm font-medium mb-1">Url</label>
                 <Input name="url" value={formData.url} onChange={handleChange} className="w-full" />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Button Type</label>
+                <div className="flex gap-4 mb-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="buttonType"
+                      value="button"
+                      checked={formData.buttonType === "button"}
+                      onChange={(e) => setFormData(prev => ({ ...prev, buttonType: e.target.value }))}
+                      className="form-radio"
+                    />
+                    <span className="ml-2">Button</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="buttonType"
+                      value="clickableText"
+                      checked={formData.buttonType === "clickableText"}
+                      onChange={(e) => setFormData(prev => ({ ...prev, buttonType: e.target.value }))}
+                      className="form-radio"
+                    />
+                    <span className="ml-2">Clickable Text</span>
+                  </label>
+                </div>
+              </div>
+
+              {formData.buttonType === "button" && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Button Text</label>
+                  <Input
+                    name="buttonText"
+                    value={formData.buttonText || ""}
+                    onChange={handleChange}
+                    className="w-full"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium mb-1">When to use</label>
@@ -232,4 +280,3 @@ export default function LinkButton(
     </div>
   )
 }
-

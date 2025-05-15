@@ -6,7 +6,7 @@ import connectMongo from '@/libs/mongoose';
 // Create a new ChatbotAction
 export async function POST(req: NextRequest) {
   await connectMongo();
-  const { chatbotId, name, url, instructions, enabled, metadata, type } = await req.json();
+  const { chatbotId, name, url, instructions, enabled, metadata, type, buttonType, buttonText } = await req.json();
 
   // Check if an action with type=ordermanagement already exists for this chatbotId
   if (type === 'ordermanagement') {
@@ -44,7 +44,11 @@ export async function POST(req: NextRequest) {
     url,
     instructions,
     enabled,
-    metadata,
+    metadata: {
+      ...metadata,
+      buttonType,
+      buttonText,
+    }, 
     type
   });
 
@@ -80,7 +84,7 @@ export async function GET(req: NextRequest) {
 // Update a ChatbotAction by actionId
 export async function PUT(req: NextRequest) {
   await connectMongo();
-  const { actionId, name, url, instructions, enabled, metadata, type } = await req.json();
+  const { actionId, name, url, instructions, enabled, metadata, type, buttonType, buttonText } = await req.json();
 
   // Validate metadata structure for order management
   if (type === 'ordermanagement' && metadata) {
@@ -100,7 +104,18 @@ export async function PUT(req: NextRequest) {
 
   const action = await ChatbotAction.findByIdAndUpdate(
     actionId,
-    { name, url, instructions, enabled, metadata, type },
+    { 
+      name, 
+      url, 
+      instructions, 
+      enabled,
+      metadata: {
+        ...metadata,
+        buttonType,
+        buttonText,
+      }, 
+      type 
+    },
     { new: true }
   );
 
