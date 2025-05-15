@@ -128,11 +128,7 @@ export async function POST(request: NextRequest) {
       }
       case 'app.uninstalled': {
         const filter = { merchantId };
-        const update = {
-          uninstallationDate: data.uninstallation_date,
-          refunded: data.refunded,
-        };
-        await SallaIntegration.findOneAndUpdate(filter, update, { new: true });
+        await SallaIntegration.deleteOne(filter);
         break;
       }
       case 'app.settings.updated': {

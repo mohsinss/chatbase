@@ -308,7 +308,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                       setIsTeamMenuOpen(!isTeamMenuOpen);
                       setIsChatbotMenuOpen(false);
                     }}
-                    className={`flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out hover:bg-gray-800 ${isTeamMenuOpen ? 'bg-gray-800' : ''}`}
+                    className={`flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out hover:bg-gray-100 ${isTeamMenuOpen ? 'bg-gray-800' : ''}`}
                   >
                     My Team
                     <svg
@@ -390,7 +390,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                         setIsChatbotMenuOpen(!isChatbotMenuOpen);
                         setIsTeamMenuOpen(false);
                       }}
-                      className="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md hover:bg-gray-800"
+                      className="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md hover:bg-gray-100"
                     >
                       Select Chatbot
                       <svg
