@@ -13,17 +13,17 @@ import toast from "react-hot-toast"
 import Playground from "../playground/Playground"
 
 const calComTemplate = {
-  name: "Cal com",
-  url: "",
+  name: "Custom Button",
+  url: "https://news.com",
   instructions:
-    'Use when the user mentions booking an appointment. If no date is specified, automatically set the window from today to 1 week from today and display these dates to the user without asking for confirmation. If a date window is specified, set the search window to that specific date window and display it to the user.After performing the search, respond with either "I have found available slots" or "I have not found available slots "Display the search window but do not provide a list of slots or links. After using the tool, check whether the user booked an appointment or not from the tool result.',
+    'Use when user ask about the news',
 }
 
-export default function Calcom(
+export default function LinkButton(
   params
     :
-    {
-      teamId: string;
+    { 
+      teamId: string; 
       chatbotId: string;
       chatbot: {
         name: string;
@@ -68,7 +68,7 @@ export default function Calcom(
     fetchAction();
   }, [actionId]);
 
-  const isValidCalComUrl = (url: string) => /^https:\/\/cal\.com\/.+/.test(url);
+  const isValidUrl = (url: string) => /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/.test(url);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -99,12 +99,12 @@ export default function Calcom(
 
   const handleSave = async () => {
     const isValid =
-      formData.name?.trim().length > 0 &&
-      isValidCalComUrl(formData.url || '') &&
-      formData.instructions?.trim().length > 0;
+        formData.name?.trim().length > 0 &&
+        isValidUrl(formData.url || '') &&
+        formData.instructions?.trim().length > 0;
 
-    console.log(formData.name, formData.url, formData.instructions)
-
+    console.log(formData.name,formData.url , formData.instructions)
+    
     if (!isValid) {
       toast.error('The data is not valid.😒');
       return;
@@ -122,7 +122,7 @@ export default function Calcom(
               url: formData.url,
               instructions: formData.instructions,
               enabled: isEnabled,
-              type: 'calcom',
+              type: 'button',
             }
             : {
               chatbotId: params.chatbotId,
@@ -130,14 +130,14 @@ export default function Calcom(
               url: formData.url,
               instructions: formData.instructions,
               enabled: isEnabled,
-              type: 'calcom',
+              type: 'button',
             }
         ),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if(!response.ok){
         throw new Error(data?.error || "Failed to save.")
       }
 
@@ -162,7 +162,7 @@ export default function Calcom(
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold text-gray-900">Cal.com get available slots</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Custom Button</h1>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Enabled</span>
@@ -174,10 +174,10 @@ export default function Calcom(
         <div className="flex-grow">
           <div className="bg-white rounded-lg border p-6 mb-6">
             <div className="flex items-center gap-2 mb-6 hidden">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-black text-white">
-                <div className="h-3 w-3 text-center text-2xl flex items-center justify-center">C </div>
+              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-xs">
+                ✓
               </div>
-              <h2 className="font-medium text-lg">Cal.com</h2>
+              <h2 className="font-medium text-lg">General</h2>
             </div>
 
             <div className="space-y-6">
@@ -190,7 +190,7 @@ export default function Calcom(
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Cal.com Event URL</label>
+                <label className="block text-sm font-medium mb-1">Url</label>
                 <Input name="url" value={formData.url} onChange={handleChange} className="w-full" />
               </div>
 
@@ -226,7 +226,7 @@ export default function Calcom(
         </div>
 
         <div className="w-fit flex justify-end">
-          <Playground chatbot={params.chatbot} embed={true} standalone={true} mocking={true} mockingData={formData} isMockingDataValid={isformDataValid} />
+          <Playground chatbot={params.chatbot} embed={true} standalone={true} mocking={true} mockingData={formData} isMockingDataValid={isformDataValid}/>
         </div>
       </div>
     </div>

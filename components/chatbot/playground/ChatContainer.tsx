@@ -169,7 +169,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
           </button>
         )}
 
-        <div className={`h-full flex flex-col bg-white shadow-sm overflow-hidden ${
+        <div className={`h-full flex flex-col bg-white shadow-sm border overflow-hidden ${
           config.theme === 'dark' ? 'bg-gray-900 text-white border-gray-800' : ''
         } ${config.roundedHeaderCorners ? 'rounded-t-xl' : 'rounded-t-lg'}`}>
           {/* Chat Header */}

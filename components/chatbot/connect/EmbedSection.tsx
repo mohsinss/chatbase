@@ -159,6 +159,24 @@ const hash = crypto.createHmac('sha256', secret).update(userId).digest('hex');`;
             <div>
               <h3 className="text-lg font-semibold mb-2">Integration</h3>
               <p className="text-gray-600 mb-4">
+                To copy chatbotId for salla app or others.
+              </p>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">ChatbotId</span>
+                  <button
+                    className="text-sm text-primary hover:text-primary/80 flex items-center gap-1"
+                    onClick={() => handleCopyCode(chatbotId)}
+                  >
+                    <IconCopy className="w-4 h-4" />
+                    Copy
+                  </button>
+                </div>
+                <pre className="bg-white p-3 rounded border text-sm overflow-x-auto">
+                  {chatbotId}
+                </pre>
+              </div>
+              <p className="text-gray-600 mb-4">
                 To add a chat bubble to the bottom right of your website add this script tag to your html
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
