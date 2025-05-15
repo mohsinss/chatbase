@@ -20,8 +20,14 @@ export default async function ChatbotPage({
   params: { chatbotId: string } 
 }) {
   await connectMongo();
-  const chatbot = await Chatbot.findOne({ chatbotId: params.chatbotId });
-  const aiSettings = await ChatbotAISettings.findOne({ chatbotId: params.chatbotId });
+  let chatbot = await Chatbot.findOne({ chatbotId: params.chatbotId });
+  let aiSettings = await ChatbotAISettings.findOne({ chatbotId: params.chatbotId });
+  
+  if(!chatbot || !aiSettings){
+    const defaultChatbotId = process.env.DEFAULT_CHATBOT_ID;
+    chatbot = await Chatbot.findOne({ chatbotId: defaultChatbotId });
+    aiSettings = await ChatbotAISettings.findOne({ chatbotId: defaultChatbotId });
+  }
 
   // Serialize the chatbot data with AI settings
   const serializedChatbot: ChatbotData = {
