@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     // Log webhook data if enabled
     if (process.env.ENABLE_WEBHOOK_LOGGING_SALLA == "1") {
       try {
-        const response = await fetch(process.env.ENDPOINT_LOGGING_SALLA, {
+        const response = await fetch(process.env.ENDPOINT_LOGGING_SALLA_VALIDATION, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),

@@ -1,8 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISallaIntegration extends Document {
-  chatbotId: string;
-  teamId: string;
   merchantId: number;
   appId: number;
   appName: string;
@@ -24,15 +22,6 @@ export interface ISallaIntegration extends Document {
 
 const SallaIntegrationSchema: Schema = new Schema(
   {
-    chatbotId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    teamId: {
-      type: String,
-      required: true,
-    },
     merchantId: {
       type: Number,
       required: true,
