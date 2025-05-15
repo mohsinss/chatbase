@@ -23,7 +23,7 @@ export default async function ChatbotPage({
   let chatbot = await Chatbot.findOne({ chatbotId: params.chatbotId });
   let aiSettings = await ChatbotAISettings.findOne({ chatbotId: params.chatbotId });
   
-  if(!chatbot || !aiSettings){
+  if(!chatbot){
     const defaultChatbotId = process.env.DEFAULT_CHATBOT_ID;
     chatbot = await Chatbot.findOne({ chatbotId: defaultChatbotId });
     aiSettings = await ChatbotAISettings.findOne({ chatbotId: defaultChatbotId });
