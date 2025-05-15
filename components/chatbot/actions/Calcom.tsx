@@ -67,7 +67,7 @@ export default function Calcom(
 
     fetchAction();
   }, [actionId]);
-  
+
   const isValidCalComUrl = (url: string) => /^https:\/\/cal\.com\/.+/.test(url);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -102,6 +102,9 @@ export default function Calcom(
         formData.name?.trim().length > 0 &&
         isValidCalComUrl(formData.url || '') &&
         formData.instructions?.trim().length > 0;
+
+    console.log(formData.name,formData.url , formData.instructions)
+    
     if (!isValid) {
       toast.error('The data is not valid.😒');
       return;
