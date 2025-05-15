@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { AI_MODELS } from "@/types";
 import toast from "react-hot-toast";
+import { PlusCircle, Trash2 } from "lucide-react";
 
 interface AISettingsProps {
   chatbotId: string;
@@ -44,6 +45,7 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
   const [loading, setLoading] = useState(false)
   const [language, setLanguage] = useState("en")
   const [lastTrained, setLastTrained] = useState('')
+  const [urls, setUrls] = useState<Array<{url: string, useCase: string}>>([{url: "", useCase: ""}])
 
   useEffect(() => {
     fetchSettings();
@@ -65,6 +67,7 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
         setContextWindow(data.contextWindow ?? 16000);
         setLanguage(data.language ?? "en");
         setLastTrained(data.lastTrained);
+        setUrls(data.urls ?? [{url: "", useCase: ""}]);
       }
     } catch (error) {
       console.error("Fetch error:", error);
@@ -87,7 +90,8 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
         chunkCount,
         topP: 1,
         frequencyPenalty: 0,
-        presencePenalty: 0
+        presencePenalty: 0,
+        urls
       };
 
       console.log("Saving settings:", settingsData);
@@ -123,6 +127,22 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
       }
     }
     return 'OpenAI'; // Default provider
+  };
+
+  const addUrlRow = () => {
+    setUrls([...urls, {url: "", useCase: ""}]);
+  };
+
+  const removeUrlRow = (index: number) => {
+    const newUrls = [...urls];
+    newUrls.splice(index, 1);
+    setUrls(newUrls);
+  };
+
+  const handleUrlChange = (index: number, field: 'url' | 'useCase', value: string) => {
+    const newUrls = [...urls];
+    newUrls[index][field] = value;
+    setUrls(newUrls);
   };
 
   return (
@@ -238,6 +258,54 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
               />
               <p className="text-sm text-gray-500">Define the AI&apos;s personality and behavior</p>
             </div>
+
+            {/* <div className="space-y-4">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                URL Settings
+              </label>
+              <div className="space-y-4">
+                {urls.map((urlItem, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <div className="flex-1 space-y-2">
+                      <input
+                        type="url"
+                        value={urlItem.url}
+                        onChange={(e) => handleUrlChange(index, 'url', e.target.value)}
+                        placeholder="https://example.com"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <input
+                        type="text"
+                        value={urlItem.useCase}
+                        onChange={(e) => handleUrlChange(index, 'useCase', e.target.value)}
+                        placeholder="When to use this URL"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      />
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => removeUrlRow(index)}
+                      className="mt-1"
+                      disabled={urls.length === 1}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                
+                <Button 
+                  variant="outline" 
+                  onClick={addUrlRow} 
+                  className="flex items-center gap-1"
+                >
+                  <PlusCircle className="h-4 w-4" /> Add URL
+                </Button>
+                <p className="text-sm text-gray-500">Add URLs that the chatbot should reference or use in responses</p>
+              </div>
+            </div> */}
 
             <div className="space-y-2 hidden">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">

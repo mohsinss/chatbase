@@ -123,7 +123,7 @@ export function PlansSettings({ teamId }: { teamId: string }) {
         { name: "10 chatbots" },
         // { name: "3 AI Actions/chatbot" },
         { name: "5 team members" },
-        { name: "Remove &apos;Powered by Chatbase&apos;" },
+        { name: "Remove Powered by ChatSa" },
         { name: "Advanced Analytics" }
       ]
     }

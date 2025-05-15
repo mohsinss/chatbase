@@ -13,6 +13,7 @@ import FAQ from "@/components/FAQ";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import dynamic from 'next/dynamic';
+import Pricing from "@/components/Pricing";
 
 const ChatbotScripts = dynamic(() => import('@/components/ChatbotScripts'), {
   ssr: false
@@ -34,6 +35,7 @@ export default function Home() {
       {/* <Testimonials /> */}
       <FAQ />
       <CTA />
+      <Pricing />
       <Footer />
       <ChatbotScripts />
     </div>
