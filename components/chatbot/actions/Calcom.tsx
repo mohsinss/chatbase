@@ -51,9 +51,9 @@ export default function Calcom(
   
     const validateFormData = () => {
       const isValid =
-        formData.name.trim().length > 0 &&
-        isValidCalComUrl(formData.url) &&
-        formData.instructions.trim().length > 0;
+        formData.name?.trim().length > 0 &&
+        isValidCalComUrl(formData.url || '') &&
+        formData.instructions?.trim().length > 0;
   
       setIsformDataValid(isValid);
     };
