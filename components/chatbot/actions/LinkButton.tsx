@@ -24,8 +24,8 @@ const calComTemplate = {
 export default function LinkButton(
   params
     :
-    { 
-      teamId: string; 
+    {
+      teamId: string;
       chatbotId: string;
       chatbot: {
         name: string;
@@ -103,12 +103,12 @@ export default function LinkButton(
 
   const handleSave = async () => {
     const isValid =
-        formData.name?.trim().length > 0 &&
-        isValidUrl(formData.url || '') &&
-        formData.instructions?.trim().length > 0;
+      formData.name?.trim().length > 0 &&
+      isValidUrl(formData.url || '') &&
+      formData.instructions?.trim().length > 0;
 
-    console.log(formData.name,formData.url , formData.instructions)
-    
+    console.log(formData.name, formData.url, formData.instructions)
+
     if (!isValid) {
       toast.error('The data is not valid.😒');
       return;
@@ -117,25 +117,25 @@ export default function LinkButton(
     try {
       const payload = actionId
         ? {
-            actionId,
-            name: formData.name,
-            url: formData.url,
-            instructions: formData.instructions,
-            enabled: isEnabled,
-            type: 'button',
-            buttonType: formData.buttonType,
-            buttonText: formData.buttonType === 'button' ? formData.buttonText : undefined,
-          }
+          actionId,
+          name: formData.name,
+          url: formData.url,
+          instructions: formData.instructions,
+          enabled: isEnabled,
+          type: 'button',
+          buttonType: formData.buttonType,
+          buttonText: formData.buttonType === 'button' ? formData.buttonText : undefined,
+        }
         : {
-            chatbotId: params.chatbotId,
-            name: formData.name,
-            url: formData.url,
-            instructions: formData.instructions,
-            enabled: isEnabled,
-            type: 'button',
-            buttonType: formData.buttonType,
-            buttonText: formData.buttonType === 'button' ? formData.buttonText : undefined,
-          };
+          chatbotId: params.chatbotId,
+          name: formData.name,
+          url: formData.url,
+          instructions: formData.instructions,
+          enabled: isEnabled,
+          type: 'button',
+          buttonType: formData.buttonType,
+          buttonText: formData.buttonType === 'button' ? formData.buttonText : undefined,
+        };
 
       const response = await fetch(`/api/chatbot/action`, {
         method: actionId ? "PUT" : "POST", // Use POST if creating new, PUT if updating existing
@@ -145,7 +145,7 @@ export default function LinkButton(
 
       const data = await response.json();
 
-      if(!response.ok){
+      if (!response.ok) {
         throw new Error(data?.error || "Failed to save.")
       }
 
@@ -188,7 +188,7 @@ export default function LinkButton(
               <h2 className="font-medium text-lg">General</h2>
             </div>
 
-              <div className="space-y-6">
+            <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-1">Action Name</label>
                 <p className="text-xs text-gray-500 mb-2">
@@ -199,6 +199,9 @@ export default function LinkButton(
 
               <div>
                 <label className="block text-sm font-medium mb-1">Url</label>
+                <p className="text-xs text-gray-500 mb-2">
+                  The URL to open shen the button is clicked.
+                </p>
                 <Input name="url" value={formData.url} onChange={handleChange} className="w-full" />
               </div>
 
@@ -233,6 +236,9 @@ export default function LinkButton(
               {formData.buttonType === "button" && (
                 <div>
                   <label className="block text-sm font-medium mb-1">Button Text</label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    The text displayed on the button.
+                  </p>
                   <Input
                     name="buttonText"
                     value={formData.buttonText || ""}
@@ -244,6 +250,9 @@ export default function LinkButton(
 
               <div>
                 <label className="block text-sm font-medium mb-1">When to use</label>
+                <p className="text-xs text-gray-500 mb-2 max-w-[500px]">
+                  Explain when the AI Agent should use this action. Include a description of what this action does, the data it provides, and any updateds it makes, Include example queries that should tirgger this action.
+                </p>
                 <p className="text-xs text-gray-500 mb-2">
                 </p>
                 <Textarea
@@ -251,6 +260,7 @@ export default function LinkButton(
                   value={formData.instructions}
                   onChange={handleChange}
                   className="w-full min-h-[200px]"
+                  placeholder="Example: Use this action shen the user asks about a product or service"
                 />
               </div>
 
@@ -274,7 +284,7 @@ export default function LinkButton(
         </div>
 
         <div className="w-fit flex justify-end">
-          <Playground chatbot={params.chatbot} embed={true} standalone={true} mocking={true} mockingData={formData} isMockingDataValid={isformDataValid}/>
+          <Playground chatbot={params.chatbot} embed={true} standalone={true} mocking={true} mockingData={formData} isMockingDataValid={isformDataValid} />
         </div>
       </div>
     </div>
