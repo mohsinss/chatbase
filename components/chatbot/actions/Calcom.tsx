@@ -47,21 +47,6 @@ export default function Calcom(
   const [isformDataValid, setIsformDataValid] = useState(false);
 
   useEffect(() => {
-    const isValidCalComUrl = (url: string) => /^https:\/\/cal\.com\/.+/.test(url);
-  
-    const validateFormData = () => {
-      const isValid =
-        formData.name?.trim().length > 0 &&
-        isValidCalComUrl(formData.url || '') &&
-        formData.instructions?.trim().length > 0;
-  
-      setIsformDataValid(isValid);
-    };
-  
-    validateFormData();
-  }, [formData]);
-
-  useEffect(() => {
     const fetchAction = async () => {
       if (actionId) {
         try {
@@ -82,6 +67,8 @@ export default function Calcom(
 
     fetchAction();
   }, [actionId]);
+  
+  const isValidCalComUrl = (url: string) => /^https:\/\/cal\.com\/.+/.test(url);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -111,7 +98,11 @@ export default function Calcom(
   };
 
   const handleSave = async () => {
-    if (!isformDataValid) {
+    const isValid =
+        formData.name?.trim().length > 0 &&
+        isValidCalComUrl(formData.url || '') &&
+        formData.instructions?.trim().length > 0;
+    if (!isValid) {
       toast.error('The data is not valid.😒');
       return;
     }
