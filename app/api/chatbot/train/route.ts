@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/next-auth";
 import connectMongo from "@/libs/mongoose";
 import Chatbot from "@/models/Chatbot";
-import DatasetModel from "@/models/Dataset"; // Import your MongoDB model
+import DatasetModel from "@/models/Dataset";
+import SallaIntegration from "@/models/SallaIntegration";
 import path from 'path';
 import OpenAI from 'openai';
 
@@ -34,6 +35,64 @@ export async function POST(req: Request) {
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectMongo();
+
+    let existingDataset = await DatasetModel.findOne({ chatbotId });
+    if (!existingDataset) {
+      return NextResponse.json({ error: "Dataset not found" }, { status: 404 });
+    }
+
+    // Find the chatbot by its ID
+    let existingChatbot = await Chatbot.findOne({ chatbotId });
+    if (!existingChatbot) {
+      return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
+    }
+
+    let sallaProducts = [];
+    if (existingChatbot.integrations.salla == true) {
+      // Find sallaIntegration by matching sallaIntegration.settings.chatbotId to chatbotId
+      const sallaIntegration = await SallaIntegration.findOne({ "settings.chatbotId": chatbotId });
+      if (sallaIntegration) {
+        const sallaProductsAccum: any[] = [];
+        let currentPage = 1;
+        let totalPages = 1;
+
+        do {
+          const url = new URL('https://api.salla.dev/admin/v2/products');
+          url.searchParams.append('per_page', '65');
+          url.searchParams.append('page', currentPage.toString());
+
+          const res = await fetch(url.toString(), {
+            headers: {
+              Authorization: `Bearer ${sallaIntegration.accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!res.ok) {
+            console.error(`Failed to fetch Salla products: ${res.status} ${res.statusText}`);
+            break;
+          }
+
+          const data = await res.json();
+
+          if (data && data.success && Array.isArray(data.data)) {
+            sallaProductsAccum.push(...data.data);
+          }
+
+          if (data && data.pagination && typeof data.pagination.totalPages === 'number') {
+            totalPages = data.pagination.totalPages;
+          } else {
+            totalPages = 1;
+          }
+
+          currentPage++;
+        } while (currentPage <= totalPages);
+
+        sallaProducts = sallaProductsAccum;
+      }
     }
 
     let linkText = '';
@@ -73,6 +132,21 @@ export async function POST(req: Request) {
     sourcesCount += links.length;
     sourcesCount += qaPairs.length;
     sourcesCount += text ? 1 : 0;
+
+    // Add sallaProducts text for training
+    let sallaText = '';
+    if (sallaProducts.length > 0) {
+      sallaProducts.forEach(product => {
+        sallaText += `Product Name: ${product.name}\n`;
+        sallaText += `Description: ${product.description || ''}\n`;
+        sallaText += `Price: ${product.price?.amount || ''} ${product.price?.currency || ''}\n`;
+        sallaText += `URL: ${product.url || product.urls?.customer || ''}\n`;
+        sallaText += `SKU: ${product.sku || ''}\n`;
+        sallaText += `Main Image: ${product.main_image || ''}\n`;
+        sallaText += `\n`;
+      });
+      sourcesCount += 1;
+    }
     // Convert qaPairs to a string containing only questions and answers
     //@ts-ignore
     const qaString = qaPairs.length > 0 ? qaPairs.map(pair => `Question: ${pair.question} Answer: ${pair.answer}`).join('\n') : '';
@@ -107,12 +181,11 @@ export async function POST(req: Request) {
       .replace(/\//g, '_')
       .replace(/=+$/, '');
 
-    await connectMongo();
+    const base64SallaFile = Buffer.from(sallaText, 'utf-8').toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
 
-    let existingDataset = await DatasetModel.findOne({ chatbotId });
-    if (!existingDataset) {
-      return NextResponse.json({ error: "Dataset not found" }, { status: 404 });
-    }
     existingDataset.text = text;
     // Perform update with error catching
     const updatedDataset = await DatasetModel.findOneAndUpdate(
@@ -339,6 +412,32 @@ export async function POST(req: Request) {
       // }));
     }
 
+    if (sallaText) {
+      const add_salla_response = await fetch("https://api.trieve.ai/api/file", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.TRIEVE_API_KEY}`,
+          "TR-Dataset": existingDataset.datasetId,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(
+          {
+            base64_file: base64SallaFile,
+            file_name: 'texttexttexttextsalla.txt',
+            metadata: {
+              type: 'text'
+            },
+          }
+        )
+      });
+
+      let responseData = await add_salla_response.json();
+
+      if (!add_salla_response.ok) {
+        throw new Error(`Failed to update text: ${add_salla_response.statusText} - ${JSON.stringify(responseData)}`);
+      }
+    }
+
     // Process YouTube links similarly
     for (let ytLink of youtubeLinks) {
       if (!ytLink.transcript || ytLink.status !== "transcripted") {
@@ -385,12 +484,6 @@ export async function POST(req: Request) {
 
     // Save the updated dataset
     await existingDataset.save();
-
-    // Find the chatbot by its ID
-    let existingChatbot = await Chatbot.findOne({ chatbotId });
-    if (!existingChatbot) {
-      return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
-    }
 
     const files = existingDataset?.files || [];
     // @ts-ignore
