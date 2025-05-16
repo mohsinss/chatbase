@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, RefreshCw } from "lucide-react"
+import { ArrowLeft, RefreshCw, Trash2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -43,7 +43,10 @@ export default function LinkButton(
   const router = useRouter()
   const [isEnabled, setIsEnabled] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [formData, setFormData] = useState(calComTemplate)
+  // Change formData to an array of buttons
+  const [buttons, setButtons] = useState([calComTemplate])
+  // Track the index of the selected button
+  const [selectedIndex, setSelectedIndex] = useState(0)
   const searchParams = useSearchParams()
   const actionId = searchParams.get("actionId")
   const [isformDataValid, setIsformDataValid] = useState(false);
@@ -57,12 +60,15 @@ export default function LinkButton(
             throw new Error("Failed to fetch action");
           }
           const action = await res.json();
-          setFormData({
-            ...action,
-            buttonText: action.metadata?.buttonText || "",
-            buttonType: action.metadata?.buttonType || "button",
-          });
-          setIsEnabled(action.enabled);
+          // Assuming action can be multiple buttons, if not, wrap in array
+          const loadedButtons = Array.isArray(action.metadata) ? action.metadata : [action.metadata];
+          setButtons(
+            loadedButtons.map((btn: any) => ({
+              ...btn,
+            }))
+          );
+          setIsEnabled(action?.enabled ?? true);
+          setSelectedIndex(0);
         } catch (error) {
           console.error("Error fetching action:", error);
         }
@@ -74,9 +80,14 @@ export default function LinkButton(
 
   const isValidUrl = (url: string) => /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/.test(url);
 
+  // Handle change for the selected button's properties
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    setButtons((prev) => {
+      const newButtons = [...prev]
+      newButtons[selectedIndex] = { ...newButtons[selectedIndex], [name]: value }
+      return newButtons
+    })
   }
 
   const handleToggle = async (checked: boolean) => {
@@ -102,12 +113,13 @@ export default function LinkButton(
   };
 
   const handleSave = async () => {
+    const currentButton = buttons[selectedIndex];
     const isValid =
-      formData.name?.trim().length > 0 &&
-      isValidUrl(formData.url || '') &&
-      formData.instructions?.trim().length > 0;
+      currentButton.name?.trim().length > 0 &&
+      isValidUrl(currentButton.url || '') &&
+      currentButton.instructions?.trim().length > 0;
 
-    console.log(formData.name, formData.url, formData.instructions)
+    console.log(currentButton.name, currentButton.url, currentButton.instructions)
 
     if (!isValid) {
       toast.error('The data is not valid.😒');
@@ -118,23 +130,15 @@ export default function LinkButton(
       const payload = actionId
         ? {
           actionId,
-          name: formData.name,
-          url: formData.url,
-          instructions: formData.instructions,
           enabled: isEnabled,
+          metadata: buttons,
           type: 'button',
-          buttonType: formData.buttonType,
-          buttonText: formData.buttonType === 'button' ? formData.buttonText : undefined,
         }
         : {
           chatbotId: params.chatbotId,
-          name: formData.name,
-          url: formData.url,
-          instructions: formData.instructions,
           enabled: isEnabled,
+          metadata: buttons,
           type: 'button',
-          buttonType: formData.buttonType,
-          buttonText: formData.buttonType === 'button' ? formData.buttonText : undefined,
         };
 
       const response = await fetch(`/api/chatbot/action`, {
@@ -163,6 +167,13 @@ export default function LinkButton(
     router.push(`/dashboard/${params.teamId}/chatbot/${params.chatbotId}/actions/main`)
   }
 
+  // Handle select change to switch between buttons
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedIndex(Number(e.target.value))
+  }
+
+  const currentButton = buttons[selectedIndex] || calComTemplate;
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
@@ -181,28 +192,70 @@ export default function LinkButton(
       <div className="flex flex-wrap justify-center gap-8">
         <div className="flex-grow">
           <div className="bg-white rounded-lg border p-6 mb-6">
-            <div className="flex items-center gap-2 mb-6 hidden">
-              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-xs">
-                ✓
-              </div>
-              <h2 className="font-medium text-lg">General</h2>
-            </div>
-
             <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-1">Select Button</label>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedIndex}
+                    onChange={handleSelectChange}
+                    className="flex-grow border rounded p-2"
+                  >
+                    {buttons.map((btn, idx) => (
+                      <option key={idx} value={idx}>
+                        {btn.name || `Button ${idx + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      const newButton = { ...calComTemplate, name: `New Button ${buttons.length + 1}` };
+                      setButtons((prev) => [...prev, newButton]);
+                      setSelectedIndex(buttons.length);
+                    }}
+                    aria-label="Add new button"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      if (buttons.length === 1) {
+                        // Reset to default if only one button left
+                        setButtons([calComTemplate]);
+                        setSelectedIndex(0);
+                      } else {
+                        setButtons((prev) => {
+                          const newButtons = prev.filter((_, i) => i !== selectedIndex);
+                          return newButtons;
+                        });
+                        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
+                      }
+                    }}
+                    aria-label="Delete selected button"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  </Button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-1">Action Name</label>
                 <p className="text-xs text-gray-500 mb-2">
                   A descriptive name for this action. This will help the AI Agent know when to use it.
                 </p>
-                <Input name="name" value={formData.name} onChange={handleChange} className="w-full" />
+                <Input name="name" value={currentButton.name} onChange={handleChange} className="w-full" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Url</label>
                 <p className="text-xs text-gray-500 mb-2">
-                  The URL to open shen the button is clicked.
+                  The URL to open when the button is clicked.
                 </p>
-                <Input name="url" value={formData.url} onChange={handleChange} className="w-full" />
+                <Input name="url" value={currentButton.url} onChange={handleChange} className="w-full" />
               </div>
 
               <div>
@@ -213,8 +266,15 @@ export default function LinkButton(
                       type="radio"
                       name="buttonType"
                       value="button"
-                      checked={formData.buttonType === "button"}
-                      onChange={(e) => setFormData(prev => ({ ...prev, buttonType: e.target.value }))}
+                      checked={currentButton.buttonType === "button"}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setButtons((prev) => {
+                          const newButtons = [...prev];
+                          newButtons[selectedIndex] = { ...newButtons[selectedIndex], buttonType: value };
+                          return newButtons;
+                        });
+                      }}
                       className="form-radio"
                     />
                     <span className="ml-2">Button</span>
@@ -224,8 +284,15 @@ export default function LinkButton(
                       type="radio"
                       name="buttonType"
                       value="clickableText"
-                      checked={formData.buttonType === "clickableText"}
-                      onChange={(e) => setFormData(prev => ({ ...prev, buttonType: e.target.value }))}
+                      checked={currentButton.buttonType === "clickableText"}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setButtons((prev) => {
+                          const newButtons = [...prev];
+                          newButtons[selectedIndex] = { ...newButtons[selectedIndex], buttonType: value };
+                          return newButtons;
+                        });
+                      }}
                       className="form-radio"
                     />
                     <span className="ml-2">Clickable Text</span>
@@ -233,7 +300,7 @@ export default function LinkButton(
                 </div>
               </div>
 
-              {formData.buttonType === "button" && (
+              {currentButton.buttonType === "button" && (
                 <div>
                   <label className="block text-sm font-medium mb-1">Button Text</label>
                   <p className="text-xs text-gray-500 mb-2">
@@ -241,7 +308,7 @@ export default function LinkButton(
                   </p>
                   <Input
                     name="buttonText"
-                    value={formData.buttonText || ""}
+                    value={currentButton.buttonText || ""}
                     onChange={handleChange}
                     className="w-full"
                   />
@@ -251,21 +318,19 @@ export default function LinkButton(
               <div>
                 <label className="block text-sm font-medium mb-1">When to use</label>
                 <p className="text-xs text-gray-500 mb-2 max-w-[500px]">
-                  Explain when the AI Agent should use this action. Include a description of what this action does, the data it provides, and any updateds it makes, Include example queries that should tirgger this action.
-                </p>
-                <p className="text-xs text-gray-500 mb-2">
+                  Explain when the AI Agent should use this action. Include a description of what this action does, the data it provides, and any updates it makes, Include example queries that should trigger this action.
                 </p>
                 <Textarea
                   name="instructions"
-                  value={formData.instructions}
+                  value={currentButton.instructions}
                   onChange={handleChange}
                   className="w-full min-h-[200px]"
-                  placeholder="Example: Use this action shen the user asks about a product or service"
+                  placeholder="Example: Use this action when the user asks about a product or service"
                 />
               </div>
 
               <div className="flex justify-between items-center pt-4">
-                <Button variant="outline" type="button" onClick={() => setFormData(calComTemplate)}>
+                <Button variant="outline" type="button" onClick={() => setButtons([calComTemplate])}>
                   Reset
                 </Button>
                 <Button onClick={handleSave} disabled={isSaving} className="bg-gray-800 hover:bg-gray-700">
@@ -284,7 +349,7 @@ export default function LinkButton(
         </div>
 
         <div className="w-fit flex justify-end">
-          <Playground chatbot={params.chatbot} embed={true} standalone={true} mocking={true} mockingData={formData} isMockingDataValid={isformDataValid} />
+          <Playground chatbot={params.chatbot} embed={true} standalone={true} mocking={true} mockingData={currentButton} isMockingDataValid={isformDataValid} />
         </div>
       </div>
     </div>

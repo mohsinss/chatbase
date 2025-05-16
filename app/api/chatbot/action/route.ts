@@ -22,6 +22,20 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Check if an action with type=ordermanagement already exists for this chatbotId
+  if (type === 'button') {
+    const existingAction = await ChatbotAction.findOne({ 
+      chatbotId, 
+      type: 'button' 
+    });
+
+    if (existingAction) {
+      return NextResponse.json({ 
+        error: 'Only one action of type button is allowed per chatbot' 
+      }, { status: 400 });
+    }
+  }
+
   // Validate metadata structure for order management
   if (type === 'ordermanagement' && metadata) {
     try {
@@ -44,11 +58,7 @@ export async function POST(req: NextRequest) {
     url,
     instructions,
     enabled,
-    metadata: {
-      ...metadata,
-      buttonType,
-      buttonText,
-    }, 
+    metadata,
     type
   });
 
@@ -109,11 +119,7 @@ export async function PUT(req: NextRequest) {
       url, 
       instructions, 
       enabled,
-      metadata: {
-        ...metadata,
-        buttonType,
-        buttonText,
-      }, 
+      metadata,
       type 
     },
     { new: true }

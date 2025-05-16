@@ -180,7 +180,6 @@ export async function POST(req: NextRequest) {
 
     if (internalModel.startsWith('gpt-') && enabledActions?.length > 0) {
       const calComActions = enabledActions.filter(action => action.type === 'calcom');
-      const buttonActions = enabledActions.filter(action => action.type === 'button');
       const orderManagementAction = enabledActions.filter(action => action.type === 'ordermanagement');
       if (orderManagementAction.length > 0) {
         const OMLanguage = orderManagementAction[0]?.metadata?.language || 'en';
@@ -195,26 +194,40 @@ ${calComActions.map((action, index) => `          ${index + 1}. "${action.url}" 
     `;
         systemPrompt += calComActionsPrompt;
       }
-      if (buttonActions.length > 0) {
-        const buttonActionsPrompt = `
+    }
+
+    const buttonActions = enabledActions.filter(action => action.type === 'button');
+    if (buttonActions.length > 0) {
+      interface ButtonActionMetadata {
+        buttonType?: string;
+        buttonText?: string;
+        url: string;
+        instructions: string;
+      }
+
+      interface ButtonAction {
+        metadata: ButtonActionMetadata[];
+      }
+
+      const buttonActionsPrompt = `
         Display a button or text link when the user asks something for each use case.
         Choose the correct button action from the list:
         
         Button Actions List:
-        ${buttonActions.map((action, index) => {
-          const type = action.metadata.buttonType || 'button';
-          const text = action.metadata.buttonText || '';
-          const url = action.url;
-          const instructions = action.instructions;
-        
-          const html =
-            type === 'button'
-              ? `<a href="${url}" class="link" target="_blank" rel="noopener"><button class="link-btn">${text}</button></a>`
-              : `<a href="${url}" class="link" target="_blank" rel="noopener">${url}</a>`;
-        
-          return `  ${index + 1}. Type: "${type}", Text: "${text}", URL: "${url}", When to use: "${instructions}"
-              HTML: ${html}`;
-        }).join('\n')}
+        ${buttonActions[0].metadata.map((action: ButtonActionMetadata, index: number) => {
+        const type: string = action.buttonType || 'button';
+        const text: string = action.buttonText || '';
+        const url: string = action.url;
+        const instructions: string = action.instructions;
+
+        const html: string =
+          type === 'button'
+            ? `<a href="${url}" class="link" target="_blank" rel="noopener"><button class="link-btn">${text}</button></a>`
+            : `<a href="${url}" class="link" target="_blank" rel="noopener">${url}</a>`;
+
+        return `  ${index + 1}. Type: "${type}", Text: "${text}", URL: "${url}", When to use: "${instructions}"
+          HTML: ${html}`;
+      }).join('\n')}
         
         Please respond in HTML format that can be embedded in a <div> tag.
         Use a <button> only if the action's buttonType is "button" and wrap it in an <a> tag with the URL as href.
@@ -222,8 +235,7 @@ ${calComActions.map((action, index) => `          ${index + 1}. "${action.url}" 
         Do not call any function; only use the given button text and URL for the appropriate use case.
         And put it after some description text.
         `;
-        systemPrompt += buttonActionsPrompt;
-      }
+      systemPrompt += buttonActionsPrompt;
     }
     console.log(systemPrompt)
 
