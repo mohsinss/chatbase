@@ -507,11 +507,17 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                 {
                   //@ts-ignore
                   currentChatbot && currentChatbot.integrations?.salla == true && (
-                    <div className="flex items-center gap-2 rounded-xl bg-red-100 p-1 text-sm text-red-800 shadow-sm ring-1 ring-red-300">
+                    <div 
+                      onClick={() => {
+                        router.push(`/dashboard/${teamId}/chatbot/${currentChatbot.chatbotId}/sources?tab=salla`);
+                      }}
+                      className="flex items-center gap-2 rounded-xl bg-green-100 p-1 text-sm text-green-800 shadow-sm ring-1 ring-green-300 cursor-pointer hover:bg-green-200 transition-colors"
+                    >
                       <IconCheck className="w-4 h-4" />
                       <span>Connected to Salla</span>
                     </div>
-                  )}
+                  )
+                }
               </div>
             }
           </div>
