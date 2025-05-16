@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-
+import { IconLoader2 } from "@tabler/icons-react";
 interface SallaProps {
   chatbotId: string;
 }
@@ -30,6 +30,7 @@ const Salla = ({ chatbotId }: SallaProps) => {
   const [hasMore, setHasMore] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState(searchKeyword);
+  const [perPage, setPerPage] = useState(10);
 
   useEffect(() => {
     if (!chatbotId) {
@@ -119,7 +120,7 @@ const Salla = ({ chatbotId }: SallaProps) => {
       setLoading(true);
       try {
         const url = new URL('https://api.salla.dev/admin/v2/products');
-        url.searchParams.append('per_page', '10');
+        url.searchParams.append('per_page', perPage.toString());
         url.searchParams.append('page', page.toString());
         if (debouncedSearch.trim() !== '') {
           url.searchParams.append('keyword', debouncedSearch.trim());
@@ -141,7 +142,8 @@ const Salla = ({ chatbotId }: SallaProps) => {
         }
         const data = await res.json();
         if (data && data.data) {
-          setProducts((prev) => (page === 1 ? data.data : [...prev, ...data.data]));
+          setProducts(data.data);
+          // setProducts((prev) => (page === 1 ? data.data : [...prev, ...data.data]));
           setHasMore(data.pagination && data.pagination.currentPage < data.pagination.totalPages);
         } else {
           setHasMore(false);
@@ -156,9 +158,58 @@ const Salla = ({ chatbotId }: SallaProps) => {
     fetchProducts();
   }, [sallaIntegration, page, debouncedSearch, selectedCategory]);
 
-  const loadMore = () => {
-    if (!loading && hasMore) {
-      setPage((prev) => prev + 1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    if (!sallaIntegration || !sallaIntegration.accessToken) {
+      return;
+    }
+
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const url = new URL('https://api.salla.dev/admin/v2/products');
+        url.searchParams.append('per_page', perPage.toString());
+        url.searchParams.append('page', page.toString());
+        if (debouncedSearch.trim() !== '') {
+          url.searchParams.append('keyword', debouncedSearch.trim());
+        }
+        if (selectedCategory) {
+          url.searchParams.append('category', selectedCategory);
+        }
+
+        const res = await fetch(url.toString(), {
+          headers: {
+            Authorization: `Bearer ${sallaIntegration.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!res.ok) {
+          setLoading(false);
+          setHasMore(false);
+          return;
+        }
+        const data = await res.json();
+        if (data && data.data) {
+          setProducts(data.data);
+          setTotalPages(data.pagination?.totalPages || 1);
+          setHasMore(page < (data.pagination?.totalPages || 1));
+        } else {
+          setHasMore(false);
+        }
+      } catch (error) {
+        setHasMore(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [sallaIntegration, page, debouncedSearch, selectedCategory]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
+      setPage(newPage);
     }
   };
 
@@ -187,48 +238,121 @@ const Salla = ({ chatbotId }: SallaProps) => {
             setProducts([]);
             setHasMore(true);
           }}
-          className="p-2 border rounded"
+          className="p-2 border rounded hidden"
         >
           <option value="">All Categories</option>
           {categories.map((category) => (
-            <option key={`salla-category-${category.id}`} value={category.id}>
+            <option key={category.id} value={category.id.toString()}>
               {category.name}
             </option>
           ))}
         </select>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {products.map((product) => (
-          <a
-            key={`sala-product-${product.id}`}
-            href={product.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border rounded p-4 hover:shadow-lg transition-shadow flex flex-col"
-          >
-            <img
-              src={product.main_image}
-              alt={product.name}
-              className="w-full h-48 object-cover mb-2 rounded"
-            />
-            <h3 className="text-lg font-medium">{product.name}</h3>
-            <p className="mt-auto font-semibold">
-              {product.price.amount} {product.price.currency}
-            </p>
-          </a>
-        ))}
-      </div>
-      {hasMore && (
+      {
+        loading && <div className='flex items-center justify-center h-[600px] overflow-y-auto'>
+          <IconLoader2 className="animate-spin h-6 w-6 text-gray-500" />
+        </div>
+      }
+      {
+        !loading && <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-[600px] overflow-y-auto">
+          {
+            products.map((product) => (
+              <a
+                key={product.id}
+                href={product.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border rounded p-4 hover:shadow-lg transition-shadow flex flex-col"
+              >
+                <img
+                  src={product.main_image}
+                  alt={product.name}
+                  className="w-full h-48 object-cover mb-2 rounded"
+                />
+                <h3 className="text-lg font-medium">{product.name}</h3>
+                <p className="mt-auto font-semibold">
+                  {product.price.amount} {product.price.currency}
+                </p>
+              </a>
+            ))
+          }
+        </div>
+      }
+      <div className="flex justify-center space-x-2 mt-4">
         <button
-          onClick={loadMore}
-          disabled={loading}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          onClick={() => handlePageChange(page - 1)}
+          disabled={page === 1 || loading}
+          className="px-3 py-1 border rounded disabled:opacity-50"
         >
-          {loading ? 'Loading...' : 'Load More'}
+          Previous
         </button>
-      )}
-      {!hasMore && products.length > 0 && <p className="mt-4 text-center">No more products.</p>}
-      {products.length === 0 && !loading && <p>No products found.</p>}
+        {totalPages <= 7
+          ? [...Array(totalPages)].map((_, idx) => {
+            const pageNum = idx + 1;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                disabled={loading}
+                className={`px-3 py-1 border rounded ${pageNum === page ? 'bg-blue-600 text-white' : ''
+                  }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })
+          : (() => {
+            const pages = [];
+            if (page <= 4) {
+              for (let i = 1; i <= 5; i++) {
+                pages.push(i);
+              }
+              pages.push('ellipsis');
+              pages.push(totalPages);
+            } else if (page >= totalPages - 3) {
+              pages.push(1);
+              pages.push('ellipsis');
+              for (let i = totalPages - 4; i <= totalPages; i++) {
+                pages.push(i);
+              }
+            } else {
+              pages.push(1);
+              pages.push('ellipsis');
+              pages.push(page - 1);
+              pages.push(page);
+              pages.push(page + 1);
+              pages.push('ellipsis');
+              pages.push(totalPages);
+            }
+            return pages.map((pageNum, idx) => {
+              if (pageNum === 'ellipsis') {
+                return (
+                  <span key={`ellipsis-${idx}`} className="px-3 py-1">
+                    ...
+                  </span>
+                );
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum as number)}
+                  disabled={loading}
+                  className={`px-3 py-1 border rounded ${pageNum === page ? 'bg-blue-600 text-white' : ''
+                    }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            });
+          })()}
+        <button
+          onClick={() => handlePageChange(page + 1)}
+          disabled={page === totalPages || loading}
+          className="px-3 py-1 border rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 };
