@@ -76,7 +76,15 @@ const TemplateDialog = ({ isOpen, setIsOpen, selectedNumberId, wabaId, phoneNumb
         { value: "it_IT", label: "Italian" },
         { value: "zh_CN", label: "Chinese (China)" },
         { value: "ja_JP", label: "Japanese" },
-        { value: "ko_KR", label: "Korean" }
+        { value: "ko_KR", label: "Korean" },
+        { value: "nb_NO", label: "Norwegian (Bokmål)" },
+        { value: "da_DK", label: "Danish" },
+        { value: "sv_SE", label: "Swedish" },
+        { value: "fi_FI", label: "Finnish" },
+        { value: "nl_NL", label: "Dutch" },
+        { value: "ru_RU", label: "Russian" },
+        { value: "ar_AR", label: "Arabic" },
+        { value: "hi_IN", label: "Hindi" },
     ];
 
     useEffect(() => {

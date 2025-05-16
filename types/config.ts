@@ -288,6 +288,7 @@ export const SUPPORTED_LANGUAGES = [
   { value: 'de', label: 'German' },
   { value: 'it', label: 'Italian' },
   { value: 'pt', label: 'Portuguese' },
+  { value: "nb_NO", label: "Norwegian (Bokmål)" },
   { value: 'nl', label: 'Dutch' },
   { value: 'pl', label: 'Polish' },
   { value: 'ru', label: 'Russian' },
