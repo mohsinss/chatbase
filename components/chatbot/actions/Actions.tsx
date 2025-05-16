@@ -226,6 +226,10 @@ const Actions = (
       toast.error("You can only have one Order Management Action, check our docs more.");
       return;
     }
+    if(actionId == 'button' && actions.filter(a => a.type == "button").length > 0) {
+      toast.error("You can only have one Button Action, check our docs more.");
+      return;
+    }
 
     setIsModalOpen(false);
     router.push(`/dashboard/${params.teamId}/chatbot/${params.chatbotId}/actions/${actionId}`);
