@@ -16,6 +16,7 @@ export interface ISallaIntegration extends Document {
   refunded?: boolean;
   storeType?: string;
   settings?: Record<string, any>;
+  additionalInfo?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -67,6 +68,9 @@ const SallaIntegrationSchema: Schema = new Schema(
       type: Boolean,
     },
     storeType: {
+      type: String,
+    },
+    additionalInfo: {
       type: String,
     },
     settings: {

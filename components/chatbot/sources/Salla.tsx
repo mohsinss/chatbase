@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { IconLoader2 } from "@tabler/icons-react";
 interface SallaProps {
   chatbotId: string;
+  additionalInfo: string;
+  setAdditionalInfo: (info: string) => void;
 }
 
 interface Product {
@@ -20,7 +22,11 @@ interface Category {
   name: string;
 }
 
-const Salla = ({ chatbotId }: SallaProps) => {
+const Salla = ({ 
+  chatbotId, 
+  additionalInfo, 
+  setAdditionalInfo 
+}: SallaProps) => {
   const [sallaIntegration, setSallaIntegration] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -31,6 +37,8 @@ const Salla = ({ chatbotId }: SallaProps) => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState(searchKeyword);
   const [perPage, setPerPage] = useState(10);
+  const [activeTab, setActiveTab] = useState<'products' | 'other'>('products');
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     if (!chatbotId) {
@@ -53,6 +61,7 @@ const Salla = ({ chatbotId }: SallaProps) => {
         }
         const result = await response.json();
         setSallaIntegration(result.sallaIntegration || null);
+        setAdditionalInfo(result.sallaIntegration?.additionalInfo || '');
         setProducts([]);
         setPage(1);
         setHasMore(true);
@@ -161,8 +170,6 @@ const Salla = ({ chatbotId }: SallaProps) => {
     fetchProducts();
   }, [sallaIntegration, page, debouncedSearch, selectedCategory]);
 
-  const [totalPages, setTotalPages] = useState(1);
-
   useEffect(() => {
     if (!sallaIntegration || !sallaIntegration.accessToken) {
       return;
@@ -222,140 +229,176 @@ const Salla = ({ chatbotId }: SallaProps) => {
 
   return (
     <div className="w-full space-y-4">
-      <h2 className="text-xl font-semibold mb-4">Products</h2>
-      <div className="flex space-x-4 mb-4">
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={searchKeyword}
-          onChange={(e) => {
-            setSearchKeyword(e.target.value);
-          }}
-          className="flex-grow p-2 border rounded"
-        />
-        <select
-          value={selectedCategory}
-          onChange={(e) => {
-            setSelectedCategory(e.target.value);
-            setPage(1);
-            setProducts([]);
-            setHasMore(true);
-          }}
-          className="p-2 border rounded"
-        >
-          <option value="">All Categories</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.name.toString()}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+          <button
+            onClick={() => setActiveTab('products')}
+            className={`whitespace-nowrap pb-2 pt-0 px-1 border-b-2 font-medium text-base ${activeTab === 'products' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          >
+            Products
+          </button>
+          <button
+            onClick={() => setActiveTab('other')}
+            className={`whitespace-nowrap pb-2 pt-0 px-1 border-b-2 font-medium text-base ${activeTab === 'other' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          >
+            Other information
+          </button>
+        </nav>
       </div>
-      {
-        loading && <div className='flex items-center justify-center h-[600px] overflow-y-auto'>
-          <IconLoader2 className="animate-spin h-6 w-6 text-gray-500" />
-        </div>
-      }
-      {
-        !loading && <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-[600px] overflow-y-auto">
+
+      {activeTab === 'products' && (
+        <>
+          <h2 className="text-xl font-semibold mb-4 hidden">Products</h2>
+          <div className="flex space-x-4 mb-4">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchKeyword}
+              onChange={(e) => {
+                setSearchKeyword(e.target.value);
+              }}
+              className="flex-grow p-2 border rounded"
+            />
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setPage(1);
+                setProducts([]);
+                setHasMore(true);
+              }}
+              className="p-2 border rounded hidden"
+            >
+              <option value="">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.name.toString()}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
           {
-            products.map((product) => (
-              <a
-                key={product.id}
-                href={product.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border rounded p-4 hover:shadow-lg transition-shadow flex flex-col"
-              >
-                <img
-                  src={product.main_image}
-                  alt={product.name}
-                  className="w-full h-48 object-cover mb-2 rounded"
-                />
-                <h3 className="text-lg font-medium">{product.name}</h3>
-                <p className="mt-auto font-semibold">
-                  {product.price.amount} {product.price.currency}
-                </p>
-              </a>
-            ))
+            loading && <div className='flex items-center justify-center h-[600px] overflow-y-auto'>
+              <IconLoader2 className="animate-spin h-6 w-6 text-gray-500" />
+            </div>
           }
-        </div>
-      }
-      <div className="flex justify-center space-x-2 mt-4">
-        <button
-          onClick={() => handlePageChange(page - 1)}
-          disabled={page === 1 || loading}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        {totalPages <= 7
-          ? [...Array(totalPages)].map((_, idx) => {
-            const pageNum = idx + 1;
-            return (
-              <button
-                key={pageNum}
-                onClick={() => handlePageChange(pageNum)}
-                disabled={loading}
-                className={`px-3 py-1 border rounded ${pageNum === page ? 'bg-blue-600 text-white' : ''
-                  }`}
-              >
-                {pageNum}
-              </button>
-            );
-          })
-          : (() => {
-            const pages = [];
-            if (page <= 4) {
-              for (let i = 1; i <= 5; i++) {
-                pages.push(i);
+          {
+            !loading && <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-[600px] overflow-y-auto">
+              {
+                products.map((product) => (
+                  <a
+                    key={product.id}
+                    href={product.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border rounded p-4 hover:shadow-lg transition-shadow flex flex-col"
+                  >
+                    <img
+                      src={product.main_image}
+                      alt={product.name}
+                      className="w-full h-48 object-cover mb-2 rounded"
+                    />
+                    <h3 className="text-lg font-medium">{product.name}</h3>
+                    <p className="mt-auto font-semibold">
+                      {product.price.amount} {product.price.currency}
+                    </p>
+                  </a>
+                ))
               }
-              pages.push('ellipsis');
-              pages.push(totalPages);
-            } else if (page >= totalPages - 3) {
-              pages.push(1);
-              pages.push('ellipsis');
-              for (let i = totalPages - 4; i <= totalPages; i++) {
-                pages.push(i);
-              }
-            } else {
-              pages.push(1);
-              pages.push('ellipsis');
-              pages.push(page - 1);
-              pages.push(page);
-              pages.push(page + 1);
-              pages.push('ellipsis');
-              pages.push(totalPages);
-            }
-            return pages.map((pageNum, idx) => {
-              if (pageNum === 'ellipsis') {
+            </div>
+          }
+          <div className="flex justify-center space-x-2 mt-4">
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1 || loading}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            {totalPages <= 7
+              ? [...Array(totalPages)].map((_, idx) => {
+                const pageNum = idx + 1;
                 return (
-                  <span key={`ellipsis-${idx}`} className="px-3 py-1">
-                    ...
-                  </span>
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    disabled={loading}
+                    className={`px-3 py-1 border rounded ${pageNum === page ? 'bg-blue-600 text-white' : ''
+                      }`}
+                  >
+                    {pageNum}
+                  </button>
                 );
-              }
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum as number)}
-                  disabled={loading}
-                  className={`px-3 py-1 border rounded ${pageNum === page ? 'bg-blue-600 text-white' : ''
-                    }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            });
-          })()}
-        <button
-          onClick={() => handlePageChange(page + 1)}
-          disabled={page === totalPages || loading}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+              })
+              : (() => {
+                const pages = [];
+                if (page <= 4) {
+                  for (let i = 1; i <= 5; i++) {
+                    pages.push(i);
+                  }
+                  pages.push('ellipsis');
+                  pages.push(totalPages);
+                } else if (page >= totalPages - 3) {
+                  pages.push(1);
+                  pages.push('ellipsis');
+                  for (let i = totalPages - 4; i <= totalPages; i++) {
+                    pages.push(i);
+                  }
+                } else {
+                  pages.push(1);
+                  pages.push('ellipsis');
+                  pages.push(page - 1);
+                  pages.push(page);
+                  pages.push(page + 1);
+                  pages.push('ellipsis');
+                  pages.push(totalPages);
+                }
+                return pages.map((pageNum, idx) => {
+                  if (pageNum === 'ellipsis') {
+                    return (
+                      <span key={`ellipsis-${idx}`} className="px-3 py-1">
+                        ...
+                      </span>
+                    );
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum as number)}
+                      disabled={loading}
+                      className={`px-3 py-1 border rounded ${pageNum === page ? 'bg-blue-600 text-white' : ''
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                });
+              })()}
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === totalPages || loading}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </>
+      )}
+
+      {activeTab === 'other' && (
+        <div>
+          <label htmlFor="additionalInfo" className="block text-base pb-2 font-medium mb-1">
+            Additional information for your salla store.
+          </label>
+          <textarea
+            id="additionalInfo"
+            value={additionalInfo}
+            onChange={(e) => setAdditionalInfo(e.target.value)}
+            className="w-full p-2 border rounded min-h-[200px]"
+            placeholder="Enter extra information about Salla here..."
+          />
+        </div>
+      )}
     </div>
   );
 };

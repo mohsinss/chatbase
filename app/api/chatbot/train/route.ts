@@ -25,7 +25,7 @@ interface IFile {
 
 export async function POST(req: Request) {
   try {
-    const { chatbotId, text, qaPairs, links, questionFlow, youtubeLinks, notionPages } = await req.json();
+    const { chatbotId, text, qaPairs, links, questionFlow, youtubeLinks, notionPages, sallaAdditionalInfo } = await req.json();
 
     if (!chatbotId) {
       return NextResponse.json({ error: "chatbotId is required" }, { status: 400 });
@@ -92,6 +92,9 @@ export async function POST(req: Request) {
         } while (currentPage <= totalPages);
 
         sallaProducts = sallaProductsAccum;
+
+        sallaIntegration.additionalInfo = sallaAdditionalInfo;
+        await sallaIntegration.save();
       }
     }
 
@@ -136,6 +139,8 @@ export async function POST(req: Request) {
     // Add sallaProducts text for training
     let sallaText = '';
     if (sallaProducts.length > 0) {
+      sallaText += `${sallaAdditionalInfo}\n\n`;
+      sallaText += `Salla Products:\n\n`;
       sallaProducts.forEach(product => {
         sallaText += `Product Name: ${product.name}\n`;
         sallaText += `Description: ${product.description || ''}\n`;

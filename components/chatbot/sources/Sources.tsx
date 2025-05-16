@@ -63,6 +63,7 @@ const Sources = ({
   const [showRetrainAlert, setShowRetrainAlert] = useState(false);
   const [lastTrained, setLastTrained] = useState<Date | null>(null);
   const [notionPagesLoading, setNotionPagesLoading] = useState(false);
+  const [sallaAdditionalInfo, setSallaAdditionalInfo] = useState<string>('');
 
   //@ts-ignore
   const planConfig = config.stripe.plans[team.plan];
@@ -166,6 +167,7 @@ const Sources = ({
           youtubeLinks,
           questionFlow: qFlow,
           notionPages, // Include Notion data in retrain payload
+          sallaAdditionalInfo, // Include Salla additional info
         }),
       });
 
@@ -285,7 +287,7 @@ const Sources = ({
           lastTrained={lastTrained}
         />;
       case "salla":
-        return <Salla chatbotId={chatbotId}/>;
+        return <Salla chatbotId={chatbotId} additionalInfo={sallaAdditionalInfo} setAdditionalInfo={setSallaAdditionalInfo}/>;
       default:
         return <div>Content for {currentTab}</div>;
     }
