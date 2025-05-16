@@ -42,6 +42,7 @@ const Salla = ({ chatbotId }: SallaProps) => {
 
     const fetchSallaIntegration = async () => {
       try {
+        setLoading(true);
         const response = await fetch(`/api/chatbot/integrations/salla?chatbotId=${chatbotId}`);
         if (!response.ok) {
           setSallaIntegration(null);
@@ -59,6 +60,7 @@ const Salla = ({ chatbotId }: SallaProps) => {
         setProducts([]);
         setHasMore(false);
       }
+      setLoading(false);
     };
 
     fetchSallaIntegration();
@@ -213,10 +215,6 @@ const Salla = ({ chatbotId }: SallaProps) => {
     }
   };
 
-  if (!sallaIntegration) {
-    return <div>Salla integration is not yet available.</div>;
-  }
-
   return (
     <div className="w-full space-y-4">
       <h2 className="text-xl font-semibold mb-4">Products</h2>
@@ -238,11 +236,11 @@ const Salla = ({ chatbotId }: SallaProps) => {
             setProducts([]);
             setHasMore(true);
           }}
-          className="p-2 border rounded hidden"
+          className="p-2 border rounded"
         >
           <option value="">All Categories</option>
           {categories.map((category) => (
-            <option key={category.id} value={category.id.toString()}>
+            <option key={category.id} value={category.name.toString()}>
               {category.name}
             </option>
           ))}
