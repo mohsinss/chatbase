@@ -48,6 +48,7 @@ const Salla = ({ chatbotId }: SallaProps) => {
           setSallaIntegration(null);
           setProducts([]);
           setHasMore(false);
+          setLoading(false);
           return;
         }
         const result = await response.json();
@@ -214,6 +215,10 @@ const Salla = ({ chatbotId }: SallaProps) => {
       setPage(newPage);
     }
   };
+
+  if (!sallaIntegration && !loading) {
+    return <div>Salla isn't connected to this chatbot.</div>;
+  }
 
   return (
     <div className="w-full space-y-4">
