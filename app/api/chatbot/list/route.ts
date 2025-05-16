@@ -33,7 +33,7 @@ export async function GET(req: Request) {
       teamId,
       // createdBy: session.user.id
     })
-      .select('chatbotId name createdAt sourcesCount')
+      .select('chatbotId name createdAt sourcesCount integrations')
       .sort({ createdAt: -1 });
 
     return NextResponse.json({ chatbots });

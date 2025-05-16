@@ -414,7 +414,7 @@ progress::-webkit-progress-value {
 }
 
 .link-btn:hover {
-  background-color: #555;
-  color: beige;
+  background-color: #555 !important;
+  color: beige !important;
   cursor: pointer;
 }

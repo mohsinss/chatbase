@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { IconSearch, IconPlus, IconMenu2, IconX, IconArrowUp, IconAlertCircle } from "@tabler/icons-react";
+import { IconSearch, IconPlus, IconMenu2, IconX, IconArrowUp, IconAlertCircle, IconCheck } from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
 import ButtonAccount from "./ButtonAccount";
 import toast from "react-hot-toast";
@@ -22,6 +22,7 @@ interface Chatbot {
   teamId: string;
   createdBy: string;
   sources: any[];
+  integrations: Object;
 }
 
 interface DashboardNavProps {
@@ -34,9 +35,8 @@ const showErrorToast = (message: string) => {
   toast.custom(
     (t) => (
       <div
-        className={`${
-          t.visible ? 'animate-enter' : 'animate-leave'
-        } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+        className={`${t.visible ? 'animate-enter' : 'animate-leave'
+          } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
       >
         <div className="flex-1 w-0 p-4">
           <div className="flex items-start">
@@ -69,6 +69,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [isChatbotMenuOpen, setIsChatbotMenuOpen] = useState(false);
   const [chatbots, setChatbots] = useState<Chatbot[]>([]);
+  const [currentChatbot, setCurrentChatbot] = useState<Chatbot | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -80,10 +81,10 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
   const [brandingSettings, setBrandingSettings] = useState<ChatbotBrandingSettings>({ logoUrl: "" });
 
   // Extract chatbotId from URL path - handle both /chatbot/ and /settings/branding paths
-  const currentChatbotId = pathname.includes('/chatbot/') 
-    ? pathname.split('/chatbot/')[1]?.split('/')[0] 
-    : pathname.includes('/settings/branding') 
-      ? pathname.split('/settings/branding')[0]?.split('/').pop() 
+  const currentChatbotId = pathname.includes('/chatbot/')
+    ? pathname.split('/chatbot/')[1]?.split('/')[0]
+    : pathname.includes('/settings/branding')
+      ? pathname.split('/settings/branding')[0]?.split('/').pop()
       : null;
 
   const handleSignOut = () => {
@@ -158,7 +159,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
     // Handler for branding settings updates
     const handleBrandingUpdate = (event: CustomEvent<any>) => {
       console.log('Received branding update event:', event.detail);
-      
+
       // Only update if it's for the current chatbot
       if (event.detail.chatbotId === currentChatbotId) {
         setBrandingSettings(event.detail);
@@ -167,18 +168,22 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
 
     // Add event listener
     window.addEventListener(
-      BRANDING_UPDATED_EVENT, 
+      BRANDING_UPDATED_EVENT,
       handleBrandingUpdate as EventListener
     );
 
     // Cleanup
     return () => {
       window.removeEventListener(
-        BRANDING_UPDATED_EVENT, 
+        BRANDING_UPDATED_EVENT,
         handleBrandingUpdate as EventListener
       );
     };
   }, [currentChatbotId]);
+
+  useEffect(() => {
+    setCurrentChatbot(chatbots.find(chatbot => chatbot.chatbotId === currentChatbotId) || null);
+  }, [currentChatbotId, chatbots])
 
   // Debug log for current branding settings
   useEffect(() => {
@@ -253,28 +258,28 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
   };
 
   return (
-    <div 
+    <div
       className="border-b z-50 relative"
       style={dynamicStyles.container}
     >
       {/* Header Image Background */}
       {brandingSettings.headerUrl && (
-        <div 
+        <div
           className="absolute inset-0 w-full h-full opacity-10"
           style={dynamicStyles.headerImage}
         />
       )}
-      
+
       {/* Header Text centered over the header image */}
       {brandingSettings.headerText && brandingSettings.headerUrl && (
         <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none">
           <h2 className="font-bold drop-shadow-lg p-4 text-center"
-              style={{
-                textShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
-                color: brandingSettings.headerTextColor || "#ffffff",
-                fontSize: brandingSettings.headerFontSize || "3rem",
-                fontFamily: brandingSettings.headerFontFamily || "Inter, sans-serif"
-              }}>
+            style={{
+              textShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
+              color: brandingSettings.headerTextColor || "#ffffff",
+              fontSize: brandingSettings.headerFontSize || "3rem",
+              fontFamily: brandingSettings.headerFontFamily || "Inter, sans-serif"
+            }}>
             {brandingSettings.headerText}
           </h2>
         </div>
@@ -326,7 +331,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                     </svg>
                   </button>
                   {isTeamMenuOpen && (
-                    <div 
+                    <div
                       className="absolute z-10 mt-2 w-72 rounded-lg shadow-lg bg-base-100 ring-1 ring-black ring-opacity-5"
                     >
                       {/* Search */}
@@ -471,7 +476,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                                     //@ts-ignore
                                     const chatbotLimit = config.stripe.plans[team.plan].chatbotLimit;
                                     console.log("chatbotLimit", chatbotLimit);
-                                    
+
                                     if (chatbots.length < chatbotLimit) {
                                       router.push(`/dashboard/${teamId}/create-new-chatbot`);
                                     } else {
@@ -498,6 +503,15 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                     )}
                   </div>
                 )}
+
+                {
+                  //@ts-ignore
+                  currentChatbot && currentChatbot.integrations?.salla == true && (
+                    <div className="flex items-center gap-2 rounded-xl bg-red-100 p-1 text-sm text-red-800 shadow-sm ring-1 ring-red-300">
+                      <IconCheck className="w-4 h-4" />
+                      <span>Connected to Salla</span>
+                    </div>
+                  )}
               </div>
             }
           </div>
@@ -622,7 +636,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                     You've reached the limit of {currentChatbotLimit} chatbots on your current plan
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={handleUpgradePlanModalClose}
                   className="btn btn-sm btn-circle bg-white/20 hover:bg-white/30 border-none text-white"
                 >
@@ -630,7 +644,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                 </button>
               </div>
             </div>
-            
+
             {/* Note below header */}
             <div className="bg-blue-50 border-b border-blue-100 px-6 py-4">
               <div className="flex gap-3 items-center">
@@ -642,7 +656,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                 </p>
               </div>
             </div>
-            
+
             {/* Content with slight padding */}
             <div className="p-6">
               <PlansSettings teamId={teamId} />

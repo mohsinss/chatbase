@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { IconFile, IconAlignLeft, IconGlobe, IconAdjustmentsSpark, IconMessageQuestion, IconBrandNotion, IconBrandYoutube } from "@tabler/icons-react";
+import { IconFile, IconAlignLeft, IconGlobe, IconAdjustmentsSpark, IconMessageQuestion, IconBrandNotion, IconBrandYoutube, IconBrandAppgallery } from "@tabler/icons-react";
 import { FileUpload } from "./FileUpload";
 import SourceStats from './SourceStats';
 import TextInput from './TextInput';
@@ -15,6 +15,7 @@ import ChatflowV1 from "./ChatflowV1";
 import { ReactFlowProvider } from "reactflow";
 import YouTubeInput from "./YouTubeInput";
 import { YouTubeLink } from "./types";
+import Salla from "./Salla";
 
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
@@ -24,6 +25,7 @@ const SOURCE_TABS = [
   { id: "qf", label: "QFlow", icon: <IconAdjustmentsSpark className="w-5 h-5" /> },
   { id: "website", label: "Website", icon: <IconGlobe className="w-5 h-5" /> },
   { id: "notion", label: "Notion", icon: <IconBrandNotion className="w-5 h-5" /> },
+  { id: "salla", label: "Salla", icon: <IconBrandAppgallery className="w-5 h-5" /> },
 ];
 
 const Sources = ({
@@ -38,6 +40,7 @@ const Sources = ({
   team: any;
 }) => {
   team = JSON.parse(team)
+  console.log("chatbot", chatbot);
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'files';
@@ -281,6 +284,8 @@ const Sources = ({
           }}
           lastTrained={lastTrained}
         />;
+      case "salla":
+        return <Salla chatbotId={chatbotId}/>;
       default:
         return <div>Content for {currentTab}</div>;
     }
@@ -307,24 +312,29 @@ const Sources = ({
             md:w-[160px] md:border-r md:space-y-2 
             md:pr-3 md:mr-6
           `}>
-            {SOURCE_TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`
+            {SOURCE_TABS.map((tab) => {
+              if(tab.id == "salla" && chatbot.integrations.salla != true) {
+                return null;
+              }
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`
                   flex items-center gap-2 transition-colors w-full
                   md:px-4 md:py-2
                   max-md:px-6 max-md:py-3
                   rounded-lg
                   ${currentTab === tab.id
-                    ? "bg-primary/10 text-primary"
-                    : "text-gray-600 hover:bg-gray-100"}
+                      ? "bg-primary/10 text-primary"
+                      : "text-gray-600 hover:bg-gray-100"}
                 `}
-              >
-                {tab.icon}
-                <span className="text-sm">{tab.label}</span>
-              </button>
-            ))}
+                >
+                  {tab.icon}
+                  <span className="text-sm">{tab.label}</span>
+                </button>
+              )
+            })}
           </div>
 
           {/* Content Area - added min-height */}
