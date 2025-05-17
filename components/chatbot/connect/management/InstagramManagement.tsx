@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button"
 import Spinner from "@/components/Spinner";
+import { IconTrash, IconSettings, IconRefresh } from "@tabler/icons-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 const InstagramManagement = ({ chatbotId, domain, teamId }:
@@ -174,16 +175,16 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                     }
                     return response.json();
                 })
-                .then((data) => {
-                    setIsConnecting(false);
-                    fetchPages();
-                    toast.success("Successfully connected to Instagram!");
-                })
-                .catch((error) => {
-                    setIsConnecting(false);
-                    console.error("Error saving Instagram page credentials:", error);
-                    toast.error("Failed to save Instagram page. Please check integration guide again.");
-                });
+                    .then((data) => {
+                        setIsConnecting(false);
+                        fetchPages();
+                        toast.success("Successfully connected to Instagram!");
+                    })
+                    .catch((error) => {
+                        setIsConnecting(false);
+                        console.error("Error saving Instagram page credentials:", error);
+                        toast.error("Failed to save Instagram page. Please check integration guide again.");
+                    });
             } else {
                 console.log(response);
                 toast.error("Something went wrong with the connection.");
@@ -285,6 +286,12 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
 
                                     </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -292,7 +299,22 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                                     <tr key={`pageTR-${page.pageId}`}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{page.pageId}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{page.name}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td
+                                            onClick={() => handleSettingsMenu(page._id)}
+                                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <IconSettings className="w-4 h-4" />
+                                        </td>
+                                        <td
+                                            onClick={handleConnect}
+                                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <IconRefresh className="w-4 h-4" />
+                                        </td>
+                                        <td
+                                            onClick={handleDeleteMenu(page)}
+                                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <IconTrash className="w-4 h-4" />
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium hidden">
                                             <Menu as="div" className="relative inline-block text-left">
                                                 <div className="z-10">
                                                     <Menu.Button className="inline-flex justify-center w-full px-2 py-1 text-sm font-medium text-gray-700 bg-white rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
