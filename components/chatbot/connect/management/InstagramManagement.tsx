@@ -301,17 +301,17 @@ const InstagramManagement = ({ chatbotId, domain, teamId }:
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{page.name}</td>
                                         <td
                                             onClick={() => handleSettingsMenu(page._id)}
-                                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            className="px-6 py-4 cursor-pointer whitespace-nowrap text-sm text-gray-500">
                                             <IconSettings className="w-4 h-4" />
                                         </td>
                                         <td
                                             onClick={handleConnect}
-                                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <IconRefresh className="w-4 h-4" />
+                                            className="px-6 py-4 cursor-pointer whitespace-nowrap flex gap-2 text-sm text-gray-500">
+                                            <IconRefresh className="w-4 h-4 pt-1" /> Reconnect
                                         </td>
                                         <td
                                             onClick={handleDeleteMenu(page)}
-                                            className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            className="px-6 py-4 cursor-pointer whitespace-nowrap text-sm text-gray-500">
                                             <IconTrash className="w-4 h-4" />
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium hidden">
