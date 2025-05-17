@@ -72,10 +72,17 @@ const IntegrationCard = ({
     <div className="flex items-center gap-2">
       <button
         onClick={onClick}
-        className="flex-1 px-4 py-2 text-center rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50"
+        className={`flex-1 px-4 py-2 text-center rounded-lg border transition-colors disabled:opacity-50
+    ${connected ? 'bg-green-500 text-white border-green-600 hover:bg-green-600' : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300'}`}
         disabled={isConnecting || commingSoon}
       >
-        {commingSoon ? "Comming Soon" : connected ? "Manage" : isConnecting ? "Connecting..." : "Connect"}
+        {commingSoon
+          ? "Coming Soon"
+          : connected
+            ? "Manage"
+            : isConnecting
+              ? "Connecting..."
+              : "Connect"}
       </button>
       {showDeviceIcon && (
         <button className="p-2 rounded-lg border border-gray-200 hover:border-gray-300">
@@ -152,7 +159,7 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
         if (platform === "Messenger") {
           const code = response.authResponse.code;
           console.log(code);
-          
+
           fetch("/api/chatbot/integrations/facebook-page/save", {
             method: "POST",
             headers: {
@@ -168,20 +175,20 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
             }
             return response.json();
           })
-          .then((data) => {
-            setConnectingTitle('');
-            router.refresh();
-            toast.success("Successfully connected to Messenger!");
-          })
-          .catch((error) => {
-            setConnectingTitle('');
-            console.error("Error saving FB page credentials:", error);
-            toast.error("Failed to save FB page. Please check integration guide again.");
-          });
+            .then((data) => {
+              setConnectingTitle('');
+              router.refresh();
+              toast.success("Successfully connected to Messenger!");
+            })
+            .catch((error) => {
+              setConnectingTitle('');
+              console.error("Error saving FB page credentials:", error);
+              toast.error("Failed to save FB page. Please check integration guide again.");
+            });
         } else if (platform === "Instagram") {
           const accessToken = response.authResponse.accessToken;
           console.log(response.authResponse);
-          
+
           fetch("/api/chatbot/integrations/instagram-page/save", {
             method: "POST",
             headers: {
@@ -197,16 +204,16 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
             }
             return response.json();
           })
-          .then((data) => {
-            setConnectingTitle('');
-            router.refresh();
-            toast.success("Successfully connected to Instagram!");
-          })
-          .catch((error) => {
-            setConnectingTitle('');
-            console.error("Error saving Instagram credentials:", error);
-            toast.error(error?.message || "Failed to save Instagram. Please check integration guide again.");
-          });
+            .then((data) => {
+              setConnectingTitle('');
+              router.refresh();
+              toast.success("Successfully connected to Instagram!");
+            })
+            .catch((error) => {
+              setConnectingTitle('');
+              console.error("Error saving Instagram credentials:", error);
+              toast.error(error?.message || "Failed to save Instagram. Please check integration guide again.");
+            });
         } else if (platform === "Whatsapp") {
           // WhatsApp uses a different flow with embedded signup
           // The actual saving happens in the message event listener
@@ -242,20 +249,20 @@ const IntegrationsSection = ({ chatbotId, chatbot, teamId }: { teamId: string, c
 
     if (platform === "Whatsapp") {
       handleFacebookConnection(
-        "Whatsapp", 
-        process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID, 
+        "Whatsapp",
+        process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID,
         'code'
       );
     } else if (platform === "Messenger") {
       handleFacebookConnection(
-        "Messenger", 
-        process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE, 
+        "Messenger",
+        process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_PAGE,
         'code'
       );
     } else if (platform === "Instagram") {
       handleFacebookConnection(
-        "Instagram", 
-        process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_INSTAGRAM, 
+        "Instagram",
+        process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIGURATION_ID_FOR_INSTAGRAM,
         'token,signed_request,graph_domain'
       );
     } else if (platform === "x") {
