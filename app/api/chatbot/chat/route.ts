@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         query: messages[messages.length - 1].content,
         search_type: 'fulltext',
-        page_size: 1
+        page_size: 4
       })
     };
 
@@ -237,7 +237,15 @@ ${calComActions.map((action, index) => `          ${index + 1}. "${action.url}" 
         `;
       systemPrompt += buttonActionsPrompt;
     }
-    console.log(systemPrompt)
+
+    if (chatbot.integrations.salla === true) {
+      systemPrompt += `\nIf the user asks about products on the Salla store, respond with details in the following format for each product:\n` +
+        `Product Name: [name]\n` +
+        `Description: [description]\n` +
+        `Price: [amount] [currency]\n` +
+        `URL: [product link]\n` +
+        `Main Image: [image link]\n`;
+    }
 
     const confidencePrompt = "\nFor your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value at the very end of your response, formatted as ':::100' with no extra text following it.";
     const todayData = "\nToday is " + Date().toString();

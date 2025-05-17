@@ -146,7 +146,7 @@ export async function POST(req: Request) {
         sallaText += `Description: ${product.description || ''}\n`;
         sallaText += `Price: ${product.price?.amount || ''} ${product.price?.currency || ''}\n`;
         sallaText += `URL: ${product.url || product.urls?.customer || ''}\n`;
-        sallaText += `SKU: ${product.sku || ''}\n`;
+        // sallaText += `SKU: ${product.sku || ''}\n`;
         sallaText += `Main Image: ${product.main_image || ''}\n`;
         sallaText += `\n`;
       });
