@@ -41,7 +41,10 @@ export default function Calcom(
   const router = useRouter()
   const [isEnabled, setIsEnabled] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [formData, setFormData] = useState(calComTemplate)
+  // Initialize formData with all keys to avoid uncontrolled to controlled input warning
+  const [formData, setFormData] = useState({
+    ...calComTemplate,
+  })
   const searchParams = useSearchParams()
   const actionId = searchParams.get("actionId")
   const [isformDataValid, setIsformDataValid] = useState(false);
@@ -55,9 +58,14 @@ export default function Calcom(
             throw new Error("Failed to fetch action");
           }
           const action = await res.json();
+          // Ensure formData keys are always defined to avoid uncontrolled input warning
           setFormData({
+            name: action.name ?? "",
+            url: action.url ?? "",
+            instructions: action.instructions ?? "",
             ...action
           });
+          console.log(action)
           setIsEnabled(action.enabled);
         } catch (error) {
           console.error("Error fetching action:", error);
@@ -232,4 +240,3 @@ export default function Calcom(
     </div>
   )
 }
-

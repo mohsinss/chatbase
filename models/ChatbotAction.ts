@@ -18,7 +18,7 @@ const ChatbotActionSchema = new Schema<IChatbotAction>({
   name: { type: String, required: true },
   type: { type: String, required: true },
   url: { type: String, required: false },
-  instructions: { type: String, required: true },
+  instructions: { type: String, required: false },
   enabled: { type: Boolean, default: true },
   metadata: {
     type: mongoose.Schema.Types.Mixed,
