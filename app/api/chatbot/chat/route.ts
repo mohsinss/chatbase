@@ -214,7 +214,7 @@ ${calComActions.map((action, index) => `          ${index + 1}. "${action.url}" 
         Choose the correct button action from the list:
         
         Button Actions List:
-        ${buttonActions[0].metadata.map((action: ButtonActionMetadata, index: number) => {
+        ${buttonActions[0]?.metadata?.map((action: ButtonActionMetadata, index: number) => {
         const type: string = action.buttonType || 'button';
         const text: string = action.buttonText || '';
         const url: string = action.url;
