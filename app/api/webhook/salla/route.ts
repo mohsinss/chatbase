@@ -32,14 +32,26 @@ async function fetchSallaStoreInfo(accessToken: string) {
   return res.json();
 }
 
+async function subscribeSallaWebhook(accessToken: string) {
+  const res = await fetch('https://api.salla.dev/admin/v2/webhooks', {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch store info: ${res.statusText}`);
+  }
+  return res.json();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('Authorization');
-    if (authHeader !== AUTH_TOKEN) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const body = await request.json();
+    const event = body.event;
     // Log webhook data if enabled
     if (process.env.ENABLE_WEBHOOK_LOGGING_SALLA == "1") {
       try {
@@ -58,7 +70,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const event = body.event;
+    if (authHeader !== AUTH_TOKEN) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const merchantId = body.merchant;
     const createdAt = body.created_at;
     const data = body.data;
