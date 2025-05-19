@@ -4,8 +4,6 @@ import SallaIntegration from '@/models/SallaIntegration';
 import Chatbot from '@/models/Chatbot';
 import connectMongo from '@/libs/mongoose';
 
-const AUTH_TOKEN = process.env.SALLA_WEBHOOK_AUTH_TOKEN || ''; // Should be stored securely in env variables
-
 async function fetchSallaAppSettings(appId: number, accessToken: string) {
   const res = await fetch(`https://api.salla.dev/admin/v2/apps/${appId}/settings`, {
     headers: {
@@ -48,7 +46,7 @@ async function subscribeSallaWebhook(accessToken: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get(process.env.SALLA_STORE_WEBHOOK_HEADER_KEY);
 
     const body = await request.json();
     // Log webhook data if enabled
@@ -69,7 +67,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (authHeader !== AUTH_TOKEN) {
+    if (authHeader !== process.env.SALLA_STORE_WEBHOOK_HEADER_VALUE) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

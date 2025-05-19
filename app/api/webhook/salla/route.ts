@@ -32,7 +32,7 @@ async function fetchSallaStoreInfo(accessToken: string) {
   return res.json();
 }
 
-async function subscribeSallaWebhook(accessToken: string) {
+async function subscribeSallaWebhook(accessToken: string, event: string) {
   const res = await fetch('https://api.salla.dev/admin/v2/webhooks/subscribe', {
     method: "POST",
     headers: {
@@ -40,8 +40,8 @@ async function subscribeSallaWebhook(accessToken: string) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      name: "chatsa product",
-      event: "product.updated",
+      name: `chatsa for ${event}`,
+      event,
       url: "https://chatsa.co/api/webhook/salla/store",
       version: 2,
       headers: [
@@ -149,7 +149,9 @@ export async function POST(request: NextRequest) {
         }
 
         await SallaIntegration.findOneAndUpdate(filter, update, { upsert: true, new: true });
-        await subscribeSallaWebhook(data.access_token);
+        await subscribeSallaWebhook(data.access_token, "product.updated");
+        await subscribeSallaWebhook(data.access_token, "product.created");
+        await subscribeSallaWebhook(data.access_token, "product.deleted");
         break;
       }
       case 'app.uninstalled': {
