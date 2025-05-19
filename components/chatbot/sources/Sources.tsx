@@ -90,7 +90,6 @@ const Sources = ({
       }
     } catch (error) {
       console.error("Error fetching Notion data:", error);
-      toast.error("Failed to load Notion data: " + error.message);
     } finally {
       setNotionPagesLoading(false);
     }
