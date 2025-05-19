@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     }
 
     let sallaProducts = [];
-    if (existingChatbot.integrations.salla == true) {
+    if (existingChatbot?.integrations?.salla == true) {
       // Find sallaIntegration by matching sallaIntegration.settings.chatbotId to chatbotId
       const sallaIntegration = await SallaIntegration.findOne({ "settings.chatbotId": chatbotId });
       if (sallaIntegration) {
@@ -418,6 +418,10 @@ export async function POST(req: Request) {
     }
 
     if (sallaText) {
+      const metadata = {
+        uniqueTag: `texttexttexttextsalla-${Date.now()}` // Append timestamp to ensure uniqueness
+      };
+
       const add_salla_response = await fetch("https://api.trieve.ai/api/file", {
         method: "POST",
         headers: {
@@ -429,9 +433,7 @@ export async function POST(req: Request) {
           {
             base64_file: base64SallaFile,
             file_name: 'texttexttexttextsalla.txt',
-            metadata: {
-              type: 'text'
-            },
+            metadata
           }
         )
       });
@@ -441,6 +443,9 @@ export async function POST(req: Request) {
       if (!add_salla_response.ok) {
         throw new Error(`Failed to update text: ${add_salla_response.statusText} - ${JSON.stringify(responseData)}`);
       }
+
+      const trieveId = responseData.file_metadata.id;
+      existingDataset.sallaTrieveId = trieveId;
     }
 
     // Process YouTube links similarly
@@ -487,11 +492,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Save the updated dataset
-    await existingDataset.save();
-
     const files = existingDataset?.files || [];
-    // @ts-ignore
 
     sourcesCount += files.length
     // Update the chatbot with the sourcesCount
@@ -501,10 +502,8 @@ export async function POST(req: Request) {
     await existingChatbot.save(); // Save the updated chatbot
 
     // Also update lastTrained in dataset
-    if (existingDataset) {
-      existingDataset.lastTrained = new Date();
-      await existingDataset.save();
-    }
+    existingDataset.lastTrained = new Date();
+    await existingDataset.save();
 
     return NextResponse.json({
       success: true,
