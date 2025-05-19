@@ -51,6 +51,7 @@ interface IDataset {
   questionFlowEnable?: boolean;
   questionAIResponseEnable?: boolean;
   restartQFTimeoutMins?: number;
+  sallaTrieveId?: string;
 }
 
 const datasetSchema = new mongoose.Schema<IDataset>({
@@ -90,6 +91,10 @@ const datasetSchema = new mongoose.Schema<IDataset>({
       chars: { type: Number, required: false },
     }],
     default: []
+  },
+  sallaTrieveId: {
+    type: String,
+    required: false,
   },
   youtubeLinks: {
     type: [{
