@@ -239,12 +239,11 @@ ${calComActions.map((action, index) => `          ${index + 1}. "${action.url}" 
     }
 
     if (chatbot?.integrations?.salla === true) {
-      systemPrompt += `\nIf the user asks about products on the Salla store, respond with details in the following format for each product:\n` +
-        `Product Name: [name]\n` +
-        `Description: [description]\n` +
-        `Price: [amount] [currency]\n` +
-        `URL: [product link]\n` +
-        `Main Image: [image link]\n`;
+      systemPrompt += `\nIf the user asks about products on the Salla store, respond with each product's details in the format below. Ensure that clicking the image opens the product URL. Summarize the description in 2–3 concise sentences:\n` +
+        `Product Name: [Product Name]\n` +
+        `Description: [Short Description – 2 to 3 sentences]\n` +
+        `Price: [Amount] [Currency]\n` +
+        `Main Image: [Image URL] (clickable, links to product page)\n`;
     }
 
     const confidencePrompt = "\nFor your response, how confident are you in its accuracy on a scale from 0 to 100? Please make sure to put only this value at the very end of your response, formatted as ':::100' with no extra text following it.";
