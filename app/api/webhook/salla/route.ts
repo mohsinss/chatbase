@@ -33,7 +33,7 @@ async function fetchSallaStoreInfo(accessToken: string) {
 }
 
 async function subscribeSallaWebhook(accessToken: string) {
-  const res = await fetch('https://api.salla.dev/admin/v2/webhooks', {
+  const res = await fetch('https://api.salla.dev/admin/v2/webhooks/subscribe', {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
