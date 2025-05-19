@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import mongoose from 'mongoose';
 import SallaIntegration from '@/models/SallaIntegration';
 import Chatbot from '@/models/Chatbot';
 import connectMongo from '@/libs/mongoose';

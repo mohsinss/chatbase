@@ -506,7 +506,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
 
                 {
                   //@ts-ignore
-                  currentChatbot && currentChatbot.integrations?.salla == true && (
+                  currentChatbot && currentChatbot?.integrations?.salla == true && (
                     <div 
                       onClick={() => {
                         router.push(`/dashboard/${teamId}/chatbot/${currentChatbot.chatbotId}/sources?tab=salla`);

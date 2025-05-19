@@ -238,7 +238,7 @@ ${calComActions.map((action, index) => `          ${index + 1}. "${action.url}" 
       systemPrompt += buttonActionsPrompt;
     }
 
-    if (chatbot.integrations.salla === true) {
+    if (chatbot?.integrations?.salla === true) {
       systemPrompt += `\nIf the user asks about products on the Salla store, respond with details in the following format for each product:\n` +
         `Product Name: [name]\n` +
         `Description: [description]\n` +
