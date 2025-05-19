@@ -8,6 +8,7 @@ import { sendGemini } from '@/libs/gemini';
 import { MODEL_MAPPING } from '@/types';
 import config from '@/config';
 import OpenAI from 'openai';
+import { O1_MODELS, O1_CONFIG } from '@/types/config';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -43,21 +44,6 @@ function processMessagesForReasoner(systemPrompt, relevant_chunk, messages) {
 
   return formattedMessages;
 }
-
-// Add model type mapping with specific O1 model versions
-const O1_MODELS = ['o1', 'o1-mini'];
-const O1_CONFIG = {
-  'o1': {
-    maxOutputTokens: 100000,
-    contextWindow: 200000,
-    model: 'o1'
-  },
-  'o1-mini': {
-    maxOutputTokens: 65536,
-    contextWindow: 128000,
-    model: 'o1-mini'
-  }
-};
 
 export const getAIResponse = async (chatbotId: string, messages: any, text: string, updatedPrompt?: string) => {
   // Measure time for fetching AI settings and dataset

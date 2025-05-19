@@ -1,6 +1,6 @@
 import { openai } from './clients';
 import { setCorsHeaders } from './cors';
-import { O1_MODELS, O1_CONFIG } from './models';
+import { O1_MODELS, O1_CONFIG } from '@/types/config';
 import { tools, orderTools } from './tools';
 import { MODEL_MAPPING } from '@/types';
 import { getAvailableSlots } from '@/lib/calcom';

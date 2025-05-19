@@ -77,16 +77,21 @@ export interface ConfigProps {
 
 export const MODEL_MAPPING: { [key: string]: string } = {
   // OpenAI models
-  'gpt-4o': 'gpt-4o',
-  'gpt-4o-mini': 'gpt-4o-mini',
-  'o1': 'o1',
-  'o1-mini': 'o1-mini',
   'gpt-3.5-turbo': 'gpt-3.5-turbo',
+  'gpt-4-0613': 'gpt-4-0613',
+  'gpt-4-turbo-2024-04-09': 'gpt-4-turbo-2024-04-09',
+  'gpt-4o-2024-11-20': 'gpt-4o-2024-11-20',
+  'gpt-4o-mini': 'gpt-4o-mini',
+  'gpt-4.1-2025-04-14': 'gpt-4.1-2025-04-14',
+  'gpt-4.1-mini': 'gpt-4.1-mini',
+  'o1': 'o1',
+  // 'o1-mini': 'o1-mini',
+  'o3-mini': 'o3-mini',
+  'o4-mini-2025-04-16': 'o4-mini-2025-04-16',
   'gpt-4.5-preview-2025-02-27': 'gpt-4.5-preview-2025-02-27',
   // Anthropic models (latest versions)
   'claude-3-5-sonnet-20241022': 'claude-3-5-sonnet-20241022',
   'claude-3-5-haiku-20241022': 'claude-3-5-haiku-20241022',
-  // 'claude-3-opus-20240229': 'claude-3-opus-20240229',
   'claude-3-7-sonnet-20250219': 'claude-3-7-sonnet-20250219',
   // Gemini models
   'gemini-2.0-flash-exp': 'gemini-2.0-flash-exp',
@@ -99,7 +104,10 @@ export const MODEL_MAPPING: { [key: string]: string } = {
   // Grok models
   'grok-2': 'grok-2',
   'grok-2-latest': 'grok-2-latest',
-  'grok-beta': 'grok-beta',
+  'grok-3-beta': 'grok-3-beta',
+  'grok-3-fast-beta': 'grok-3-fast-beta',
+  'grok-3-mini-beta': 'grok-3-mini-beta',
+  'grok-3-mini-fast-beta': 'grok-3-mini-fast-beta',
 };
 
 type ModelInfo = {
@@ -120,14 +128,19 @@ type AIModelProviders = {
 export const AI_MODELS: AIModelProviders = {
   OpenAI: [
     { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo", default: false},
-    { value: "gpt-4o", label: "GPT-4o (Flagship)", default: true},
+    { value: "gpt-4-0613", label: "GPT-4", default: false},
+    { value: "gpt-4-turbo-2024-04-09", label: "GPT-4 Turbo", default: false},
+    { value: "gpt-4o-2024-11-20", label: "GPT-4o", default: false},//tool not supported
     { value: "gpt-4o-mini", label: "GPT-4o Mini", default: false},
+    { value: "gpt-4.1-2025-04-14", label: "GPT-4.1", default: false},
+    { value: "gpt-4.1-mini", label: "GPT-4.1 Mini", default: false},
     { value: "o1", label: "O1 (Advanced Reasoning)", default: false},
-    { value: "o1-mini", label: "O1 Mini", default: false},
+    // { value: "o1-mini", label: "O1 Mini", default: true},//Unsupported value: 'messages[0].role' does not support 'system' with this model.
+    { value: "o3-mini", label: "O3 Mini", default: false},
+    { value: "o4-mini-2025-04-16", label: "O4 Mini", default: false},
     { value: "gpt-4.5-preview-2025-02-27", label: "GPT-4.5 (Preview)", default: false},
   ],
   Anthropic: [
-    // { value: "claude-3-opus-20240229", label: "Claude 3 Opus", default: false},
     { value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet", default: false},
     { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku", default: false},
     { value: "claude-3-7-sonnet-20250219", label: "Claude 3.7 Sonnet", default: true},
@@ -145,8 +158,36 @@ export const AI_MODELS: AIModelProviders = {
   Grok: [
     { value: "grok-2", label: "Grok 2", default: true},
     { value: "grok-2-latest", label: "Grok 2 latest", default: false},
-    { value: "grok-beta", label: "Grok Beta", default: false},
+    { value: "grok-3-beta", label: "Grok 3 Beta", default: false},
+    { value: "grok-3-fast-beta", label: "Grok 3 Fast Beta", default: false},
+    { value: "grok-3-mini-beta", label: "Grok 3 Mini Beta", default: false},
+    { value: "grok-3-mini-fast-beta", label: "Grok 3 Mini Fast Beta", default: false},
   ]
+};
+
+export const O1_MODELS = ['o1', 'o1-mini', 'o3-mini', 'o4-mini-2025-04-16'];
+
+export const O1_CONFIG = {
+  'o1': {
+    maxOutputTokens: 100000,
+    contextWindow: 200000,
+    model: 'o1'
+  },
+  'o1-mini': {
+    maxOutputTokens: 65536,
+    contextWindow: 128000,
+    model: 'o1-mini'
+  },
+  'o3-mini': {
+    maxOutputTokens: 65536,
+    contextWindow: 128000,
+    model: 'o3-mini'
+  },
+  'o4-mini-2025-04-16': {
+    maxOutputTokens: 65536,
+    contextWindow: 128000,
+    model: 'o4-mini-2025-04-16'
+  }
 };
 
 export const sampleFlow = {
