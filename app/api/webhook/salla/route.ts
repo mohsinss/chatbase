@@ -39,6 +39,18 @@ async function subscribeSallaWebhook(accessToken: string) {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      name: "chatsa product",
+      event: "product.updated",
+      url: "https://chatsa.co/api/webhook/salla/store",
+      version: 2,
+      headers: [
+        {
+          key: process.env.SALLA_STORE_WEBHOOK_HEADER_KEY,
+          value: process.env.SALLA_STORE_WEBHOOK_HEADER_VALUE
+        }
+      ]
+    })
   });
   if (!res.ok) {
     throw new Error(`Failed to fetch store info: ${res.statusText}`);
@@ -137,6 +149,7 @@ export async function POST(request: NextRequest) {
         }
 
         await SallaIntegration.findOneAndUpdate(filter, update, { upsert: true, new: true });
+        await subscribeSallaWebhook(data.access_token);
         break;
       }
       case 'app.uninstalled': {
