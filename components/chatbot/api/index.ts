@@ -9,9 +9,6 @@ export * from './tools';
 // Helpers
 export * from './helpers';
 
-// Models
-export * from './models';
-
 // CORS
 export * from './cors';
 
