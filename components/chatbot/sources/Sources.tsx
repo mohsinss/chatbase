@@ -315,7 +315,7 @@ const Sources = ({
             md:pr-3 md:mr-6
           `}>
             {SOURCE_TABS.map((tab) => {
-              if(tab.id == "salla" && chatbot.integrations.salla != true) {
+              if(tab.id == "salla" && chatbot?.integrations?.salla != true) {
                 return null;
               }
               return (
