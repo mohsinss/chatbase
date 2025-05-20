@@ -99,7 +99,7 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
 
   systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
   if (updatedPrompt) {
-    systemPrompt += `\n\nThen only apply this prompt(${updatedPrompt}) if the response does not contain a JSON array\n\n`;
+    systemPrompt += `\n\nApply this prompt only if the response does not include a JSON array:\n${updatedPrompt}\n\n`;
   }
 
   const enabledActions = await ChatbotAction.find({ chatbotId, enabled: true });
@@ -119,51 +119,50 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
       }
 
       const buttonActionsPrompt = `
-  Respond with a JSON array of recommended actions based on the user's message.
-  Each item in the array should follow this structure:
-  
-  {
-    "type": "button",
-    "text": "Text for the button or link",
-    "url": "https://...",
-    "description": "give brief description for this link",
-  }
-  
-  Choose from the following actions:
-  
-  ${buttonActions[0]?.metadata
+Respond with a **JSON array** of recommended actions based on the user's message.
+Each item must follow this format:
+
+{
+  "type": "button",
+  "text": "Label for the button or link",
+  "url": "https://...",
+  "description": "A short explanation of what this action does"
+}
+
+Choose from the following available actions:
+
+${buttonActions[0]?.metadata
           ?.map((action: ButtonActionMetadata, index: number) => {
-            const type: string = action.buttonType || 'button';
-            const text: string = action.buttonText || action.url;
-            const url: string = action.url;
-            const instructions: string = action.instructions;
+            const type = action.buttonType || 'button';
+            const text = action.buttonText || action.url;
+            const url = action.url;
+            const instructions = action.instructions;
 
             return `  ${index + 1}. Type: "${type}", Text: "${text}", URL: "${url}", When to use: "${instructions}"`;
           })
           .join('\n')}
-  
-  Make sure that Only return the JSON array of relevant actions (no description text or formatting, ignore other prompts).
-  `;
+
+Only return the JSON array of relevant actions. Do not include additional explanation, formatting, or unrelated prompts.
+`;
 
       systemPrompt += buttonActionsPrompt;
     }
 
     if (chatbot?.integrations?.salla === true) {
       systemPrompt += `
-  If the user asks about products on the Salla store, respond with a JSON array.
-  Each item should look like this:
-  
-  {
-    "type": "product",
-    "name": "[Product Name]",
-    "description": "[Short Description – 2 to 3 sentences]",
-    "price": "[Amount] [Currency]",
-    "image": "[Image URL]",
-    "url": "[Product Page URL]"
-  }
-  
-   Make sure that Only return the JSON array. Clicking the image or product name should go to the product URL, ignore other prompts.
-  `;
+If the user inquires about products in the Salla store, respond with a **JSON array**. Each product item should be structured as follows:
+
+{
+  "type": "product",
+  "name": "[Product Name]",
+  "description": "[Short description, 2–3 sentences]",
+  "price": "[Amount] [Currency]",
+  "image": "[Image URL]",
+  "url": "[Product Page URL]"
+}
+
+Return only the JSON array. Do not include explanatory text. Clicking the image or product name should link to the product page.
+`;
     }
   }
 
