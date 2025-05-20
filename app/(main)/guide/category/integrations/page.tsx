@@ -199,7 +199,11 @@ export default function IntegrationsPage() {
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className="flex items-center gap-2 text-gray-600 hover:text-gray-900 py-1 px-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      className={`flex items-center gap-2 py-1 px-3 rounded-lg transition-colors ${
+                        item.href === '/guide/category/integrations'
+                          ? 'text-gray-900 bg-gray-50'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
                     >
                       <svg
                         className={`w-4 h-4 transition-transform ${item.isExpanded ? 'rotate-90' : ''}`}
