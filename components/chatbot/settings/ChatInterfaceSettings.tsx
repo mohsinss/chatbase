@@ -643,7 +643,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 {/* Footer */}
                 <div className="mt-2 flex items-center justify-center gap-1 text-sm" style={{ color: config.theme === 'dark' ? '#9ca3af' : '#6b7280', fontFamily: 'inherit' }}>
                   <span className="whitespace-nowrap">Powered By ChatSA.co</span>
-                  {config.footerText && <span className="ml-1" style={{ color: 'inherit', fontFamily: 'inherit' }}>{config.footerText}</span>}
+                  {config.footerText && <span className="ml-0" style={{ color: 'inherit', fontFamily: 'inherit' }}>{config.footerText}</span>}
                 </div>
               </div>
             </Card>
@@ -798,7 +798,7 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                     <textarea 
                       value={config.footerText}
                       onChange={(e) => handleConfigChange('footerText', e.target.value)}
-                      className="flex w-full min-h-[50px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      className="flex w-full max-h-[35px] rounded-md border border-input bg-background px-1 py-2 text-sm"
                       placeholder="Add your custom footer text here..."
                     />
                   </div>
