@@ -641,11 +641,9 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                 </div>
 
                 {/* Footer */}
-                <div className={`mt-2 text-center text-sm ${
-                  config.theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                } flex items-center justify-center gap-1`}>
-                  <span>Powered By ChatSA.co</span>
-                  <span>{config.footerText}</span>
+                <div className="mt-2 flex items-center justify-center gap-1 text-sm" style={{ color: config.theme === 'dark' ? '#9ca3af' : '#6b7280', fontFamily: 'inherit' }}>
+                  <span className="whitespace-nowrap">Powered By ChatSA.co</span>
+                  {config.footerText && <span className="ml-1" style={{ color: 'inherit', fontFamily: 'inherit' }}>{config.footerText}</span>}
                 </div>
               </div>
             </Card>
@@ -776,6 +774,33 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                       </button>
                       <span className="ml-2 text-sm text-gray-500">pixels</span>
                     </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">
+                    Footer Text
+                  </label>
+                  <div className="flex gap-2 mb-2">
+                    <Button variant="outline" size="icon"><Bold className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon"><Italic className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon"><Underline className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon"><Link2 className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon"><AlignLeft className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon"><AlignCenter className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon"><AlignRight className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon"><Undo2 className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon"><Redo2 className="h-4 w-4" /></Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 whitespace-nowrap">Powered By ChatSA.co</span>
+                    <textarea 
+                      value={config.footerText}
+                      onChange={(e) => handleConfigChange('footerText', e.target.value)}
+                      className="flex w-full min-h-[50px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      placeholder="Add your custom footer text here..."
+                    />
                   </div>
                 </div>
               </div>
@@ -1260,29 +1285,6 @@ export default function ChatInterfaceSettings({ chatbotId }: ChatInterfaceSettin
                     <p className="text-sm text-gray-500">Supports JPG, PNG, and SVG files up to 1MB</p>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Footer Section */}
-            <div className="space-y-6 p-6 bg-card rounded-lg border">
-              <h2 className="text-lg font-semibold">Footer</h2>
-              <div className="space-y-4">
-                <div className="flex gap-2 mb-2">
-                  <Button variant="outline" size="icon"><Bold className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon"><Italic className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon"><Underline className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon"><Link2 className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon"><AlignLeft className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon"><AlignCenter className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon"><AlignRight className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon"><Undo2 className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon"><Redo2 className="h-4 w-4" /></Button>
-                </div>
-                <textarea 
-                  value={config.footerText}
-                  onChange={(e) => handleConfigChange('footerText', e.target.value)}
-                  className="flex w-full min-h-[50px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
               </div>
             </div>
           </div>

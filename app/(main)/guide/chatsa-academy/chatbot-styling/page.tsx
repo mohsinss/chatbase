@@ -13,25 +13,39 @@ interface TutorialCard {
 
 const tutorials: TutorialCard[] = [
   {
-    id: "customize-font",
-    title: "Customizing Chatbot Font",
-    description: "Learn how to change the font style, size, and color of your chatbot interface",
-    videoUrl: "https://example.com/videos/customize-font.mp4",
-    thumbnailUrl: "https://example.com/thumbnails/customize-font.jpg"
+    id: "basic-settings",
+    title: "Chat Interface Basic Settings",
+    description: "Configure fundamental settings for your chat interface",
+    videoUrl: "https://example.com/videos/basic-settings.mp4",
+    thumbnailUrl: "https://example.com/thumbnails/basic-settings.jpg"
   },
   {
-    id: "theme-colors",
-    title: "Theme Colors",
-    description: "Customize your chatbot's color scheme and theme",
-    videoUrl: "https://example.com/videos/theme-colors.mp4",
-    thumbnailUrl: "https://example.com/thumbnails/theme-colors.jpg"
+    id: "appearance",
+    title: "Chat Interface Appearance",
+    description: "Customize the visual appearance of your chat interface",
+    videoUrl: "https://example.com/videos/appearance.mp4",
+    thumbnailUrl: "https://example.com/thumbnails/appearance.jpg"
   },
   {
-    id: "layout-customization",
-    title: "Layout Customization",
-    description: "Adjust the layout and positioning of chat elements",
-    videoUrl: "https://example.com/videos/layout-customization.mp4",
-    thumbnailUrl: "https://example.com/thumbnails/layout-customization.jpg"
+    id: "behavior",
+    title: "Chat Behavior",
+    description: "Adjust how your chat interface behaves and responds",
+    videoUrl: "https://example.com/videos/behavior.mp4",
+    thumbnailUrl: "https://example.com/thumbnails/behavior.jpg"
+  },
+  {
+    id: "display-settings",
+    title: "Display Settings",
+    description: "Fine-tune display preferences and layout options",
+    videoUrl: "https://example.com/videos/display-settings.mp4",
+    thumbnailUrl: "https://example.com/thumbnails/display-settings.jpg"
+  },
+  {
+    id: "media-management",
+    title: "Chat Interface Media Management",
+    description: "Manage and customize media elements in your chat interface",
+    videoUrl: "https://example.com/videos/media-management.mp4",
+    thumbnailUrl: "https://example.com/thumbnails/media-management.jpg"
   }
 ];
 
