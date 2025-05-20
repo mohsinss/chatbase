@@ -99,7 +99,7 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
 
   systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
   if (updatedPrompt) {
-    systemPrompt += `\n\n${updatedPrompt}. Use this guidance only when the response lacks a JSON array.\n\n`;
+    systemPrompt += `\n\n${updatedPrompt} (only apply this if the response does not contain a JSON array)\n\n`;
   }
 
   const enabledActions = await ChatbotAction.find({ chatbotId, enabled: true });
