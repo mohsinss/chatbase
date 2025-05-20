@@ -175,7 +175,7 @@ const Compare = ({ chatbot, team }: CompareProps) => {
       setInstances((prev) => [
         ...prev,
         {
-          id: chatbot.id || `default-${Math.random().toString(36).substring(7)}`,
+          id: `default-${Math.random().toString(36).substring(7)}`,
           name: chatbot.name || defaultModel.label,
           messages: [],
           input: "",
@@ -262,7 +262,7 @@ const Compare = ({ chatbot, team }: CompareProps) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages,
-            chatbotId: instance.id,
+            chatbotId: chatbot.id,
             language: aiSettings.language,
             model: aiSettings.model,
             temperature: aiSettings.temperature,
@@ -274,7 +274,10 @@ const Compare = ({ chatbot, team }: CompareProps) => {
         });
 
         if (!response.ok) {
-          throw new Error(`API request failed with status: ${response.status}`);
+          const errorData = await response.json();
+          console.log("Error response:", errorData);
+          console.log("Error response:", response);
+          throw new Error(errorData.error || `API request failed with status: ${response.status}`);
         }
 
         const assistantMessage: Message = {
@@ -344,7 +347,7 @@ const Compare = ({ chatbot, team }: CompareProps) => {
         }
       } catch (error) {
         console.error("Chat error:", error);
-        toast.error(`An error occurred while processing your request for instance ${instance.name}`);
+        toast.error(`${error.message}`);
         updateInstance(instance.id, { isLoading: false });
       }
     });
