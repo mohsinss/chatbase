@@ -142,7 +142,7 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
           })
           .join('\n')}
   
-  Only return the JSON array of relevant actions (no description text or formatting).
+  Make sure that Only return the JSON array of relevant actions (no description text or formatting).
   `;
 
       systemPrompt += buttonActionsPrompt;
@@ -162,7 +162,7 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
     "url": "[Product Page URL]"
   }
   
-  Only return the JSON array. Clicking the image or product name should go to the product URL.
+   Make sure that Only return the JSON array. Clicking the image or product name should go to the product URL.
   `;
     }
   }
