@@ -305,7 +305,6 @@ export async function handleTextMessage(
         );
 
         // Send response
-        await sendTextMessage(phoneNumberId, from, responseText);
         try {
           const parsed = JSON.parse(responseText);
 
