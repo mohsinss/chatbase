@@ -308,14 +308,14 @@ export async function handleTextMessage(
         await sendTextMessage(phoneNumberId, from, responseText);
         try {
           const parsed = JSON.parse(responseText);
-          
+
           await applyMessageDelay();
 
           if (Array.isArray(parsed)) {
             for (const item of parsed) {
               await applyMessageDelay();
 
-              if (item.type === "button") {
+              if (item.type == "button") {
                 // Send URL button message
                 await sendUrlButtonMessage(
                   phoneNumberId,

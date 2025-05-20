@@ -124,7 +124,7 @@ export async function handleButtonReply(
             for (const item of parsed) {
               await applyMessageDelay();
               
-              if (item.type === "button") {
+              if (item.type == "button") {
                 // Send URL button message
                 await sendUrlButtonMessage(
                   phoneNumberId,
