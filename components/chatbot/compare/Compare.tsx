@@ -133,7 +133,7 @@ const Compare = ({ chatbot, team }: CompareProps) => {
           };
 
         return {
-          id: chatbot.id || `default-${Math.random().toString(36).substring(7)}`,
+          id: `default-${Math.random().toString(36).substring(7)}`,
           name: chatbot.name || defaultModel.label,
           messages: [] as Message[],
           input: "",

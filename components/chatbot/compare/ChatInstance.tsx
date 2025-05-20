@@ -122,7 +122,6 @@ const ChatInstance: React.FC<ChatInstanceProps> = ({
             <IconInfoCircle />
           </div>
           <div>
-            <span className="font-medium">{instance.name}</span>
             {instance.aiSettings?.model && (
               <div className="text-xs text-gray-500">
                 {instance.aiSettings.model} • Temp: {instance.aiSettings.temperature || 0}
