@@ -5,6 +5,7 @@ import Chatbot from '@/models/Chatbot';
 import Dataset from "@/models/Dataset";
 import Team from '@/models/Team';
 import { setCorsHeaders } from '@/components/chatbot/api';
+import config from '@/config';
 
 import {
   handleAnthropicRequest,
