@@ -8,11 +8,12 @@ import {
   addAssistantMessageToConversation,
   isAutoReplyDisabled
 } from '@/components/webhook/whatsapp/services/conversationService';
-import { markMessageAsRead, sendTextMessage } from '@/components/webhook/whatsapp/services/whatsappService';
+import { markMessageAsRead, sendTextMessage, sendUrlButtonMessage } from '@/components/webhook/whatsapp/services/whatsappService';
 import { getQuestionFlow, processInitialNode } from '@/components/webhook/whatsapp/services/questionFlowService';
 import { isMessageTooOld, applyConfiguredDelay } from '@/components/webhook/whatsapp/utils/helpers';
 import ChatbotAction from '@/models/ChatbotAction';
 import { translateText } from '@/components/chatbot/api/translation';
+import { applyMessageDelay } from './interactive';
 
 function templateToRegex(template: string): RegExp {
   // Escape all regex‑special chars except {}
@@ -62,7 +63,7 @@ export async function handleTextMessage(
 
     // Mark message as read
     await markMessageAsRead(phoneNumberId, messageId);
-    
+
     // Get or create conversation
     const { conversation, triggerQF } = await getOrCreateConversation(
       chatbotId,
@@ -92,53 +93,53 @@ export async function handleTextMessage(
       console.error('Error fetching order management actions:', error);
       // Continue with empty array if query fails
     }
-    
+
     // Check if the message matches a table order template
     let isTableOrder = false;
     let tableName = null;
 
     if (enabledOMAction) {
       console.log('Found order management actions:', enabledOMAction.name);
-        try {
-          if (enabledOMAction.metadata?.messageTemplate) {
-            const template = enabledOMAction.metadata?.messageTemplate;
-            if (enabledOMAction.metadata?.translations) {
-              const translations = enabledOMAction.metadata.translations;
-              for (const lang in translations) {
-                const orderTemplate = translations[lang]?.messages?.orderTemplate;
-                if (orderTemplate) {
-                  const templateRegex = templateToRegex(orderTemplate);
-                  const match = text.match(templateRegex);
-                  if (match?.groups?.table) {
-                    isTableOrder = true;
-                    tableName = match.groups.table.trim();
-                    break;
-                  }
+      try {
+        if (enabledOMAction.metadata?.messageTemplate) {
+          const template = enabledOMAction.metadata?.messageTemplate;
+          if (enabledOMAction.metadata?.translations) {
+            const translations = enabledOMAction.metadata.translations;
+            for (const lang in translations) {
+              const orderTemplate = translations[lang]?.messages?.orderTemplate;
+              if (orderTemplate) {
+                const templateRegex = templateToRegex(orderTemplate);
+                const match = text.match(templateRegex);
+                if (match?.groups?.table) {
+                  isTableOrder = true;
+                  tableName = match.groups.table.trim();
+                  break;
                 }
               }
-            } else if (template) {
-              const templateRegex = templateToRegex(template);
-              const match = text.match(templateRegex);
-  
-              if (match?.groups?.table) {
-                isTableOrder = true;
-                tableName = match.groups.table.trim();
-              }
+            }
+          } else if (template) {
+            const templateRegex = templateToRegex(template);
+            const match = text.match(templateRegex);
+
+            if (match?.groups?.table) {
+              isTableOrder = true;
+              tableName = match.groups.table.trim();
             }
           }
-        } catch (error) {
-          console.error('Error processing order template match:', error);
-          // Continue to next enabledOMAction if one fails
         }
+      } catch (error) {
+        console.error('Error processing order template match:', error);
+        // Continue to next enabledOMAction if one fails
+      }
     }
 
     // If this is a table order, handle it using the order management tools
     if (isTableOrder && tableName && enabledOMAction) {
       console.log(`Received order from table: ${tableName}`);
-      
+
       // Import the order management functions
       const { getCategories } = await import('@/components/chatbot/api/order-management');
-      
+
       try {
         // Get categories using the tool with isWhatsApp=true
         const categoriesResult = await getCategories(chatbotId, true);
@@ -150,7 +151,7 @@ export async function handleTextMessage(
           from,
           template1.replace("{table}", tableName)
         );
-        
+
         // Check if we got a JSON response
         if (typeof categoriesResult === 'object') {
           // Replace placeholders in button IDs with actual values
@@ -167,7 +168,7 @@ export async function handleTextMessage(
               }
             });
           }
-          
+
           // Create a WhatsApp list message from the JSON response
           const listPayload = {
             messaging_product: "whatsapp",
@@ -188,7 +189,7 @@ export async function handleTextMessage(
               }
             }
           };
-          
+
           // Send the list message via WhatsApp API
           try {
             const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
@@ -199,7 +200,7 @@ export async function handleTextMessage(
               },
               body: JSON.stringify(listPayload)
             });
-            
+
             if (!response.ok) {
               throw new Error(`WhatsApp API returned ${response.status}`);
             }
@@ -220,7 +221,7 @@ export async function handleTextMessage(
             categoriesResult
           );
         }
-        
+
         // Save the table number in the conversation metadata for future reference
         conversation.metadata = {
           ...conversation.metadata,
@@ -228,13 +229,13 @@ export async function handleTextMessage(
           orderManagementActionId: enabledOMAction._id
         };
         await conversation.save();
-        
+
         // Add to conversation history
         await addAssistantMessageToConversation(
           conversation,
           categoriesResult
         );
-        
+
         return {
           success: true,
           message: `Table order initiated for table ${tableName}`
@@ -246,7 +247,7 @@ export async function handleTextMessage(
           from,
           `Welcome to our restaurant! You're at table ${tableName}. We're experiencing technical difficulties with our menu system. A staff member will assist you shortly.`
         );
-        
+
         return {
           success: false,
           message: `Error using order management tools: ${error.message}`
@@ -259,7 +260,7 @@ export async function handleTextMessage(
       try {
         // Import the order management AI service
         const { processOrderManagementWithAI } = await import('@/components/webhook/whatsapp/services/orderManagementAIService');
-        
+
         // Process the message using AI with tool calling
         const result = await processOrderManagementWithAI(
           chatbotId,
@@ -269,7 +270,7 @@ export async function handleTextMessage(
           from,
           enabledOMAction._id
         );
-        
+
         // If successful, return the result
         if (result.success) {
           return result;
@@ -305,6 +306,36 @@ export async function handleTextMessage(
 
         // Send response
         await sendTextMessage(phoneNumberId, from, responseText);
+        try {
+          const parsed = JSON.parse(responseText);
+          
+          await applyMessageDelay();
+
+          if (Array.isArray(parsed)) {
+            for (const item of parsed) {
+              await applyMessageDelay();
+
+              if (item.type === "button") {
+                // Send URL button message
+                await sendUrlButtonMessage(
+                  phoneNumberId,
+                  from,
+                  item.text || "Click the button below:", // Body text
+                  item.buttonTitle || "Open Link",       // Button text
+                  item.url                               // URL to open
+                );
+              } else {
+                // Default text handling
+                await sendTextMessage(phoneNumberId, from, JSON.stringify(item));
+              }
+            }
+          } else {
+            // Single message handling
+            await sendTextMessage(phoneNumberId, from, responseText);
+          }
+        } catch {
+          await sendTextMessage(phoneNumberId, from, responseText);
+        }
 
         // Update conversation
         await addAssistantMessageToConversation(conversation, responseText);

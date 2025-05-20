@@ -50,6 +50,46 @@ export async function sendImageMessage(phoneNumberId: string, to: string, imageU
 }
 
 /**
+ * Send a link message
+ */
+export async function sendUrlButtonMessage(
+  phoneNumberId: string,
+  to: string,
+  bodyText: string,
+  buttonTitle: string,
+  url: string
+): Promise<any> {
+  return axios.post(
+    `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
+    {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      type: "interactive",
+      to: to,
+      interactive: {
+        type: "cta_url",  // For URL buttons
+        body: {
+          text: bodyText
+        },
+        action: {
+          name: "cta_url",
+          parameters: {
+            display_text: buttonTitle,
+            url: url
+          }
+        }
+      }
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.FACEBOOK_USER_ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+}
+
+/**
  * Send an interactive button message
  */
 export async function sendButtonMessage(

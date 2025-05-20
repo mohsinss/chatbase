@@ -8,7 +8,7 @@ import {
   isAutoReplyDisabled,
   getConversationAIResponse
 } from '@/components/webhook/whatsapp/services/conversationService';
-import { markMessageAsRead, sendTextMessage } from '@/components/webhook/whatsapp/services/whatsappService';
+import { markMessageAsRead, sendTextMessage, sendUrlButtonMessage } from '@/components/webhook/whatsapp/services/whatsappService';
 import { getQuestionFlow, processButtonReply } from '@/components/webhook/whatsapp/services/questionFlowService';
 import { applyConfiguredDelay } from '@/components/webhook/whatsapp/utils/helpers';
 import { handleOrderManagementButton } from './orderManagementHandler';
@@ -115,9 +115,36 @@ export async function handleButtonReply(
           whatsappSettings.prompt
         );
 
-        // Send response
         await applyMessageDelay();
-        await sendTextMessage(phoneNumberId, from, responseText);
+
+        try {
+          const parsed = JSON.parse(responseText);
+        
+          if (Array.isArray(parsed)) {
+            for (const item of parsed) {
+              await applyMessageDelay();
+              
+              if (item.type === "button") {
+                // Send URL button message
+                await sendUrlButtonMessage(
+                  phoneNumberId,
+                  from,
+                  item.text || "Click the button below:", // Body text
+                  item.buttonTitle || "Open Link",       // Button text
+                  item.url                               // URL to open
+                );
+              } else {
+                // Default text handling
+                await sendTextMessage(phoneNumberId, from, JSON.stringify(item));
+              }
+            }
+          } else {
+            // Single message handling
+            await sendTextMessage(phoneNumberId, from, responseText);
+          }
+        } catch {
+          await sendTextMessage(phoneNumberId, from, responseText);
+        }
 
         // Update conversation
         await addAssistantMessageToConversation(conversation, responseText);
