@@ -384,12 +384,12 @@ export const ChatSettings = ({
                 }}
                 className="flex-1 p-2.5 border rounded-lg bg-white text-gray-700"
               >
+                <option key="custom" value="custom">Custom Prompt</option>
                 {systemPromptTemplates.map(template => (
                   <option key={template.key} value={template.key}>
                     {template.displayName}
                   </option>
                 ))}
-                <option key="custom" value="custom">Custom Prompt</option>
               </select>
               <button
                 className="p-2.5 border rounded-lg"
