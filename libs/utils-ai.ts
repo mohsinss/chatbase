@@ -1,8 +1,8 @@
 import Dataset from "@/models/Dataset"
 import Chatbot from "@/models/Chatbot"
-import ChatbotAISettings from "@/models/ChatbotAISettings"  
+import ChatbotAISettings from "@/models/ChatbotAISettings"
 import Team from "@/models/Team"
-import { NextResponse } from "next/server"
+import ChatbotAction from "@/models/ChatbotAction"
 import { sendAnthropic } from '@/libs/anthropic';
 import { sendGemini } from '@/libs/gemini';
 import { MODEL_MAPPING } from '@/types';
@@ -45,7 +45,7 @@ function processMessagesForReasoner(systemPrompt, relevant_chunk, messages) {
   return formattedMessages;
 }
 
-export const getAIResponse = async (chatbotId: string, messages: any, text: string, updatedPrompt?: string) => {
+export const getAIResponse = async (chatbotId: string, messages: any, text: string, updatedPrompt?: string, params?: any) => {
   // Measure time for fetching AI settings and dataset
   const dataset = await Dataset.findOne({ chatbotId });
   const aiSettings = await ChatbotAISettings.findOne({ chatbotId });
@@ -96,12 +96,80 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
   const maxTokens = aiSettings?.maxTokens ?? 500;
   const language = aiSettings?.language || 'en';
   let systemPrompt;
-  
-  if(updatedPrompt){
-    systemPrompt = `${updatedPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
-  } else {
-    systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
+
+  systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
+  if (updatedPrompt) {
+    systemPrompt += `\n\n${updatedPrompt}\n\n`;
   }
+
+  const enabledActions = await ChatbotAction.find({ chatbotId, enabled: true });
+  const buttonActions = enabledActions.filter(action => action.type === 'button');
+
+  if (params?.enableJsonResponse) {
+    if (buttonActions.length > 0) {
+      interface ButtonActionMetadata {
+        buttonType?: string;
+        buttonText?: string;
+        url: string;
+        instructions: string;
+      }
+
+      interface ButtonAction {
+        metadata: ButtonActionMetadata[];
+      }
+
+      const buttonActionsPrompt = `
+  Respond with a JSON array of recommended actions based on the user's message.
+  Each item in the array should follow this structure:
+  
+  {
+    "type": "button",
+    "text": "Text for the button or link",
+    "url": "https://...",
+    "instructions": "When to show this"
+  }
+  
+  Choose from the following actions:
+  
+  ${buttonActions[0]?.metadata
+          ?.map((action: ButtonActionMetadata, index: number) => {
+            const type: string = action.buttonType || 'button';
+            const text: string = action.buttonText || action.url;
+            const url: string = action.url;
+            const instructions: string = action.instructions;
+
+            return `  ${index + 1}. Type: "${type}", Text: "${text}", URL: "${url}", When to use: "${instructions}"`;
+          })
+          .join('\n')}
+  
+  Only return the JSON array of relevant actions (no description text or formatting).
+  `;
+
+      systemPrompt += buttonActionsPrompt;
+    }
+
+    if (chatbot?.integrations?.salla === true) {
+      systemPrompt += `
+  If the user asks about products on the Salla store, respond with a JSON array.
+  Each item should look like this:
+  
+  {
+    "type": "product",
+    "name": "[Product Name]",
+    "description": "[Short Description – 2 to 3 sentences]",
+    "price": "[Amount] [Currency]",
+    "image": "[Image URL]",
+    "url": "[Product Page URL]"
+  }
+  
+  Only return the JSON array. Clicking the image or product name should go to the product URL.
+  `;
+    }
+  }
+
+  const todayData = "\nToday is " + Date().toString();
+
+  systemPrompt += todayData;
 
   const encoder = new TextEncoder();
   let response_text = '';

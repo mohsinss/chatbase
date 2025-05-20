@@ -21,20 +21,20 @@ export async function getWhatsAppNumber(phoneNumberId: string): Promise<any> {
  * Get or create a conversation for a WhatsApp chat
  */
 export async function getOrCreateConversation(
-  chatbotId: string, 
-  from: string, 
-  to: string, 
+  chatbotId: string,
+  from: string,
+  to: string,
   text: string
 ): Promise<{ conversation: any, isNew: boolean, triggerQF: boolean }> {
   await connectMongo();
-  
-  let conversation = await ChatbotConversation.findOne({ 
-    chatbotId, 
-    platform: "whatsapp", 
-    "metadata.from": from, 
-    "metadata.to": to 
+
+  let conversation = await ChatbotConversation.findOne({
+    chatbotId,
+    platform: "whatsapp",
+    "metadata.from": from,
+    "metadata.to": to
   });
-  
+
   let triggerQF = false;
   let isNew = false;
 
@@ -52,17 +52,17 @@ export async function getOrCreateConversation(
 
     // Update existing conversation
     conversation.messages.push({ role: "user", content: text });
-    
+
     // Check if conversation timeout has been reached
     const dataset = await Dataset.findOne({ chatbotId });
     const { restartQFTimeoutMins, questionAIResponseEnable } = dataset;
     const currentTimestamp = (new Date().getTime()) / 1000;
     const lastMessageTimestamp = conversation.updatedAt.getTime() / 1000;
-    
+
     if (currentTimestamp - lastMessageTimestamp > (restartQFTimeoutMins || 30) * 60) {
       triggerQF = true;
     }
-    
+
     // If AI responses are disabled, always trigger question flow
     const isAiResponseEnabled = questionAIResponseEnable !== undefined ? questionAIResponseEnable : true;
     if (!isAiResponseEnabled) {
@@ -77,7 +77,7 @@ export async function getOrCreateConversation(
       metadata: { from, to },
       messages: [{ role: "user", content: text }]
     });
-    
+
     isNew = true;
     triggerQF = true;
   }
@@ -90,33 +90,33 @@ export async function getOrCreateConversation(
  * Get AI response for a conversation
  */
 export async function getConversationAIResponse(
-  chatbotId: string, 
-  conversation: any, 
-  text: string, 
+  chatbotId: string,
+  conversation: any,
+  text: string,
   customPrompt?: string
 ): Promise<string> {
   // Get all messages from the conversation for context
   let messages = filterRecentMessages(conversation.messages);
-  
+
   // Ensure the current message is included
   if (!messages.some((msg: any) => msg.role === 'user' && msg.content === text)) {
     messages.push({ role: 'user', content: text });
   }
-  
+
   // Get AI response
-  return await getAIResponse(chatbotId, messages, text, customPrompt);
+  return await getAIResponse(chatbotId, messages, text, customPrompt, { enableJsonResponse: true });
 }
 
 /**
  * Update conversation with assistant message
  */
 export async function addAssistantMessageToConversation(
-  conversation: any, 
+  conversation: any,
   content: string | object
 ): Promise<any> {
   // If content is an object, stringify it with error handling
   let messageContent: string;
-  
+
   if (typeof content === 'object') {
     try {
       messageContent = JSON.stringify(content);
@@ -128,12 +128,12 @@ export async function addAssistantMessageToConversation(
   } else {
     messageContent = content;
   }
-  
-  conversation.messages.push({ 
-    role: "assistant", 
-    content: messageContent 
+
+  conversation.messages.push({
+    role: "assistant",
+    content: messageContent
   });
-  
+
   return await conversation.save();
 }
 
