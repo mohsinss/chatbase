@@ -67,7 +67,7 @@ export default function GuidePage() {
 
           {/* Integrations Card */}
           <Link
-            href="/guide/category/integrations"
+            href="/guide/integrations"
             className="block p-6 bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-shadow"
           >
             <div className="flex gap-4">

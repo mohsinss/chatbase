@@ -8,7 +8,7 @@ const integrations = [
   {
     title: "Whatsapp",
     description: "This guide provides a step-by-step process for integrating WhatsApp with Chatsa.",
-    href: "/guide/category/integrations/whatsapp",
+    href: "/guide/integrations/whatsapp",
     icons: {
       platform: "/integrations/whatsapp.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -17,7 +17,7 @@ const integrations = [
   {
     title: "Zapier",
     description: "A Step-by-step guide on how to integrate your Chatsa bot with Zapier",
-    href: "/guide/category/integrations/zapier",
+    href: "/guide/integrations/zapier",
     icons: {
       platform: "/integrations/zapier.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -26,7 +26,7 @@ const integrations = [
   {
     title: "Wix",
     description: "A quick guide on how to add a Chatsa chatbot on your Wix website",
-    href: "/guide/category/integrations/wix",
+    href: "/guide/integrations/wix",
     icons: {
       platform: "/integrations/wix-icon.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -35,7 +35,7 @@ const integrations = [
   {
     title: "Framer",
     description: "Learn how to seamlessly integrate a Chatsa chatbot into your Framer website with these step-by-step instructions",
-    href: "/guide/category/integrations/framer",
+    href: "/guide/integrations/framer",
     icons: {
       platform: "/integrations/framer-icon.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -44,7 +44,7 @@ const integrations = [
   {
     title: "Cal.com",
     description: "How to set up the Cal.com integration with your Chatsa chatbot",
-    href: "/guide/category/integrations/calcom",
+    href: "/guide/integrations/calcom",
     icons: {
       platform: "/integrations/cal-icon.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -53,7 +53,7 @@ const integrations = [
   {
     title: "Slack",
     description: "How to add a Chatsa chatbot to Slack for seamless team communication",
-    href: "/guide/category/integrations/slack",
+    href: "/guide/integrations/slack",
     icons: {
       platform: "/integrations/slack.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -62,7 +62,7 @@ const integrations = [
   {
     title: "Bubble",
     description: "How to embed a Chatsa chatbot on your Bubble web app",
-    href: "/guide/category/integrations/bubble",
+    href: "/guide/integrations/bubble",
     icons: {
       platform: "/integrations/bubble-icon.png",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -71,7 +71,7 @@ const integrations = [
   {
     title: "WordPress",
     description: "Let&apos;s walk you through how to embed a Chatsa chatbot on your WordPress website",
-    href: "/guide/category/integrations/wordpress",
+    href: "/guide/integrations/wordpress",
     icons: {
       platform: "/integrations/wordpress.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -80,7 +80,7 @@ const integrations = [
   {
     title: "Instagram",
     description: "This guide provides a step-by-step process for integrating Instagram with Chatbase.",
-    href: "/guide/category/integrations/instagram",
+    href: "/guide/integrations/instagram",
     icons: {
       platform: "/integrations/instagram.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -89,7 +89,7 @@ const integrations = [
   {
     title: "Messenger",
     description: "This guide provides a step-by-step process for integrating Messenger with Chatbase.",
-    href: "/guide/category/integrations/messenger",
+    href: "/guide/integrations/messenger",
     icons: {
       platform: "/integrations/messenger.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -98,7 +98,7 @@ const integrations = [
   {
     title: "Weebly",
     description: "How to add a Chatsa chatbot to your Weebly website",
-    href: "/guide/category/integrations/weebly",
+    href: "/guide/integrations/weebly",
     icons: {
       platform: "/integrations/weebly-icon.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -107,7 +107,7 @@ const integrations = [
   {
     title: "Webflow",
     description: "How to add a Chatsa chatbot to your Webflow website",
-    href: "/guide/category/integrations/webflow",
+    href: "/guide/integrations/webflow",
     icons: {
       platform: "/integrations/webflow-icon.svg",
       chatbase: "/integrations/chatbase-icon.svg"
@@ -116,7 +116,7 @@ const integrations = [
   {
     title: "Shopify",
     description: "How to add a Chatsa chatbot to your Shopify website or store",
-    href: "/guide/category/integrations/shopify",
+    href: "/guide/integrations/shopify",
     icons: {
       platform: "/integrations/shopify.svg",
       chatbase: "/integrations/chatbase-icon.svg"

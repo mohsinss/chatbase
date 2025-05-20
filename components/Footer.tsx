@@ -20,7 +20,7 @@ const footerContent = {
         links: [
           { label: "Features", href: "#features" },
           { label: "Pricing", href: "#pricing" },
-          { label: "Integrations", href: "/guide/category/integrations" },
+          { label: "Integrations", href: "/guide/integrations" },
           { label: "Changelog", href: "/changelog" },
           { label: "Roadmap", href: "/roadmap" }
         ]
@@ -61,7 +61,7 @@ const footerContent = {
         links: [
           { label: "المميزات", href: "#features" },
           { label: "التسعير", href: "#pricing" },
-          { label: "التكاملات", href: "/guide/category/integrations" },
+          { label: "التكاملات", href: "/guide/integrations" },
           { label: "سجل التغييرات", href: "/changelog" },
           { label: "خارطة الطريق", href: "/roadmap" }
         ]

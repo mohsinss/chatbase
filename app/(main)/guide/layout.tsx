@@ -24,15 +24,15 @@ const sidebarItems = [
                 href: "/guide/integrations",
                 subItems: [
                     { name: "Whatsapp", href: "/guide/integrations/whatsapp" },
+                    { name: "Messenger", href: "/guide/integrations/messenger" },
+                    { name: "Instagram", href: "/guide/integrations/instagram" },
+                    { name: "Cal.com", href: "/guide/integrations/calcom" },
                     { name: "Zapier", href: "/guide/integrations/zapier" },
+                    { name: "Slack", href: "/guide/integrations/slack" },
                     { name: "Wix", href: "/guide/integrations/wix" },
                     { name: "Framer", href: "/guide/integrations/framer" },
-                    { name: "Cal.com", href: "/guide/integrations/calcom" },
-                    { name: "Slack", href: "/guide/integrations/slack" },
                     { name: "Bubble", href: "/guide/integrations/bubble" },
                     { name: "WordPress", href: "/guide/integrations/wordpress" },
-                    { name: "Instagram", href: "/guide/integrations/instagram" },
-                    { name: "Messenger", href: "/guide/integrations/messenger" },
                     { name: "Weebly", href: "/guide/integrations/weebly" },
                     { name: "Webflow", href: "/guide/integrations/webflow" },
                     { name: "Shopify", href: "/guide/integrations/shopify" },
@@ -101,7 +101,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                                                         <li key={subItem.name}>
                                                             <Link
                                                                 href={subItem.href}
-                                                                className={`block py-1 px-3 rounded-lg transition-colors ${subItem.href === '/guide/category/integrations/framer'
+                                                                className={`block py-1 px-3 rounded-lg transition-colors ${subItem.href === '/guide/integrations/framer'
                                                                     ? 'text-gray-900 bg-gray-50'
                                                                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                                                     }`}

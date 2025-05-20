@@ -13,22 +13,22 @@ const sidebarItems = [
       },
       {
         name: "Integrations",
-        href: "/guide/category/integrations",
+        href: "/guide/integrations",
         isExpanded: true,
         subItems: [
-          { name: "Whatsapp", href: "/guide/category/integrations/whatsapp" },
-          { name: "Zapier", href: "/guide/category/integrations/zapier" },
-          { name: "Wix", href: "/guide/category/integrations/wix" },
-          { name: "Framer", href: "/guide/category/integrations/framer" },
-          { name: "Cal.com", href: "/guide/category/integrations/calcom" },
-          { name: "Slack", href: "/guide/category/integrations/slack" },
-          { name: "Bubble", href: "/guide/category/integrations/bubble" },
-          { name: "WordPress", href: "/guide/category/integrations/wordpress" },
-          { name: "Instagram", href: "/guide/category/integrations/instagram" },
-          { name: "Messenger", href: "/guide/category/integrations/messenger" },
-          { name: "Weebly", href: "/guide/category/integrations/weebly" },
-          { name: "Webflow", href: "/guide/category/integrations/webflow" },
-          { name: "Shopify", href: "/guide/category/integrations/shopify" },
+          { name: "Whatsapp", href: "/guide/integrations/whatsapp" },
+          { name: "Zapier", href: "/guide/integrations/zapier" },
+          { name: "Wix", href: "/guide/integrations/wix" },
+          { name: "Framer", href: "/guide/integrations/framer" },
+          { name: "Cal.com", href: "/guide/integrations/calcom" },
+          { name: "Slack", href: "/guide/integrations/slack" },
+          { name: "Bubble", href: "/guide/integrations/bubble" },
+          { name: "WordPress", href: "/guide/integrations/wordpress" },
+          { name: "Instagram", href: "/guide/integrations/instagram" },
+          { name: "Messenger", href: "/guide/integrations/messenger" },
+          { name: "Weebly", href: "/guide/integrations/weebly" },
+          { name: "Webflow", href: "/guide/integrations/webflow" },
+          { name: "Shopify", href: "/guide/integrations/shopify" },
         ],
       },
     ],
@@ -42,7 +42,7 @@ export default function FramerIntegrationPage() {
       <div className="flex items-center gap-2 text-gray-600 mb-8">
         <Link href="/guide" className="hover:text-gray-900">Guide</Link>
         <span>›</span>
-        <Link href="/guide/category/integrations" className="hover:text-gray-900">Integrations</Link>
+        <Link href="/guide/integrations" className="hover:text-gray-900">Integrations</Link>
         <span>›</span>
         <span className="text-gray-900">Framer</span>
       </div>
