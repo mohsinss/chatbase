@@ -38,8 +38,6 @@ export async function GET(request: Request) {
           headerFontFamily: "Inter, sans-serif"
         };
     
-    console.log('[GET] Final response being sent:', response);
-    
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching branding settings:', error);
@@ -162,8 +160,6 @@ export async function POST(request: Request) {
       ...updatedDoc,
       ...headerFields
     };
-    
-    console.log('[POST] Final response being sent:', response);
     
     return NextResponse.json(response);
   } catch (error) {
