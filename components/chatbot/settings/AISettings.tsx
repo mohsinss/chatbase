@@ -3,9 +3,8 @@
 import React, { useState, useEffect, ChangeEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { AI_MODELS } from "@/types";
+import { AI_MODELS, systemPromptTemplates } from "@/types/config";
 import toast from "react-hot-toast";
-import { PlusCircle, Trash2 } from "lucide-react";
 
 interface AISettingsProps {
   chatbotId: string;
@@ -40,6 +39,26 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
   const [chunkCount, setChunkCount] = useState<number>(5)
   const [model, setModel] = useState("gpt-3.5-turbo")
   const [systemPrompt, setSystemPrompt] = useState("")
+  const [systemPromptTemplate, setSystemPromptTemplate] = useState("custom")
+
+  // Update systemPrompt when systemPromptTemplate changes
+  useEffect(() => {
+    if (systemPromptTemplate === "custom") return;
+    const template = systemPromptTemplates.find(t => t.key === systemPromptTemplate);
+    if (template) {
+      setSystemPrompt(template.prompt);
+    }
+  }, [systemPromptTemplate]);
+  
+  // Update systemPromptTemplate when systemPrompt changes (detect custom)
+  useEffect(() => {
+    const template = systemPromptTemplates.find(t => t.prompt === systemPrompt);
+    if (template) {
+      setSystemPromptTemplate(template.key);
+    } else {
+      setSystemPromptTemplate("custom");
+    }
+  }, [systemPrompt]);
   const [knowledgeCutoff, setKnowledgeCutoff] = useState("")
   const [maxTokens, setMaxTokens] = useState<number>(500)
   const [contextWindow, setContextWindow] = useState<number>(16000)
@@ -63,6 +82,7 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
         setTemperature(data.temperature ?? 0.7);
         setChunkCount(data.chunkCount ?? 4);
         setSystemPrompt(data.systemPrompt ?? "");
+        setSystemPromptTemplate(data.systemPromptTemplate ?? "custom");
         setKnowledgeCutoff(data.knowledgeCutoff ?? "");
         setMaxTokens(data.maxTokens ?? 500);
         setContextWindow(data.contextWindow ?? 16000);
@@ -84,6 +104,7 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
         model,
         temperature,
         systemPrompt,
+        systemPromptTemplate,
         knowledgeCutoff,
         maxTokens,
         contextWindow,
@@ -250,14 +271,36 @@ const AISettings = ({ chatbotId, team }: AISettingsProps) => {
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 System Message
               </label>
+              <select
+                value={systemPromptTemplate}
+                onChange={(e) => {
+                  const selectedKey = e.target.value;
+                  setSystemPromptTemplate(selectedKey);
+                  const selectedTemplate = systemPromptTemplates.find(t => t.key === selectedKey);
+                  if (selectedTemplate) {
+                    setSystemPrompt(selectedTemplate.prompt);
+                  }
+                }}
+                className="flex h-10 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                {systemPromptTemplates.map(template => (
+                  <option key={template.key} value={template.key}>
+                    {template.displayName}
+                  </option>
+                ))}
+                <option key="custom" value="custom">Custom Prompt</option>
+              </select>
               <textarea
                 value={systemPrompt}
-                onChange={(e) => setSystemPrompt(e.target.value)}
+                onChange={(e) => {
+                  setSystemPrompt(e.target.value);
+                  setSystemPromptTemplate("custom");
+                }}
                 rows={4}
                 placeholder="You are a helpful AI assistant..."
                 className="flex w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
-              <p className="text-sm text-gray-500">Define the AI&apos;s personality and behavior</p>
+              <p className="text-sm text-gray-500">Define the AI's personality and behavior</p>
             </div>
 
             {/* <div className="space-y-4">
