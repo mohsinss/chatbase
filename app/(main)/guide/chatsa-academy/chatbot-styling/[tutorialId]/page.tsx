@@ -79,6 +79,19 @@ export default function TutorialDetailPage({ params }: { params: { tutorialId: s
               </ul>
             </div>
           )}
+          {tutorial.id === "appearance" && (
+            <div className="mt-4 space-y-4">
+              <p>In this tutorial, we go through the chatbot appearance. Changing the chatbot colors, header colors, and syncing the colors with the header. Chatbot bubble colors, rounded header, and rounded chatbot messages styling.</p>
+              <div>
+                <span className="font-semibold">Tags:</span>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {['appearance', 'colors', 'header', 'bubble', 'styling'].map(tag => (
+                    <span key={tag} className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">{tag}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
