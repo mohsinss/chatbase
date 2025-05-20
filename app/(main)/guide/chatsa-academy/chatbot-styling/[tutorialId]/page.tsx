@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { tutorials } from "../tutorials";
+import { tutorials } from "../../tutorials";
 
 export default function TutorialDetailPage({ params }: { params: { tutorialId: string } }) {
   const tutorial = tutorials.find(t => t.id === params.tutorialId);
@@ -77,6 +77,20 @@ export default function TutorialDetailPage({ params }: { params: { tutorialId: s
                 <li>Adjusting the chatbot window width</li>
                 <li>Customizing the footer text at the bottom of the chatbot</li>
               </ul>
+              <div>
+                <span className="font-semibold">Tags:</span>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {tutorial.tags.map(tag => (
+                    <Link
+                      key={tag}
+                      href={`/guide/chatsa-academy/tag/${encodeURIComponent(tag)}`}
+                      className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs hover:bg-blue-200 transition-colors"
+                    >
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
           {tutorial.id === "appearance" && (
@@ -85,8 +99,14 @@ export default function TutorialDetailPage({ params }: { params: { tutorialId: s
               <div>
                 <span className="font-semibold">Tags:</span>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {['appearance', 'colors', 'header', 'bubble', 'styling'].map(tag => (
-                    <span key={tag} className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">{tag}</span>
+                  {tutorial.tags.map(tag => (
+                    <Link
+                      key={tag}
+                      href={`/guide/chatsa-academy/tag/${encodeURIComponent(tag)}`}
+                      className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs hover:bg-blue-200 transition-colors"
+                    >
+                      {tag}
+                    </Link>
                   ))}
                 </div>
               </div>

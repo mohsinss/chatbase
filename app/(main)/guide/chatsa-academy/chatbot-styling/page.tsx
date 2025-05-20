@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { tutorials, TutorialCard } from "./tutorials";
+import { tutorials, TutorialCard } from "./../tutorials";
 
 export default function ChatbotStylingPage() {
   return (

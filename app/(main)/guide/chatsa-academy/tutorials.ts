@@ -5,6 +5,7 @@ export interface TutorialCard {
   videoUrl: string;
   thumbnailUrl: string;
   tags: string[];
+  section: string;
 }
 
 export const tutorials: TutorialCard[] = [
@@ -14,7 +15,8 @@ export const tutorials: TutorialCard[] = [
     description: "Configure fundamental settings for your chat interface",
     videoUrl: "https://www.loom.com/embed/8627cb64312447cfb2ff114258b6e8b4?sid=79923b73-eb81-43c3-85d0-0e0cb9df41cb",
     thumbnailUrl: "https://example.com/thumbnails/basic-settings.jpg",
-    tags: ["settings", "display name", "theme", "footer", "width"]
+    tags: ["settings", "display name", "theme", "footer", "width"],
+    section: "Chatbot Styling"
   },
   {
     id: "appearance",
@@ -22,7 +24,8 @@ export const tutorials: TutorialCard[] = [
     description: "Customize the visual appearance of your chat interface",
     videoUrl: "https://www.loom.com/embed/53d2ed33c10b4e28b8cfd4c6991116c7",
     thumbnailUrl: "https://example.com/thumbnails/appearance.jpg",
-    tags: ["appearance", "colors", "header", "bubble", "styling"]
+    tags: ["appearance", "colors", "header", "bubble", "styling"],
+    section: "Chatbot Styling"
   },
   {
     id: "behavior",
@@ -30,7 +33,8 @@ export const tutorials: TutorialCard[] = [
     description: "Adjust how your chat interface behaves and responds",
     videoUrl: "https://example.com/videos/behavior.mp4",
     thumbnailUrl: "https://example.com/thumbnails/behavior.jpg",
-    tags: ["behavior", "responses", "interaction"]
+    tags: ["behavior", "responses", "interaction"],
+    section: "Chatbot Styling"
   },
   {
     id: "display-settings",
@@ -38,7 +42,8 @@ export const tutorials: TutorialCard[] = [
     description: "Fine-tune display preferences and layout options",
     videoUrl: "https://example.com/videos/display-settings.mp4",
     thumbnailUrl: "https://example.com/thumbnails/display-settings.jpg",
-    tags: ["display", "layout", "preferences"]
+    tags: ["display", "layout", "preferences"],
+    section: "Chatbot Styling"
   },
   {
     id: "media-management",
@@ -46,6 +51,7 @@ export const tutorials: TutorialCard[] = [
     description: "Manage and customize media elements in your chat interface",
     videoUrl: "https://example.com/videos/media-management.mp4",
     thumbnailUrl: "https://example.com/thumbnails/media-management.jpg",
-    tags: ["media", "images", "videos", "management"]
+    tags: ["media", "images", "videos", "management"],
+    section: "Chatbot Styling"
   }
 ]; 
