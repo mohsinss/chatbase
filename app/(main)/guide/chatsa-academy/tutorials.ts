@@ -30,28 +30,28 @@ export const tutorials: TutorialCard[] = [
   {
     id: "behavior",
     title: "Chat Behavior",
-    description: "Adjust how your chat interface behaves and responds",
-    videoUrl: "https://example.com/videos/behavior.mp4",
+    description: "Edit the initial message, add suggested messages, customize the message placeholder, enable user feedback, and allow message regeneration for your chatbot.",
+    videoUrl: "https://www.loom.com/embed/2d51e94985384bf5a4bb145540b4db43?sid=dc6fec63-9203-4c33-b862-19a770b9e3c2",
     thumbnailUrl: "https://example.com/thumbnails/behavior.jpg",
-    tags: ["behavior", "responses", "interaction"],
+    tags: ["behavior", "responses", "interaction", "initial message", "suggested messages", "feedback", "regenerate"],
     section: "Chatbot Styling"
   },
   {
     id: "display-settings",
     title: "Display Settings",
-    description: "Fine-tune display preferences and layout options",
-    videoUrl: "https://example.com/videos/display-settings.mp4",
+    description: "Align the chat bubble, control the initial message pop-up timing, and set the tooltip message for your chatbot interface.",
+    videoUrl: "https://www.loom.com/embed/e92f45fc4aed4d03baa7cb5d913bed71?sid=e3687caa-1c24-4310-babb-452850aea65b",
     thumbnailUrl: "https://example.com/thumbnails/display-settings.jpg",
-    tags: ["display", "layout", "preferences"],
+    tags: ["display", "layout", "alignment", "tooltip", "initial message", "timing"],
     section: "Chatbot Styling"
   },
   {
     id: "media-management",
     title: "Chat Interface Media Management",
-    description: "Manage and customize media elements in your chat interface",
-    videoUrl: "https://example.com/videos/media-management.mp4",
+    description: "Change the chatbot's profile picture (copy-paste or upload), change the icon, change the background, and control background opacity.",
+    videoUrl: "https://www.loom.com/embed/6c16f31067554f4c84751b7726633f26?sid=d13479aa-7cda-4be2-bd6b-a6b8e5e543c5",
     thumbnailUrl: "https://example.com/thumbnails/media-management.jpg",
-    tags: ["media", "images", "videos", "management"],
+    tags: ["media", "profile picture", "icon", "background", "opacity", "images", "upload"],
     section: "Chatbot Styling"
   }
 ]; 
