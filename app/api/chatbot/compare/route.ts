@@ -65,6 +65,33 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const options = {
+      method: 'POST',
+      headers: {
+        'TR-Dataset': dataset.datasetId,
+        Authorization: `Bearer ${process.env.TRIEVE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: messages[messages.length - 1].content,
+        search_type: 'fulltext',
+        page_size: 4
+      })
+    };
+
+    const chunk_response = await fetch('https://api.trieve.ai/api/chunk/search', options)
+    const chunk_response_data = await chunk_response.json();
+
+    if (!chunk_response.ok) {
+      console.error("semantic search failed:", chunk_response_data);
+      throw new Error(chunk_response_data.message || "semantic search failed.");
+    }
+
+    let relevant_chunk = "Please use the following information for answering.\n";
+    for (let i = 0; i < chunk_response_data.chunks.length; i++) {
+      relevant_chunk += chunk_response_data.chunks[i].chunk.chunk_html;
+    }
+
     // Compose system prompt with instructions and language
     let finalSystemPrompt = systemPrompt || aiSettings?.systemPrompt || 'You are a helpful AI assistant.';
     if (language) {
@@ -83,7 +110,7 @@ export async function POST(req: NextRequest) {
     if (model.startsWith('claude-')) {
       return await handleAnthropicRequest(
         finalSystemPrompt,
-        '',
+        relevant_chunk,
         messages,
         'user-1',
         maxTokens,
@@ -94,7 +121,7 @@ export async function POST(req: NextRequest) {
     } else if (model.startsWith('gemini-')) {
       return await handleGeminiRequest(
         finalSystemPrompt,
-        '',
+        relevant_chunk,
         messages,
         'user-1',
         maxTokens,
@@ -105,7 +132,7 @@ export async function POST(req: NextRequest) {
     } else if (model.startsWith('deepseek-')) {
       return await handleDeepseekRequest(
         finalSystemPrompt,
-        '',
+        relevant_chunk,
         messages,
         maxTokens,
         temperature,
@@ -115,7 +142,7 @@ export async function POST(req: NextRequest) {
     } else if (model.startsWith('grok-')) {
       return await handleGrokRequest(
         finalSystemPrompt,
-        '',
+        relevant_chunk,
         messages,
         maxTokens,
         temperature,
@@ -125,7 +152,7 @@ export async function POST(req: NextRequest) {
     } else {
       return await handleOpenAIRequest(
         finalSystemPrompt,
-        '',
+        relevant_chunk,
         messages,
         maxTokens,
         temperature,
