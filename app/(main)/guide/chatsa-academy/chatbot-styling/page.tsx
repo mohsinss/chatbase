@@ -16,7 +16,7 @@ const tutorials: TutorialCard[] = [
     id: "basic-settings",
     title: "Chat Interface Basic Settings",
     description: "Configure fundamental settings for your chat interface",
-    videoUrl: "https://example.com/videos/basic-settings.mp4",
+    videoUrl: "https://www.loom.com/embed/8627cb64312447cfb2ff114258b6e8b4?sid=79923b73-eb81-43c3-85d0-0e0cb9df41cb",
     thumbnailUrl: "https://example.com/thumbnails/basic-settings.jpg"
   },
   {
@@ -103,18 +103,44 @@ export default function ChatbotStylingPage() {
           <h2 className="text-2xl font-bold mb-4">{selectedTutorial.title}</h2>
           
           <div className="aspect-video mb-6">
-            <video
-              className="w-full h-full rounded-lg"
-              controls
-              poster={selectedTutorial.thumbnailUrl}
-            >
-              <source src={selectedTutorial.videoUrl} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
+  {selectedTutorial.id === "basic-settings" ? (
+    <div className="w-full h-full rounded-lg overflow-hidden relative">
+      <iframe
+        src={`${selectedTutorial.videoUrl}${selectedTutorial.videoUrl.includes('?') ? '&' : '?'}autoplay=1`}
+        allow="autoplay; fullscreen"
+        allowFullScreen
+        className="absolute top-0 left-0 w-full h-full"
+        frameBorder="0"
+      />
+    </div>
+  ) : (
+    <video
+      className="w-full h-full rounded-lg"
+      controls
+      autoPlay
+      muted
+      poster={selectedTutorial.thumbnailUrl}
+    >
+      <source src={selectedTutorial.videoUrl} type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+  )}
+</div>
+
           
           <div className="prose max-w-none">
             <p className="text-gray-600">{selectedTutorial.description}</p>
+            {selectedTutorial.id === "basic-settings" && (
+              <div className="mt-4 space-y-4">
+                <p>This tutorial covers essential customization options for your chatbot interface:</p>
+                <ul className="list-disc pl-6 space-y-2">
+                  <li>Changing the chatbot display name</li>
+                  <li>Switching between light and dark themes</li>
+                  <li>Adjusting the chatbot window width</li>
+                  <li>Customizing the footer text at the bottom of the chatbot</li>
+                </ul>
+              </div>
+            )}
             {/* Add more detailed content here */}
           </div>
         </div>
