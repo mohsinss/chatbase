@@ -13,10 +13,10 @@ const sidebarItems = [
                 name: "Getting started",
                 href: "/guide/getting-started",
                 subItems: [
-                    { name: 'Chatbot settings', href: '/guide/category/getting-started' },
-                    { name: 'Response quality', href: '/guide/category/response-quality' },
-                    { name: 'Custom Domains', href: '/guide/category/custom-domains' },
-                    { name: 'Create and Manage Teams', href: '/guide/category/teams' },
+                    { name: 'Chatbot settings', href: '/guide/getting-started' },
+                    { name: 'Response quality', href: '/guide/getting-started/response-quality' },
+                    { name: 'Custom Domains', href: '/guide/getting-started/custom-domains' },
+                    { name: 'Create and Manage Teams', href: '/guide/getting-started/teams' },
                 ]
             },
             {
@@ -47,11 +47,11 @@ export default function Layout({ children }: { children: ReactNode }) {
     const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
 
     return (
-        <div className="min-h-screen pt-32 pb-16">
+        <div className="h-screen">
             <div className="max-w-7xl mx-auto px-4">
-                <div className="flex gap-12">
+                <div className="flex gap-12 pt-16 h-screen">
                     {/* Sidebar */}
-                    <div className="w-64 flex-shrink-0">
+                    <div className="h- w-64 flex-shrink-0">
                         {/* Search */}
                         <div className="mb-8">
                             <div className="relative">
@@ -118,7 +118,9 @@ export default function Layout({ children }: { children: ReactNode }) {
                             </div>
                         ))}
                     </div>
-                    {children}
+                    <div className='overflow-y-auto flex-1'>
+                        {children}
+                    </div>
                 </div>
             </div>
         </div>

@@ -21,7 +21,7 @@ export default function GuidePage() {
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Getting Started Card */}
-          <Link href="/guide/category/getting-started" className="block">
+          <Link href="/guide/getting-started" className="block">
             <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:border-blue-500 transition-colors">
               <div className="flex items-center gap-6">
                 {/* Decorative illustration */}
