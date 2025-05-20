@@ -50,9 +50,8 @@ export async function POST(req: NextRequest) {
 
     if (team) {
       //@ts-ignore
-      const creditLimit = team.plan ? (team.plan in team ? team.plan : null) : null;
-      const planCredits = creditLimit ? team.credits : null;
-      if (team.credits >= (planCredits || 0)) {
+      const creditLimit = config.stripe.plans[team.plan].credits;
+      if (team.credits >= creditLimit) {
         return setCorsHeaders(new Response(
           JSON.stringify({
             error: 'limit reached, upgrade for more messages.',
