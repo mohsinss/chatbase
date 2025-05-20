@@ -2,7 +2,7 @@ import { IconRefresh } from "@tabler/icons-react";
 import { useAISettings } from '@/contexts/AISettingsContext';
 import React, { useState, useEffect } from 'react';
 import { SUPPORTED_LANGUAGES } from '../settings/AISettings';
-import { AI_MODELS } from "@/types";
+import { AI_MODELS, systemPromptTemplates } from "@/types/config";
 import toast from "react-hot-toast";
 
 interface ChatSettingsProps {
@@ -45,6 +45,7 @@ export const ChatSettings = ({
     temperature: false,
     maxTokens: false,
     language: false,
+    systemPrompt: false,
   });
 
   const tooltipContent = {
@@ -52,8 +53,13 @@ export const ChatSettings = ({
     modelProvider: "Choose the AI model. Each model has different capabilities and pricing.",
     temperature: "Adjust the creativity level of responses. Lower values give consistent outputs.",
     maxTokens: "Set the maximum length of responses. One token is roughly 4 characters.",
-    language: "Select the language for AI responses. This will affect how the AI communicates."
+    language: "Select the language for AI responses. This will affect how the AI communicates.",
+    systemPrompt: "Select a system prompt template or enter a custom prompt below.",
   };
+
+  // Determine if current instructions match any template prompt
+  const currentTemplate = systemPromptTemplates.find(t => t.prompt === localSettings.systemPrompt);
+  const systemPromptTemplateValue = currentTemplate ? currentTemplate.key : "custom";
 
   // Update local settings when global settings change
   useEffect(() => {
@@ -356,7 +362,7 @@ export const ChatSettings = ({
             </p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 hidden">
             <h3 className="text-gray-700 font-medium">AI Actions</h3>
             <div className="p-4 border rounded-lg bg-white text-gray-500 text-center">
               No actions found
@@ -366,10 +372,35 @@ export const ChatSettings = ({
           <div className="space-y-2">
             <h3 className="text-gray-700 font-medium">System prompt</h3>
             <div className="flex gap-2">
-              <select className="flex-1 p-2.5 border rounded-lg bg-white text-gray-700">
-                <option>AI Chatbot</option>
+              <select
+                value={systemPromptTemplates.find(t => t.prompt === localSettings.systemPrompt)?.key || "custom"}
+                onChange={(e) => {
+                  const selectedKey = e.target.value;
+                  const selectedTemplate = systemPromptTemplates.find(t => t.key === selectedKey);
+                  setLocalSettings(prev => ({
+                    ...prev,
+                    systemPrompt: selectedTemplate ? selectedTemplate.prompt : prev.systemPrompt,
+                  }));
+                }}
+                className="flex-1 p-2.5 border rounded-lg bg-white text-gray-700"
+              >
+                {systemPromptTemplates.map(template => (
+                  <option key={template.key} value={template.key}>
+                    {template.displayName}
+                  </option>
+                ))}
+                <option key="custom" value="custom">Custom Prompt</option>
               </select>
-              <button className="p-2.5 border rounded-lg">
+              <button
+                className="p-2.5 border rounded-lg"
+                onClick={() => {
+                  // On refresh, set systemPromptTemplate to custom and keep current instructions
+                  setLocalSettings(prev => ({
+                    ...prev,
+                    systemPrompt: prev.systemPrompt,
+                  }));
+                }}
+              >
                 <IconRefresh className="w-4 h-4" />
               </button>
             </div>
@@ -400,4 +431,4 @@ export const ChatSettings = ({
       </div>
     </div>
   );
-}; 
+};

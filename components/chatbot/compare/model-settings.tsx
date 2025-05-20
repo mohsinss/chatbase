@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { IconRefresh, IconInfoCircle } from "@tabler/icons-react"
-import { AI_MODELS } from "@/types/config"
+import { AI_MODELS, systemPromptTemplates } from "@/types/config"
 
 // Flatten all models from different providers into a single array
 const allModels = Object.entries(AI_MODELS).flatMap(([provider, models]) => 
@@ -29,9 +29,13 @@ const ModelSettings = ({ instance, updateInstance, onClose }: ModelSettingsProps
     model: "gpt-4o",
     temperature: 0,
     maxTokens: 1000,
-    systemPrompt: "You are a helpful assistant.",
-    instructions: "### Role\nYou are a Developer Assistant who helps with coding tasks.",
-  }
+    systemPromptTemplate: "aiAgent",
+    instructions: "You are a helpful assistant.",
+  };
+
+  // Determine if current instructions match any template prompt
+  const currentTemplate = systemPromptTemplates.find(t => t.prompt === aiSettings.instructions);
+  const systemPromptTemplateValue = currentTemplate ? currentTemplate.key : "custom";
 
   // Update model and instance name with deep copy
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -93,21 +97,20 @@ const ModelSettings = ({ instance, updateInstance, onClose }: ModelSettingsProps
   // Update system prompt based on template with deep copy
   const handleSystemPromptChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation()
-    const template = e.target.value
-    let systemPrompt = aiSettings.systemPrompt || "You are a helpful assistant."
+    const templateKey = e.target.value
+    let systemPrompt = "You are a helpful assistant."
 
-    // Set system prompt based on template
-    if (template === "ai-agent") {
-      systemPrompt = "You are an AI agent designed to assist with various tasks."
-    } else if (template === "helpful-assistant") {
-      systemPrompt = "You are a helpful assistant."
+    // Find the prompt template by key
+    const template = systemPromptTemplates.find(t => t.key === templateKey)
+    if (template) {
+      systemPrompt = template.prompt
     }
 
     // Create a deep copy of settings
     const newSettings = JSON.parse(JSON.stringify({
       ...aiSettings,
-      systemPromptTemplate: template,
-      systemPrompt: systemPrompt,
+      systemPromptTemplate: templateKey,
+      instructions: systemPrompt,
     }));
 
     updateInstance(instance.id, {
@@ -206,7 +209,7 @@ const ModelSettings = ({ instance, updateInstance, onClose }: ModelSettingsProps
         </div>
       </div>
 
-      <div>
+      <div className="hidden">
         <div className="flex items-center justify-between mb-2">
           <label className="text-sm font-medium text-gray-700">AI Actions</label>
         </div>
@@ -220,14 +223,17 @@ const ModelSettings = ({ instance, updateInstance, onClose }: ModelSettingsProps
         <div className="flex gap-2">
           <div className="relative flex-grow">
             <select
-              value={aiSettings.systemPromptTemplate || "ai-agent"}
-              onChange={handleSystemPromptChange}
-              className="w-full p-2 border rounded-md appearance-none bg-white pr-8"
-            >
-              <option value="ai-agent">AI agent</option>
-              <option value="helpful-assistant">Helpful assistant</option>
-              <option value="custom">Custom</option>
-            </select>
+            value={aiSettings.systemPromptTemplate || "aiAgent"}
+            onChange={handleSystemPromptChange}
+            className="w-full p-2 border rounded-md appearance-none bg-white pr-8"
+          >
+            <option key="custom" value="custom">Custom Prompt</option>
+            {systemPromptTemplates.map(template => (
+              <option key={template.key} value={template.key}>
+                {template.displayName}
+              </option>
+            ))}
+          </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -250,18 +256,6 @@ const ModelSettings = ({ instance, updateInstance, onClose }: ModelSettingsProps
             onChange={handleInstructionsChange}
             className="w-full p-2 border rounded-md h-24 resize-none"
           />
-          <div className="absolute top-0 right-0 flex">
-            <button className="p-1 text-gray-400 hover:text-gray-600">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
-              </svg>
-            </button>
-            <button className="p-1 text-gray-400 hover:text-gray-600">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
         </div>
       </div>
     </div>
