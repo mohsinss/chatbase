@@ -320,8 +320,8 @@ export async function handleTextMessage(
                 await sendUrlButtonMessage(
                   phoneNumberId,
                   from,
-                  item.text || "Click the button below:", // Body text
-                  item.buttonTitle || "Open Link",       // Button text
+                  item.description || "Click the button below:", // Body text
+                  item.text || "Open Link",       // Button text
                   item.url                               // URL to open
                 );
               } else {

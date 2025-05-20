@@ -126,7 +126,7 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
     "type": "button",
     "text": "Text for the button or link",
     "url": "https://...",
-    "instructions": "When to show this"
+    "description": "give brief description for this link",
   }
   
   Choose from the following actions:
