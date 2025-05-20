@@ -1,9 +1,9 @@
 "use client"
 import React, { useState, useEffect, useRef } from "react"
 import { IconSend, IconSettings, IconDotsVertical, IconTrash, IconInfoCircle } from "@tabler/icons-react"
-import toast from "react-hot-toast"
 import ModelSettings from "./model-settings"
 import InstanceActions from "./instance-actions"
+
 interface Message {
   role: "user" | "assistant"
   content: string

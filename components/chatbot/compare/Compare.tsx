@@ -2,11 +2,8 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { IconArrowLeft } from "@tabler/icons-react"
-import { AISettingsProvider } from "@/contexts/AISettingsContext"
 import toast from "react-hot-toast"
 import ChatInstance from "./ChatInstance"
-import ModelSettings from "./model-settings"
-import InstanceActions from "./instance-actions"
 import { AI_MODELS } from "@/types/config"
 
 // Find a default model (first one marked as default)
