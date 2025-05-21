@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const integration = await SallaIntegration.findOne({ merchantId });
 
     if (integration && integration.settings.chatbotId) {
-      return NextResponse.json({ success: true, chatbotId: integration.settings.chatbotId });
+      return NextResponse.json({ success: true, chatbotId: integration.settings.chatbotId, settings: integration.settings });
     } else {
       return NextResponse.json({ success: false, errors: ["No chatbotId found for this merchant"] });
     }
