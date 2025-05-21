@@ -17,7 +17,7 @@ export default function GuidePage() {
       {/* Reference Section */}
       <div className="mb-12">
         <h2 className="text-2xl font-bold mb-4">Reference</h2>
-        <p className="text-gray-600 mb-8">Get to know chatbase</p>
+        <p className="text-gray-600 mb-8">Get to know ChatSa</p>
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Getting Started Card */}
