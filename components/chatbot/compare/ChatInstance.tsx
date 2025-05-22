@@ -34,6 +34,7 @@ interface ChatInstanceProps {
   handleSubmit: (e: React.FormEvent) => void
   allInstances: ChatInstanceType[]
   setAllInstances: React.Dispatch<React.SetStateAction<ChatInstanceType[]>>
+  team: any
 }
 
 const ChatInstance: React.FC<ChatInstanceProps> = ({
@@ -48,7 +49,8 @@ const ChatInstance: React.FC<ChatInstanceProps> = ({
   onDeleteInstance,
   allInstances,
   setAllInstances,
-  handleSubmit
+  handleSubmit,
+  team,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showSettings, setShowSettings] = useState(false)
@@ -147,6 +149,7 @@ const ChatInstance: React.FC<ChatInstanceProps> = ({
                 instance={instance}
                 updateInstance={updateInstance}
                 onClose={() => setShowSettings(false)}
+                plan={team?.plan || "Free"}
               />
             )}
           </div>

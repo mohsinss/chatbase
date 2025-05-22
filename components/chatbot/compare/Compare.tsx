@@ -538,6 +538,7 @@ const Compare = ({ chatbot, team }: CompareProps) => {
               allInstances={instances}
               setAllInstances={setInstances}
               handleSubmit={handleSubmit}
+              team={team}
             />
           ))}
         </div>

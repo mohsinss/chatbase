@@ -16,9 +16,10 @@ interface ModelSettingsProps {
   instance: any
   updateInstance: (id: string, updates: any) => void
   onClose: () => void
+  plan: string
 }
 
-const ModelSettings = ({ instance, updateInstance, onClose }: ModelSettingsProps) => {
+const ModelSettings = ({ instance, updateInstance, onClose, plan }: ModelSettingsProps) => {
   // Ensure instance and aiSettings exist
   if (!instance) {
     return null
@@ -154,7 +155,7 @@ const ModelSettings = ({ instance, updateInstance, onClose }: ModelSettingsProps
             {Object.entries(AI_MODELS).map(([provider, models]) => (
               <optgroup key={provider} label={provider}>
                 {models.map(model => (
-                  <option key={model.value} value={model.value}>
+                  <option key={model.value} value={model.value} disabled={!model.default && plan == "Free"}>
                     {model.label}
                   </option>
                 ))}
