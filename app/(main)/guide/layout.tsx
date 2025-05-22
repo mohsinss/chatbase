@@ -4,6 +4,7 @@ import { ReactNode, useState } from 'react';
 import { IconChevronRight, IconMenu2 } from '@tabler/icons-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import SearchResults from './components/SearchResults';
 
 const sidebarItems = [
     {
@@ -46,6 +47,16 @@ export default function Layout({ children }: { children: ReactNode }) {
     const [searchQuery, setSearchQuery] = useState("");
     const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [showSearchResults, setShowSearchResults] = useState(false);
+
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+        setShowSearchResults(true);
+    };
+
+    const handleCloseSearch = () => {
+        setShowSearchResults(false);
+    };
 
     return (
         <div className="h-screen">
@@ -70,7 +81,8 @@ export default function Layout({ children }: { children: ReactNode }) {
                                         placeholder="Search"
                                         className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onChange={handleSearch}
+                                        onFocus={() => setShowSearchResults(true)}
                                     />
                                     <svg
                                         className="absolute right-3 top-2.5 w-5 h-5 text-gray-400"
@@ -144,6 +156,14 @@ export default function Layout({ children }: { children: ReactNode }) {
                     </div>
                 </div>
             </div>
+
+            {/* Search Results */}
+            {showSearchResults && (
+                <SearchResults 
+                    query={searchQuery} 
+                    onClose={handleCloseSearch}
+                />
+            )}
         </div>
     );
 }
