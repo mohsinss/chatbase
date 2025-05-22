@@ -48,16 +48,7 @@ const nextConfig = {
       },
     ];
   },
-  experimental: {
-    serverComponentsExternalPackages: ['tesseract.js'],
-    outputFileTracingIncludes: {
-      '/api/**/*': ['./node_modules/**/*.wasm', './node_modules/**/*.proto']
-    }
-  },
   swcMinify: true,
-  experimental: {
-    turbo: true, // Optional: faster builds
-  },
   experimental: {
     turbo: true, // Optional: faster builds
     webpackMemoryOptimizations: true,
