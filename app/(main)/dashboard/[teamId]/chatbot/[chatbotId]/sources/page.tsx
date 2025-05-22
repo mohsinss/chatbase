@@ -7,6 +7,7 @@ import Chatbot from "@/models/Chatbot";
 import DashboardNav from "@/components/DashboardNav";
 import ChatbotTabs from "@/components/chatbot/ChatbotTabs";
 import Sources from "@/components/chatbot/sources/Sources";
+import { convertToJSON } from "@/lib/utils";
 
 export default async function SourcesPage({ 
   params 
@@ -32,7 +33,7 @@ export default async function SourcesPage({
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <Sources teamId={params.teamId} chatbotId={params.chatbotId} chatbot={chatbot} team={team}/>
+        <Sources teamId={params.teamId} chatbotId={params.chatbotId} chatbot={convertToJSON(chatbot)} team={convertToJSON(team)}/>
       </main>
     </>
   );

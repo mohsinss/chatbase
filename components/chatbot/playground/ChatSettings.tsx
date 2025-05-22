@@ -104,7 +104,7 @@ export const ChatSettings = ({
         </button>
       )}
 
-      <div className="h-full overflow-y-auto">
+      <div className="h-full">
         <div className="p-4 border-b">
           <div className="flex items-center gap-2">
             <button
@@ -117,7 +117,7 @@ export const ChatSettings = ({
           </div>
         </div>
 
-        <div className="p-4 space-y-6">
+        <div className="p-4 space-y-6 h-[calc(100vh-160px)] overflow-y-auto">
           <div>
             <div className="flex items-center justify-between">
               <span className="text-gray-700 font-medium">Status:</span>
@@ -397,7 +397,7 @@ export const ChatSettings = ({
                   // On refresh, set systemPromptTemplate to custom and keep current instructions
                   setLocalSettings(prev => ({
                     ...prev,
-                    systemPrompt: prev.systemPrompt,
+                    systemPrompt: '',
                   }));
                 }}
               >

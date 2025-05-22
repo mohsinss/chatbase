@@ -155,7 +155,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       messages.filter(message => message.role === 'user').length >= (leadSetting.delay || 0)));
 
   return (
-    <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center ${mocking ? 'h-[calc(100dvh-300px)]' : 'min-h-[calc(100dvh-80px)] h-full'}`}>
+    <div className={`${embed ? '' : 'pt-4 px-4'} flex-1 flex justify-center ${mocking ? 'h-[calc(100dvh-300px)]' : 'min-h-[calc(100dvh-120px)] h-full'}`}>
       <div
         className={`${embed ? 'w-full h-full' : ''} relative`}
         style={{ width: `${(embed && !standalone) ? 'w-full' : (config.chatWidth + 'px')}` }}
@@ -163,7 +163,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
         {!embed && !isSettingsOpen && !standalone && (
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className={`absolute ${config.bubbleAlignment === 'right' ? '-left-12' : '-right-12'} h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white`}
+            className={`absolute -left-12 h-[38px] w-[38px] flex items-center justify-center border rounded-lg bg-white`}
           >
             ☰
           </button>

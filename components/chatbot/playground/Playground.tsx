@@ -727,7 +727,7 @@ const Playground: React.FC<PlaygroundProps> = ({
         </div>
 
         {/* Main content area */}
-        <div className="relative min-h-[calc(100dvh-80px)] pl-2"
+        <div className="relative pl-2"
           style={{
             backgroundImage: 'radial-gradient(circle, #e5e5e5 1px, transparent 1px)',
             backgroundSize: '20px 20px'
