@@ -47,11 +47,11 @@ export default function AccountPage() {
   return (
     <>
       <DashboardNav teamId="" />
-      <div className="min-h-screen max-w-3xl mx-auto px-4 py-12">
+      <div className="max-w-3xl mx-auto px-4 py-12">
         <h1 className="text-4xl font-bold text-center mb-12">Account</h1>
 
         {/* Email Section */}
-        <div className="bg-white rounded-xl p-8 mb-6 shadow-sm">
+        <div className="bg-white rounded-xl p-8 mb-6 shadow-sm border">
           <h2 className="text-2xl font-bold mb-2">Email</h2>
           <p className="text-gray-600 mb-4">
             Please enter the email address you want to use to sign in with.
@@ -74,7 +74,7 @@ export default function AccountPage() {
         </div>
 
         {/* Display Name Section */}
-        <div className="bg-white rounded-xl p-8 mb-6 shadow-sm">
+        <div className="bg-white rounded-xl p-8 mb-6 shadow-sm border">
           <h2 className="text-2xl font-bold mb-2">Display Name</h2>
           <p className="text-gray-600 mb-4">
             Enter your full name or a comfortable display name.
@@ -96,22 +96,28 @@ export default function AccountPage() {
           </div>
         </div>
 
+        {/* Danger Zone Divider*/}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t"></span>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 font-bold text-red-400">Danger Zone</span>
+          </div>
+        </div>
+
         {/* Danger Zone */}
-        <div className="mt-12">
-          <h3 className="text-red-500 text-sm font-medium mb-4">DANGER ZONE</h3>
+        <div className="mt-6">
           <div className="bg-white rounded-xl p-8 border border-red-100">
             <h2 className="text-2xl font-bold text-red-500 mb-4">Delete Account</h2>
-            <p className="text-gray-600 mb-2">
-              Once you delete your account, there is no going back. Please be certain.
-            </p>
-            <p className="text-gray-600 mb-4">
-              All your uploaded data and trained chatbots will be deleted.{" "}
-              <span className="font-bold">This action is not reversible</span>
-            </p>
-            <div className="flex justify-end">
+            <div className="">
+              <p>Once you delete your account, there is no going back. Please be certain.</p>
+              <p>All your uploaded data and trained agents will be deleted.<b>&nbsp;This action is not reversible</b></p>
+            </div>
+            <div className="flex justify-end pt-6">
               <button
                 onClick={handleDeleteAccount}
-                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 bg-red-500 text-zinc-50 shadow-sm hover:bg-red-500/90 dark:bg-red-900 dark:text-zinc-50 dark:hover:bg-red-900/90 h-9 px-4 py-1"
               >
                 Delete Your Account
               </button>

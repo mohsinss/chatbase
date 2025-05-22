@@ -171,7 +171,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
     try {
       if (!datasetId)
         return;
-      // setLoading(true);
+      setLoading(true);
 
       const response = await fetch(`/api/chatbot/sources/dataset?chatbotId=${chatbotId}`);
 

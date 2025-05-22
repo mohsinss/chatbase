@@ -6,7 +6,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { IconSearch, IconPlus, IconMenu2, IconX, IconArrowUp, IconAlertCircle, IconCheck } from "@tabler/icons-react";
+import {
+  IconSearch,
+  IconPlus,
+  IconMenu2,
+  IconX,
+  IconArrowUp,
+  IconAlertCircle,
+  IconCheck,
+  IconChevronDown
+} from "@tabler/icons-react";
 import { useSession, signOut } from "next-auth/react";
 import ButtonAccount from "./ButtonAccount";
 import toast from "react-hot-toast";
@@ -15,6 +24,12 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PlansSettings } from "@/components/tabs/settings/PlansSettings";
 import { ChatbotBrandingSettings } from '@/models/ChatbotBrandingSettings'
 import { BRANDING_UPDATED_EVENT } from "@/components/chatbot/settings/BrandingSettings";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface Chatbot {
   chatbotId: string;
@@ -307,33 +322,13 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
               teamId != "" && !hideFields &&
               <div className="flex items-center gap-4">
                 {/* Team Selector */}
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setIsTeamMenuOpen(!isTeamMenuOpen);
-                      setIsChatbotMenuOpen(false);
-                    }}
-                    className={`flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 ease-in-out hover:bg-gray-100 ${isTeamMenuOpen ? 'bg-gray-800' : ''}`}
-                  >
-                    My Team
-                    <svg
-                      className="w-4 h-4 opacity-50"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-                  {isTeamMenuOpen && (
-                    <div
-                      className="absolute z-10 mt-2 w-72 rounded-lg shadow-lg bg-base-100 ring-1 ring-black ring-opacity-5"
-                    >
+                <div className="flex items-center gap-1 justify-between">
+                  <Link href={`/dashboard/${teamId}`}>{teamId}</Link>
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger className="flex h-10 items-center justify-between rounded-md border border-zinc-900/10 bg-white px-2 py-1 text-sm text-zinc-900 placeholder:text-zinc-400 disabled:opacity-50 focus:outline-none border-none focus:bg-zinc-50 hover:bg-zinc-50 focus:ring-0">
+                      <IconChevronDown className="w-4 h-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
                       {/* Search */}
                       <div className="p-2">
                         <div className="relative">
@@ -383,37 +378,20 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                           <span className="text-sm font-medium">Create team</span>
                         </button>
                       </div>
-                    </div>
-                  )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {/* Chatbot Selector - always visible when not on root dashboard */}
-                {!isRootDashboard && (
-                  <div className="relative">
-                    <button
-                      onClick={() => {
-                        setIsChatbotMenuOpen(!isChatbotMenuOpen);
-                        setIsTeamMenuOpen(false);
-                      }}
-                      className="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-md hover:bg-gray-100"
-                    >
-                      Select Chatbot
-                      <svg
-                        className="w-4 h-4 opacity-50"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
-                    {isChatbotMenuOpen && (
-                      <div className="absolute z-10 mt-2 w-72 rounded-lg shadow-lg bg-base-100 ring-1 ring-black ring-opacity-5">
+                {
+                  !isRootDashboard &&
+                  <div className="flex items-center gap-1 justify-between">
+                    <Link href={currentChatbot?.name ? `/dashboard/${teamId}/chatbot/${currentChatbot?.chatbotId}` : '#'}>{currentChatbot?.name ?? "Select Chatbot"}</Link>
+                    <DropdownMenu modal={false}>
+                      <DropdownMenuTrigger className="flex h-10 items-center justify-between rounded-md border border-zinc-900/10 bg-white px-2 py-1 text-sm text-zinc-900 placeholder:text-zinc-400 disabled:opacity-50 focus:outline-none border-none focus:bg-zinc-50 hover:bg-zinc-50 focus:ring-0">
+                        <IconChevronDown className="w-4 h-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
                         {/* Search */}
                         <div className="p-2">
                           <div className="relative">
@@ -499,15 +477,15 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                             <span className="text-sm font-medium">Create new chatbot</span>
                           </button>
                         </div>
-                      </div>
-                    )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                )}
-
+                }
+                
                 {
                   //@ts-ignore
                   currentChatbot && currentChatbot?.integrations?.salla == true && (
-                    <div 
+                    <div
                       onClick={() => {
                         router.push(`/dashboard/${teamId}/chatbot/${currentChatbot.chatbotId}/sources?tab=salla`);
                       }}
