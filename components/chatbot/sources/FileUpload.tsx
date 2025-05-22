@@ -142,8 +142,8 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
             await new Promise((r) => setTimeout(r, 500));
 
             const extractedText = pageTexts.join('');
-            console.log("Extracted text:", extractedText); // Debug log
-            buffer = Buffer.from(extractedText, 'utf-8');
+            console.log("Extracted text:", Buffer.from(extractedText, 'utf8').toString('utf8')); // Debug log
+            buffer = Buffer.from(extractedText, 'utf8');
           } catch (err) {
             console.error("PDF extraction error:", err);
             toast.dismiss();
@@ -171,7 +171,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
               Bucket: process.env.NEXT_PUBLIC_AWS_S3_BUCKET_NAME,
               Key: key,
               Body: buffer,
-              ContentType: file.type === 'application/pdf' ? 'text/plain' : file.type,
+              ContentType: file.type === 'application/pdf' ? 'text/plain;charset=utf-8' : file.type,
             })
           );
         } catch (s3Error) {

@@ -114,7 +114,7 @@ export async function POST(req: Request) {
       }
 
       trieve_data = await trieve_response.json();
-    } else if (fileType === 'text/plain') {
+    } else if (fileType.startsWith('text/plain')) {
       charCount = Buffer.byteLength(buffer.toString(), 'utf8');
       status = 'Completed';
       console.log(`Text file character count: ${charCount}`);
