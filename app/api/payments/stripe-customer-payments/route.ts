@@ -3,6 +3,8 @@ import Stripe from "stripe";
 import connectMongo from "@/libs/mongoose";
 import Team from "@/models/Team";
 
+export const dynamic = "force-dynamic";
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2023-08-16",
     typescript: true,

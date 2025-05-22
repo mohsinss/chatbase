@@ -7,6 +7,8 @@ import Payment from "@/models/Payment";
 import Subscription from "@/models/Subscription";
 import { authOptions } from "@/libs/next-auth";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
