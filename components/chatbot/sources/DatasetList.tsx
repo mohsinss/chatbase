@@ -18,7 +18,8 @@ import {
   IconFileTypePng,
   IconChevronRight,
   IconChevronDown,
-  IconSearch
+  IconSearch,
+  IconLoader2,
 } from "@tabler/icons-react";
 import { formatFileSize } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -129,6 +130,9 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
     if (!confirm(`Are you sure you want to delete ${selectedFileIds.size} selected file(s)?`)) return;
 
     setDeleting(true);
+    const totalFiles = selectedFileIds.size;
+    let deletedCount = 0;
+    const toastId = toast.loading(`Deleting 0 of ${totalFiles} file(s)...`, { duration: Infinity });
     try {
       for (const fileId of Array.from(selectedFileIds)) {
         const file = files.find(f => f._id === fileId);
@@ -137,15 +141,18 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
           method: "DELETE"
         });
         if (!response.ok) throw new Error(`Failed to delete file ${file.name}`);
+        deletedCount++;
+        toast.loading(`Deleting ${deletedCount} of ${totalFiles} file(s)...`, { id: toastId });
       }
-      setSelectedFileIds(new Set());
       await fetchFiles();
+      setSelectedFileIds(new Set());
       onDelete?.();
-      toast.success(`${selectedFileIds.size} file(s) successfully deleted.`);
+      toast.success(`${totalFiles} file(s) successfully deleted.`, { id: toastId });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete selected files");
+      toast.error(err instanceof Error ? err.message : "Failed to delete selected files", { id: toastId });
       setError(err instanceof Error ? err.message : "Failed to delete selected files");
     } finally {
+      toast.dismiss(toastId);
       setDeleting(false);
     }
   };
@@ -430,32 +437,32 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
         <div className="p-6 pb-2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">File Sources</h2>
-              <div className="relative flex items-center space-x-2 flex-grow max-w-xs">
-                <span className="absolute left-3 text-gray-400 pointer-events-none">
-                  {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="relative flex items-center space-x-2 flex-grow max-w-xs">
+              <span className="absolute left-3 text-gray-400 pointer-events-none">
+                {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.5 3a7.5 7.5 0 016.15 13.65z" />
                   </svg> */}
-                  <IconSearch className="h-4 w-4 ml-2"/>
-                </span>
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex h-9 w-full rounded-md border border-input py-2 text-sm ring-offset-background disabled:cursor-not-allowed file:border-0 file:bg-transparent file:font-medium file:text-sm disabled:opacity-50 focus:outline-none focus-visible:ring-ring focus:ring-violet-500/10 bg-white text-zinc-900 focus:border-zinc-400 placeholder:text-zinc-400 focus-visible:ring-0 focus:ring-0 px-8"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                    aria-label="Clear search"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
+                <IconSearch className="h-4 w-4 ml-2" />
+              </span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input py-2 text-sm ring-offset-background disabled:cursor-not-allowed file:border-0 file:bg-transparent file:font-medium file:text-sm disabled:opacity-50 focus:outline-none focus-visible:ring-ring focus:ring-violet-500/10 bg-white text-zinc-900 focus:border-zinc-400 placeholder:text-zinc-400 focus-visible:ring-0 focus:ring-0 px-8"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  aria-label="Clear search"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
             <button
               onClick={() => fetchFiles()}
               className="text-gray-600 hover:text-gray-900 hidden"
@@ -582,7 +589,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                 key={`file-${file._id}-${index}`}
                 className="cursor-pointer">
                 <div
-                  className="flex items-center justify-between px-6 py-2 hover:bg-gray-50"
+                  className="flex items-center justify-between px-6 py-4 hover:bg-gray-50"
                 >
                   <div className="flex items-center space-x-3">
                     {/* Add checkbox for each file */}
@@ -599,9 +606,9 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                     />
                     {getFileIcon(file.name)}
                     <div>
-                      <div className="font-medium pb-1">{file.name}</div>
+                      <div className="overflow-hidden text-ellipsis whitespace-nowrap font-medium text-sm text-zinc-800 pb-1">{file.name}</div>
                       <div className="text-sm text-gray-500 flex items-center">
-                        <div className="w-[60px]">
+                        <div className="w-[60px] text-xs text-zinc-700">
                           {file.status != "Completed" ?
                             <>
                               <span className="my-auto loading loading-spinner loading-xs">
@@ -610,7 +617,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                             formatFileSize(file.charCount)
                           }
                         </div>
-                        <span className={`rounded-full p-1 px-4 text-sm ${file.trained ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>{file.trained ? 'Trained' : 'Not Trained'}</span>
+                        <div className={`focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-950 whitespace-nowrap flex items-center justify-center select-none font-medium border transition-colors rounded-full flex-shrink-0 px-1.5 py-0.5 text-xs shadow-none ${file.trained ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100 dark:border-zinc-800 dark:focus:ring-zinc-300 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80' : 'focus:ring-zinc-950 focus:ring-offset-2 dark:border-zinc-800 dark:focus:ring-zinc-300 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80 bg-red-50 text-red-600 border-red-300 hover:bg-red-100'}`}><span className="w-full truncate text-center">{file.trained ? 'Trained' : 'Not Trained'}</span></div>
                       </div>
                     </div>
                   </div>
@@ -636,7 +643,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                       className="text-red-500 hover:text-red-700 flex"
                       disabled={deleting}
                     >
-                      {file._id == dFileId ? <span className="my-auto loading loading-spinner loading-xs"></span> : <IconTrash className="w-5 h-5" />}
+                      {file._id == dFileId ? <span className="my-auto loading loading-spinner loading-xs"></span> : <IconTrash stroke={1} className="w-5 h-5" />}
                     </button>
                     <button
                       // onClick={() => handleDownload(file.url, file.name)}
@@ -673,7 +680,12 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                 className="inline-flex items-center justify-center whitespace-nowrap font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 border bg-transparent dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 px-4 py-1 h-7 rounded-md border-zinc-700 text-red-400 text-xs transition-colors disabled:border-red-400 hover:border-red-400 disabled:bg-red-500/10 hover:bg-red-500/10 disabled:text-red-300 hover:text-red-300"
                 disabled={deleting}
               >
-                <IconTrash className="w-3 h-3 mr-1" /> Delete
+                {
+                  !deleting ?
+                    <><IconLoader2 className="w-3 h-3 animate-spin mr-1" />Deleting...</>
+                    :
+                    <><IconTrash className="w-3 h-3 mr-1" />Delete</>
+                }
               </button>
               <button
                 onClick={handleRestoreSelected}
