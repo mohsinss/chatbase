@@ -681,7 +681,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                 disabled={deleting}
               >
                 {
-                  !deleting ?
+                  deleting ?
                     <><IconLoader2 className="w-3 h-3 animate-spin mr-1" />Deleting...</>
                     :
                     <><IconTrash className="w-3 h-3 mr-1" />Delete</>
