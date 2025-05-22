@@ -39,8 +39,9 @@ const Sources = ({
   chatbot: any;
   team: any;
 }) => {
-  team = JSON.parse(team)
+  // team = JSON.parse(team)
   console.log("chatbot", chatbot);
+  console.log("team", team);
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'files';

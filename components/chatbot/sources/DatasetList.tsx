@@ -23,13 +23,14 @@ import {
 } from "@tabler/icons-react";
 import { formatFileSize } from "@/lib/utils";
 import toast from "react-hot-toast";
-
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import DeleteDialog from "@/components/ui/deleteDialog";
 
 interface IFile {
   trieveId: string;
@@ -59,24 +60,26 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dFileId, setDFileId] = useState<string | null>(null);
+  const [dFile, setDFile] = useState<IFile | null>(null);
   const [pendingFiles, setPendingFiles] = useState(true);
-  // const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
   const [selectedViewFileId, setSelectedViewFileId] = useState<string | null>(null);
   const [selectedViewTextId, setSelectedViewTextId] = useState<string | null>(null);
   const [fileText, setFileText] = useState<string | null>(null);
-
   // New state for selection
   const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
-
   // New state for sort option
   const [sortOption, setSortOption] = useState<string>("Default");
-
   // New state for search query
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleteDialogOpen1, setIsDeleteDialogOpen1] = useState(false);
+  const [deleteDialogTitle, setDeleteDialogTitle] = useState('Delete file(s)');
+  const [deleteDialogDescription, setDeleteDialogDescription] = useState('Are you sure to delete file(s)?');
+
+  const router = useRouter();
 
   const handleViewFile = (fileId: string, fileUrl: string) => {
-    console.log('handleViewFile', fileId, fileUrl);
+    router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources/${fileId}`)
   }
 
   const getFileIcon = (fileName: string) => {
@@ -127,7 +130,6 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
   // Handler for multi-delete
   const handleDeleteSelected = async () => {
     if (selectedFileIds.size === 0) return;
-    if (!confirm(`Are you sure you want to delete ${selectedFileIds.size} selected file(s)?`)) return;
 
     setDeleting(true);
     const totalFiles = selectedFileIds.size;
@@ -154,6 +156,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
     } finally {
       toast.dismiss(toastId);
       setDeleting(false);
+      setIsDeleteDialogOpen1(false);
     }
   };
 
@@ -197,15 +200,13 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>, fileId: string, trieveId: string) => {
-    e.stopPropagation();
-
-    if (!confirm("Are you sure you want to delete this file?")) return;
+  const handleDelete = async () => {
+    if(!dFile)
+      return;
     setDeleting(true)
-    setDFileId(fileId)
 
     try {
-      const response = await fetch(`/api/chatbot/sources/file/${fileId}?datasetId=${datasetId}&trieveId=${trieveId}&chatbotId=${chatbotId}`, {
+      const response = await fetch(`/api/chatbot/sources/file/${dFile._id}?datasetId=${datasetId}&trieveId=${dFile.trieveId}&chatbotId=${chatbotId}`, {
         method: "DELETE"
       });
 
@@ -219,36 +220,11 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
       setError(err instanceof Error ? err.message : "Failed to delete file");
     } finally {
       setDeleting(false)
-      setDFileId(null);
+      setDFile(null);
+      setIsDeleteDialogOpen(false);
     }
   };
-
-  const handleDownload = async (fileUrl: string, fileName: string) => {
-    try {
-      if (fileUrl) {
-        const a = document.createElement('a');
-        a.href = fileUrl;
-        a.download = fileName || 'download';
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to download file");
-    }
-  };
-
-  const handleViewPDF = (fileId: string, fileUrl: string) => {
-    if (fileId == selectedViewFileId) {
-      setSelectedViewFileId(null);
-    } else {
-      setSelectedViewFileId(fileId);
-    }
-
-    setSelectedViewTextId(null);
-  }
-
+  
   const handleViewImage = (fileId: string, fileUrl: string) => {
     if (fileId == selectedViewFileId) {
       setSelectedViewFileId(null);
@@ -617,7 +593,10 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                             formatFileSize(file.charCount)
                           }
                         </div>
-                        <div className={`focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-950 whitespace-nowrap flex items-center justify-center select-none font-medium border transition-colors rounded-full flex-shrink-0 px-1.5 py-0.5 text-xs shadow-none ${file.trained ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100 dark:border-zinc-800 dark:focus:ring-zinc-300 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80' : 'focus:ring-zinc-950 focus:ring-offset-2 dark:border-zinc-800 dark:focus:ring-zinc-300 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80 bg-red-50 text-red-600 border-red-300 hover:bg-red-100'}`}><span className="w-full truncate text-center">{file.trained ? 'Trained' : 'Not Trained'}</span></div>
+                        <div
+                          className={`focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-950 whitespace-nowrap flex items-center justify-center select-none font-medium border transition-colors rounded-full flex-shrink-0 px-1.5 py-0.5 text-xs shadow-none ${file.trained ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100 dark:border-zinc-800 dark:focus:ring-zinc-300 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80' : 'focus:ring-zinc-950 focus:ring-offset-2 dark:border-zinc-800 dark:focus:ring-zinc-300 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80 bg-red-50 text-red-600 border-red-300 hover:bg-red-100'}`}>
+                          <span className="w-full truncate text-center">{file.trained ? 'Trained' : 'Not Trained'}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -639,11 +618,15 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                       <IconEye className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={(e) => handleDelete(e, file._id, file.trieveId)}
+                      onClick={(e) => {    
+                        e.stopPropagation();
+                        setDFile(file);
+                        setIsDeleteDialogOpen(true);
+                      }}
                       className="text-red-500 hover:text-red-700 flex"
                       disabled={deleting}
                     >
-                      {file._id == dFileId ? <span className="my-auto loading loading-spinner loading-xs"></span> : <IconTrash stroke={1} className="w-5 h-5" />}
+                      {file._id == dFile?._id ? <span className="my-auto loading loading-spinner loading-xs"></span> : <IconTrash stroke={1} className="w-5 h-5" />}
                     </button>
                     <button
                       // onClick={() => handleDownload(file.url, file.name)}
@@ -676,7 +659,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
             <div className="shrink-0 w-[1px] hidden h-4 bg-zinc-700 md:block"></div>
             <div className="flex gap-2">
               <button
-                onClick={handleDeleteSelected}
+                onClick={() => setIsDeleteDialogOpen1(true)}
                 className="inline-flex items-center justify-center whitespace-nowrap font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 border bg-transparent dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 px-4 py-1 h-7 rounded-md border-zinc-700 text-red-400 text-xs transition-colors disabled:border-red-400 hover:border-red-400 disabled:bg-red-500/10 hover:bg-red-500/10 disabled:text-red-300 hover:text-red-300"
                 disabled={deleting}
               >
@@ -697,6 +680,24 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
           </div>
         </div>
       )}
+      {/* for single deletion */}
+      <DeleteDialog
+        title={deleteDialogTitle}
+        description={deleteDialogDescription}
+        isDeleting={deleting}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        isOpen={isDeleteDialogOpen}
+        onDelete={handleDelete}
+      />
+      {/* for multi deletion */}
+      <DeleteDialog
+        title={deleteDialogTitle}
+        description={deleteDialogDescription}
+        isDeleting={deleting}
+        onClose={() => setIsDeleteDialogOpen1(false)}
+        isOpen={isDeleteDialogOpen1}
+        onDelete={handleDeleteSelected}
+      />
     </div>
   );
 };

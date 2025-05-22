@@ -36,7 +36,7 @@ const config = {
           { name: "Email support" },
         ],
         credits: 20,
-        charactersLimit: 0.4 * 1024 * 1024,
+        charactersLimit: 1024 * 1024 * 0.4,
         teamMemberLimit: 1,
         chatbotLimit: 1,
         linksLimit: 10,
