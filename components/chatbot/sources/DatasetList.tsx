@@ -55,7 +55,16 @@ interface DatasetListProps {
   onDelete?: () => void;
 }
 
-export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading, setFileCount, setFileSize, setFileChars }: DatasetListProps) => {
+export const DatasetList = ({
+  teamId,
+  chatbotId,
+  datasetId,
+  uploading,
+  onDelete,
+  setFileCount,
+  setFileSize,
+  setFileChars
+}: DatasetListProps) => {
   const [files, setFiles] = useState<IFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -201,7 +210,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
   };
 
   const handleDelete = async () => {
-    if(!dFile)
+    if (!dFile)
       return;
     setDeleting(true)
 
@@ -224,7 +233,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
       setIsDeleteDialogOpen(false);
     }
   };
-  
+
   const handleViewImage = (fileId: string, fileUrl: string) => {
     if (fileId == selectedViewFileId) {
       setSelectedViewFileId(null);
@@ -618,7 +627,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
                       <IconEye className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={(e) => {    
+                      onClick={(e) => {
                         e.stopPropagation();
                         setDFile(file);
                         setIsDeleteDialogOpen(true);

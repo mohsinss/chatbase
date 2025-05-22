@@ -2,7 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { IconFile, IconAlignLeft, IconGlobe, IconAdjustmentsSpark, IconMessageQuestion, IconBrandNotion, IconBrandYoutube, IconBrandAppgallery } from "@tabler/icons-react";
+import {
+  IconFile,
+  IconAlignLeft,
+  IconGlobe,
+  IconAdjustmentsSpark,
+  IconMessageQuestion,
+  IconBrandNotion,
+  IconBrandYoutube,
+  IconBrandAppgallery,
+  IconPictureInPicture
+} from "@tabler/icons-react";
 import { FileUpload } from "./FileUpload";
 import SourceStats from './SourceStats';
 import TextInput from './TextInput';
@@ -19,6 +29,7 @@ import Salla from "./Salla";
 
 const SOURCE_TABS = [
   { id: "files", label: "Files", icon: <IconFile className="w-5 h-5" /> },
+  { id: "images", label: "Images", icon: <IconPictureInPicture className="w-5 h-5" /> },
   { id: "text", label: "Text", icon: <IconAlignLeft className="w-5 h-5" /> },
   { id: "youtube", label: "YouTube", icon: <IconBrandYoutube className="w-5 h-5" /> },
   { id: "qa", label: "Q&A", icon: <IconMessageQuestion className="w-5 h-5" /> },
@@ -251,7 +262,13 @@ const Sources = ({
   const renderContent = () => {
     switch (currentTab) {
       case "files":
-        return <FileUpload teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount}
+        return <FileUpload
+          teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount}
+          setFileSize={setFileSize} setFileChars={setFileChars}
+          limitChars={planConfig.charactersLimit} totalChars={totalChars} />;
+      case "images":
+        return <FileUpload
+          teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount}
           setFileSize={setFileSize} setFileChars={setFileChars}
           limitChars={planConfig.charactersLimit} totalChars={totalChars} />;
       case "text":
@@ -287,7 +304,7 @@ const Sources = ({
           lastTrained={lastTrained}
         />;
       case "salla":
-        return <Salla chatbotId={chatbotId} additionalInfo={sallaAdditionalInfo} setAdditionalInfo={setSallaAdditionalInfo}/>;
+        return <Salla chatbotId={chatbotId} additionalInfo={sallaAdditionalInfo} setAdditionalInfo={setSallaAdditionalInfo} />;
       default:
         return <div>Content for {currentTab}</div>;
     }
@@ -315,7 +332,7 @@ const Sources = ({
             md:pr-3 md:mr-6
           `}>
             {SOURCE_TABS.map((tab) => {
-              if(tab.id == "salla" && chatbot?.integrations?.salla != true) {
+              if (tab.id == "salla" && chatbot?.integrations?.salla != true) {
                 return null;
               }
               return (
