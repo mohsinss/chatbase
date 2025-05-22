@@ -325,7 +325,7 @@ export async function POST(req: Request) {
         }
 
         // Check if the file name ends with .txt
-        if (file.name.endsWith('.txt')) {
+        if (file.name.endsWith('.txt') || file.name.endsWith('.pdf')) {
           // Fetch the text from the file URL
           const response = await fetch(file.url);
           if (!response.ok) {

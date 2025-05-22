@@ -6,8 +6,6 @@ import { promisify } from 'util';
 
 export const dynamic = 'force-dynamic';
 
-const pipelineAsync = promisify(pipeline);
-
 async function blobToBuffer(blob: Blob) {
   const reader = blob.stream().getReader();
   let chunks = [];
@@ -63,30 +61,8 @@ export async function POST(req: Request) {
     }
 
     if (fileType === 'application/pdf') {
-      // create OCR task for pdf
-      const provider = model === "Chunkr" ? "Chunkr" : "LLM";
-      const formData = {
-        file_name: newFileName,
-        base64_file: buffer.toString('base64'),
-        provider,
-        llm_model: model || 'openai/gpt-4o-mini',
-        system_prompt: conversionPrompt || 'Convert the following PDF page to markdown. Return only the markdown with no explanation text. Do not exclude any content from the page.',
-      };
-
-      const trieve_response = await fetch("https://pdf2md.trieve.ai/api/task", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: process.env.TRIEVE_PDF2MD_API_KEY,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!trieve_response.ok) {
-        throw new Error(`Error while creating trieve task for OCR. Please try again later. ${trieve_response.statusText}`);
-      }
-
-      trieve_data = await trieve_response.json();
+      console.log("I am here")
+      status = 'Completed';
     } else if (fileType.startsWith('image/')) {
       const formData = new FormData();
       formData.append('Files[0]', file, fileName);

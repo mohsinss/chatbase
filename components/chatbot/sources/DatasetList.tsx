@@ -1,10 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { IconTrash, IconRefresh, IconFile, IconDownload, IconEye, IconImageInPicture, IconPdf } from "@tabler/icons-react";
-import { TrieveSDK } from "trieve-ts-sdk";
+import {
+  IconTrash,
+  IconRefresh,
+  IconFile,
+  IconDownload,
+  IconEye,
+  IconImageInPicture,
+  IconFileTypePdf,
+  IconFileTypeTxt,
+  IconFileTypeDoc,
+  IconFileTypeDocx,
+  IconFileTypeBmp,
+  IconFileTypeJpg,
+  IconFileTypePng,
+} from "@tabler/icons-react";
+import { formatFileSize } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { setLazyProp } from "next/dist/server/api-utils";
 
 interface IFile {
   trieveId: string;
@@ -40,6 +53,29 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
   const [selectedViewFileId, setSelectedViewFileId] = useState<string | null>(null);
   const [selectedViewTextId, setSelectedViewTextId] = useState<string | null>(null);
   const [fileText, setFileText] = useState<string | null>(null);
+
+  const getFileIcon = (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return <IconFileTypePdf className="w-10 h-10 text-gray-400" />;
+      case 'txt':
+        return <IconFileTypeTxt className="w-10 h-10 text-gray-400" />;
+      case 'doc':
+        return <IconFileTypeDoc className="w-10 h-10 text-gray-400" />;
+      case 'docx':
+        return <IconFileTypeDocx className="w-10 h-10 text-gray-400" />;
+      case 'bmp':
+        return <IconFileTypeBmp className="w-10 h-10 text-gray-400" />;
+      case 'jpg':
+      case 'jpeg':
+        return <IconFileTypeJpg className="w-10 h-10 text-gray-400" />;
+      case 'png':
+        return <IconFileTypePng className="w-10 h-10 text-gray-400" />;
+      default:
+        return <IconFile className="w-10 h-10 text-gray-400" />;
+    }
+  };
 
   const fetchFiles = async () => {
     try {
@@ -161,7 +197,7 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
       return;
     }
 
-    if (fileName.endsWith(".txt")) {
+    if (fileName.endsWith(".txt") || fileName.endsWith(".pdf")) {
       if (fileId == selectedViewFileId) {
         setSelectedViewFileId(null);
       } else {
@@ -341,80 +377,75 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
         </button>
       </div>
 
-      <div className="bg-white rounded-lg border">
+      <div className="bg-white rounded-lg border divide-y">
         {files.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             No files uploaded yet
           </div>
-        ) : (
-          <div className="divide-y">
-            {files.map((file) => (
-              <>
-                <div
-                  key={`file-${file._id}`}
-                  className="flex items-center justify-between p-4 hover:bg-gray-50"
-                >
-                  <div className="flex items-center space-x-3">
-                    <IconFile className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <div className="font-medium">{file.name}</div>
-                      <div className="text-sm text-gray-500">
-                        <span>{file.status != "Completed" ?
-                          <><span className="my-auto loading loading-spinner loading-xs"></span> {file.status}</> : file.charCount + ' chars'}</span>
-                        <span className={`rounded-md p-1 text-sm ml-5 text-black ${file.trained ? 'bg-green-300' : 'bg-red-300'}`}>{file.trained ? 'Trained' : 'Not Trained'}</span>
+        ) :
+          files.map((file, index) => (
+            <div key={`file-${file._id}-${index}`}>
+              <div
+                className="flex items-center justify-between p-4 hover:bg-gray-50"
+              >
+                <div className="flex items-center space-x-3">
+                  {getFileIcon(file.name)}
+                  <div>
+                    <div className="font-medium pb-1">{file.name}</div>
+                    <div className="text-sm text-gray-500 flex items-center">
+                      <div className="w-[60px]">
+                        {file.status != "Completed" ?
+                          <>
+                            <span className="my-auto loading loading-spinner loading-xs">
+                            </span> {file.status}
+                          </> :
+                          formatFileSize(file.charCount)
+                        }
                       </div>
+                      <span className={`rounded-full p-1 px-4 text-sm ${file.trained ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>{file.trained ? 'Trained' : 'Not Trained'}</span>
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    {file.name.endsWith('.pdf') &&
-                      <button
-                        onClick={() => handleViewPDF(file._id, file.url)}
-                        className="text-gray-600 hover:text-gray-900"
-                        disabled={deleting}
-                      >
-                        <IconPdf className="w-5 h-5" />
-                      </button>
-                    }
-                    {!file.name.endsWith('.pdf') && !file.name.endsWith('.txt') &&
-                      <button
-                        onClick={() => handleViewImage(file._id, file.url)}
-                        className="text-gray-600 hover:text-gray-900"
-                        disabled={deleting}
-                      >
-                        <IconImageInPicture className="w-5 h-5" />
-                      </button>
-                    }
+                </div>
+                <div className="flex space-x-2">
+                  {!file.name.endsWith('.pdf') && !file.name.endsWith('.txt') &&
                     <button
-                      onClick={() => handleViewText(file._id, file.name, file.status, file.trieveTaskId)}
+                      onClick={() => handleViewImage(file._id, file.url)}
                       className="text-gray-600 hover:text-gray-900"
                       disabled={deleting}
                     >
-                      <IconEye className="w-5 h-5" />
+                      <IconImageInPicture className="w-5 h-5" />
                     </button>
-                    <button
-                      onClick={() => handleDelete(file._id, file.trieveId)}
-                      className="text-red-500 hover:text-red-700 flex"
-                      disabled={deleting}
-                    >
-                      {file._id == dFileId ? <span className="my-auto loading loading-spinner loading-xs"></span> : <IconTrash className="w-5 h-5" />}
-                    </button>
-                  </div>
+                  }
+                  <button
+                    onClick={() => handleViewText(file._id, file.name, file.status, file.trieveTaskId)}
+                    className="text-gray-600 hover:text-gray-900"
+                    disabled={deleting}
+                  >
+                    <IconEye className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(file._id, file.trieveId)}
+                    className="text-red-500 hover:text-red-700 flex"
+                    disabled={deleting}
+                  >
+                    {file._id == dFileId ? <span className="my-auto loading loading-spinner loading-xs"></span> : <IconTrash className="w-5 h-5" />}
+                  </button>
                 </div>
-                {selectedViewFileId && selectedViewFileId == file._id && file.url && !/\.(jpe?g|png|gif|bmp|svg)$/i.test(file.url) && (
-                  <iframe src={file.url} width="100%" height="500px"></iframe>
-                )}
-                {selectedViewFileId && selectedViewFileId == file._id && file.url && /\.(jpe?g|png|gif|bmp|svg)$/i.test(file.url) && (
-                  // Use an img tag to display the image
-                  <img src={file.url} alt={file.name} style={{ width: "100%", maxHeight: "500px" }} />
-                )}
-                {selectedViewTextId && selectedViewTextId == file._id && (
-                  <div className="w-full max-h-[500px] overflow-hidden overflow-y-auto p-4">{fileText}</div>
-                )}
-              </>
-            ))}
-          </div>
-        )}
+              </div>
+              {selectedViewFileId && selectedViewFileId == file._id && file.url && !/\.(jpe?g|png|gif|bmp|svg)$/i.test(file.url) && (
+                <iframe src={file.url} width="100%" height="500px" key={`iframe-${file._id}-${index}`}></iframe>
+              )}
+              {selectedViewFileId && selectedViewFileId == file._id && file.url && /\.(jpe?g|png|gif|bmp|svg)$/i.test(file.url) && (
+                // Use an img tag to display the image
+                <img src={file.url} alt={file.name} style={{ width: "100%", maxHeight: "500px" }} key={`img-${file._id}-${index}`} />
+              )}
+              {selectedViewTextId && selectedViewTextId == file._id && (
+                <div className="w-full max-h-[500px] overflow-hidden overflow-y-auto p-4" key={`div-${file._id}-${index}`}>{fileText}</div>
+              )}
+            </div>
+          ))
+        }
       </div>
     </div>
   );
-}; 
+};
