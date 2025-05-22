@@ -89,7 +89,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
     try {
       if (!datasetId) return;
       await Promise.all(acceptedFiles.map(async (file) => {
-        if (file.size > 15245760) { // 15MB in bytes
+        if (file.size > 15 * 1024 * 1024) { // 15MB in bytes
           toast.error(`File size exceeds 15MB. Please upload a smaller file.`);
           return;
         }
@@ -221,9 +221,9 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
     accept: {
       'application/pdf': ['.pdf', '.PDF'],
       'text/plain': ['.txt'],
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/png': ['.png'],
-      'image/gif': ['.gif']
+      // 'image/jpeg': ['.jpg', '.jpeg'],
+      // 'image/png': ['.png'],
+      // 'image/gif': ['.gif']
     },
     // maxSize: 15245760, // 15MB
   });
@@ -243,7 +243,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
               : "Drag & drop files here, or click to select files"}
           </h3>
           <p className="text-gray-500 mb-4">
-            Supported File Types: PDF, TXT, IMAGES
+            Supported File Types: PDF, TXT
           </p>
           <p className="text-gray-500">
             Maximum file size: 15MB
@@ -272,6 +272,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
         setFileSize={setFileSize}
         setFileChars={setFileChars}
         onDelete={() => setSuccess(null)}
+        onlyImages={true}
       />
     </div>
   );

@@ -55,7 +55,7 @@ const SourceStats = ({
   }, [fileChars, textInputChars, linkInputChars, qaInputChars, youtubeLinkChars, notionPages, setTotalChars]);
 
   return (
-    <div className="w-[300px] bg-white rounded-lg p-6 border shadow-sm">
+    <div className="bg-white rounded-lg p-6 border shadow-sm">
       <h2 className="text-xl font-semibold mb-6">Sources</h2>
 
       <div className="space-y-3 pb-6 border-b-[3px] border-dotted">
@@ -81,7 +81,7 @@ const SourceStats = ({
 
       <div className="space-y-2 my-5">
         <p className="font-medium">Total size</p>
-        <p className="text-center">
+        <p className="text-right">
           <span className="text-lg font-semibold">{formatFileSize(totalChars)}</span>
           <span className="text-gray-500">/ {charLimit == 0 ? "Unlimited" : formatFileSize(charLimit) + ' limit'}</span>
         </p>

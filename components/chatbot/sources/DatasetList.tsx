@@ -49,6 +49,7 @@ interface DatasetListProps {
   chatbotId: string;
   datasetId: string;
   uploading: boolean;
+  onlyImages: boolean;
   setFileCount: (value: number | ((prevState: number) => number)) => void;
   setFileChars: (value: number | ((prevState: number) => number)) => void;
   setFileSize: (value: number | ((prevState: number) => number)) => void;
@@ -60,6 +61,7 @@ export const DatasetList = ({
   chatbotId,
   datasetId,
   uploading,
+  onlyImages,
   onDelete,
   setFileCount,
   setFileSize,
@@ -191,14 +193,16 @@ export const DatasetList = ({
 
       if (data.files) {
         // @ts-ignore
-        setFiles(data.files);
-        setFileCount(data.files.length);
+        const filteredFile = data.files.filter(file => onlyImages && !(file.name.endsWith('.txt') || file.name.endsWith('.pdf')));
+        // @ts-ignore
+        setFiles([...filteredFile]);
+        setFileCount(filteredFile.length);
         //@ts-ignore
-        setFileChars(data.files.reduce((size, file) => {
+        setFileChars(filteredFile.reduce((size, file) => {
           return size + file.charCount;
         }, 0))
         // @ts-ignore
-        setPendingFiles(data.files.some(file => file.status !== "Completed"));
+        setPendingFiles(filteredFile.some(file => file.status !== "Completed"));
       }
 
     } catch (err) {
