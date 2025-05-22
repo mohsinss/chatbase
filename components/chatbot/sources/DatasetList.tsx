@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useState, useEffect } from "react";
 import {
   IconTrash,
@@ -15,9 +16,19 @@ import {
   IconFileTypeBmp,
   IconFileTypeJpg,
   IconFileTypePng,
+  IconChevronRight,
+  IconChevronDown,
+  IconSearch
 } from "@tabler/icons-react";
 import { formatFileSize } from "@/lib/utils";
 import toast from "react-hot-toast";
+
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface IFile {
   trieveId: string;
@@ -54,6 +65,19 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
   const [selectedViewTextId, setSelectedViewTextId] = useState<string | null>(null);
   const [fileText, setFileText] = useState<string | null>(null);
 
+  // New state for selection
+  const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
+
+  // New state for sort option
+  const [sortOption, setSortOption] = useState<string>("Default");
+
+  // New state for search query
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const handleViewFile = (fileId: string, fileUrl: string) => {
+    console.log('handleViewFile', fileId, fileUrl);
+  }
+
   const getFileIcon = (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
     switch (ext) {
@@ -75,6 +99,62 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
       default:
         return <IconFile className="w-10 h-10 text-gray-400" />;
     }
+  };
+
+  // Handler to toggle selection of a single file
+  const toggleFileSelection = (fileId: string) => {
+    setSelectedFileIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(fileId)) {
+        newSet.delete(fileId);
+      } else {
+        newSet.add(fileId);
+      }
+      return newSet;
+    });
+  };
+
+  // Handler to toggle select all files
+  const toggleSelectAll = () => {
+    if (selectedFileIds.size === files.length) {
+      setSelectedFileIds(new Set());
+    } else {
+      setSelectedFileIds(new Set(files.map(f => f._id)));
+    }
+  };
+
+  // Handler for multi-delete
+  const handleDeleteSelected = async () => {
+    if (selectedFileIds.size === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedFileIds.size} selected file(s)?`)) return;
+
+    setDeleting(true);
+    try {
+      for (const fileId of Array.from(selectedFileIds)) {
+        const file = files.find(f => f._id === fileId);
+        if (!file) continue;
+        const response = await fetch(`/api/chatbot/sources/file/${fileId}?datasetId=${datasetId}&trieveId=${file.trieveId}&chatbotId=${chatbotId}`, {
+          method: "DELETE"
+        });
+        if (!response.ok) throw new Error(`Failed to delete file ${file.name}`);
+      }
+      setSelectedFileIds(new Set());
+      await fetchFiles();
+      onDelete?.();
+      toast.success(`${selectedFileIds.size} file(s) successfully deleted.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete selected files");
+      setError(err instanceof Error ? err.message : "Failed to delete selected files");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Handler for multi-restore (placeholder)
+  const handleRestoreSelected = () => {
+    if (selectedFileIds.size === 0) return;
+    toast.success(`${selectedFileIds.size} file(s) restored (placeholder).`);
+    // Implement restore logic if applicable
   };
 
   const fetchFiles = async () => {
@@ -108,17 +188,11 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
     } finally {
       setLoading(false);
     }
-
-    // // @ts-ignore
-    // setFiles(files.map(item => item.file));
-    // setFileCount(files.length);
-    // // @ts-ignore
-    // setFileChars(files.reduce((size, file) => {
-    //   return size + file.file.metadata.sizeInCharacters;
-    // }, 0));
   };
 
-  const handleDelete = async (fileId: string, trieveId: string) => {
+  const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>, fileId: string, trieveId: string) => {
+    e.stopPropagation();
+
     if (!confirm("Are you sure you want to delete this file?")) return;
     setDeleting(true)
     setDFileId(fileId)
@@ -153,19 +227,6 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
         a.click();
         a.remove();
       }
-
-      // fetch(fileUrl, { mode: 'no-cors' })
-      //   .then(response => response.blob())
-      //   .then(blob => {
-      //     const a = document.createElement('a');
-      //     a.href = URL.createObjectURL(blob);
-      //     a.download = fileName;
-      //     document.body.appendChild(a);
-      //     a.click();
-      //     document.body.removeChild(a);
-      //     URL.revokeObjectURL(a.href); // Clean up the object URL
-      //   })
-      //   .catch(error => console.error('Error downloading file:', error));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to download file");
     }
@@ -253,7 +314,6 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
   }, [chatbotId, datasetId, uploading]);
 
   useEffect(() => {
-
     const updateFiles = async () => {
       try {
         if (!files || files.length === 0) return;
@@ -366,86 +426,265 @@ export const DatasetList = ({ teamId, chatbotId, onDelete, datasetId, uploading,
 
   return (
     <div className="mt-8">
-
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Uploaded Files</h2>
-        <button
-          onClick={() => fetchFiles()}
-          className="text-gray-600 hover:text-gray-900"
-        >
-          <IconRefresh className="w-5 h-5" />
-        </button>
-      </div>
-
       <div className="bg-white rounded-lg border divide-y">
+        <div className="p-6 pb-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">File Sources</h2>
+              <div className="relative flex items-center space-x-2 flex-grow max-w-xs">
+                <span className="absolute left-3 text-gray-400 pointer-events-none">
+                  {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.5 3a7.5 7.5 0 016.15 13.65z" />
+                  </svg> */}
+                  <IconSearch className="h-4 w-4 ml-2"/>
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex h-9 w-full rounded-md border border-input py-2 text-sm ring-offset-background disabled:cursor-not-allowed file:border-0 file:bg-transparent file:font-medium file:text-sm disabled:opacity-50 focus:outline-none focus-visible:ring-ring focus:ring-violet-500/10 bg-white text-zinc-900 focus:border-zinc-400 placeholder:text-zinc-400 focus-visible:ring-0 focus:ring-0 px-8"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    aria-label="Clear search"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            <button
+              onClick={() => fetchFiles()}
+              className="text-gray-600 hover:text-gray-900 hidden"
+            >
+              <IconRefresh className="w-5 h-5" />
+            </button>
+          </div>
+          {/* Add Select All checkbox */}
+          {
+            files.length > 0 &&
+            <div className="flex justify-between items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedFileIds.size === files.length && files.length > 0}
+                  onChange={toggleSelectAll}
+                  id="select-all-checkbox"
+                  className="w-4 h-4 cursor-pointer"
+                />
+                <label htmlFor="select-all-checkbox" className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Select all</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="hidden shrink-0 text-sm text-zinc-600 tracking-tighter md:inline">Sort by:</span>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger className="flex h-10 items-center justify-between rounded-md border border-zinc-900/10 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 disabled:opacity-50 focus:outline-none w-44 border-none focus:bg-zinc-50 hover:bg-zinc-50 focus:ring-0">
+                    {(() => {
+                      switch (sortOption) {
+                        case "Status":
+                          return "Status";
+                        case "Newest":
+                          return "Newest";
+                        case "Oldest":
+                          return "Oldest";
+                        case "AlphabeticalAsc":
+                          return "Alphabetical (A-Z)";
+                        case "AlphabeticalDesc":
+                          return "Alphabetical (Z-A)";
+                        case "Default":
+                        default:
+                          return "Default";
+                      }
+                    })()}
+                    <IconChevronDown className="w-4 h-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent sideOffset={0} align="start">
+                    <DropdownMenuItem
+                      onClick={() => setSortOption("Default")}
+                    >
+                      Default
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setSortOption("Status")}
+                    >
+                      Status
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setSortOption("Newest")}
+                    >
+                      Newest
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setSortOption("Oldest")}
+                    >
+                      Oldest
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setSortOption("AlphabeticalAsc")}
+                    >
+                      Alphabetical (A-Z)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setSortOption("AlphabeticalDesc")}
+                    >
+                      Alphabetical (Z-A)
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          }
+        </div>
+        <div
+          style={{ height: selectedFileIds.size > 0 ? '50px' : '0px' }}
+          className={`overflow-hidden transition-all flex flex-col items-start justify-between gap-2 bg-zinc-50 px-6 md:flex-row md:items-center`}>
+          <p className="font-medium text-sm text-zinc-700"> {selectedFileIds.size} item{selectedFileIds.size > 1 && "s"} on this page is selected</p>
+        </div>
         {files.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             No files uploaded yet
           </div>
-        ) :
-          files.map((file, index) => (
-            <div key={`file-${file._id}-${index}`}>
+        ) : (
+          (() => {
+            let filteredFiles = files.filter(file =>
+              file.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+
+            let sortedFiles = [...filteredFiles];
+            switch (sortOption) {
+              case "Status":
+                sortedFiles.sort((a, b) => a.status.localeCompare(b.status));
+                break;
+              case "Newest":
+                // Sort by _id descending (MongoDB ObjectId contains timestamp)
+                sortedFiles.sort((a, b) => b._id.localeCompare(a._id));
+                break;
+              case "Oldest":
+                // Sort by _id ascending
+                sortedFiles.sort((a, b) => a._id.localeCompare(b._id));
+                break;
+              case "AlphabeticalAsc":
+                sortedFiles.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+              case "AlphabeticalDesc":
+                sortedFiles.sort((a, b) => b.name.localeCompare(a.name));
+                break;
+              case "Default":
+              default:
+                // No sorting or original order
+                break;
+            }
+            return sortedFiles.map((file, index) => (
               <div
-                className="flex items-center justify-between p-4 hover:bg-gray-50"
-              >
-                <div className="flex items-center space-x-3">
-                  {getFileIcon(file.name)}
-                  <div>
-                    <div className="font-medium pb-1">{file.name}</div>
-                    <div className="text-sm text-gray-500 flex items-center">
-                      <div className="w-[60px]">
-                        {file.status != "Completed" ?
-                          <>
-                            <span className="my-auto loading loading-spinner loading-xs">
-                            </span> {file.status}
-                          </> :
-                          formatFileSize(file.charCount)
-                        }
+                onClick={() => handleViewFile(file._id, file.url)}
+                key={`file-${file._id}-${index}`}
+                className="cursor-pointer">
+                <div
+                  className="flex items-center justify-between px-6 py-2 hover:bg-gray-50"
+                >
+                  <div className="flex items-center space-x-3">
+                    {/* Add checkbox for each file */}
+                    <input
+                      type="checkbox"
+                      checked={selectedFileIds.has(file._id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleFileSelection(file._id);
+                      }}
+                      onClick={e => e.stopPropagation()}
+                      className="w-4 h-4 cursor-pointer"
+                      id={`checkbox-${file._id}`}
+                    />
+                    {getFileIcon(file.name)}
+                    <div>
+                      <div className="font-medium pb-1">{file.name}</div>
+                      <div className="text-sm text-gray-500 flex items-center">
+                        <div className="w-[60px]">
+                          {file.status != "Completed" ?
+                            <>
+                              <span className="my-auto loading loading-spinner loading-xs">
+                              </span> {file.status}
+                            </> :
+                            formatFileSize(file.charCount)
+                          }
+                        </div>
+                        <span className={`rounded-full p-1 px-4 text-sm ${file.trained ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>{file.trained ? 'Trained' : 'Not Trained'}</span>
                       </div>
-                      <span className={`rounded-full p-1 px-4 text-sm ${file.trained ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>{file.trained ? 'Trained' : 'Not Trained'}</span>
                     </div>
                   </div>
-                </div>
-                <div className="flex space-x-2">
-                  {!file.name.endsWith('.pdf') && !file.name.endsWith('.txt') &&
+                  <div className="flex space-x-2">
+                    {!file.name.endsWith('.pdf') && !file.name.endsWith('.txt') &&
+                      <button
+                        onClick={() => handleViewImage(file._id, file.url)}
+                        className="text-gray-600 hover:text-gray-900"
+                        disabled={deleting}
+                      >
+                        <IconImageInPicture className="w-5 h-5" />
+                      </button>
+                    }
                     <button
-                      onClick={() => handleViewImage(file._id, file.url)}
-                      className="text-gray-600 hover:text-gray-900"
+                      onClick={() => handleViewText(file._id, file.name, file.status, file.trieveTaskId)}
+                      className="text-gray-600 hover:text-gray-900 hidden"
                       disabled={deleting}
                     >
-                      <IconImageInPicture className="w-5 h-5" />
+                      <IconEye className="w-5 h-5" />
                     </button>
-                  }
-                  <button
-                    onClick={() => handleViewText(file._id, file.name, file.status, file.trieveTaskId)}
-                    className="text-gray-600 hover:text-gray-900"
-                    disabled={deleting}
-                  >
-                    <IconEye className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(file._id, file.trieveId)}
-                    className="text-red-500 hover:text-red-700 flex"
-                    disabled={deleting}
-                  >
-                    {file._id == dFileId ? <span className="my-auto loading loading-spinner loading-xs"></span> : <IconTrash className="w-5 h-5" />}
-                  </button>
+                    <button
+                      onClick={(e) => handleDelete(e, file._id, file.trieveId)}
+                      className="text-red-500 hover:text-red-700 flex"
+                      disabled={deleting}
+                    >
+                      {file._id == dFileId ? <span className="my-auto loading loading-spinner loading-xs"></span> : <IconTrash className="w-5 h-5" />}
+                    </button>
+                    <button
+                      // onClick={() => handleDownload(file.url, file.name)}
+                      className="text-gray-600 hover:text-gray-900"
+                      disabled={deleting}>
+                      <IconChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
+                {selectedViewFileId && selectedViewFileId == file._id && file.url && !/\.(jpe?g|png|gif|bmp|svg)$/i.test(file.url) && (
+                  <iframe src={file.url} width="100%" height="500px" key={`iframe-${file._id}-${index}`}></iframe>
+                )}
+                {selectedViewFileId && selectedViewFileId == file._id && file.url && /\.(jpe?g|png|gif|bmp|svg)$/i.test(file.url) && (
+                  // Use an img tag to display the image
+                  <img src={file.url} alt={file.name} style={{ width: "100%", maxHeight: "500px" }} key={`img-${file._id}-${index}`} />
+                )}
+                {selectedViewTextId && selectedViewTextId == file._id && (
+                  <div className="w-full max-h-[500px] overflow-hidden overflow-y-auto p-4" key={`div-${file._id}-${index}`}>{fileText}</div>
+                )}
               </div>
-              {selectedViewFileId && selectedViewFileId == file._id && file.url && !/\.(jpe?g|png|gif|bmp|svg)$/i.test(file.url) && (
-                <iframe src={file.url} width="100%" height="500px" key={`iframe-${file._id}-${index}`}></iframe>
-              )}
-              {selectedViewFileId && selectedViewFileId == file._id && file.url && /\.(jpe?g|png|gif|bmp|svg)$/i.test(file.url) && (
-                // Use an img tag to display the image
-                <img src={file.url} alt={file.name} style={{ width: "100%", maxHeight: "500px" }} key={`img-${file._id}-${index}`} />
-              )}
-              {selectedViewTextId && selectedViewTextId == file._id && (
-                <div className="w-full max-h-[500px] overflow-hidden overflow-y-auto p-4" key={`div-${file._id}-${index}`}>{fileText}</div>
-              )}
-            </div>
-          ))
-        }
+            ))
+          })()
+        )}
       </div>
+      {/* Bottom bar for selection actions */}
+      {selectedFileIds.size > 0 && (
+        <div className="-translate-x-1/2 fixed bottom-10 left-[50%] z-50 w-fit rounded-md bg-zinc-950 p-2 text-zinc-50">
+          <div className="mx-auto flex max-w-screen-xl flex-wrap items-center justify-center gap-2 md:gap-4">
+            <span className="px-2 text-xs">{selectedFileIds.size} selected</span>
+            <div className="shrink-0 w-[1px] hidden h-4 bg-zinc-700 md:block"></div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDeleteSelected}
+                className="inline-flex items-center justify-center whitespace-nowrap font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 border bg-transparent dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 px-4 py-1 h-7 rounded-md border-zinc-700 text-red-400 text-xs transition-colors disabled:border-red-400 hover:border-red-400 disabled:bg-red-500/10 hover:bg-red-500/10 disabled:text-red-300 hover:text-red-300"
+                disabled={deleting}
+              >
+                <IconTrash className="w-3 h-3 mr-1" /> Delete
+              </button>
+              <button
+                onClick={handleRestoreSelected}
+                className="hidden inline-flex items-center justify-center whitespace-nowrap font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 border bg-transparent dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 px-4 py-1 h-7 rounded-md border-zinc-700 text-green-400 text-xs transition-colors disabled:border-green-400 hover:border-green-400 disabled:bg-green-500/10 hover:bg-green-500/10 disabled:text-green-300 hover:text-green-300"
+              >
+                <IconRefresh className="w-3 h-3 mr-1" /> Restore
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
