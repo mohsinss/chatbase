@@ -325,7 +325,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                 <div className="flex items-center gap-1 justify-between">
                   <Link href={`/dashboard/${teamId}`}>{teamId}</Link>
                   <DropdownMenu modal={false}>
-                    <DropdownMenuTrigger className="flex h-10 items-center justify-between rounded-md border border-zinc-900/10 bg-white px-2 py-1 text-sm text-zinc-900 placeholder:text-zinc-400 disabled:opacity-50 focus:outline-none border-none focus:bg-zinc-50 hover:bg-zinc-50 focus:ring-0">
+                    <DropdownMenuTrigger className="flex items-center justify-between rounded-md border border-zinc-900/10 px-2 py-1 text-sm placeholder:text-zinc-400 disabled:opacity-50 focus:outline-none border-none focus:bg-zinc-50 hover:bg-zinc-50 focus:ring-0 hover:text-zinc-900">
                       <IconChevronDown className="w-4 h-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
@@ -388,7 +388,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ teamId, hideFields = false 
                   <div className="flex items-center gap-1 justify-between">
                     <Link href={currentChatbot?.name ? `/dashboard/${teamId}/chatbot/${currentChatbot?.chatbotId}` : '#'}>{currentChatbot?.name ?? "Select Chatbot"}</Link>
                     <DropdownMenu modal={false}>
-                      <DropdownMenuTrigger className="flex h-10 items-center justify-between rounded-md border border-zinc-900/10 bg-white px-2 py-1 text-sm text-zinc-900 placeholder:text-zinc-400 disabled:opacity-50 focus:outline-none border-none focus:bg-zinc-50 hover:bg-zinc-50 focus:ring-0">
+                      <DropdownMenuTrigger className="flex items-center justify-between rounded-md border border-zinc-900/10 px-2 py-1 text-sm hover:text-zinc-900 placeholder:text-zinc-400 disabled:opacity-50 focus:outline-none border-none focus:bg-zinc-50 hover:bg-zinc-50 focus:ring-0">
                         <IconChevronDown className="w-4 h-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
