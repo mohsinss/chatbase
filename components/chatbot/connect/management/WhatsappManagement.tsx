@@ -9,7 +9,7 @@ import Spinner from "@/components/Spinner";
 import { useRouter } from "next/navigation";
 
 // Import dialog components
-import DeleteDialog from "./dialogs/DeleteDialog";
+import DeleteDialog from "@/components/ui/deleteDialog";
 import SettingsDialog from "./dialogs/SettingsDialog";
 import ProfileDialog from "./dialogs/ProfileDialog";
 import TemplateDialog from "./dialogs/TemplateDialog";
@@ -447,21 +447,23 @@ const WhatsappManagement = ({ chatbotId, domain, teamId }:
                         <QRCodeCanvas id="qr-code-canvas" value={integrationUrl} className="w-[400px]" />
                     </div>
                     {/* Dialog components */}
-                    <DeleteDialog 
+                    <DeleteDialog
                         isOpen={isDeleteDialogOpen}
-                        setIsOpen={setIsDeleteDialogOpen}
+                        onClose={() => setIsDeleteDialogOpen(false)}
                         isDeleting={isConnecting}
                         onDelete={handleDelete}
+                        title={'Delete WhatsApp Number'}
+                        description={'Are you sure you want to delete this WhatsApp Number?.'}
                     />
 
-                    <SettingsDialog 
+                    <SettingsDialog
                         isOpen={isSettingsDialogOpen}
                         setIsOpen={setIsSettingsDialogOpen}
                         selectedNumberId={selectedNumberId}
                         onClose={() => setSelectedNumberId(null)}
                     />
 
-                    <ProfileDialog 
+                    <ProfileDialog
                         isOpen={isProfileDialogOpen}
                         setIsOpen={setIsProfileDialogOpen}
                         selectedNumberId={selectedNumberId}

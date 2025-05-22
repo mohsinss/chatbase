@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { ChatbotData, Conversation, User } from "./types";
-import DeleteDialog from "./DeleteDialog";
+import DeleteDialog from "@/components/ui/deleteDialog";
 import ChatLogs from "./ChatLogs";
 import Leads from "./Leads";
 
@@ -427,6 +427,8 @@ const Activity = ({ teamId, chatbotId, chatbot }: { teamId: string; chatbotId: s
         isDeleting={isDeleting}
         onClose={() => setIsDeleteDialogOpen(false)}
         onDelete={handleDelete}
+        title={'Delete Conversation'}
+        description={'Are you sure you want to delete this conversation? This action cannot be undone.'}
       />
       
       <div className="flex flex-col lg:flex-row min-h-[calc(100dvh-104px)]">

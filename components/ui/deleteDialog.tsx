@@ -9,20 +9,22 @@ import {
 } from "@/components/ui/dialog";
 
 interface DeleteDialogProps {
+  title: string,
+  description: string,
   isOpen: boolean;
   isDeleting: boolean;
   onClose: () => void;
   onDelete: () => Promise<void>;
 }
 
-const DeleteDialog = ({ isOpen, isDeleting, onClose, onDelete }: DeleteDialogProps) => {
+const DeleteDialog = ({ isOpen, isDeleting, onClose, onDelete, title, description }: DeleteDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete Conversation</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this conversation? This action cannot be undone.
+            {description}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
