@@ -1,7 +1,7 @@
 'use client';
 
 import { Metadata } from 'next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, X } from 'lucide-react';
@@ -141,7 +141,7 @@ const templates = [
   }
 ];
 
-export default function ChatbotTemplates() {
+function ChatbotTemplatesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState('Recently added');
@@ -441,5 +441,20 @@ export default function ChatbotTemplates() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ChatbotTemplates() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading templates...</p>
+        </div>
+      </div>
+    }>
+      <ChatbotTemplatesContent />
+    </Suspense>
   );
 } 
