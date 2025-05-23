@@ -15,7 +15,6 @@ export default async function TeamPage({
   params: { teamId: string },
   searchParams: { welcome?: string }
 }) {
-  const session = await getServerSession(authOptions);
   await connectMongo();
   let team = await Team.findOne({ teamId: params.teamId });
   

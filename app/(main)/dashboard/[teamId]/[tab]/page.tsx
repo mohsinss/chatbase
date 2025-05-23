@@ -13,12 +13,6 @@ export default async function TeamTabPage({
 }: {
   params: { teamId: string; tab: string }
 }) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    redirect("/api/auth/signin");
-  }
-
   // Validate tab
   if (!VALID_TABS.includes(params.tab)) {
     redirect(`/dashboard/${params.teamId}/chatbots`);

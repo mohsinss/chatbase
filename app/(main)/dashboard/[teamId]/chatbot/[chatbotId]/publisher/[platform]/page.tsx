@@ -14,12 +14,6 @@ export default async function PublisherPage({
 }: {
   params: { teamId: string; chatbotId: string; platform: string };
 }) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session?.user?.id) {
-    redirect("/api/auth/signin");
-  }
-
   const { teamId, chatbotId, platform } = params;
   
   // Validate platform

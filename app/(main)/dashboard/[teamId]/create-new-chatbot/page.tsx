@@ -11,12 +11,6 @@ export default async function CreateNewChatbot({
 }: { 
   params: { teamId: string } 
 }) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session?.user?.id) {
-    redirect("/api/auth/signin");
-  }
-
   await connectMongo();
   const team = await Team.findOne({ teamId: params.teamId });
 
