@@ -14,6 +14,7 @@ import {
   IconPictureInPicture
 } from "@tabler/icons-react";
 import { FileUpload } from "./FileUpload";
+import { ImageUpload } from "./ImageUpload";
 import SourceStats from './SourceStats';
 import TextInput from './TextInput';
 import WebsiteInput from './WebsiteInput';
@@ -50,16 +51,14 @@ const Sources = ({
   chatbot: any;
   team: any;
 }) => {
-  // team = JSON.parse(team)
-  console.log("chatbot", chatbot);
-  console.log("team", team);
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'files';
-  const [fileCount, setFileCount] = useState<number>(0);
-  const [fileSize, setFileSize] = useState<number>(0);
   const [totalChars, setTotalChars] = useState<number>(0);
+  const [fileCount, setFileCount] = useState<number>(0);
   const [fileChars, setFileChars] = useState<number>(0);
+  const [imageCount, setImageCount] = useState<number>(0);
+  const [imageChars, setImageChars] = useState<number>(0);
   const [isTraining, setIsTraining] = useState(false);
   const [dataset, setDataset] = useState<any>(null);
   const [text, setText] = useState<string>('');
@@ -128,9 +127,19 @@ const Sources = ({
         setYoutubeLinks(data.youtubeLinks)
       if (data.files) {
         // @ts-ignore
-        setFileCount(data.files.length);
+        const filteredFiles = data.files.filter(file => (file.name.endsWith('.txt') || file.name.endsWith('.pdf')));
+        // @ts-ignore
+        const filteredImages = data.files.filter(file => !(file.name.endsWith('.txt') || file.name.endsWith('.pdf')));
+        // @ts-ignore
+        setFileCount(filteredFiles.length);
         //@ts-ignore
-        setFileChars(data.files.reduce((size, file) => {
+        setFileChars(filteredFiles.reduce((size, file) => {
+          return size + file.charCount;
+        }, 0))
+        // @ts-ignore
+        setImageCount(filteredImages.length);
+        //@ts-ignore
+        setImageChars(filteredImages.reduce((size, file) => {
           return size + file.charCount;
         }, 0))
       }
@@ -263,13 +272,13 @@ const Sources = ({
     switch (currentTab) {
       case "files":
         return <FileUpload
-          teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount}
-          setFileSize={setFileSize} setFileChars={setFileChars}
+          teamId={teamId} chatbotId={chatbotId} 
+          setFileCount={setFileCount} setFileChars={setFileChars}
           limitChars={planConfig.charactersLimit} totalChars={totalChars} />;
       case "images":
-        return <FileUpload
-          teamId={teamId} chatbotId={chatbotId} setFileCount={setFileCount}
-          setFileSize={setFileSize} setFileChars={setFileChars}
+        return <ImageUpload
+          teamId={teamId} chatbotId={chatbotId} 
+          setFileCount={setImageCount} setFileChars={setImageChars}
           limitChars={planConfig.charactersLimit} totalChars={totalChars} />;
       case "text":
         return <TextInput text={text} setText={setText} />;
@@ -321,15 +330,19 @@ const Sources = ({
       )}
 
       {/* Responsive Layout Container */}
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-6 md:items-start items-center">
         {/* Left side nav and main content */}
-        <div className="flex flex-col md:flex-row flex-1">
+        <div
+          style={{ width: '-webkit-fill-available' }}
+          className="flex flex-col md:flex-row flex-1">
           {/* Source Type Tabs - Side for larger screens, Top for mobile */}
           <div className={`
             max-md:mb-8
             max-md:flex max-md:justify-center max-md:space-x-4
             md:w-[160px] md:border-r md:space-y-2 
             md:pr-3 md:mr-6
+            w-full
+            overflow-x-auto
           `}>
             {SOURCE_TABS.map((tab) => {
               if (tab.id == "salla" && chatbot?.integrations?.salla != true) {
@@ -357,17 +370,19 @@ const Sources = ({
           </div>
 
           {/* Content Area - added min-height */}
-          <div className="flex-1 min-h-[700px]">
+          <div className="flex-1">
             {renderContent()}
           </div>
         </div>
 
         {/* Right Stats Panel */}
-        <div className="w-[300px] shrink-0">
+        <div className="md:w-[300px] shrink-0 w-full">
           <SourceStats
             totalChars={totalChars}
             fileCount={fileCount}
             fileChars={fileChars}
+            imageCount={imageCount}
+            imageChars={imageChars}
             textInputChars={text ? text.length : 0}
             charLimit={planConfig.charactersLimit}
             setTotalChars={setTotalChars}
