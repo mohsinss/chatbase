@@ -30,13 +30,6 @@ export default async function LayoutPrivate({
   if (!team || !chatbot) {
     redirect("/dashboard");
   }
-  console.log(children)
-  console.log('typeof children is ', typeof children)
-  console.log('React.isValidElement(children)', React.isValidElement(children))
-  // Pass team and chatbot as props to children if possible
-  // Check if children is a valid React element and clone it with props
-  if (React.isValidElement(children)) {
-    return React.cloneElement(children as ReactElement<any>, { aaa:"aaa" });
-  }
+  
   return <>{children}</>;
 }
