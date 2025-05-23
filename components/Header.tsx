@@ -196,9 +196,9 @@ const Header = () => {
             <a href="#pricing" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
               {isArabic ? "الأسعار" : "Pricing"}
             </a>
-            <a href="#faq" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
-              {isArabic ? "الأسئلة الشائعة" : "FAQ"}
-            </a>
+            <Link href="/chatbot-templates" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
+              {isArabic ? "القوالب" : "Templates"}
+            </Link>
           </div>
         </nav>
         
@@ -259,13 +259,13 @@ const Header = () => {
             >
               {isArabic ? "الأسعار" : "Pricing"}
             </a>
-            <a 
-              href="#faq" 
+            <Link 
+              href="/chatbot-templates" 
               className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              {isArabic ? "الأسئلة الشائعة" : "FAQ"}
-            </a>
+              {isArabic ? "القوالب" : "Templates"}
+            </Link>
             <div className={`flex flex-col space-y-2 ${isArabic ? "items-end" : ""}`}>
               <ButtonSignin 
                 text={isArabic ? "تسجيل الدخول" : "Sign in"}
