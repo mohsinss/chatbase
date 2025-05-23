@@ -15,67 +15,6 @@ export default function Pricing() {
   const [atEnd, setAtEnd] = useState(false);
   const [isYearly, setIsYearly] = useState(false);
 
-  // Add scroll monitoring
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!carouselRef.current) return;
-      
-      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-      setAtStart(scrollLeft === 0);
-      setAtEnd(Math.abs(scrollWidth - clientWidth - scrollLeft) < 10);
-    };
-    
-    const carousel = carouselRef.current;
-    if (carousel) {
-      carousel.addEventListener('scroll', handleScroll);
-      // Initial check
-      handleScroll();
-    }
-    
-    // Cleanup function
-    return () => {
-      if (carousel) {
-        carousel.removeEventListener('scroll', handleScroll);
-      }
-    };
-  }, []);
-
-  const scrollLeft = () => {
-    if (!carouselRef.current) return;
-    
-    if (atStart) {
-      carouselRef.current.scrollTo({
-        left: carouselRef.current.scrollWidth,
-        behavior: 'instant'
-      });
-      setTimeout(() => {
-        if (carouselRef.current) {
-          carouselRef.current.scrollBy({ left: -370, behavior: 'smooth' });
-        }
-      }, 10);
-    } else {
-      carouselRef.current.scrollBy({ left: -370, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (!carouselRef.current) return;
-    
-    if (atEnd) {
-      carouselRef.current.scrollTo({
-        left: 0,
-        behavior: 'instant'
-      });
-      setTimeout(() => {
-        if (carouselRef.current) {
-          carouselRef.current.scrollBy({ left: 370, behavior: 'smooth' });
-        }
-      }, 10);
-    } else {
-      carouselRef.current.scrollBy({ left: 370, behavior: 'smooth' });
-    }
-  };
-
   const plans = [
     {
       name: "Free",
@@ -153,6 +92,72 @@ export default function Pricing() {
     }
   ];
 
+  // Add scroll monitoring
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!carouselRef.current) return;
+      
+      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+      const cardWidth = 350 + 24;
+      const totalCards = plans.length * 3; // We have 3 sets of plans
+      const singleSetWidth = cardWidth * plans.length;
+      
+      // If scrolled to the beginning of first set, jump to beginning of second set
+      if (scrollLeft <= 0) {
+        carouselRef.current.scrollTo({
+          left: singleSetWidth,
+          behavior: 'instant'
+        });
+      }
+      
+      // If scrolled to the end of third set, jump to end of second set
+      if (scrollLeft >= scrollWidth - clientWidth - 10) {
+        carouselRef.current.scrollTo({
+          left: singleSetWidth * 2 - clientWidth,
+          behavior: 'instant'
+        });
+      }
+      
+      setAtStart(scrollLeft <= singleSetWidth + 10);
+      setAtEnd(scrollLeft >= singleSetWidth * 2 - clientWidth - 10);
+    };
+    
+    const carousel = carouselRef.current;
+    if (carousel) {
+      carousel.addEventListener('scroll', handleScroll);
+      handleScroll();
+    }
+    
+    return () => {
+      if (carousel) {
+        carousel.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [plans.length]);
+
+  // Center carousel on load
+  useEffect(() => {
+    if (carouselRef.current) {
+      // Center on the Standard plan (index 2, most popular) in the first set
+      const cardWidth = 350 + 24; // card width + gap
+      const centerPosition = cardWidth * (plans.length + 1); // Position to show Standard plan centered in first duplicate set
+      carouselRef.current.scrollTo({
+        left: centerPosition,
+        behavior: 'instant'
+      });
+    }
+  }, []);
+
+  const scrollLeft = () => {
+    if (!carouselRef.current) return;
+    carouselRef.current.scrollBy({ left: -356, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    if (!carouselRef.current) return;
+    carouselRef.current.scrollBy({ left: 356, behavior: 'smooth' });
+  };
+
   return (
     <section id="pricing" className="py-20 bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -197,80 +202,85 @@ export default function Pricing() {
           
           <div 
             ref={carouselRef}
-            className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory pt-12 justify-center"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory pt-12 px-6"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
           >
-            {plans.map((plan, index) => (
-              <div 
-                key={index} 
-                className={`flex-none w-[350px] bg-white rounded-xl p-8 border snap-center relative group ${
-                  plan.popular 
-                    ? 'border-indigo-500 shadow-lg min-h-[600px] hover:border-purple-600 transition-colors duration-500' 
-                    : 'border-gray-200 shadow-sm min-h-[550px]'
-                }`}
-              >
-                {plan.popular && (
-                  <>
-                    {/* Animated background overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-tl from-purple-600 via-indigo-600 to-violet-700 opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out"></div>
-                    <div className="absolute inset-0 bg-gradient-to-tl from-purple-600/0 via-purple-600/50 to-purple-600 translate-x-full translate-y-full group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-1000 ease-out"></div>
-                    
+            {/* Render three sets of plans for infinite scroll */}
+            {[...plans, ...plans, ...plans].map((plan, index) => {
+              const originalIndex = index % plans.length;
+              const setNumber = Math.floor(index / plans.length);
+              return (
+                <div key={`${setNumber}-${originalIndex}`} className="flex-none w-[350px] snap-center relative group">
+                  {plan.popular && (
                     <div className="absolute -top-5 inset-x-0 flex justify-center z-50">
                       <div className="bg-indigo-600 group-hover:bg-white text-white group-hover:text-purple-600 px-8 py-2 rounded-full text-base font-semibold shadow-lg transition-colors duration-500 border border-transparent group-hover:border-purple-600">
                         Most Popular
                       </div>
                     </div>
-                  </>
-                )}
-                {!plan.popular && (
-                  <div className="absolute -top-5 inset-x-0 flex justify-center opacity-0">
-                    <div className="bg-indigo-600 text-white px-8 py-2 rounded-full text-base font-semibold shadow-lg">
-                      Most Popular
-                    </div>
-                  </div>
-                )}
-                <div className="flex flex-col h-full relative z-10">
-                  <div className={`text-center ${plan.popular ? 'mt-6 mb-8' : 'mb-8'}`}>
-                    <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'group-hover:text-white transition-colors duration-500' : ''}`}>{plan.name}</h3>
-                    <div className="flex items-center justify-center">
-                      <span className={`text-4xl font-bold ${plan.popular ? 'group-hover:text-white transition-colors duration-500' : ''}`}>
-                        {isYearly ? plan.yearlyPrice || plan.price : plan.price}
-                      </span>
-                      {plan.period && <span className={`text-gray-500 ml-1 ${plan.popular ? 'group-hover:text-gray-200 transition-colors duration-500' : ''}`}>{plan.period}</span>}
-                    </div>
-                    <p className={`text-gray-600 mt-2 ${plan.popular ? 'group-hover:text-gray-200 transition-colors duration-500' : ''}`}>{plan.description}</p>
-                  </div>
-                  
-                  <div className="flex-grow overflow-y-auto mb-6 max-h-[280px] pr-2" style={{ scrollbarWidth: 'thin' }}>
-                    <ul className="space-y-3">
-                      {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-start">
-                          <Check className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${plan.popular ? 'text-indigo-600 group-hover:text-white transition-colors duration-500' : 'text-indigo-600'}`} />
-                          <span className={plan.popular ? 'group-hover:text-white transition-colors duration-500' : ''}>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    {plan.footnote && (
-                      <p className={`text-sm text-gray-500 mt-4 ${plan.popular ? 'group-hover:text-gray-300 transition-colors duration-500' : ''}`}>{plan.footnote}</p>
+                  )}
+                  <div 
+                    className={`bg-white rounded-xl p-8 border relative overflow-hidden h-[650px] ${
+                      plan.popular 
+                        ? 'border-indigo-500 shadow-lg hover:border-purple-600 transition-colors duration-500' 
+                        : 'border-gray-200 shadow-sm transition-all duration-500 before:absolute before:inset-0 before:bg-purple-50 before:origin-bottom-right before:scale-0 before:transition-transform before:duration-500 before:ease-out hover:before:scale-100 before:rounded-xl hover:border-purple-200'
+                    }`}
+                  >
+                    {plan.popular && (
+                      <>
+                        {/* Animated background overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-tl from-purple-600 via-indigo-600 to-violet-700 opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out"></div>
+                        <div className="absolute inset-0 bg-gradient-to-tl from-purple-600/0 via-purple-600/50 to-purple-600 translate-x-full translate-y-full group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-1000 ease-out"></div>
+                      </>
                     )}
-                  </div>
-                  
-                  <div className="text-center mt-auto">
-                    <Link href={plan.name === "Unlimited" ? "/contact" : "/signup"}>
-                      <Button 
-                        className={`w-full ${
-                          plan.popular 
-                            ? 'bg-indigo-600 text-white hover:bg-indigo-700 group-hover:bg-white group-hover:text-purple-600 group-hover:border-white transition-all duration-500' 
-                            : 'bg-white text-indigo-600 border border-indigo-600 hover:bg-indigo-50'
-                        }`}
-                      >
-                        {plan.cta}
-                      </Button>
-                    </Link>
+                    
+                    <div className="flex flex-col h-full relative z-10">
+                      <div className={`text-center ${plan.popular ? 'mt-6 mb-8' : 'mb-8'}`}>
+                        <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'group-hover:text-white transition-colors duration-500' : ''}`}>{plan.name}</h3>
+                        <div className="flex items-center justify-center">
+                          <span className={`text-4xl font-bold ${plan.popular ? 'group-hover:text-white transition-colors duration-500' : ''}`}>
+                            {isYearly ? plan.yearlyPrice || plan.price : plan.price}
+                          </span>
+                          {plan.period && <span className={`text-gray-500 ml-1 ${plan.popular ? 'group-hover:text-gray-200 transition-colors duration-500' : ''}`}>{plan.period}</span>}
+                        </div>
+                        <p className={`text-gray-600 mt-2 ${plan.popular ? 'group-hover:text-gray-200 transition-colors duration-500' : ''}`}>{plan.description}</p>
+                      </div>
+                      
+                      <div className="flex-grow overflow-y-auto mb-6 max-h-[280px] pr-2" style={{ scrollbarWidth: 'thin' }}>
+                        <ul className="space-y-3">
+                          {plan.features.map((feature, i) => (
+                            <li key={i} className="flex items-start">
+                              <Check className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${plan.popular ? 'text-indigo-600 group-hover:text-white transition-colors duration-500' : 'text-indigo-600'}`} />
+                              <span className={plan.popular ? 'group-hover:text-white transition-colors duration-500' : ''}>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        {plan.footnote && (
+                          <p className={`text-sm text-gray-500 mt-4 ${plan.popular ? 'group-hover:text-gray-300 transition-colors duration-500' : ''}`}>{plan.footnote}</p>
+                        )}
+                      </div>
+                      
+                      <div className="text-center mt-auto">
+                        <Link href={plan.name === "Unlimited" ? "/contact" : "/signup"}>
+                          <Button 
+                            className={`w-full py-4 text-lg font-semibold ${
+                              plan.popular 
+                                ? 'bg-indigo-600 text-white hover:bg-indigo-700 group-hover:bg-white group-hover:text-purple-600 group-hover:border-white transition-all duration-500' 
+                                : 'bg-white text-indigo-600 border border-indigo-600 hover:bg-indigo-50'
+                            }`}
+                          >
+                            {plan.cta}
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
