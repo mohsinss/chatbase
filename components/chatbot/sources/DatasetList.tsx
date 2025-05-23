@@ -87,10 +87,13 @@ export const DatasetList = ({
 
   const router = useRouter();
 
-  const handleViewFile = (fileId: string, fileUrl: string) => {
-    if (onlyImages)
-      return;
-    router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources/${fileId}`)
+  const handleViewFile = (fileId: string, status: string) => {
+    if (onlyImages) {
+      if(status == 'Completed')
+        router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources/image/${fileId}`)
+    } else {
+      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources/file/${fileId}`)
+    }
   }
 
   const getFileIcon = (fileName: string) => {
@@ -250,71 +253,6 @@ export const DatasetList = ({
     }
   };
 
-  const handleViewImage = (fileId: string, fileUrl: string) => {
-    if (fileId == selectedViewFileId) {
-      setSelectedViewFileId(null);
-    } else {
-      setSelectedViewFileId(fileId);
-    }
-
-    setSelectedViewTextId(null);
-  }
-
-  const handleViewText = async (fileId: string, fileName: string, fileStatus: string, trieveTaskId: string) => {
-    if (fileStatus != "Completed") {
-      toast.error("You can't view text until the status is completed.")
-      return;
-    }
-
-    if (fileName.endsWith(".txt") || fileName.endsWith(".pdf")) {
-      if (fileId == selectedViewFileId) {
-        setSelectedViewFileId(null);
-      } else {
-        setSelectedViewFileId(fileId);
-      }
-
-      setSelectedViewTextId(null);
-    } else {
-      if (fileId == selectedViewTextId) {
-        setSelectedViewTextId(null);
-      } else {
-        setSelectedViewTextId(fileId);
-      }
-
-      setSelectedViewFileId(null);
-
-      let text = '';
-
-      try {
-        const resp = await fetch(
-          `https://pdf2md.trieve.ai/api/task/${trieveTaskId}?limit=1000`,
-          {
-            headers: {
-              Authorization: process.env.NEXT_PUBLIC_TRIEVE_PDF2MD_API_KEY,
-            },
-          }
-        );
-
-        if (!resp.ok) throw new Error("Failed to fetch task");
-
-        const data = await resp.json();
-
-        if (data.pages) {
-          //@ts-ignore
-          data.pages.forEach(page => {
-            text += page.content + "\n";
-          });
-        }
-      } catch (err) {
-        // Handle the error
-        toast.error(err instanceof Error ? err.message : "An error occurred while updating files");
-        // setError(err instanceof Error ? err.message : "An error occurred while updating files");
-      }
-
-      setFileText(text);
-    }
-  }
-
   useEffect(() => {
     if (uploading)
       return;
@@ -326,8 +264,6 @@ export const DatasetList = ({
       try {
         if (!files || files.length === 0) return;
         if (!pendingFiles) return;
-
-        let shouldUpdate = false;
 
         const newFiles = [...files];
         console.log(newFiles)
@@ -381,7 +317,6 @@ export const DatasetList = ({
 
               // Update the status of the file
               newFiles[i].status = data.status;
-              shouldUpdate = true;
 
               // Send a PUT request to update the file in the dataset
               const updateResp = await fetch(`/api/chatbot/sources/file/${newFiles[i]._id}?datasetId=${datasetId}`, {
@@ -392,6 +327,7 @@ export const DatasetList = ({
                 body: JSON.stringify({
                   charCount,
                   status: data.status,
+                  text,
                 })
               });
 
@@ -409,9 +345,7 @@ export const DatasetList = ({
         // Wait for 5 seconds
         await new Promise(resolve => setTimeout(resolve, 5000));
 
-        // if (shouldUpdate) {
         await fetchFiles();
-        // }
 
         // Check if there are any files with status not completed
         setPendingFiles(newFiles.some(file => file.status !== "Completed" && file.trieveTaskId));
@@ -423,10 +357,6 @@ export const DatasetList = ({
     }
 
     updateFiles();
-
-    // const intervalId = setInterval(updateFiles, 10000);
-
-    // return () => clearInterval(intervalId); // Clear the interval when the component unmounts
   }, [files, pendingFiles]);
 
   if (error) return <div className="text-red-500 py-4">{error}</div>;
@@ -585,7 +515,7 @@ export const DatasetList = ({
             }
             return sortedFiles.map((file, index) => (
               <div
-                onClick={() => handleViewFile(file._id, file.url)}
+                onClick={() => handleViewFile(file._id, file.status)}
                 key={`file-${file._id}-${index}`}
                 className="cursor-pointer">
                 <div
@@ -625,22 +555,6 @@ export const DatasetList = ({
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    {!file.name.endsWith('.pdf') && !file.name.endsWith('.txt') &&
-                      <button
-                        onClick={() => handleViewImage(file._id, file.url)}
-                        className="text-gray-600 hover:text-gray-900"
-                        disabled={deleting}
-                      >
-                        <IconImageInPicture className="w-5 h-5" />
-                      </button>
-                    }
-                    <button
-                      onClick={() => handleViewText(file._id, file.name, file.status, file.trieveTaskId)}
-                      className={`text-gray-600 hover:text-gray-900 ${onlyImages ? "" : "hidden"}`}
-                      disabled={deleting}
-                    >
-                      <IconEye className="w-5 h-5" />
-                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
