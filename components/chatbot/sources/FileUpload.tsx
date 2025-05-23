@@ -27,10 +27,9 @@ interface FileUploadProps {
   limitChars: number
   setFileCount: (value: number | ((prevState: number) => number)) => void;
   setFileChars: (value: number | ((prevState: number) => number)) => void;
-  setFileSize: (value: number | ((prevState: number) => number)) => void;
 }
 
-export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFileChars, totalChars, limitChars }: FileUploadProps) => {
+export const FileUpload = ({ teamId, chatbotId, setFileCount, setFileChars, totalChars, limitChars }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -239,8 +238,8 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
           </div>
           <h3 className="text-lg font-semibold mb-2">
             {isDragActive
-              ? "Drop the files here"
-              : "Drag & drop files here, or click to select files"}
+              ? "Drop the file here"
+              : "Drag & drop files here, or click to select file"}
           </h3>
           <p className="text-gray-500 mb-4">
             Supported File Types: PDF, TXT
@@ -269,10 +268,9 @@ export const FileUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFi
         datasetId={datasetId}
         uploading={uploading}
         setFileCount={setFileCount}
-        setFileSize={setFileSize}
         setFileChars={setFileChars}
         onDelete={() => setSuccess(null)}
-        onlyImages={true}
+        onlyImages={false}
       />
     </div>
   );

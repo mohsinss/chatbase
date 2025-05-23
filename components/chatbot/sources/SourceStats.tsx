@@ -7,6 +7,8 @@ interface SourceStatsProps {
   totalChars: number;
   fileCount: number;
   fileChars: number;
+  imageCount: number;
+  imageChars: number;
   textInputChars: number;
   charLimit: number;
   setTotalChars: React.Dispatch<React.SetStateAction<number>>;
@@ -24,6 +26,8 @@ interface SourceStatsProps {
 const SourceStats = ({
   fileCount,
   fileChars,
+  imageCount,
+  imageChars,
   textInputChars,
   qaInputCount,
   qaInputChars,
@@ -44,7 +48,7 @@ const SourceStats = ({
 
   useEffect(() => {
     const notionChars = notionPages.reduce((total: number, page: any) => total + (page.charCount || 0), 0);
-    const total = fileChars + textInputChars + linkInputChars + qaInputChars + youtubeLinkChars + notionChars;
+    const total = fileChars + imageChars + textInputChars + linkInputChars + qaInputChars + youtubeLinkChars + notionChars;
     if (firstTotalChars === 0) {
       setFirstTotalChars(total);
     } else if (!needRetrain) {
@@ -52,7 +56,7 @@ const SourceStats = ({
     }
     setIsLimited(total > charLimit && charLimit > 0);
     setTotalChars(total);
-  }, [fileChars, textInputChars, linkInputChars, qaInputChars, youtubeLinkChars, notionPages, setTotalChars]);
+  }, [fileChars, imageChars, textInputChars, linkInputChars, qaInputChars, youtubeLinkChars, notionPages, setTotalChars]);
 
   return (
     <div className="bg-white rounded-lg p-6 border shadow-sm">
@@ -61,6 +65,9 @@ const SourceStats = ({
       <div className="space-y-3 pb-6 border-b-[3px] border-dotted">
         {fileCount > 0 && <p className="text-gray-700">
           {fileCount} File{fileCount == 1 ? '' : 's'} ({formatFileSize(fileChars)})
+        </p>}
+        {imageCount > 0 && <p className="text-gray-700">
+          {imageCount} Image{imageCount == 1 ? '' : 's'} ({formatFileSize(imageChars)})
         </p>}
         {textInputChars > 0 && <p className="text-gray-700">
           Text Input ({formatFileSize(textInputChars)})

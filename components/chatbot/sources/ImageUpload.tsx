@@ -27,10 +27,9 @@ interface ImageUploadProps {
   limitChars: number
   setFileCount: (value: number | ((prevState: number) => number)) => void;
   setFileChars: (value: number | ((prevState: number) => number)) => void;
-  setFileSize: (value: number | ((prevState: number) => number)) => void;
 }
 
-export const ImageUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setFileChars, totalChars, limitChars }: ImageUploadProps) => {
+export const ImageUpload = ({ teamId, chatbotId, setFileCount, setFileChars, totalChars, limitChars }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -200,17 +199,17 @@ export const ImageUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setF
 
         if (!response.ok) {
           const data = await response.json();
-          throw new Error(data.error || `Failed to upload file: ${file.name}`);
+          throw new Error(data.error || `Failed to upload a image: ${file.name}`);
         }
 
         const data = await response.json();
         console.log("Upload response:", data); // Debug log
       }));
       toast.dismiss();
-      setSuccess(`Successfully uploaded file`);
+      setSuccess(`Successfully uploaded image`);
     } catch (err) {
       console.error("Upload error:", err);
-      setError(err instanceof Error ? err.message : "Failed to upload file");
+      setError(err instanceof Error ? err.message : "Failed to upload a image");
     } finally {
       setUploading(false);
     }
@@ -219,8 +218,8 @@ export const ImageUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setF
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'application/pdf': ['.pdf', '.PDF'],
-      'text/plain': ['.txt'],
+      // 'application/pdf': ['.pdf', '.PDF'],
+      // 'text/plain': ['.txt'],
       'image/jpeg': ['.jpg', '.jpeg'],
       'image/png': ['.png'],
       'image/gif': ['.gif']
@@ -231,7 +230,7 @@ export const ImageUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setF
   return (
     <div>
       <div className={`rounded-lg p-6 border bg-white`}>
-        <h2 className="text-2xl font-semibold mb-4">Files</h2>
+        <h2 className="text-2xl font-semibold mb-4">Images</h2>
         <div {...getRootProps()} className="text-center p-16 cursor-pointer rounded-md border border-zinc-300 border-dashed bg-zinc-50">
           <input {...getInputProps()} disabled={uploading} />
           <div className="flex justify-center mb-4">
@@ -239,11 +238,11 @@ export const ImageUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setF
           </div>
           <h3 className="text-lg font-semibold mb-2">
             {isDragActive
-              ? "Drop the files here"
-              : "Drag & drop files here, or click to select files"}
+              ? "Drop the image here"
+              : "Drag & drop image here, or click to select image"}
           </h3>
           <p className="text-gray-500 mb-4">
-            Supported File Types: PDF, TXT, IMAGES
+            Supported File Types: IMAGES
           </p>
           <p className="text-gray-500">
             Maximum file size: 15MB
@@ -269,9 +268,9 @@ export const ImageUpload = ({ teamId, chatbotId, setFileSize, setFileCount, setF
         datasetId={datasetId}
         uploading={uploading}
         setFileCount={setFileCount}
-        setFileSize={setFileSize}
         setFileChars={setFileChars}
         onDelete={() => setSuccess(null)}
+        onlyImages={true}
       />
     </div>
   );

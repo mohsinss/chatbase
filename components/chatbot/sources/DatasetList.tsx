@@ -52,7 +52,6 @@ interface DatasetListProps {
   onlyImages: boolean;
   setFileCount: (value: number | ((prevState: number) => number)) => void;
   setFileChars: (value: number | ((prevState: number) => number)) => void;
-  setFileSize: (value: number | ((prevState: number) => number)) => void;
   onDelete?: () => void;
 }
 
@@ -64,8 +63,7 @@ export const DatasetList = ({
   onlyImages,
   onDelete,
   setFileCount,
-  setFileSize,
-  setFileChars
+  setFileChars,
 }: DatasetListProps) => {
   const [files, setFiles] = useState<IFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +88,8 @@ export const DatasetList = ({
   const router = useRouter();
 
   const handleViewFile = (fileId: string, fileUrl: string) => {
+    if (onlyImages)
+      return;
     router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources/${fileId}`)
   }
 
@@ -192,17 +192,29 @@ export const DatasetList = ({
       console.log(data);
 
       if (data.files) {
-        // @ts-ignore
-        const filteredFile = data.files.filter(file => onlyImages && !(file.name.endsWith('.txt') || file.name.endsWith('.pdf')));
-        // @ts-ignore
-        setFiles([...filteredFile]);
-        setFileCount(filteredFile.length);
-        //@ts-ignore
-        setFileChars(filteredFile.reduce((size, file) => {
-          return size + file.charCount;
-        }, 0))
-        // @ts-ignore
-        setPendingFiles(filteredFile.some(file => file.status !== "Completed"));
+        if (onlyImages) {
+          // @ts-ignore
+          const filteredFile = data.files.filter(file => !(file.name.endsWith('.txt') || file.name.endsWith('.pdf')));
+          // @ts-ignore
+          setFiles([...filteredFile]);
+          setFileCount(filteredFile.length);
+          //@ts-ignore
+          setFileChars(filteredFile.reduce((size, file) => {
+            return size + file.charCount;
+          }, 0))
+        } else {
+          // @ts-ignore
+          const filteredFile = data.files.filter(file => (file.name.endsWith('.txt') || file.name.endsWith('.pdf')));
+          // @ts-ignore
+          setFiles([...filteredFile]);
+          setFileCount(filteredFile.length);
+          //@ts-ignore
+          setFileChars(filteredFile.reduce((size, file) => {
+            return size + file.charCount;
+          }, 0))
+          // @ts-ignore
+          // setPendingFiles(filteredFile.some(file => file.status !== "Completed"));
+        }
       }
 
     } catch (err) {
@@ -417,7 +429,6 @@ export const DatasetList = ({
     // return () => clearInterval(intervalId); // Clear the interval when the component unmounts
   }, [files, pendingFiles]);
 
-  if (loading) return <div className="text-center py-4">Loading files...</div>;
   if (error) return <div className="text-red-500 py-4">{error}</div>;
 
   return (
@@ -425,7 +436,7 @@ export const DatasetList = ({
       <div className="bg-white rounded-lg border divide-y">
         <div className="p-6 pb-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">File Sources</h2>
+            <h2 className="text-xl font-semibold">{onlyImages ? 'Image' : 'File'} Sources</h2>
             <div className="relative flex items-center space-x-2 flex-grow max-w-xs">
               <span className="absolute left-3 text-gray-400 pointer-events-none">
                 {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -540,7 +551,7 @@ export const DatasetList = ({
         </div>
         {files.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No files uploaded yet
+            {loading ? "Loading files..." : "No files uploaded yet"}
           </div>
         ) : (
           (() => {
@@ -596,19 +607,19 @@ export const DatasetList = ({
                     {getFileIcon(file.name)}
                     <div>
                       <div className="overflow-hidden text-ellipsis whitespace-nowrap font-medium text-sm text-zinc-800 pb-1">{file.name}</div>
-                      <div className="text-sm text-gray-500 flex items-center">
-                        <div className="w-[60px] text-xs text-zinc-700">
+                      <div className="text-sm text-gray-500 flex gap-2 items-center">
+                        <div
+                          className={`focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-950 whitespace-nowrap flex items-center justify-center select-none font-medium border transition-colors rounded-full flex-shrink-0 px-1.5 py-0.5 text-xs shadow-none ${file.trained ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100 dark:border-zinc-800 dark:focus:ring-zinc-300 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80' : 'focus:ring-zinc-950 focus:ring-offset-2 dark:border-zinc-800 dark:focus:ring-zinc-300 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80 bg-red-50 text-red-600 border-red-300 hover:bg-red-100'}`}>
+                          <span className="w-full truncate text-center">{file.trained ? 'Trained' : 'Not Trained'}</span>
+                        </div>
+                        <div className="w-[160px] flex text-xs text-zinc-700">
                           {file.status != "Completed" ?
                             <>
-                              <span className="my-auto loading loading-spinner loading-xs">
+                              <span className="my-auto loading loading-spinner loading-xs mr-2">
                               </span> {file.status}
                             </> :
                             formatFileSize(file.charCount)
                           }
-                        </div>
-                        <div
-                          className={`focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-950 whitespace-nowrap flex items-center justify-center select-none font-medium border transition-colors rounded-full flex-shrink-0 px-1.5 py-0.5 text-xs shadow-none ${file.trained ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100 dark:border-zinc-800 dark:focus:ring-zinc-300 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80' : 'focus:ring-zinc-950 focus:ring-offset-2 dark:border-zinc-800 dark:focus:ring-zinc-300 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80 bg-red-50 text-red-600 border-red-300 hover:bg-red-100'}`}>
-                          <span className="w-full truncate text-center">{file.trained ? 'Trained' : 'Not Trained'}</span>
                         </div>
                       </div>
                     </div>
@@ -625,7 +636,7 @@ export const DatasetList = ({
                     }
                     <button
                       onClick={() => handleViewText(file._id, file.name, file.status, file.trieveTaskId)}
-                      className="text-gray-600 hover:text-gray-900 hidden"
+                      className={`text-gray-600 hover:text-gray-900 ${onlyImages ? "" : "hidden"}`}
                       disabled={deleting}
                     >
                       <IconEye className="w-5 h-5" />
