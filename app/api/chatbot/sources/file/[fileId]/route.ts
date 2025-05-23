@@ -63,7 +63,8 @@ export async function PUT(
       {
         $set: {
           "files.$.charCount": body.charCount,
-          "files.$.status": body.status
+          "files.$.status": body.status,
+          "files.$.text": body.text,
         }
       },
       { new: true } // This option returns the modified document
