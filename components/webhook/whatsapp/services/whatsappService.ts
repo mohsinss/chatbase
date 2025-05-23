@@ -3,6 +3,7 @@
  */
 import axios from 'axios';
 import { sleep } from '@/libs/utils';
+import { applyMessageDelay } from '../handlers/interactive';
 
 /**
  * Mark a message as read
@@ -168,4 +169,46 @@ export async function sendNodeContent(
   }
 
   return responses;
+}
+
+
+/**
+ * Parse the responseText and send messages accordingly.
+ * This function is reusable for other handlers.
+ */
+export async function sendParsedResponseMessages(phoneNumberId: string, from: string, responseText: string): Promise<void> {
+  try {
+    const parsed = JSON.parse(responseText);
+
+    switch (parsed.type) {
+      case 'text':
+        await applyMessageDelay();
+        await sendTextMessage(phoneNumberId, from, parsed.text);
+        break;
+      case 'actions':
+        for (const item of parsed.items) {
+          await applyMessageDelay();
+          if (item.type == "button") {
+            // Send URL button message
+            await sendUrlButtonMessage(
+              phoneNumberId,
+              from,
+              item.description || "Click the button below:", // Body text
+              item.text || "Open Link",       // Button text
+              item.url                               // URL to open
+            );
+          } else {
+            // Default text handling
+            await sendTextMessage(phoneNumberId, from, JSON.stringify(item));
+          }
+        }
+        break;
+      case 'products':
+        break;
+      default:
+        break;
+    }
+  } catch {
+    await sendTextMessage(phoneNumberId, from, "sth went wrong, contact with support team, :)");
+  }
 }

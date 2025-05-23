@@ -8,12 +8,11 @@ import {
   addAssistantMessageToConversation,
   isAutoReplyDisabled
 } from '@/components/webhook/whatsapp/services/conversationService';
-import { markMessageAsRead, sendTextMessage, sendUrlButtonMessage } from '@/components/webhook/whatsapp/services/whatsappService';
+import { markMessageAsRead, sendTextMessage, sendUrlButtonMessage, sendParsedResponseMessages } from '@/components/webhook/whatsapp/services/whatsappService';
 import { getQuestionFlow, processInitialNode } from '@/components/webhook/whatsapp/services/questionFlowService';
 import { isMessageTooOld, applyConfiguredDelay } from '@/components/webhook/whatsapp/utils/helpers';
 import ChatbotAction from '@/models/ChatbotAction';
 import { translateText } from '@/components/chatbot/api/translation';
-import { applyMessageDelay } from './interactive';
 
 function templateToRegex(template: string): RegExp {
   // Escape all regex‑special chars except {}
@@ -305,36 +304,7 @@ export async function handleTextMessage(
         );
 
         // Send response
-        try {
-          const parsed = JSON.parse(responseText);
-
-          await applyMessageDelay();
-
-          if (Array.isArray(parsed)) {
-            for (const item of parsed) {
-              await applyMessageDelay();
-
-              if (item.type == "button") {
-                // Send URL button message
-                await sendUrlButtonMessage(
-                  phoneNumberId,
-                  from,
-                  item.description || "Click the button below:", // Body text
-                  item.text || "Open Link",       // Button text
-                  item.url                               // URL to open
-                );
-              } else {
-                // Default text handling
-                await sendTextMessage(phoneNumberId, from, JSON.stringify(item));
-              }
-            }
-          } else {
-            // Single message handling
-            await sendTextMessage(phoneNumberId, from, responseText);
-          }
-        } catch {
-          await sendTextMessage(phoneNumberId, from, responseText);
-        }
+        await sendParsedResponseMessages(phoneNumberId, from, responseText);
 
         // Update conversation
         await addAssistantMessageToConversation(conversation, responseText);
