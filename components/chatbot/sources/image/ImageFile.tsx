@@ -7,6 +7,7 @@ import { IconTrash } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button"
 import DeleteDialog from "@/components/ui/deleteDialog";
 import toast from "react-hot-toast";
+import { Switch } from "@/components/ui/switch"
 
 const ImageFile = (
   {
@@ -27,8 +28,9 @@ const ImageFile = (
 ) => {
   const [deleting, setDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const router = useRouter();
   const [dFile, setDFile] = useState<any | null>(file);
+  const [isImageView, setIsImageView] = useState<boolean>(false);
+  const router = useRouter();
 
   const handleBack = () => {
     router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources?tab=images`)
@@ -71,8 +73,16 @@ const ImageFile = (
               <span className="w-full truncate text-center">{file.trained ? 'Trained' : 'Not Trained'}</span>
             </div>
           </div>
-          <div className="flex">
-            <button 
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              Text/Image
+              <Switch
+                checked={isImageView}
+                onCheckedChange={(enabled) => setIsImageView(enabled)}
+              />
+            </div>
+
+            <button
               onClick={() => setIsDeleteDialogOpen(true)}
               className="inline-flex items-center justify-center whitespace-nowrap font-thin focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-80 border bg-transparent dark:border-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 p-2 h-7 rounded-md border-red-200 text-red-400 text-xs transition-colors disabled:border-red-400 hover:border-red-400 disabled:bg-red-500/10 hover:bg-red-500/10 disabled:text-red-300 hover:text-red-300">
               <IconTrash className="text-red-400" />
@@ -83,9 +93,16 @@ const ImageFile = (
       <div className="h-full w-full bg-zinc-50">
         <div className="mx-auto grid h-full max-w-7xl gap-4 p-6">
           <div className="rounded-lg border border-zinc-200 bg-white text-zinc-950 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 flex-1 overflow-auto break-words">
-            <div className="p-6 w-full h-[800px]">
-              {file.text}
-            </div>
+            {
+              !isImageView &&
+              <div className="p-6 w-full h-[800px]">
+                {file.text}
+              </div>
+            }
+            {
+              isImageView && 
+               <iframe className="p-6" width="100%" height='800px' src={file.url} />
+            }
           </div>
         </div>
       </div>
