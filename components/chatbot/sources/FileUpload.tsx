@@ -245,7 +245,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileCount, setFileChars, tota
             Supported File Types: PDF, TXT
           </p>
           <p className="text-gray-500">
-            Maximum file size: 15MB
+            Maximum file size: 200MB
           </p>
           {error && (
             <p className="text-red-500 mt-4">{error}</p>

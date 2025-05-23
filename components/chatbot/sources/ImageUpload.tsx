@@ -245,7 +245,7 @@ export const ImageUpload = ({ teamId, chatbotId, setFileCount, setFileChars, tot
             Supported File Types: IMAGES
           </p>
           <p className="text-gray-500">
-            Maximum file size: 15MB
+            Maximum file size: 200MB
           </p>
           {error && (
             <p className="text-red-500 mt-4">{error}</p>
