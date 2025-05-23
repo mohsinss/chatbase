@@ -209,6 +209,6 @@ export async function sendParsedResponseMessages(phoneNumberId: string, from: st
         break;
     }
   } catch {
-    await sendTextMessage(phoneNumberId, from, "sth went wrong, contact with support team, :)");
+    await sendTextMessage(phoneNumberId, from, "sth went wrong, contact with support team, :)\n" + responseText);
   }
 }
