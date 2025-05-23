@@ -368,6 +368,7 @@ export async function POST(req: Request) {
         // Mark the file as trained
         file.trieveId = responseData.file_metadata.id;
         file.trained = true;
+        file.text = text;
       }
     }
 
