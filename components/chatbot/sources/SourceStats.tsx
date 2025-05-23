@@ -1,7 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { IconInfoCircle, IconRefresh } from "@tabler/icons-react";
+import { IconImageInPicture, IconInfoCircle, IconRefresh } from "@tabler/icons-react";
 import { formatFileSize } from "@/lib/utils";
+import {
+  IconFile,
+  IconAlignLeft,
+  IconGlobe,
+  IconAdjustmentsSpark,
+  IconMessageQuestion,
+  IconBrandNotion,
+  IconBrandYoutube,
+  IconBrandAppgallery,
+  IconPictureInPicture,
+} from "@tabler/icons-react";
 
 interface SourceStatsProps {
   totalChars: number;
@@ -48,7 +59,7 @@ const SourceStats = ({
 
   useEffect(() => {
     const notionChars = notionPages.reduce((total: number, page: any) => total + (page.charCount || 0), 0);
-    const total = fileChars + imageChars + textInputChars + linkInputChars + qaInputChars + youtubeLinkChars + notionChars;
+    const total = fileChars + fileChars + textInputChars + linkInputChars + qaInputChars + youtubeLinkChars + notionChars;
     if (firstTotalChars === 0) {
       setFirstTotalChars(total);
     } else if (!needRetrain) {
@@ -60,38 +71,87 @@ const SourceStats = ({
 
   return (
     <div className="bg-white rounded-lg p-6 border shadow-sm">
-      <h2 className="text-xl font-semibold mb-6">Sources</h2>
+      <h2 className="text-xl font-semibold mb-6 text-zinc-600">Sources</h2>
 
-      <div className="space-y-3 pb-6 border-b-[3px] border-dotted">
-        {fileCount > 0 && <p className="text-gray-700">
-          {fileCount} File{fileCount == 1 ? '' : 's'} ({formatFileSize(fileChars)})
-        </p>}
-        {imageCount > 0 && <p className="text-gray-700">
-          {imageCount} Image{imageCount == 1 ? '' : 's'} ({formatFileSize(imageChars)})
-        </p>}
-        {textInputChars > 0 && <p className="text-gray-700">
-          Text Input ({formatFileSize(textInputChars)})
-        </p>}
-        {linkInputCount > 0 && <p className="text-gray-700">
-          {linkInputCount} Links ({formatFileSize(linkInputChars)})
-        </p>}
-        {youtubeLinkCount > 0 && <p className="text-gray-700">
-          {youtubeLinkCount} YouTube Video{youtubeLinkCount == 1 ? '' : 's'} ({formatFileSize(youtubeLinkChars)})
-        </p>}
-        {qaInputCount > 0 && <p className="text-gray-700">
-          {qaInputCount} Q&A ({formatFileSize(qaInputChars)})
-        </p>}
-        {notionPages.length > 0 && <p className="text-gray-700">
-          {notionPages.length} Notion Page{notionPages.length === 1 ? '' : 's'} ({formatFileSize(notionPages.reduce((total, page) => total + (page.charCount || 0), 0))})
-        </p>}
+      <div className="space-y-3 pb-6 border-b-[3px] border-dotted text-sm">
+        {
+          fileCount > 0 &&
+          <div className="text-gray-700 flex items-center justify-between">
+            <div className="flex gap-1 items-center">
+              <IconFile className="w-4 h-4" />
+              {fileCount} File{fileCount == 1 ? '' : 's'}
+            </div>
+            <p className="font-medium text-zinc-900">{formatFileSize(fileChars)}</p>
+          </div>
+        }
+        {
+          imageCount > 0 &&
+          <div className="text-gray-700 flex items-center justify-between">
+            <div className="flex gap-1 items-center">
+              <IconPictureInPicture className="w-4 h-4" />
+              {imageCount} Image{imageCount == 1 ? '' : 's'}
+            </div>
+            <p className="font-medium text-zinc-900">{formatFileSize(imageChars)}</p>
+          </div>
+        }
+        {
+          textInputChars > 0 &&
+          <div className="text-gray-700 flex items-center justify-between">
+            <div className="flex gap-1 items-center">
+              <IconAlignLeft className="w-4 h-4" />
+              Text Input
+            </div>
+            <p className="font-medium text-zinc-900">{formatFileSize(textInputChars)}</p>
+          </div>
+        }
+        {
+          youtubeLinkCount > 0 &&
+          <div className="text-gray-700 flex items-center justify-between">
+            <div className="flex gap-1 items-center">
+              <IconBrandYoutube className="w-4 h-4" />
+              {youtubeLinkCount} YouTube Video{youtubeLinkCount == 1 ? '' : 's'}
+            </div>
+            <p className="font-medium text-zinc-900">{formatFileSize(youtubeLinkChars)}</p>
+          </div>
+        }
+        {
+          linkInputCount > 0 &&
+          <div className="text-gray-700 flex items-center justify-between">
+            <div className="flex gap-1 items-center">
+              <IconGlobe className="w-4 h-4" />
+              {linkInputCount} Link{linkInputCount == 1 ? '' : 's'}
+            </div>
+            <p className="font-medium text-zinc-900">{formatFileSize(linkInputChars)}</p>
+          </div>
+        }
+        {
+          qaInputCount > 0 &&
+          <div className="text-gray-700 flex items-center justify-between">
+            <div className="flex gap-1 items-center">
+              <IconMessageQuestion className="w-4 h-4" />
+              {qaInputCount} Q&A{qaInputCount == 1 ? '' : 's'}
+            </div>
+            <p className="font-medium text-zinc-900">{formatFileSize(qaInputChars)}</p>
+          </div>
+        }
+        {
+          notionPages.length > 0 &&
+          <div className="text-gray-700 flex items-center justify-between">
+            <div className="flex gap-1 items-center">
+              <IconMessageQuestion className="w-4 h-4" />
+              {notionPages.length} Notion Page{notionPages.length == 1 ? '' : 's'}
+            </div>
+            <p className="font-medium text-zinc-900">{formatFileSize(notionPages.reduce((total, page) => total + (page.charCount || 0), 0))}</p>
+          </div>
+        }
       </div>
-
-      <div className="space-y-2 my-5">
-        <p className="font-medium">Total size</p>
-        <p className="text-right">
-          <span className="text-lg font-semibold">{formatFileSize(totalChars)}</span>
-          <span className="text-gray-500">/ {charLimit == 0 ? "Unlimited" : formatFileSize(charLimit) + ' limit'}</span>
-        </p>
+      
+      <div className="my-5 flex flex-col gap-1 text-sm">
+        <span className="flex items-center justify-between font-medium text-zinc-800">
+          <span className="text-base">Total size:</span>
+          <span className="font-bold">{formatFileSize(totalChars)}</span>
+        </span>
+        <span className="self-end font-medium text-zinc-800">/ {charLimit == 0 ? "Unlimited" : formatFileSize(charLimit) + ' limit'}</span>
       </div>
 
       <Button
