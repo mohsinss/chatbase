@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import DeleteDialog from "@/components/ui/deleteDialog";
 import toast from "react-hot-toast";
 
-const SourceFile = (
+const ImageFile = (
   {
     teamId,
     chatbotId,
@@ -31,7 +31,7 @@ const SourceFile = (
   const [dFile, setDFile] = useState<any | null>(file);
 
   const handleBack = () => {
-    router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources`)
+    router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/sources?tab=images`)
   }
 
   const handleDelete = async () => {
@@ -83,7 +83,9 @@ const SourceFile = (
       <div className="h-full w-full bg-zinc-50">
         <div className="mx-auto grid h-full max-w-7xl gap-4 p-6">
           <div className="rounded-lg border border-zinc-200 bg-white text-zinc-950 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 flex-1 overflow-auto break-words">
-            <iframe className="p-6" width="100%" height='800px' src={file.url} />
+            <div className="p-6 w-full h-[800px]">
+              {file.text}
+            </div>
           </div>
         </div>
       </div>
@@ -99,4 +101,4 @@ const SourceFile = (
   )
 }
 
-export default SourceFile;
+export default ImageFile;

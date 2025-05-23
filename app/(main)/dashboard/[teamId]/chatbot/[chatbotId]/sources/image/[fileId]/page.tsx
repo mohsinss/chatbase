@@ -7,16 +7,16 @@ import Chatbot from "@/models/Chatbot";
 import DashboardNav from "@/components/DashboardNav";
 import ChatbotTabs from "@/components/chatbot/ChatbotTabs";
 import Dataset from "@/models/Dataset";
-import SourceFile from "@/components/chatbot/sources/file/SourceFile";
+import ImageFile from "@/components/chatbot/sources/image/ImageFile";
 import { convertToJSON } from "@/lib/utils";
 
-export default async function FilePage({ 
-  params 
-}: { 
-  params: { teamId: string; chatbotId: string, fileId: string } 
+export default async function FilePage({
+  params
+}: {
+  params: { teamId: string; chatbotId: string, fileId: string }
 }) {
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user?.id) {
     redirect("/api/auth/signin");
   }
@@ -42,7 +42,14 @@ export default async function FilePage({
       <DashboardNav teamId={params.teamId} />
       <ChatbotTabs teamId={params.teamId} chatbotId={params.chatbotId} />
       <main className="min-h-screen">
-        <SourceFile teamId={params.teamId} chatbotId={params.chatbotId} chatbot={convertToJSON(chatbot)} team={convertToJSON(team)} file={convertToJSON(file)}/>
+        <ImageFile
+          datasetId={dataset.datasetId}
+          teamId={params.teamId}
+          chatbotId={params.chatbotId}
+          chatbot={convertToJSON(chatbot)}
+          team={convertToJSON(team)}
+          file={convertToJSON(file)}
+        />
       </main>
     </>
   );
