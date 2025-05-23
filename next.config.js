@@ -50,9 +50,7 @@ const nextConfig = {
   },
   swcMinify: true,
   experimental: {
-    turbo: true, // Optional: faster builds
-    webpackMemoryOptimizations: true,
-    // webpackBuildWorker: true,
+    // Remove invalid options
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if

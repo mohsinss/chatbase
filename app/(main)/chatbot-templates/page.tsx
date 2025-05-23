@@ -72,7 +72,7 @@ const templates = [
     slug: 'restaurant-booking-bot',
     title: 'RESTAURANT BOOKING BOT',
     description: 'Automate table reservations and customer inquiries for your restaurant',
-    tags: ['RESTAURANT', 'BOOKING', 'AUTOMATION', 'CUSTOMER SERVICE'],
+    tags: ['ChatSa', 'RESTAURANT', 'BOOKING', 'AUTOMATION', 'CUSTOMER SERVICE', 'FACEBOOK MESSENGER', 'HOSPITALITY', 'LEAD GENERATION'],
     image: '/api/placeholder/300/400',
     category: 'Restaurant'
   },
@@ -81,7 +81,7 @@ const templates = [
     slug: 'real-estate-lead-generator',
     title: 'REAL ESTATE LEAD GENERATOR',
     description: 'Capture and qualify real estate leads automatically',
-    tags: ['REAL ESTATE', 'LEAD GENERATION', 'AUTOMATION', 'SALES'],
+    tags: ['ChatSa', 'REAL ESTATE', 'LEAD GENERATION', 'AUTOMATION', 'SALES', 'APPOINTMENT BOOKING', 'PROPERTY TOURS', 'MESSENGER', 'BROKER'],
     image: '/api/placeholder/300/400',
     category: 'Real Estate'
   },
@@ -295,11 +295,11 @@ function ChatbotTemplatesContent() {
           )}
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex gap-2">
           {/* Sidebar */}
-          <div className="w-64 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">CATEGORIES</h2>
+          <div className="w-44 flex-shrink-0">
+            <div className="bg-white rounded-lg shadow-sm p-2 sticky top-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">CATEGORIES</h2>
               <nav className="space-y-2">
                 {categories.map((category, index) => (
                   <button
@@ -320,99 +320,164 @@ function ChatbotTemplatesContent() {
 
           {/* Main Content */}
           <div className="flex-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {filteredTemplates.map((template) => (
                 <Link
                   key={template.id}
                   href={`/chatbot-templates/${template.slug}`}
                   className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group block"
                 >
-                  {/* Template Image */}
-                  <div className="aspect-[3/4] bg-gray-100 relative overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center group-hover:from-blue-100 group-hover:to-indigo-200 transition-all duration-300">
-                      <div className="w-48 h-64 bg-white rounded-lg shadow-md flex flex-col group-hover:shadow-xl transition-shadow duration-300">
-                        {/* Mock phone header */}
-                        <div className="bg-gray-800 text-white text-xs p-2 rounded-t-lg flex items-center justify-between">
-                          <span>12:29</span>
-                          <span className="flex space-x-1">
-                            <div className="w-1 h-1 bg-white rounded-full"></div>
-                            <div className="w-1 h-1 bg-white rounded-full"></div>
-                            <div className="w-1 h-1 bg-white rounded-full"></div>
-                          </span>
-                          <span>100%</span>
-                        </div>
-                        {/* Mock chat interface */}
-                        <div className="flex-1 p-3 space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center overflow-hidden">
-                              <img 
-                                src="/chatbase-icon.png" 
-                                alt="ChatSa" 
-                                className="w-6 h-6 object-contain"
-                              />
-                            </div>
-                            <div>
-                              <div className="text-xs font-medium">{template.title.split(' ')[0]} Bot</div>
-                              <div className="text-xs text-gray-500">ChatSa</div>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="bg-gray-100 rounded-lg p-2 text-xs">
-                              Welcome! How can I help you today?
-                            </div>
-                            <div className="bg-blue-500 text-white rounded-lg p-2 text-xs ml-8">
-                              I need information
-                            </div>
-                            <div className="bg-gray-100 rounded-lg p-2 text-xs">
-                              I'd be happy to help! What would you like to know?
+                  <div className="flex h-74">
+                    {/* Template Image - Phone Mockup */}
+                    <div className="w-1/2  relative overflow-hidden p-4 flex items-center justify-center">
+                      <div className="relative group-hover:scale-105 transition-transform duration-300">
+                        {/* Phone Container */}
+                        <div className="w-32 h-68 bg-black rounded-2xl p-1 shadow-2xl">
+                          <div className="w-full h-full bg-white rounded-xl overflow-hidden relative">
+                            {/* Phone Header/Status Bar */}
+                            {/* <div className="bg-white text-gray-800 text-xs p-0.5 flex items-center justify-between" style={{ fontSize: '6px' }}>
+                              <span>12:29</span>
+                              <div className="flex space-x-0.5">
+                                <div className="w-0.25 h-0.25 bg-gray-800 rounded-full" style={{ width: '1px', height: '1px' }}></div>
+                                <div className="w-0.25 h-0.25 bg-gray-800 rounded-full" style={{ width: '1px', height: '1px' }}></div>
+                                <div className="w-0.25 h-0.25 bg-gray-800 rounded-full" style={{ width: '1px', height: '1px' }}></div>
+                              </div>
+                              <span>100%</span>
+                            </div> */}
+
+                            {/* Phone Content */}
+                            <div className="flex-1 h-[%90]">
+                              {template.slug === 'instagram-bot-for-lawyers-and-law-firms' ? (
+                                <img 
+                                  src="https://botmakers.blob.core.windows.net/screenshots/p1t6lH2aa.png"
+                                  alt={template.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                /* Mock Chat Interface for other templates */
+                                <div className="p-1 space-y-2 h-full bg-gray-50">
+                                  {/* Chat Header */}
+                                  <div className="flex items-center space-x-1.5 bg-white rounded-md p-1.5 shadow-sm">
+                                    <div className="w-5 h-5 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center overflow-hidden">
+                                      <img 
+                                        src="/chatbase-icon.png" 
+                                        alt="ChatSa" 
+                                        className="w-3 h-3 object-contain"
+                                      />
+                                    </div>
+                                    <div>
+                                      <div className="text-xs font-medium text-gray-900">{template.title.split(' ')[0]} Bot</div>
+                                      <div className="text-xs text-gray-500">ChatSa</div>
+                                    </div>
+                                  </div>
+
+                                  {/* Chat Messages */}
+                                  <div className="space-y-1.5">
+                                    <div className="bg-white rounded-md p-1.5 shadow-sm">
+                                      <div className="text-xs text-gray-700">
+                                        Welcome! How can I help you today?
+                                      </div>
+                                    </div>
+                                    <div className="bg-blue-500 text-white rounded-md p-1.5 ml-4 shadow-sm">
+                                      <div className="text-xs">
+                                        I need information
+                                      </div>
+                                    </div>
+                                    <div className="bg-white rounded-md p-1.5 shadow-sm">
+                                      <div className="text-xs text-gray-700">
+                                        I'd be happy to help! What would you like to know?
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Category-specific message */}
+                                    {template.category === 'Real Estate' && (
+                                      <div className="bg-white rounded-md p-1.5 shadow-sm">
+                                        <div className="text-xs text-gray-700">
+                                          🏠 Looking for properties?
+                                        </div>
+                                      </div>
+                                    )}
+                                    {template.category === 'Restaurant' && (
+                                      <div className="bg-white rounded-md p-1.5 shadow-sm">
+                                        <div className="text-xs text-gray-700">
+                                          🍽️ Ready to make a reservation?
+                                        </div>
+                                      </div>
+                                    )}
+                                    {template.category === 'Healthcare' && (
+                                      <div className="bg-white rounded-md p-1.5 shadow-sm">
+                                        <div className="text-xs text-gray-700">
+                                          🏥 Book your appointment
+                                        </div>
+                                      </div>
+                                    )}
+                                    {template.category === 'E-Commerce' && (
+                                      <div className="bg-white rounded-md p-1.5 shadow-sm">
+                                        <div className="text-xs text-gray-700">
+                                          🛒 Need help with your order?
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Input Area */}
+                                  <div className="absolute bottom-1 left-1 right-1">
+                                    <div className="bg-white rounded-full px-2 py-1 shadow-sm border">
+                                      <div className="text-xs text-gray-400">Type a message...</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Template Content */}
-                  <div className="p-6">
-                    <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-200">
-                      {template.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {template.description}
-                    </p>
-                    
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {template.tags.slice(0, 3).map((tag, index) => (
-                        <button
-                          key={index}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleTagClick(tag);
-                          }}
-                          className="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-200 transition-colors duration-200 cursor-pointer"
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                      {template.tags.length > 3 && (
-                        <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
-                          +{template.tags.length - 3}
-                        </span>
-                      )}
+                    {/* Template Content */}
+                    <div className="w-1/2 p-2 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-200 text-sm leading-tight">
+                          {template.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">
+                          {template.description}
+                        </p>
+                        
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1 mb-4">
+                          {template.tags.slice(0, 3).map((tag, index) => (
+                            <button
+                              key={index}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleTagClick(tag);
+                              }}
+                              className="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-200 transition-colors duration-200 cursor-pointer"
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                          {template.tags.length > 3 && (
+                            <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
+                              +{template.tags.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Unlock Button */}
+                      <button 
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 group-hover:shadow-md text-sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Handle button click if needed
+                        }}
+                      >
+                        UNLOCK TEMPLATE
+                      </button>
                     </div>
-
-                    {/* Unlock Button */}
-                    <button 
-                      className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 group-hover:shadow-md"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        // Handle button click if needed
-                      }}
-                    >
-                      UNLOCK TEMPLATE
-                    </button>
                   </div>
                 </Link>
               ))}

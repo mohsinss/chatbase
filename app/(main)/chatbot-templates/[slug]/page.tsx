@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Head from 'next/head';
 import { ArrowLeft, Check, Star, Users, Zap, Shield, Clock, ArrowRight } from 'lucide-react';
 
 // Template data (in a real app, this would come from a database)
@@ -130,8 +129,31 @@ export default function TemplatePage({ params }: { params: { slug: string } }) {
   const [activeTab, setActiveTab] = useState('preview');
   const [faqItems, setFaqItems] = useState(faqs);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const template = templates.find(t => t.slug === params.slug);
+
+  // Slider images for the law firm template
+  const sliderImages = [
+    'https://botmakers.blob.core.windows.net/screenshots/p1t6lH2aa.png',
+    'https://botmakers.blob.core.windows.net/screenshots/01t6lH2aa.png',
+    'https://botmakers.blob.core.windows.net/screenshots/Q1t6lH2aa.png',
+    'https://botmakers.blob.core.windows.net/screenshots/k2t6lH2aa.png',
+    'https://botmakers.blob.core.windows.net/screenshots/w2t6lH2aa.png',
+    'https://botmakers.blob.core.windows.net/screenshots/72t6lH2aa.png'
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + sliderImages.length) % sliderImages.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
 
   useEffect(() => {
     // Simulate loading
@@ -163,23 +185,21 @@ export default function TemplatePage({ params }: { params: { slug: string } }) {
     <>
       <StructuredData template={template} />
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-            <Link 
-              href="/chatbot-templates" 
-              className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Templates
-            </Link>
-          </div>
-        </div>
-
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           {/* Hero Section */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 mb-8 animate-fade-in">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 mb-8 animate-fade-in relative">
+            {/* Back to Templates Link */}
+            <div className="absolute top-6 left-6">
+              <Link 
+                href="/chatbot-templates" 
+                className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200 bg-white bg-opacity-70 hover:bg-opacity-100 px-3 py-2 rounded-lg backdrop-blur-sm"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Templates
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center pt-8">
               <div className="space-y-6">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 text-sm text-blue-600 font-medium">
@@ -239,58 +259,56 @@ export default function TemplatePage({ params }: { params: { slug: string } }) {
               {/* Phone Mockup */}
               <div className="flex justify-center lg:justify-end">
                 <div className="relative animate-float">
-                  <div className="w-80 h-96 bg-black rounded-3xl p-2 shadow-2xl">
-                    <div className="w-full h-full bg-white rounded-2xl overflow-hidden">
-                      {/* Phone Header */}
-                      <div className="bg-gray-800 text-white text-xs p-3 flex items-center justify-between">
-                        <span>12:31</span>
-                        <div className="flex space-x-1">
-                          <div className="w-1 h-1 bg-white rounded-full"></div>
-                          <div className="w-1 h-1 bg-white rounded-full"></div>
-                          <div className="w-1 h-1 bg-white rounded-full"></div>
-                        </div>
-                        <span>100%</span>
-                      </div>
+                  <div className="w-80 h-[700px] bg-black rounded-3xl p-2 shadow-2xl">
+                    <div className="w-full h-full bg-white rounded-2xl overflow-hidden relative">
+    
 
-                      {/* Chat Interface */}
-                      <div className="p-4 space-y-3 h-full bg-gray-50">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center overflow-hidden">
-                            <img 
-                              src="/chatbase-icon.png" 
-                              alt="ChatSa" 
-                              className="w-8 h-8 object-contain"
+                      {/* Slider Container */}
+                      <div className="relative h-full">
+                        {/* Slider Images */}
+                        <div className="relative h-full overflow-hidden">
+                          {sliderImages.map((imageUrl, index) => (
+                            <div 
+                              key={index}
+                              className={`absolute inset-0 w-full h-full transition-all duration-500 ease-in-out ${
+                                index === currentSlide ? 'translate-x-0 opacity-100' : 
+                                index < currentSlide ? '-translate-x-full opacity-0' : 'translate-x-full opacity-0'
+                              }`}
+                            >
+                              <img 
+                                src={imageUrl}
+                                alt={`Bot preview ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Navigation Arrows */}
+                        <button 
+                          onClick={prevSlide}
+                          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all duration-200 z-10"
+                        >
+                          <ArrowLeft className="w-3 h-3" />
+                        </button>
+                        <button 
+                          onClick={nextSlide}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 transition-all duration-200 z-10"
+                        >
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+
+                        {/* Dots Indicator */}
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10">
+                          {sliderImages.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => goToSlide(index)}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                index === currentSlide ? 'bg-white' : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+                              }`}
                             />
-                          </div>
-                          <div>
-                            <div className="text-sm font-semibold">lawfirms_chatbot</div>
-                            <div className="text-xs text-gray-500">Instagram • 0 followers • 1 post</div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <div className="bg-white rounded-lg p-3 shadow-sm animate-slide-in-left">
-                            <p className="text-sm">Welcome to "Breeze Law", law firm specializing exclusively in Family law, where our focus is on you!</p>
-                            <div className="mt-2 bg-gray-100 rounded p-2">
-                              <div className="w-full h-16 bg-gradient-to-r from-blue-100 to-blue-200 rounded flex items-center justify-center">
-                                <span className="text-xs text-gray-600">Law Office Image</span>
-                              </div>
-                            </div>
-                            <p className="text-xs text-blue-600 mt-1">Definitely! 😊</p>
-                          </div>
-
-                          <div className="bg-blue-500 text-white rounded-lg p-3 ml-8 animate-slide-in-right">
-                            <p className="text-sm">Our experienced team guides you through the legal process of your life's transition.</p>
-                          </div>
-
-                          <div className="bg-white rounded-lg p-3 shadow-sm animate-slide-in-left">
-                            <p className="text-sm">We provide you with the knowledge and tools necessary to successfully get through what is often a difficult time.</p>
-                            <div className="mt-2 flex space-x-2">
-                              <button className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">CHILD SUPPORT</button>
-                              <button className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">DIVORCE</button>
-                              <button className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">CUSTODY</button>
-                            </div>
-                          </div>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -351,18 +369,72 @@ export default function TemplatePage({ params }: { params: { slug: string } }) {
               )}
 
               {activeTab === 'preview' && (
-                <div className="animate-fade-in text-center">
-                  <h2 className="text-2xl font-bold text-blue-600 mb-4">Preview Template</h2>
-                  <p className="text-gray-600 mb-8">
+                <div className="animate-fade-in">
+                  <h2 className="text-2xl font-bold text-blue-600 mb-4 text-center">Preview Template</h2>
+                  <p className="text-gray-600 mb-8 text-center">
                     See how the Instagram Bot for Lawyers and Law Firms is used to drive sales and engage with customers
                   </p>
-                  <div className="bg-gray-100 rounded-lg p-8 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-3xl">⚖️</span>
+                  
+                  {/* Two Column Layout */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    {/* Left Column - Phone Mockup */}
+                    <div className="flex justify-center">
+                      <div className="relative">
+                        <div className="w-80 h-[680px] bg-black rounded-3xl p-2 shadow-2xl">
+                          <div className="w-full h-full bg-white rounded-2xl overflow-hidden relative">
+                            {/* Phone Header */}
+      
+
+                            {/* Single Image */}
+                            <div className="h-full">
+                              <img 
+                                src={sliderImages[0]}
+                                alt="Bot preview"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Law Firm chatbot</h3>
-                      <p className="text-gray-600">Interactive preview coming soon</p>
+                    </div>
+
+                    {/* Right Column - Description */}
+                    <div className="space-y-6">
+                      <div className="text-center lg:text-left">
+                        <h3 className="text-3xl font-bold text-blue-400 mb-4">Preview Template</h3>
+                        <p className="text-gray-600 text-lg leading-relaxed mb-6">
+                          See how the Instagram Bot for Lawyers and Law Firms is used to drive sales and engage with customers
+                        </p>
+                      </div>
+
+                      <div className="flex justify-center lg:justify-start">
+                        <div className="text-center">
+              
+                          <h4 className="text-xl font-semibold text-gray-900">Law Firm chatbot</h4>
+                        </div>
+                      </div>
+
+                      <div className="bg-blue-50 rounded-lg p-6">
+                        <h5 className="font-semibold text-gray-900 mb-3">What you'll get:</h5>
+                        <ul className="space-y-2 text-gray-600">
+                          <li className="flex items-center">
+                            <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                            Complete Instagram DM automation
+                          </li>
+                          <li className="flex items-center">
+                            <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                            Lead qualification system
+                          </li>
+                          <li className="flex items-center">
+                            <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                            Service showcase funnel
+                          </li>
+                          <li className="flex items-center">
+                            <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                            Automated follow-up sequences
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -453,58 +525,128 @@ export default function TemplatePage({ params }: { params: { slug: string } }) {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-2xl font-bold text-center text-blue-600 mb-8">Explore more chatbot templates</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-                <h3 className="font-semibold text-gray-900 mb-2">TABLE RESERVATION BOT FOR BARS AND RESTAURANTS</h3>
-                <p className="text-gray-600 text-sm mb-4">Book tables in minutes with a Facebook Messenger bot</p>
-                <div className="flex flex-wrap gap-1 mb-4">
-                  <Link 
-                    href="/chatbot-templates?tag=ChatSa"
-                    className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-200 transition-colors duration-200"
-                  >
-                    ChatSa
-                  </Link>
-                  <Link 
-                    href="/chatbot-templates?tag=LEAD%20GENERATION"
-                    className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-200 transition-colors duration-200"
-                  >
-                    LEAD GENERATION
-                  </Link>
-                  <Link 
-                    href="/chatbot-templates?tag=RESTAURANT"
-                    className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-200 transition-colors duration-200"
-                  >
-                    RESTAURANT
-                  </Link>
+              <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+                <div className="flex-grow">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">TABLE RESERVATION BOT FOR BARS AND RESTAURANTS</h3>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">Book tables in minutes with a Facebook Messenger bot</p>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <Link 
+                      href="/chatbot-templates?tag=ChatSa"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      ChatSa
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=LEAD%20GENERATION"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      LEAD GENERATION
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=RESTAURANT"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      RESTAURANT
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=FACEBOOK%20MESSENGER"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      FACEBOOK MESSENGER
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=BOOKING"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      BOOKING
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=HOSPITALITY"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      HOSPITALITY
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=AUTOMATION"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      AUTOMATION
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=CUSTOMER%20SERVICE"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      CUSTOMER SERVICE
+                    </Link>
+                  </div>
                 </div>
-                <button className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors duration-200">
+                <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 mt-auto">
                   UNLOCK TEMPLATE
                 </button>
               </div>
               
-              <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-                <h3 className="font-semibold text-gray-900 mb-2">APPOINTMENT MESSENGER BOT FOR REAL ESTATE AGENTS</h3>
-                <p className="text-gray-600 text-sm mb-4">Get information about properties for sale and schedule property tours with real estate brokers</p>
-                <div className="flex flex-wrap gap-1 mb-4">
-                  <Link 
-                    href="/chatbot-templates?tag=ChatSa"
-                    className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-200 transition-colors duration-200"
-                  >
-                    ChatSa
-                  </Link>
-                  <Link 
-                    href="/chatbot-templates?tag=REAL%20ESTATE"
-                    className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-200 transition-colors duration-200"
-                  >
-                    REAL ESTATE
-                  </Link>
-                  <Link 
-                    href="/chatbot-templates?tag=SALES"
-                    className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-200 transition-colors duration-200"
-                  >
-                    SALES
-                  </Link>
+              <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+                <div className="flex-grow">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">APPOINTMENT MESSENGER BOT FOR REAL ESTATE AGENTS</h3>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">Get information about properties for sale and schedule property tours with real estate brokers</p>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <Link 
+                      href="/chatbot-templates?tag=ChatSa"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      ChatSa
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=REAL%20ESTATE"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      REAL ESTATE
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=SALES"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      SALES
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=APPOINTMENT%20BOOKING"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      APPOINTMENT BOOKING
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=LEAD%20GENERATION"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      LEAD GENERATION
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=PROPERTY%20TOURS"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      PROPERTY TOURS
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=MESSENGER"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      MESSENGER
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=BROKER"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      BROKER
+                    </Link>
+                    <Link 
+                      href="/chatbot-templates?tag=AUTOMATION"
+                      className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full hover:bg-blue-200 transition-colors duration-200"
+                    >
+                      AUTOMATION
+                    </Link>
+                  </div>
                 </div>
-                <button className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors duration-200">
+                <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 mt-auto">
                   UNLOCK TEMPLATE
                 </button>
               </div>
