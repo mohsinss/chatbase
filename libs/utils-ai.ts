@@ -95,17 +95,33 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
   const temperature = aiSettings?.temperature ?? 0.7;
   const maxTokens = aiSettings?.maxTokens ?? 500;
   const language = aiSettings?.language || 'en';
-  let systemPrompt;
 
-  systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
+  // Construct the base system prompt
+  let systemPrompt = `${aiSettings?.systemPrompt || 'You are a helpful AI assistant.'} You must respond in ${language} language only.`;
+
+  // Add updated prompt if provided, with clear condition
   if (updatedPrompt) {
-    systemPrompt += `\n\nApply this prompt only if the response does not include a JSON array:\n${updatedPrompt}\n\n`;
+    systemPrompt += `\n\n${updatedPrompt}\n\n`;
   }
 
+  // Get enabled actions and filter button actions
   const enabledActions = await ChatbotAction.find({ chatbotId, enabled: true });
   const buttonActions = enabledActions.filter(action => action.type === 'button');
 
+  // Add JSON response capabilities if enabled
   if (params?.enableJsonResponse) {
+    // Base JSON response structure instruction
+    systemPrompt += `
+All responses must be formatted as JSON objects. For regular text responses, use this format:
+{
+  "type": "text",
+  "text": "Your response content here"
+}
+
+Additional JSON formats for specific cases are described below.
+`;
+
+    // Add button actions prompt if available
     if (buttonActions.length > 0) {
       interface ButtonActionMetadata {
         buttonType?: string;
@@ -114,23 +130,21 @@ export const getAIResponse = async (chatbotId: string, messages: any, text: stri
         instructions: string;
       }
 
-      interface ButtonAction {
-        metadata: ButtonActionMetadata[];
-      }
-
       const buttonActionsPrompt = `
-Respond with a **JSON array** of recommended actions based on the user's message.
-Each item must follow this format:
-
+For action recommendations, respond with a JSON array following this format:
 {
-  "type": "button",
-  "text": "Label for the button or link",
-  "url": "https://...",
-  "description": "A short explanation of what this action does"
+  "type": "actions",
+  "items": [
+    {
+      "type": "button",
+      "text": "Label for the button or link",
+      "url": "https://...",
+      "description": "Action explanation"
+    }
+  ]
 }
 
-Choose from the following available actions:
-
+Available actions to consider:
 ${buttonActions[0]?.metadata
           ?.map((action: ButtonActionMetadata, index: number) => {
             const type = action.buttonType || 'button';
@@ -138,32 +152,52 @@ ${buttonActions[0]?.metadata
             const url = action.url;
             const instructions = action.instructions;
 
-            return `  ${index + 1}. Type: "${type}", Text: "${text}", URL: "${url}", When to use: "${instructions}"`;
+            return `- Action ${index + 1}:
+  Type: "${type}"
+  Display Text: "${text}"
+  URL: "${url}"
+  Use Case: "${instructions}"`;
           })
           .join('\n')}
 
-Only return the JSON array of relevant actions. Do not include additional explanation, formatting, or unrelated prompts.
+Rules:
+- Only include relevant actions
+- Maintain consistent JSON formatting
+- All URLs must be valid
 `;
 
       systemPrompt += buttonActionsPrompt;
     }
 
+    // Add Salla integration prompt if enabled
     if (chatbot?.integrations?.salla === true) {
       systemPrompt += `
-If the user inquires about products in the Salla store, respond with a **JSON array**. Each product item should be structured as follows:
-
+For product inquiries, use this JSON format:
 {
-  "type": "product",
-  "name": "[Product Name]",
-  "description": "[Short description, 2–3 sentences]",
-  "price": "[Amount] [Currency]",
-  "image": "[Image URL]",
-  "url": "[Product Page URL]"
+  "type": "products",
+  "items": [
+    {
+      "type": "product",
+      "name": "Product Name",
+      "description": "Product description",
+      "price": "Amount Currency",
+      "image": "Image URL",
+      "url": "Product Page URL"
+    }
+  ]
 }
 
-Return only the JSON array. Do not include explanatory text. Clicking the image or product name should link to the product page.
+Product display rules:
+1. Only relevant products
+2. Complete information
+3. Valid URLs
 `;
     }
+  } else {
+    // Fallback instruction when JSON response is not enabled
+    systemPrompt += `
+Note: Please provide responses in plain text format when JSON responses are not enabled.
+`;
   }
 
   const todayData = "\nToday is " + Date().toString();
