@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Check, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRef, useEffect, useState } from "react";
+import ButtonSignin from "./ButtonSignin";
 
 // <Pricing/> displays the pricing plans for your app
 // It's your Stripe config in config.js.stripe.plans[] that will be used to display the plans
@@ -30,7 +31,8 @@ export default function Pricing() {
         "Limit to 10 links to train on",
         "Embed on unlimited websites",
         "Capture leads",
-        "View chat history"
+        "View chat history",
+        "WhatsApp chatbot"
       ],
       cta: "Get started",
       popular: false,
@@ -51,7 +53,8 @@ export default function Pricing() {
         "Unlimited links to train on",
         "API access",
         "Integrations",
-        "Basic Analytics"
+        "Basic Analytics",
+        "Chatbot integration for Facebook and Instagram"
       ],
       cta: "Subscribe",
       popular: false
@@ -66,7 +69,11 @@ export default function Pricing() {
         "Everything in Hobby, plus...",
         "10,000 message credits/month",
         "5 chatbots",
-        "3 team members"
+        "3 team members",
+        "Unlimited YouTube links to train",
+        "Unlimited AI actions (agentic AI)",
+        "Calendar scheduling",
+        "Advanced social media chatbot actions"
       ],
       cta: "Subscribe",
       popular: true
@@ -84,7 +91,8 @@ export default function Pricing() {
         "5 team members",
         "Remove 'Powered by Chatbase'",
         "Use your own custom domains",
-        "Advanced Analytics"
+        "Advanced Analytics",
+        "Advanced Twitter and Shopify chatbot actions"
       ],
       cta: "Subscribe",
       popular: false,
@@ -249,7 +257,7 @@ export default function Pricing() {
                         <p className={`text-gray-600 mt-2 ${plan.popular ? 'group-hover:text-gray-200 transition-colors duration-500' : ''}`}>{plan.description}</p>
                       </div>
                       
-                      <div className="flex-grow overflow-y-auto mb-6 max-h-[280px] pr-2" style={{ scrollbarWidth: 'thin' }}>
+                      <div className="flex-grow  mb-6 max-h-[380px] pr-2" style={{ scrollbarWidth: 'thin' }}>
                         <ul className="space-y-3">
                           {plan.features.map((feature, i) => (
                             <li key={i} className="flex items-start">
@@ -264,17 +272,14 @@ export default function Pricing() {
                       </div>
                       
                       <div className="text-center mt-auto">
-                        <Link href={plan.name === "Unlimited" ? "/contact" : "/signup"}>
-                          <Button 
-                            className={`w-full py-4 text-lg font-semibold ${
-                              plan.popular 
-                                ? 'bg-indigo-600 text-white hover:bg-indigo-700 group-hover:bg-white group-hover:text-purple-600 group-hover:border-white transition-all duration-500' 
-                                : 'bg-white text-indigo-600 border border-indigo-600 hover:bg-indigo-50'
-                            }`}
-                          >
-                            {plan.cta}
-                          </Button>
-                        </Link>
+                        <ButtonSignin 
+                          text={plan.cta}
+                          extraStyle={`w-full py-4 text-lg font-semibold ${
+                            plan.popular 
+                              ? 'bg-indigo-600 text-white hover:bg-indigo-700 group-hover:bg-white group-hover:text-purple-600 group-hover:border-white transition-all duration-500' 
+                              : 'bg-white text-indigo-600 border border-indigo-600 hover:bg-indigo-50'
+                          }`}
+                        />
                       </div>
                     </div>
                   </div>
