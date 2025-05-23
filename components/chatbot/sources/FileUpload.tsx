@@ -88,7 +88,7 @@ export const FileUpload = ({ teamId, chatbotId, setFileCount, setFileChars, tota
     try {
       if (!datasetId) return;
       await Promise.all(acceptedFiles.map(async (file) => {
-        if (file.size > 15 * 1024 * 1024) { // 15MB in bytes
+        if (file.size > 200 * 1024 * 1024) { // 15MB in bytes
           toast.error(`File size exceeds 15MB. Please upload a smaller file.`);
           return;
         }
