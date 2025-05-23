@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, X } from 'lucide-react';
 
 // Note: This metadata export won't work in client components, so we'll need to move it
 // export const metadata: Metadata = {
@@ -145,28 +146,59 @@ export default function ChatbotTemplates() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState('Recently added');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   
-  // Get tag from URL parameters
+  // Get tag from URL parameters and sync with component state
   useEffect(() => {
     const tagParam = searchParams.get('tag');
     if (tagParam) {
       setSelectedTag(tagParam);
       setSelectedCategory(''); // Clear category when filtering by tag
+      setSearchQuery(''); // Clear search when filtering by tag
+    } else {
+      // If no tag parameter, reset to default state
+      setSelectedTag(null);
+      if (!searchQuery.trim()) {
+        setSelectedCategory('Recently added');
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, searchQuery]);
 
-  // Filter templates based on category or tag
-  const filteredTemplates = selectedTag 
-    ? templates.filter(template => 
+  // Filter templates based on category, tag, or search query
+  const filteredTemplates = (() => {
+    let filtered = templates;
+
+    // If there's a search query, search through all templates
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      
+      filtered = templates.filter(template => 
+        template.title.toLowerCase().includes(query) ||
+        template.description.toLowerCase().includes(query) ||
+        template.tags.some(tag => tag.toLowerCase().includes(query)) ||
+        template.category.toLowerCase().includes(query)
+      );
+    }
+    // If there's a tag filter, apply it
+    else if (selectedTag) {
+      filtered = templates.filter(template => 
         template.tags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())
-      )
-    : selectedCategory === 'Recently added' 
-      ? templates 
-      : templates.filter(template => template.category === selectedCategory);
+      );
+    } 
+    // If there's a category filter, apply it
+    else if (selectedCategory === 'Recently added') {
+      filtered = templates;
+    } else {
+      filtered = templates.filter(template => template.category === selectedCategory);
+    }
+
+    return filtered;
+  })();
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setSelectedTag(null);
+    setSearchQuery(''); // Clear search when changing category
     // Update URL to remove tag parameter
     router.push('/chatbot-templates');
   };
@@ -174,14 +206,38 @@ export default function ChatbotTemplates() {
   const handleTagClick = (tag: string) => {
     setSelectedTag(tag);
     setSelectedCategory('');
+    setSearchQuery(''); // Clear search when clicking tag
     // Update URL with tag parameter
     router.push(`/chatbot-templates?tag=${encodeURIComponent(tag)}`);
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    // Clear category and tag filters when searching
+    if (e.target.value.trim()) {
+      setSelectedCategory('');
+      setSelectedTag(null);
+    } else {
+      // When search is cleared, reset to default state
+      setSelectedCategory('Recently added');
+      setSelectedTag(null);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSelectedCategory('Recently added');
+    setSelectedTag(null);
+    router.push('/chatbot-templates');
+  };
+
   // Get display title based on current filter
   const getDisplayTitle = () => {
+    if (searchQuery.trim()) {
+      return `${filteredTemplates.length} Templates found for "${searchQuery}"`;
+    }
     if (selectedTag) {
-      return `Templates tagged with "${selectedTag}"`;
+      return `${filteredTemplates.length} Templates tagged with "${selectedTag}"`;
     }
     return `Found ${filteredTemplates.length} Chatbot Templates`;
   };
@@ -194,23 +250,43 @@ export default function ChatbotTemplates() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {getDisplayTitle()}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-6">
             Create bots for Facebook Messenger and Websites in minutes. No coding or technical skills required.
           </p>
           
+          {/* Search Bar */}
+          <div className="relative max-w-md mb-4">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search templates..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              </button>
+            )}
+          </div>
+          
           {/* Show active filter */}
-          {selectedTag && (
-            <div className="mt-4 flex items-center space-x-2">
-              <span className="text-sm text-gray-500">Filtering by tag:</span>
+          {(selectedTag || searchQuery) && (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">
+                {searchQuery ? 'Searching for:' : 'Filtering by tag:'}
+              </span>
               <span className="bg-blue-100 text-blue-700 text-sm px-3 py-1 rounded-full font-medium">
-                {selectedTag}
+                {searchQuery || selectedTag}
               </span>
               <button
-                onClick={() => {
-                  setSelectedTag(null);
-                  setSelectedCategory('Recently added');
-                  router.push('/chatbot-templates');
-                }}
+                onClick={clearSearch}
                 className="text-sm text-blue-600 hover:text-blue-800 underline"
               >
                 Clear filter
@@ -230,7 +306,7 @@ export default function ChatbotTemplates() {
                     key={index}
                     onClick={() => handleCategoryChange(category)}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all duration-200 ${
-                      selectedCategory === category && !selectedTag
+                      selectedCategory === category && !selectedTag && !searchQuery
                         ? 'bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-500' 
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:translate-x-1'
                     }`}
@@ -346,20 +422,19 @@ export default function ChatbotTemplates() {
               <div className="text-center py-12">
                 <div className="text-gray-400 text-lg mb-2">No templates found</div>
                 <div className="text-gray-500 text-sm">
-                  {selectedTag ? `No templates found with tag "${selectedTag}"` : 'Try selecting a different category'}
+                  {searchQuery 
+                    ? `No templates found matching "${searchQuery}"`
+                    : selectedTag 
+                      ? `No templates found with tag "${selectedTag}"` 
+                      : 'Try selecting a different category'
+                  }
                 </div>
-                {selectedTag && (
-                  <button
-                    onClick={() => {
-                      setSelectedTag(null);
-                      setSelectedCategory('Recently added');
-                      router.push('/chatbot-templates');
-                    }}
-                    className="mt-4 text-blue-600 hover:text-blue-800 underline"
-                  >
-                    View all templates
-                  </button>
-                )}
+                <button
+                  onClick={clearSearch}
+                  className="mt-4 text-blue-600 hover:text-blue-800 underline"
+                >
+                  {searchQuery || selectedTag ? 'Clear search and view all templates' : 'View all templates'}
+                </button>
               </div>
             )}
           </div>

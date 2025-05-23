@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Header from '@/components/Header';
 
 export const metadata: Metadata = {
   title: 'Chatbot Templates | ChatSa',
@@ -45,5 +46,12 @@ export default function ChatbotTemplatesLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <>
+      <Header />
+      <div className="pt-20">
+        {children}
+      </div>
+    </>
+  );
 } 
