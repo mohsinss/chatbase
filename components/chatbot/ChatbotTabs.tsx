@@ -47,13 +47,10 @@ const TABS: ReadonlyArray<Tab> = [
     id: "reactions", 
     label: "Reactions",
     subRoutes: [
-      { id: "whatsapp", label: "WhatsApp" },
-      { id: "facebook", label: "Facebook" },
-      { id: "instagram", label: "Instagram" },
-      { id: "twitter", label: "Twitter" },
-      { id: "linkedin", label: "LinkedIn" }
+      { id: "reactions", label: "Reactions" },
+      { id: "publisher", label: "Publisher" }
     ],
-    defaultSubRoute: "whatsapp",
+    defaultSubRoute: "reactions",
   },
   { 
     id: "analytics", 
@@ -65,7 +62,7 @@ const TABS: ReadonlyArray<Tab> = [
     ],
     defaultSubRoute: "chats",
   },
-  { id: "sources", label: "Sources" },
+  { id: "sources", label: "Knowledge Base" },
   { 
     id: "actions", 
     label: "Actions", 
@@ -76,8 +73,8 @@ const TABS: ReadonlyArray<Tab> = [
     ],
     defaultSubRoute: "main",
   },
-  { id: "contacts", label: "Contacts", badge: "New" },
-  { id: "publisher", label: "Publisher", badge: "New", defaultSubRoute: "whatsapp" },
+  // { id: "contacts", label: "Contacts", badge: "New" },
+  // { id: "publisher", label: "Publisher", badge: "New", defaultSubRoute: "whatsapp" },
   { id: "connect", label: "Connect", defaultSubRoute: "embed" },
   { 
     id: "settings", 
@@ -119,20 +116,24 @@ const ChatbotTabs = ({
   return (
     <div className="border-b">
       <div className="max-w-6xl mx-auto px-8">
-        <div className="flex justify-start space-x-1 overflow-x-auto scrollbar-hide">
+        <div className="flex justify-center space-x-1 overflow-x-auto scrollbar-hide">
           {TABS.map((tab) => (
             <Link
               key={tab.id}
               href={getTabHref(tab)}
               className={`px-4 py-2 relative flex items-center gap-2 text-sm font-medium transition-colors
                 ${(currentTab === tab.id || (tab.id === 'playground' && pathParts.length === 5)) 
-                  ? "text-primary border-b-2 border-primary" 
+                  ? "text-purple-600 border-b-2 border-purple-800" 
                   : "text-gray-600 hover:text-gray-900"
                 }`}
             >
               {tab.label}
               {tab.badge && (
-                <span className="px-1.5 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                <span className={`px-1.5 py-0.5 text-xs font-medium rounded-full ${
+                  (currentTab === tab.id || (tab.id === 'playground' && pathParts.length === 5))
+                    ? "bg-purple-100 text-purple-600"
+                    : "bg-primary/10 text-primary"
+                }`}>
                   {tab.badge}
                 </span>
               )}
