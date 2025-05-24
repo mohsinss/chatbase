@@ -35,11 +35,15 @@ interface SettingsData {
   commentDmEnabled: boolean;
   commentDmPrompt: string;
   commentDmDelay: number;
+  commentDmPublicReply: boolean;
+  commentDmPublicReplyText: string;
   storyReactionEnabled: boolean;
   storyReactionPrompt: string;
   storyReactionDelay: number;
   keywordDmEnabled: boolean;
   keywordTriggers: KeywordTrigger[];
+  keywordDmPublicReply: boolean;
+  keywordDmPublicReplyText: string;
   likeDmEnabled: boolean;
   likeDmPrompt: string;
   likeDmDelay: number;
@@ -143,13 +147,17 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
   const [settingsData, setSettingsData] = useState<SettingsData>({
     // Original reactions - keeping these
     commentDmEnabled: false,
-    commentDmPrompt: "Thanks for your comment! I'd love to continue this conversation in DMs.",
+    commentDmPrompt: "Thanks for your comment! 💬 Check your DMs for a special message! 📩",
     commentDmDelay: 0,
+    commentDmPublicReply: false,
+    commentDmPublicReplyText: "Thanks for your comment! 💬 Check your DMs for a special message! 📩",
     storyReactionEnabled: false,
     storyReactionPrompt: "Thanks for reacting to my story! What did you think about it?",
     storyReactionDelay: 0,
     keywordDmEnabled: false,
     keywordTriggers: [],
+    keywordDmPublicReply: false,
+    keywordDmPublicReplyText: "Thanks for your comment! 💬 Check your DMs for a special message! 📩",
     likeDmEnabled: false,
     likeDmPrompt: "Thanks for liking our post! We're glad you enjoyed it. How can we help you today?",
     likeDmDelay: 0,
@@ -251,8 +259,10 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
         ...prev,
         // Original reactions test data
         commentDmEnabled: true,
+        commentDmPublicReply: true,
         storyReactionEnabled: true,
         keywordDmEnabled: true,
+        keywordDmPublicReply: true,
         keywordTriggers: [
           { keyword: "collab", prompt: "Let's collaborate! I'll send you our partnership details.", delay: 2 },
           { keyword: "price", prompt: "Here's our current pricing and special Instagram discount!", delay: 1 }
@@ -767,25 +777,69 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                 <div className={`p-4 space-y-4 ${!section.enabled || !canInteract ? 'opacity-50 pointer-events-none' : ''}`}>
                   {/* Comment DM specific settings */}
                   {section.id === 'commentDm' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Comment DM Template</label>
-                        <textarea
-                          className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus} resize-none`}
-                          rows={3}
-                          value={settingsData.commentDmPrompt}
-                          onChange={(e) => setSettingsData({ ...settingsData, commentDmPrompt: e.target.value })}
-                          placeholder="Enter message for comment authors..."
-                        />
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            DM Message Template
+                            <span className="text-gray-500 text-xs block font-normal">Private message sent to the commenter</span>
+                          </label>
+                          <textarea
+                            className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus} resize-none`}
+                            rows={3}
+                            value={settingsData.commentDmPrompt}
+                            onChange={(e) => setSettingsData({ ...settingsData, commentDmPrompt: e.target.value })}
+                            placeholder="Enter the private DM message to send to comment authors..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">DM Delay (seconds)</label>
+                          <input
+                            type="number"
+                            className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus}`}
+                            value={settingsData.commentDmDelay}
+                            onChange={(e) => setSettingsData({ ...settingsData, commentDmDelay: Number(e.target.value) })}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">How long to wait before sending the private DM</p>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Delay (seconds)</label>
-                        <input
-                          type="number"
-                          className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus}`}
-                          value={settingsData.commentDmDelay}
-                          onChange={(e) => setSettingsData({ ...settingsData, commentDmDelay: Number(e.target.value) })}
-                        />
+                      
+                      {/* Public Reply Option */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <input
+                            type="checkbox"
+                            id="commentDmPublicReply"
+                            checked={settingsData.commentDmPublicReply}
+                            onChange={(e) => setSettingsData({ ...settingsData, commentDmPublicReply: e.target.checked })}
+                            className={`rounded border-gray-300 ${colors.switch} focus:ring-2 ${colors.focus}`}
+                          />
+                          <label htmlFor="commentDmPublicReply" className="text-sm font-medium text-gray-700">
+                            Also write a public comment reply first
+                          </label>
+                        </div>
+                        <p className="text-xs text-blue-600 mb-3">
+                          💡 <strong>Flow:</strong> Public comment reply → Wait for delay → Send private DM
+                        </p>
+                        
+                        {settingsData.commentDmPublicReply && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Public Comment Reply Text
+                              <span className="text-gray-500 text-xs block font-normal">Visible to everyone under their comment</span>
+                            </label>
+                            <input
+                              type="text"
+                              className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus}`}
+                              value={settingsData.commentDmPublicReplyText}
+                              onChange={(e) => setSettingsData({ ...settingsData, commentDmPublicReplyText: e.target.value })}
+                              placeholder="Thanks for your comment! 💬 Check your DMs for a special message! 📩"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              This public reply will appear under their comment, then we'll send the private DM above
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -842,7 +896,45 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
 
                   {/* Keyword DM specific settings */}
                   {section.id === 'keywordDm' && (
-                    <>
+                    <div className="space-y-4">
+                      {/* Public Reply Option */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <input
+                            type="checkbox"
+                            id="keywordDmPublicReply"
+                            checked={settingsData.keywordDmPublicReply}
+                            onChange={(e) => setSettingsData({ ...settingsData, keywordDmPublicReply: e.target.checked })}
+                            className={`rounded border-gray-300 ${colors.switch} focus:ring-2 ${colors.focus}`}
+                          />
+                          <label htmlFor="keywordDmPublicReply" className="text-sm font-medium text-gray-700">
+                            Also write a public comment reply first
+                          </label>
+                        </div>
+                        <p className="text-xs text-blue-600 mb-3">
+                          💡 <strong>Flow:</strong> Public comment reply → Wait for delay → Send private DM with keyword response
+                        </p>
+                        
+                        {settingsData.keywordDmPublicReply && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Public Comment Reply Text
+                              <span className="text-gray-500 text-xs block font-normal">Visible to everyone under their comment</span>
+                            </label>
+                            <input
+                              type="text"
+                              className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus}`}
+                              value={settingsData.keywordDmPublicReplyText}
+                              onChange={(e) => setSettingsData({ ...settingsData, keywordDmPublicReplyText: e.target.value })}
+                              placeholder="Thanks for your comment! 💬 Check your DMs for a special message! 📩"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              This public reply will appear under their comment, then we'll send the private DM based on keyword match
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
                       {(settingsData.keywordTriggers || []).length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
                           <div className="flex flex-col items-center gap-2">
@@ -885,8 +977,8 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                                 </div>
                                 <div>
                                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Custom Response
-                                    <span className="text-gray-400">(optional)</span>
+                                    DM Response for This Keyword
+                                    <span className="text-gray-500 text-xs block font-normal">Private message sent when this keyword is detected</span>
                                   </label>
                                   <input
                                     type="text"
@@ -897,12 +989,12 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                                       newTriggers[index].prompt = e.target.value;
                                       setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
                                     }}
-                                    placeholder="Leave empty to use default response"
+                                    placeholder="Enter specific DM response for this keyword..."
                                   />
-                                  <p className="text-xs text-gray-500 mt-1">Override default response for this keyword</p>
+                                  <p className="text-xs text-gray-500 mt-1">This private DM will be sent when the keyword is detected</p>
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">Delay (seconds)</label>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">DM Delay (seconds)</label>
                                   <input
                                     type="number"
                                     className={`w-full border border-gray-300 rounded-lg p-2 ${colors.focus}`}
@@ -913,6 +1005,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                                       setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
                                     }}
                                   />
+                                  <p className="text-xs text-gray-500 mt-1">How long to wait before sending the private DM</p>
                                 </div>
                               </div>
 
@@ -969,7 +1062,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                           ))}
                         </div>
                       )}
-                    </>
+                    </div>
                   )}
 
                   {/* Like DM specific settings */}
@@ -1328,20 +1421,20 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                               </div>
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Custom Response
-                                  <span className="text-gray-400">(optional)</span>
+                                  DM Response for This Keyword
+                                  <span className="text-gray-500 text-xs block font-normal">Private message sent when this keyword is detected</span>
                                 </label>
                                 <input
                                   type="text"
                                   className={`w-full border border-gray-300 rounded-lg p-2 ${colors.focus}`}
                                   value={trigger.prompt}
                                   onChange={(e) => updateKeywordTrigger(fieldName, index, 'prompt', e.target.value)}
-                                  placeholder="Leave empty to use default response"
+                                  placeholder="Enter specific DM response for this keyword..."
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Override default response for this keyword</p>
+                                <p className="text-xs text-gray-500 mt-1">This private DM will be sent when the keyword is detected</p>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Delay (seconds)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">DM Delay (seconds)</label>
                                 <input
                                   type="number"
                                   className={`w-full border border-gray-300 rounded-lg p-2 ${colors.focus}`}

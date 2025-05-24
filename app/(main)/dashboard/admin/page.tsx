@@ -13,6 +13,17 @@ interface ChatbotType {
   conversationCount: number;
 }
 
+interface RecentActivity {
+  userId: string;
+  userName: string;
+  teamId: string;
+  chatbotId: string;
+  chatbotName: string;
+  timestamp: string;
+  userMessage: string;
+  botResponse: string;
+}
+
 interface TeamType {
   teamId: string;
   chatbots: ChatbotType[];
@@ -33,6 +44,7 @@ interface UserType {
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState<UserType[]>([]);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingChatbot, setDeletingChatbot] = useState<string | null>(null);
@@ -66,11 +78,21 @@ export default function AdminDashboard() {
       
       setAuthChecking(false);
 
-      const usersRes = await fetch('/api/admin/users');
+      // Fetch users and recent activities in parallel
+      const [usersRes, activitiesRes] = await Promise.all([
+        fetch('/api/admin/users'),
+        fetch('/api/admin/recent-activities')
+      ]);
+      
       if (!usersRes.ok) throw new Error('Failed to fetch users');
       
-      const data = await usersRes.json();
-      setUsers(data);
+      const userData = await usersRes.json();
+      setUsers(userData);
+
+      if (activitiesRes.ok) {
+        const activitiesData = await activitiesRes.json();
+        setRecentActivities(activitiesData);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
@@ -373,6 +395,7 @@ export default function AdminDashboard() {
         
         <AdminMetrics 
           users={users}
+          recentActivities={recentActivities}
           onChatbotSelect={handleChatbotSelect}
         />
 
