@@ -1,6 +1,6 @@
 {
-  "name": "ship-fast-code",
-  "version": "0.1.0",
+  "name": "chatsa",
+  "version": "0.8.2",
   "private": true,
   "scripts": {
     "dev-base": "next dev",

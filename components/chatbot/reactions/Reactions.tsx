@@ -160,7 +160,7 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
       case "instagram":
         return <InstagramReactions chatbot={chatbot} />;
       case "twitter":
-        return <TwitterReactions />;
+        return <TwitterReactions chatbot={chatbot} />;
       case "linkedin":
         return <LinkedInReactions chatbot={chatbot} />;
       case "slack":
