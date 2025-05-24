@@ -1,4 +1,4 @@
-import PricingSection from "@/components/PricingSection";
+import Pricing from "@/components/Pricing";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
 import { getTeams } from "@/libs/teams";
@@ -13,5 +13,9 @@ export default async function PricingPage() {
     teams = await getTeams(session.user.id);
   }
 
-  return <PricingSection is_signed={is_signed} team={teams ? teams[0] : null}/>;
+  return (
+    <div className="min-h-screen">
+      <Pricing />
+    </div>
+  );
 } 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Switch } from "@headlessui/react";
-import { IconInfoCircle, IconBrandSnapchat } from "@tabler/icons-react";
+import { IconInfoCircle, IconBrandSnapchat, IconPlus, IconTrash, IconAlertTriangle } from "@tabler/icons-react";
 import Spinner from "@/components/Spinner";
 
 const SnapchatReactions = () => {
@@ -38,208 +38,293 @@ const SnapchatReactions = () => {
     }
   };
 
+  const addKeywordSetting = () => {
+    setSettingsData({
+      ...settingsData,
+      keywordSettings: [...(settingsData.keywordSettings || []), { keyword: "", prompt: "", delay: 0 }]
+    });
+  };
+
+  const removeKeywordSetting = (index: number) => {
+    const newSettings = [...(settingsData.keywordSettings || [])];
+    newSettings.splice(index, 1);
+    setSettingsData({ ...settingsData, keywordSettings: newSettings });
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Fixed Snapchat header */}
-      <div className="sticky top-0 z-10">
-        <div className="bg-[#FFFC00] text-black p-6">
+    <div className="bg-yellow-50 border border-yellow-200 rounded-lg overflow-hidden">
+      {/* Connection Status Banner */}
+      {!isConnected && (
+        <div className="bg-orange-50 border-b border-orange-200 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <IconAlertTriangle className="w-5 h-5 text-orange-500" />
+              <div>
+                <p className="text-sm font-medium text-orange-800">Snapchat Not Connected</p>
+                <p className="text-xs text-orange-600">Connect your Snapchat account to enable these features</p>
+              </div>
+            </div>
+            <button 
+              onClick={handleConnect}
+              disabled={isConnecting}
+              className="px-4 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+            >
+              {isConnecting ? "Connecting..." : "Connect Snapchat"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black p-6">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <IconBrandSnapchat className="w-8 h-8 text-black" />
+            <IconBrandSnapchat className="w-8 h-8" />
             <div>
               <h1 className="text-2xl font-semibold">Snapchat Reactions</h1>
-              <p className="mt-1 text-black/80">Manage your Snapchat chatbot reactions and settings.</p>
+              <p className="mt-1 text-black/80">Manage your Snapchat chatbot reactions and automated messages</p>
             </div>
           </div>
+          {isConnected && (
+            <div className="flex items-center gap-2 text-sm bg-black/20 px-3 py-1 rounded-full">
+              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+              Connected
+            </div>
+          )}
         </div>
       </div>
       
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-6 p-6 bg-[#F7F9F9]">
-          <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Story View Settings</h3>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={settingsData.storyViewEnabled}
-                    onChange={(enabled) => setSettingsData({ ...settingsData, storyViewEnabled: enabled })}
-                    className={`${settingsData.storyViewEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                  >
-                    <span className={`${settingsData.storyViewEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                  </Switch>
-                  <span className="text-sm font-medium text-gray-700">Respond to Story Views</span>
-                </div>
-              </div>
-
-              <div className={`space-y-4 ${!settingsData.storyViewEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Response Template</label>
-                  <textarea
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-                    value={settingsData.storyViewPrompt}
-                    onChange={(e) => setSettingsData({ ...settingsData, storyViewPrompt: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Delay (seconds)</label>
-                  <input
-                    type="number"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={settingsData.storyViewDelay}
-                    onChange={(e) => setSettingsData({ ...settingsData, storyViewDelay: Number(e.target.value) })}
-                  />
-                </div>
+      {/* Content */}
+      <div className={`p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto ${!isConnected ? 'opacity-60' : ''}`}>
+        {/* Story View Settings */}
+        <div className="bg-white rounded-lg border border-yellow-200 overflow-hidden">
+          <div className="p-4 bg-yellow-50 border-b border-yellow-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={settingsData.storyViewEnabled}
+                  onChange={(enabled) => setSettingsData({ ...settingsData, storyViewEnabled: enabled })}
+                  disabled={!isConnected}
+                  className={`${settingsData.storyViewEnabled ? 'bg-yellow-500' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50`}
+                >
+                  <span className={`${settingsData.storyViewEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                </Switch>
+                <h3 className="text-lg font-semibold text-yellow-700">Story View Responses</h3>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Snap Settings</h3>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={settingsData.snapEnabled}
-                    onChange={(enabled) => setSettingsData({ ...settingsData, snapEnabled: enabled })}
-                    className={`${settingsData.snapEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                  >
-                    <span className={`${settingsData.snapEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                  </Switch>
-                  <span className="text-sm font-medium text-gray-700">Respond to Snaps</span>
-                </div>
+          <div className={`p-4 space-y-4 ${!settingsData.storyViewEnabled || !isConnected ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Response Template</label>
+                <textarea
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 resize-none"
+                  rows={3}
+                  value={settingsData.storyViewPrompt}
+                  onChange={(e) => setSettingsData({ ...settingsData, storyViewPrompt: e.target.value })}
+                  placeholder="Enter message for story viewers..."
+                />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Delay (seconds)</label>
+                <input
+                  type="number"
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  value={settingsData.storyViewDelay}
+                  onChange={(e) => setSettingsData({ ...settingsData, storyViewDelay: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
-              <div className={`space-y-4 ${!settingsData.snapEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Response Template</label>
-                  <textarea
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-                    value={settingsData.snapPrompt}
-                    onChange={(e) => setSettingsData({ ...settingsData, snapPrompt: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Delay (seconds)</label>
-                  <input
-                    type="number"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={settingsData.snapDelay}
-                    onChange={(e) => setSettingsData({ ...settingsData, snapDelay: Number(e.target.value) })}
-                  />
-                </div>
+        {/* Snap Settings */}
+        <div className="bg-white rounded-lg border border-yellow-200 overflow-hidden">
+          <div className="p-4 bg-yellow-50 border-b border-yellow-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={settingsData.snapEnabled}
+                  onChange={(enabled) => setSettingsData({ ...settingsData, snapEnabled: enabled })}
+                  disabled={!isConnected}
+                  className={`${settingsData.snapEnabled ? 'bg-yellow-500' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50`}
+                >
+                  <span className={`${settingsData.snapEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                </Switch>
+                <h3 className="text-lg font-semibold text-yellow-700">Snap Responses</h3>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Chat Settings</h3>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={settingsData.chatEnabled}
-                    onChange={(enabled) => setSettingsData({ ...settingsData, chatEnabled: enabled })}
-                    className={`${settingsData.chatEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                  >
-                    <span className={`${settingsData.chatEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                  </Switch>
-                  <span className="text-sm font-medium text-gray-700">Enable Chat Responses</span>
-                </div>
+          <div className={`p-4 space-y-4 ${!settingsData.snapEnabled || !isConnected ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Response Template</label>
+                <textarea
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 resize-none"
+                  rows={3}
+                  value={settingsData.snapPrompt}
+                  onChange={(e) => setSettingsData({ ...settingsData, snapPrompt: e.target.value })}
+                  placeholder="Enter message for snap responses..."
+                />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Delay (seconds)</label>
+                <input
+                  type="number"
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  value={settingsData.snapDelay}
+                  onChange={(e) => setSettingsData({ ...settingsData, snapDelay: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
-              <div className={`space-y-4 ${!settingsData.chatEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Response Template</label>
-                  <textarea
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-                    value={settingsData.chatPrompt}
-                    onChange={(e) => setSettingsData({ ...settingsData, chatPrompt: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Delay (seconds)</label>
-                  <input
-                    type="number"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={settingsData.chatDelay}
-                    onChange={(e) => setSettingsData({ ...settingsData, chatDelay: Number(e.target.value) })}
-                  />
-                </div>
+        {/* Chat Settings */}
+        <div className="bg-white rounded-lg border border-yellow-200 overflow-hidden">
+          <div className="p-4 bg-yellow-50 border-b border-yellow-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={settingsData.chatEnabled}
+                  onChange={(enabled) => setSettingsData({ ...settingsData, chatEnabled: enabled })}
+                  disabled={!isConnected}
+                  className={`${settingsData.chatEnabled ? 'bg-yellow-500' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50`}
+                >
+                  <span className={`${settingsData.chatEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                </Switch>
+                <h3 className="text-lg font-semibold text-yellow-700">Chat Responses</h3>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Keyword Triggers</h3>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={settingsData.keywordEnabled}
-                    onChange={(enabled) => setSettingsData({ ...settingsData, keywordEnabled: enabled })}
-                    className={`${settingsData.keywordEnabled ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                  >
-                    <span className={`${settingsData.keywordEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                  </Switch>
-                  <span className="text-sm font-medium text-gray-700">Enable Keyword Triggers</span>
-                </div>
+          <div className={`p-4 space-y-4 ${!settingsData.chatEnabled || !isConnected ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Response Template</label>
+                <textarea
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 resize-none"
+                  rows={3}
+                  value={settingsData.chatPrompt}
+                  onChange={(e) => setSettingsData({ ...settingsData, chatPrompt: e.target.value })}
+                  placeholder="Enter message for chat responses..."
+                />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Delay (seconds)</label>
+                <input
+                  type="number"
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  value={settingsData.chatDelay}
+                  onChange={(e) => setSettingsData({ ...settingsData, chatDelay: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
-              <div className={`space-y-4 ${!settingsData.keywordEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
-                {(settingsData.keywordSettings || []).map((setting, index) => (
-                  <div key={index} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-lg">
+        {/* Keyword Triggers */}
+        <div className="bg-white rounded-lg border border-yellow-200 overflow-hidden">
+          <div className="p-4 bg-yellow-50 border-b border-yellow-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={settingsData.keywordEnabled}
+                  onChange={(enabled) => setSettingsData({ ...settingsData, keywordEnabled: enabled })}
+                  disabled={!isConnected}
+                  className={`${settingsData.keywordEnabled ? 'bg-yellow-500' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50`}
+                >
+                  <span className={`${settingsData.keywordEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
+                </Switch>
+                <h3 className="text-lg font-semibold text-yellow-700">Keyword Triggers</h3>
+              </div>
+              <button
+                onClick={addKeywordSetting}
+                disabled={!settingsData.keywordEnabled || !isConnected}
+                className="flex items-center gap-2 px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50"
+              >
+                <IconPlus className="w-4 h-4" />
+                Add Keyword
+              </button>
+            </div>
+          </div>
+
+          <div className={`p-4 space-y-4 ${!settingsData.keywordEnabled || !isConnected ? 'opacity-50 pointer-events-none' : ''}`}>
+            {(settingsData.keywordSettings || []).length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No keyword triggers configured. Click "Add Keyword" to get started.</p>
+              </div>
+            ) : (
+              (settingsData.keywordSettings || []).map((setting, index) => (
+                <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-gray-700">Keyword Trigger {index + 1}</h4>
+                    <button
+                      onClick={() => removeKeywordSetting(index)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <IconTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Keyword</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Keyword</label>
                       <input
                         type="text"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter keyword"
+                        className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                         value={setting.keyword}
                         onChange={(e) => {
                           const newSettings = [...(settingsData.keywordSettings || [])];
                           newSettings[index].keyword = e.target.value;
                           setSettingsData({ ...settingsData, keywordSettings: newSettings });
                         }}
+                        placeholder="Enter keyword"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Response</label>
-                      <textarea
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Enter response for this keyword"
-                        value={setting.response}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Response</label>
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                        value={setting.prompt}
                         onChange={(e) => {
                           const newSettings = [...(settingsData.keywordSettings || [])];
-                          newSettings[index].response = e.target.value;
+                          newSettings[index].prompt = e.target.value;
+                          setSettingsData({ ...settingsData, keywordSettings: newSettings });
+                        }}
+                        placeholder="Enter response message"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Delay (seconds)</label>
+                      <input
+                        type="number"
+                        className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                        value={setting.delay}
+                        onChange={(e) => {
+                          const newSettings = [...(settingsData.keywordSettings || [])];
+                          newSettings[index].delay = Number(e.target.value);
                           setSettingsData({ ...settingsData, keywordSettings: newSettings });
                         }}
                       />
                     </div>
-                    <button
-                      onClick={() => {
-                        const newSettings = [...(settingsData.keywordSettings || [])];
-                        newSettings.splice(index, 1);
-                        setSettingsData({ ...settingsData, keywordSettings: newSettings });
-                      }}
-                      className="text-sm text-red-500 hover:text-red-700"
-                    >
-                      Remove Keyword
-                    </button>
                   </div>
-                ))}
-                <button
-                  onClick={() => {
-                    const newSettings = [...(settingsData.keywordSettings || []), { keyword: '', response: '' }];
-                    setSettingsData({ ...settingsData, keywordSettings: newSettings });
-                  }}
-                  className="text-sm font-medium text-blue-500 hover:text-blue-700"
-                >
-                  + Add Keyword
-                </button>
-              </div>
-            </div>
+                </div>
+              ))
+            )}
           </div>
+        </div>
+
+        {/* Save Button */}
+        <div className="flex justify-end pt-4 border-t border-yellow-200">
+          <button 
+            disabled={!isConnected}
+            className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Save Settings
+          </button>
         </div>
       </div>
     </div>

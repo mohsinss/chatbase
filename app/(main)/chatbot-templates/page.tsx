@@ -147,6 +147,7 @@ function ChatbotTemplatesContent() {
   const [selectedCategory, setSelectedCategory] = useState('Recently added');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedTemplates, setExpandedTemplates] = useState<Set<number>>(new Set());
   
   // Get tag from URL parameters and sync with component state
   useEffect(() => {
@@ -229,6 +230,18 @@ function ChatbotTemplatesContent() {
     setSelectedCategory('Recently added');
     setSelectedTag(null);
     router.push('/chatbot-templates');
+  };
+
+  const toggleExpandedTags = (templateId: number) => {
+    setExpandedTemplates(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(templateId)) {
+        newSet.delete(templateId);
+      } else {
+        newSet.add(templateId);
+      }
+      return newSet;
+    });
   };
 
   // Get display title based on current filter
@@ -446,7 +459,7 @@ function ChatbotTemplatesContent() {
                         
                         {/* Tags */}
                         <div className="flex flex-wrap gap-1 mb-4">
-                          {template.tags.slice(0, 3).map((tag, index) => (
+                          {(expandedTemplates.has(template.id) ? template.tags : template.tags.slice(0, 4)).map((tag, index) => (
                             <button
                               key={index}
                               onClick={(e) => {
@@ -459,10 +472,17 @@ function ChatbotTemplatesContent() {
                               {tag}
                             </button>
                           ))}
-                          {template.tags.length > 3 && (
-                            <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
-                              +{template.tags.length - 3}
-                            </span>
+                          {template.tags.length > 4 && (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleExpandedTags(template.id);
+                              }}
+                              className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
+                            >
+                              {expandedTemplates.has(template.id) ? '−' : `+${template.tags.length - 4}`}
+                            </button>
                           )}
                         </div>
                       </div>

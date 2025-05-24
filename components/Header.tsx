@@ -7,6 +7,7 @@ import Image from "next/image";
 import Announcement from "./Announcement";
 import ButtonSignin from "./ButtonSignin";
 import { Menu, X } from "lucide-react";
+import { useRouter } from 'next/navigation';
 
 // Domain configuration
 const ENGLISH_DOMAIN = process.env.NEXT_PUBLIC_ENGLISH_DOMAIN || 'chatsa.co';
@@ -139,6 +140,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isArabic, setIsArabic] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -154,8 +156,29 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     checkDomain();
     
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
+
+  const handlePricingClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Check if we're on the landing page (home page)
+    if (window.location.pathname === '/') {
+      // Scroll to pricing section on same page
+      const pricingSection = document.getElementById('pricing');
+      if (pricingSection) {
+        pricingSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // Navigate to dedicated pricing page
+      router.push('/pricing');
+    }
+    
+    // Close mobile menu if open
+    setIsMobileMenuOpen(false);
+  };
 
   const currentLinks = isArabic ? links.ar : links.en;
   const currentResources = isArabic ? resourcesDropdown.ar : resourcesDropdown.en;
@@ -176,9 +199,15 @@ const Header = () => {
             alt={brandName} 
             width={40} 
             height={40} 
-            className={isArabic ? "ml-2" : "mr-2"} 
+            className={`${isArabic ? "ml-2" : "mr-2"} cursor-pointer`}
+            onClick={() => router.push('/')}
           />
-          <span className="text-xl font-bold">{brandName}</span>
+          <span 
+            className="text-xl font-bold cursor-pointer" 
+            onClick={() => router.push('/')}
+          >
+            {brandName}
+          </span>
         </div>
         
         {/* Desktop Navigation */}
@@ -193,12 +222,12 @@ const Header = () => {
             <Link href="/blog" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
               {isArabic ? "المدونة" : "Blog"}
             </Link>
-            <a href="#pricing" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
+            <a href="#pricing" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap" onClick={handlePricingClick}>
               {isArabic ? "الأسعار" : "Pricing"}
             </a>
-            <a href="#faq" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
-              {isArabic ? "الأسئلة الشائعة" : "FAQ"}
-            </a>
+            <Link href="/chatbot-templates" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
+              {isArabic ? "القوالب" : "Templates"}
+            </Link>
           </div>
         </nav>
         
@@ -255,17 +284,17 @@ const Header = () => {
             <a 
               href="#pricing" 
               className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={handlePricingClick}
             >
               {isArabic ? "الأسعار" : "Pricing"}
             </a>
-            <a 
-              href="#faq" 
+            <Link 
+              href="/chatbot-templates" 
               className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              {isArabic ? "الأسئلة الشائعة" : "FAQ"}
-            </a>
+              {isArabic ? "القوالب" : "Templates"}
+            </Link>
             <div className={`flex flex-col space-y-2 ${isArabic ? "items-end" : ""}`}>
               <ButtonSignin 
                 text={isArabic ? "تسجيل الدخول" : "Sign in"}

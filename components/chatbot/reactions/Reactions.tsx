@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { IconSettings, IconMessageCircle, IconBrandWhatsapp, IconBrandFacebook, IconBrandInstagram, IconBrandTwitter, IconBrandLinkedin, IconBrandSlack, IconBrandWordpress, IconBrandSpotify, IconBrandSnapchat, IconBrandTiktok } from "@tabler/icons-react";
 import WhatsAppReactions from "./WhatsAppReactions";
 import FacebookReactions from "./FacebookReactions";
@@ -13,6 +14,7 @@ import WordPressReactions from "./WordPressReactions";
 import ShopifyReactions from "./ShopifyReactions";
 import SnapchatReactions from "./SnapchatReactions";
 import TikTokReactions from "./TikTokReactions";
+import Publisher from "../publisher/Publisher";
 
 interface ReactionsProps {
   chatbot: {
@@ -26,82 +28,131 @@ interface ReactionsProps {
   chatbotId: string;
 }
 
+const MAIN_TABS = [
+  { id: "reactions", label: "Reactions" },
+  { id: "publisher", label: "Publisher" },
+];
+
 const SIDEBAR_ITEMS = [
   {
     id: "whatsapp",
     label: "WhatsApp",
     icon: IconBrandWhatsapp,
-    color: "text-green-500",
+    color: "text-green-600",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
+    hoverColor: "hover:bg-green-100"
   },
   {
     id: "facebook",
     label: "Facebook",
     icon: IconBrandFacebook,
-    color: "text-blue-500",
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+    hoverColor: "hover:bg-blue-100"
   },
   {
     id: "instagram",
     label: "Instagram",
     icon: IconBrandInstagram,
-    color: "text-pink-500",
+    color: "text-pink-600",
+    bgColor: "bg-pink-50",
+    borderColor: "border-pink-200",
+    hoverColor: "hover:bg-pink-100"
   },
   {
     id: "twitter",
     label: "Twitter",
     icon: IconBrandTwitter,
-    color: "text-blue-400",
+    color: "text-sky-500",
+    bgColor: "bg-sky-50",
+    borderColor: "border-sky-200",
+    hoverColor: "hover:bg-sky-100"
   },
   {
     id: "linkedin",
     label: "LinkedIn",
     icon: IconBrandLinkedin,
-    color: "text-blue-600",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+    hoverColor: "hover:bg-blue-100"
   },
   {
     id: "slack",
     label: "Slack",
     icon: IconBrandSlack,
-    color: "text-purple-500",
+    color: "text-purple-600",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-200",
+    hoverColor: "hover:bg-purple-100"
   },
   {
     id: "wordpress",
     label: "WordPress",
     icon: IconBrandWordpress,
-    color: "text-gray-600",
+    color: "text-gray-700",
+    bgColor: "bg-gray-50",
+    borderColor: "border-gray-200",
+    hoverColor: "hover:bg-gray-100"
   },
   {
     id: "shopify",
     label: "Shopify",
     icon: IconBrandSpotify,
-    color: "text-green-600",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
+    hoverColor: "hover:bg-green-100"
   },
   {
     id: "snapchat",
     label: "Snapchat",
     icon: IconBrandSnapchat,
-    color: "text-yellow-500",
+    color: "text-yellow-600",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200",
+    hoverColor: "hover:bg-yellow-100"
   },
   {
     id: "tiktok",
     label: "TikTok",
     icon: IconBrandTiktok,
-    color: "text-black",
+    color: "text-gray-900",
+    bgColor: "bg-gray-50",
+    borderColor: "border-gray-200",
+    hoverColor: "hover:bg-gray-100"
   },
 ];
 
 const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
   const { subTab } = params;
-  const [activeTab, setActiveTab] = useState(subTab || "whatsapp");
+  
+  // Determine current main tab and sub tab
+  const currentMainTab = subTab === "publisher" ? "publisher" : "reactions";
+  const [activeReactionTab, setActiveReactionTab] = useState(
+    currentMainTab === "reactions" ? (subTab as string || "whatsapp") : "whatsapp"
+  );
 
-  const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId);
-    router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/reactions/${tabId}`);
+  const handleMainTabClick = (tabId: string) => {
+    if (tabId === "publisher") {
+      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/reactions/publisher`);
+    } else {
+      router.push(`/dashboard/${teamId}/chatbot/${chatbotId}/reactions/reactions`);
+    }
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
+  const handleReactionTabClick = (tabId: string) => {
+    setActiveReactionTab(tabId);
+    // Don't change URL for reaction sub-tabs, just update state
+  };
+
+  const renderReactionsContent = () => {
+    switch (activeReactionTab) {
       case "whatsapp":
         return <WhatsAppReactions chatbot={chatbot}/>;
       case "facebook":
@@ -109,7 +160,7 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
       case "instagram":
         return <InstagramReactions chatbot={chatbot} />;
       case "twitter":
-        return <TwitterReactions />;
+        return <TwitterReactions chatbot={chatbot} />;
       case "linkedin":
         return <LinkedInReactions chatbot={chatbot} />;
       case "slack":
@@ -128,41 +179,81 @@ const Reactions = ({ chatbot, teamId, chatbotId }: ReactionsProps) => {
   };
 
   return (
-    <div className="flex h-screen flex-row pl-8">
-      {/* Sidebar - Fixed */}
-      <div className="w-[70px] md:w-48 bg-white border-r border-gray-200 transition-all duration-200">
-        <div className="p-3 hidden md:block">
-          <h2 className="text-base font-semibold text-gray-900">Reactions</h2>
-          <p className="text-xs text-gray-500 mt-1">Manage your chatbot reactions</p>
-        </div>
-        <nav className="overflow-y-auto scrollbar-thin">
-          {SIDEBAR_ITEMS.map((item) => {
-            const Icon = item.icon;
-            return (
+    <div className="flex justify-center w-full">
+      <div className="w-full max-w-6xl p-4 md:p-6">
+        {/* Main Tab Navigation */}
+        <div className="mb-6">
+          <div className="flex justify-center space-x-4">
+            {MAIN_TABS.map((tab) => (
               <button
-                key={item.id}
-                onClick={() => handleTabClick(item.id)}
-                className={`w-full flex items-center justify-center md:justify-start px-2 md:px-3 py-4 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  activeTab === item.id
-                    ? "bg-primary/10 text-primary shadow-lg"
-                    : "text-gray-600 hover:bg-gray-50 hover:shadow-md"
-                } hover:scale-[1.02] active:scale-[0.98] ${
-                  activeTab === item.id 
-                    ? `hover:shadow-${item.color.split('-')[1]}-200/50`
-                    : 'hover:shadow-gray-200/50'
-                }`}
+                key={tab.id}
+                onClick={() => handleMainTabClick(tab.id)}
+                className={`px-6 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 border
+                  ${currentMainTab === tab.id
+                    ? "bg-primary text-white border-primary shadow-md"
+                    : "bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
+                  }`}
               >
-                <Icon className={`w-7 h-7 md:w-5 md:h-5 ${item.color} ${activeTab === item.id ? 'md:mr-2' : ''} transition-all`} />
-                <span className="hidden md:inline text-sm">{item.label}</span>
+                {tab.label}
               </button>
-            );
-          })}
-        </nav>
-      </div>
+            ))}
+          </div>
+        </div>
 
-      {/* Main Content - With offset for fixed sidebar */}
-      <div className="flex-1 overflow-hidden h-screen p-0 flex flex-col">
-        {renderContent()}
+        {/* Content Area */}
+        {currentMainTab === "reactions" ? (
+          <div className="md:flex md:space-x-8">
+            {/* Reactions Sidebar */}
+            <div className="mb-6 md:mb-0 md:w-48">
+              <div className="flex md:flex-col space-x-4 md:space-x-0 md:space-y-2 overflow-x-auto md:overflow-visible">
+                {SIDEBAR_ITEMS.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeReactionTab === item.id;
+                  const connected = chatbot?.integrations?.[item.id] || 
+                                  (item.id === 'facebook' && chatbot?.integrations?.['messenger']);
+                  
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleReactionTabClick(item.id)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 whitespace-nowrap w-full border
+                        ${isActive
+                          ? `${item.bgColor} ${item.color} ${item.borderColor} shadow-sm`
+                          : `text-gray-600 border-gray-200 ${item.hoverColor} hover:border-gray-300`
+                        }`}
+                    >
+                      <Icon className={`w-5 h-5 ${isActive ? item.color : 'text-gray-400'}`} />
+                      <span className="font-medium">{item.label}</span>
+                      {connected ? (
+                        <span className="ml-auto text-xs font-semibold text-green-600 bg-green-100 rounded-full px-2 py-1">
+                          ●
+                        </span>
+                      ) : (
+                        <span className="ml-auto text-xs font-semibold text-gray-400 bg-gray-100 rounded-full px-2 py-1">
+                          ○
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Reactions Content */}
+            <div className="flex-1">
+              {renderReactionsContent()}
+            </div>
+          </div>
+        ) : (
+          /* Publisher Content */
+          <div className="flex-1">
+            <Publisher 
+              teamId={teamId} 
+              chatbotId={chatbotId} 
+              chatbot={chatbot}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
