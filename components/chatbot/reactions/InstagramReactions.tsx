@@ -19,6 +19,7 @@ interface KeywordTrigger {
   keyword: string;
   prompt: string;
   delay: number;
+  delayUnit: 'seconds' | 'minutes' | 'hours';
   attachments?: FileAttachment[];
 }
 
@@ -35,11 +36,13 @@ interface SettingsData {
   commentDmEnabled: boolean;
   commentDmPrompt: string;
   commentDmDelay: number;
+  commentDmDelayUnit: 'seconds' | 'minutes' | 'hours';
   commentDmPublicReply: boolean;
   commentDmPublicReplyText: string;
   storyReactionEnabled: boolean;
   storyReactionPrompt: string;
   storyReactionDelay: number;
+  storyReactionDelayUnit: 'seconds' | 'minutes' | 'hours';
   keywordDmEnabled: boolean;
   keywordTriggers: KeywordTrigger[];
   keywordDmPublicReply: boolean;
@@ -47,17 +50,20 @@ interface SettingsData {
   likeDmEnabled: boolean;
   likeDmPrompt: string;
   likeDmDelay: number;
+  likeDmDelayUnit: 'seconds' | 'minutes' | 'hours';
   likeDmFirstOnly: boolean;
-  likeDmSpecificPosts: { postUrl: string; prompt: string; delay: number }[];
+  likeDmSpecificPosts: { postUrl: string; prompt: string; delay: number; delayUnit: 'seconds' | 'minutes' | 'hours' }[];
   followDmEnabled: boolean;
   followDmPrompt: string;
   followDmDelay: number;
+  followDmDelayUnit: 'seconds' | 'minutes' | 'hours';
   
   // Instagram Influencer Outreach
   influencerOutreachEnabled: boolean;
   influencerKeywords: KeywordTrigger[];
   influencerPrompt: string;
   influencerDelay: number;
+  influencerDelayUnit: 'seconds' | 'minutes' | 'hours';
   influencerAttachments: FileAttachment[];
   
   // UGC Content Collection
@@ -65,6 +71,7 @@ interface SettingsData {
   ugcKeywords: KeywordTrigger[];
   ugcPrompt: string;
   ugcDelay: number;
+  ugcDelayUnit: 'seconds' | 'minutes' | 'hours';
   ugcAttachments: FileAttachment[];
   
   // Instagram Shopping Assistant
@@ -72,6 +79,7 @@ interface SettingsData {
   shoppingKeywords: KeywordTrigger[];
   shoppingPrompt: string;
   shoppingDelay: number;
+  shoppingDelayUnit: 'seconds' | 'minutes' | 'hours';
   shoppingAttachments: FileAttachment[];
   
   // Story Poll/Quiz Engagement
@@ -79,6 +87,7 @@ interface SettingsData {
   storyEngagementKeywords: KeywordTrigger[];
   storyEngagementPrompt: string;
   storyEngagementDelay: number;
+  storyEngagementDelayUnit: 'seconds' | 'minutes' | 'hours';
   storyEngagementAttachments: FileAttachment[];
   
   // Reels Viral Boost
@@ -86,6 +95,7 @@ interface SettingsData {
   reelsKeywords: KeywordTrigger[];
   reelsPrompt: string;
   reelsDelay: number;
+  reelsDelayUnit: 'seconds' | 'minutes' | 'hours';
   reelsAttachments: FileAttachment[];
   
   // Brand Ambassador Recruitment
@@ -93,6 +103,7 @@ interface SettingsData {
   ambassadorKeywords: KeywordTrigger[];
   ambassadorPrompt: string;
   ambassadorDelay: number;
+  ambassadorDelayUnit: 'seconds' | 'minutes' | 'hours';
   ambassadorAttachments: FileAttachment[];
   
   // Instagram Live Engagement
@@ -100,6 +111,7 @@ interface SettingsData {
   liveKeywords: KeywordTrigger[];
   livePrompt: string;
   liveDelay: number;
+  liveDelayUnit: 'seconds' | 'minutes' | 'hours';
   liveAttachments: FileAttachment[];
   
   // Hashtag Campaign Management
@@ -107,6 +119,7 @@ interface SettingsData {
   hashtagKeywords: KeywordTrigger[];
   hashtagPrompt: string;
   hashtagDelay: number;
+  hashtagDelayUnit: 'seconds' | 'minutes' | 'hours';
   hashtagAttachments: FileAttachment[];
   
   // Instagram Contest Automation
@@ -114,6 +127,7 @@ interface SettingsData {
   contestKeywords: KeywordTrigger[];
   contestPrompt: string;
   contestDelay: number;
+  contestDelayUnit: 'seconds' | 'minutes' | 'hours';
   contestAttachments: FileAttachment[];
   
   // Micro-Influencer Discovery
@@ -121,6 +135,7 @@ interface SettingsData {
   microInfluencerKeywords: KeywordTrigger[];
   microInfluencerPrompt: string;
   microInfluencerDelay: number;
+  microInfluencerDelayUnit: 'seconds' | 'minutes' | 'hours';
   microInfluencerAttachments: FileAttachment[];
   
   // AI Detection toggles for each automation
@@ -149,11 +164,13 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     commentDmEnabled: false,
     commentDmPrompt: "Thanks for your comment! 💬 Check your DMs for a special message! 📩",
     commentDmDelay: 0,
+    commentDmDelayUnit: 'seconds',
     commentDmPublicReply: false,
     commentDmPublicReplyText: "Thanks for your comment! 💬 Check your DMs for a special message! 📩",
     storyReactionEnabled: false,
     storyReactionPrompt: "Thanks for reacting to my story! What did you think about it?",
     storyReactionDelay: 0,
+    storyReactionDelayUnit: 'seconds',
     keywordDmEnabled: false,
     keywordTriggers: [],
     keywordDmPublicReply: false,
@@ -161,17 +178,20 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     likeDmEnabled: false,
     likeDmPrompt: "Thanks for liking our post! We're glad you enjoyed it. How can we help you today?",
     likeDmDelay: 0,
+    likeDmDelayUnit: 'seconds',
     likeDmFirstOnly: false,
     likeDmSpecificPosts: [],
     followDmEnabled: false,
     followDmPrompt: "Thanks for following us! We're excited to connect with you. How can we help?",
     followDmDelay: 0,
+    followDmDelayUnit: 'seconds',
     
     // Instagram Influencer Outreach
     influencerOutreachEnabled: false,
     influencerKeywords: [],
     influencerPrompt: "🌟 Love your content! We'd love to collaborate with you. Check your DMs for partnership details!",
     influencerDelay: 2,
+    influencerDelayUnit: 'seconds',
     influencerAttachments: [],
     
     // UGC Content Collection
@@ -179,6 +199,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     ugcKeywords: [],
     ugcPrompt: "📸 Amazing content! We'd love to feature you on our page. Can we repost this with credit?",
     ugcDelay: 1,
+    ugcDelayUnit: 'seconds',
     ugcAttachments: [],
     
     // Instagram Shopping Assistant
@@ -186,6 +207,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     shoppingKeywords: [],
     shoppingPrompt: "🛍️ Interested in this product? Here's the direct link to purchase + exclusive discount code!",
     shoppingDelay: 1,
+    shoppingDelayUnit: 'seconds',
     shoppingAttachments: [],
     
     // Story Poll/Quiz Engagement
@@ -193,6 +215,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     storyEngagementKeywords: [],
     storyEngagementPrompt: "🎯 Thanks for participating in our story! Here's your personalized result and special offer:",
     storyEngagementDelay: 0,
+    storyEngagementDelayUnit: 'seconds',
     storyEngagementAttachments: [],
     
     // Reels Viral Boost
@@ -200,6 +223,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     reelsKeywords: [],
     reelsPrompt: "🔥 Your Reel is amazing! Want to boost its reach? Here's how we can help make it go viral:",
     reelsDelay: 3,
+    reelsDelayUnit: 'seconds',
     reelsAttachments: [],
     
     // Brand Ambassador Recruitment
@@ -207,6 +231,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     ambassadorKeywords: [],
     ambassadorPrompt: "👑 We love your vibe! Interested in becoming a brand ambassador? Here's our exclusive program:",
     ambassadorDelay: 2,
+    ambassadorDelayUnit: 'seconds',
     ambassadorAttachments: [],
     
     // Instagram Live Engagement
@@ -214,6 +239,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     liveKeywords: [],
     livePrompt: "🔴 Thanks for joining our Live! Here's the exclusive content/offer we mentioned:",
     liveDelay: 1,
+    liveDelayUnit: 'seconds',
     liveAttachments: [],
     
     // Hashtag Campaign Management
@@ -221,6 +247,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     hashtagKeywords: [],
     hashtagPrompt: "🏷️ Thanks for using our hashtag! You're entered in our campaign. Here are the details:",
     hashtagDelay: 2,
+    hashtagDelayUnit: 'seconds',
     hashtagAttachments: [],
     
     // Instagram Contest Automation
@@ -228,6 +255,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     contestKeywords: [],
     contestPrompt: "🎉 Contest entry confirmed! Here are the rules, prizes, and how to increase your chances:",
     contestDelay: 1,
+    contestDelayUnit: 'seconds',
     contestAttachments: [],
     
     // Micro-Influencer Discovery
@@ -235,6 +263,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
     microInfluencerKeywords: [],
     microInfluencerPrompt: "✨ We discovered your amazing content! Interested in paid collaborations? Here's our creator program:",
     microInfluencerDelay: 3,
+    microInfluencerDelayUnit: 'seconds',
     microInfluencerAttachments: [],
     
     // AI Detection toggles for each automation
@@ -264,8 +293,8 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
         keywordDmEnabled: true,
         keywordDmPublicReply: true,
         keywordTriggers: [
-          { keyword: "collab", prompt: "Let's collaborate! I'll send you our partnership details.", delay: 2 },
-          { keyword: "price", prompt: "Here's our current pricing and special Instagram discount!", delay: 1 }
+          { keyword: "collab", prompt: "Let's collaborate! I'll send you our partnership details.", delay: 2, delayUnit: 'seconds' },
+          { keyword: "price", prompt: "Here's our current pricing and special Instagram discount!", delay: 1, delayUnit: 'seconds' }
         ],
         likeDmEnabled: true,
         followDmEnabled: true,
@@ -273,16 +302,16 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
         // New automations test data
         influencerOutreachEnabled: true,
         influencerKeywords: [
-          { keyword: "influencer", prompt: "🌟 Perfect! Here's our influencer partnership package with rates and perks!", delay: 2 },
-          { keyword: "collab", prompt: "💫 Let's create something amazing together! Check out our collaboration terms:", delay: 1 }
+          { keyword: "influencer", prompt: "🌟 Perfect! Here's our influencer partnership package with rates and perks!", delay: 2, delayUnit: 'seconds' },
+          { keyword: "collab", prompt: "💫 Let's create something amazing together! Check out our collaboration terms:", delay: 1, delayUnit: 'seconds' }
         ],
         ugcCollectionEnabled: true,
         ugcKeywords: [
-          { keyword: "repost", prompt: "📸 Absolutely! We'd love to feature your content. Here's our UGC agreement:", delay: 1 }
+          { keyword: "repost", prompt: "📸 Absolutely! We'd love to feature your content. Here's our UGC agreement:", delay: 1, delayUnit: 'seconds' }
         ],
         shoppingAssistantEnabled: true,
         shoppingKeywords: [
-          { keyword: "buy", prompt: "🛍️ Here's your direct purchase link + 15% off with code INSTA15!", delay: 1 }
+          { keyword: "buy", prompt: "🛍️ Here's your direct purchase link + 15% off with code INSTA15!", delay: 1, delayUnit: 'seconds' }
         ],
         storyEngagementEnabled: true,
         reelsBoostEnabled: true,
@@ -310,7 +339,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
   const addKeywordTrigger = (field: string) => {
     setSettingsData({
       ...settingsData,
-      [field]: [...(settingsData[field] || []), { keyword: "", prompt: "", delay: 0 }]
+      [field]: [...(settingsData[field] || []), { keyword: "", prompt: "", delay: 0, delayUnit: 'seconds' }]
     });
   };
 
@@ -329,7 +358,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
   const addSpecificPost = () => {
     setSettingsData({
       ...settingsData,
-      likeDmSpecificPosts: [...(settingsData.likeDmSpecificPosts || []), { postUrl: "", prompt: "", delay: 0 }]
+      likeDmSpecificPosts: [...(settingsData.likeDmSpecificPosts || []), { postUrl: "", prompt: "", delay: 0, delayUnit: 'seconds' }]
     });
   };
 
@@ -380,6 +409,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       specificPosts: settingsData.likeDmSpecificPosts,
       prompt: settingsData.likeDmPrompt,
       delay: settingsData.likeDmDelay,
+      delayUnit: settingsData.likeDmDelayUnit,
       firstOnly: settingsData.likeDmFirstOnly
     },
     {
@@ -403,6 +433,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       keywords: settingsData.influencerKeywords,
       prompt: settingsData.influencerPrompt,
       delay: settingsData.influencerDelay,
+      delayUnit: settingsData.influencerDelayUnit,
       color: 'yellow'
     },
     {
@@ -414,6 +445,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       keywords: settingsData.ugcKeywords,
       prompt: settingsData.ugcPrompt,
       delay: settingsData.ugcDelay,
+      delayUnit: settingsData.ugcDelayUnit,
       color: 'green'
     },
     {
@@ -425,6 +457,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       keywords: settingsData.shoppingKeywords,
       prompt: settingsData.shoppingPrompt,
       delay: settingsData.shoppingDelay,
+      delayUnit: settingsData.shoppingDelayUnit,
       color: 'blue'
     },
     {
@@ -436,6 +469,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       keywords: settingsData.storyEngagementKeywords,
       prompt: settingsData.storyEngagementPrompt,
       delay: settingsData.storyEngagementDelay,
+      delayUnit: settingsData.storyEngagementDelayUnit,
       color: 'purple'
     },
     {
@@ -447,6 +481,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       keywords: settingsData.reelsKeywords,
       prompt: settingsData.reelsPrompt,
       delay: settingsData.reelsDelay,
+      delayUnit: settingsData.reelsDelayUnit,
       color: 'red'
     },
     {
@@ -458,6 +493,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       keywords: settingsData.ambassadorKeywords,
       prompt: settingsData.ambassadorPrompt,
       delay: settingsData.ambassadorDelay,
+      delayUnit: settingsData.ambassadorDelayUnit,
       color: 'indigo'
     },
     {
@@ -469,6 +505,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       keywords: settingsData.liveKeywords,
       prompt: settingsData.livePrompt,
       delay: settingsData.liveDelay,
+      delayUnit: settingsData.liveDelayUnit,
       color: 'orange'
     },
     {
@@ -480,6 +517,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       keywords: settingsData.hashtagKeywords,
       prompt: settingsData.hashtagPrompt,
       delay: settingsData.hashtagDelay,
+      delayUnit: settingsData.hashtagDelayUnit,
       color: 'teal'
     },
     {
@@ -491,6 +529,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       keywords: settingsData.contestKeywords,
       prompt: settingsData.contestPrompt,
       delay: settingsData.contestDelay,
+      delayUnit: settingsData.contestDelayUnit,
       color: 'pink'
     },
     {
@@ -502,6 +541,7 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
       keywords: settingsData.microInfluencerKeywords,
       prompt: settingsData.microInfluencerPrompt,
       delay: settingsData.microInfluencerDelay,
+      delayUnit: settingsData.microInfluencerDelayUnit,
       color: 'rose'
     }
   ];
@@ -793,13 +833,25 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">DM Delay (seconds)</label>
-                          <input
-                            type="number"
-                            className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus}`}
-                            value={settingsData.commentDmDelay}
-                            onChange={(e) => setSettingsData({ ...settingsData, commentDmDelay: Number(e.target.value) })}
-                          />
+                          <label className="block text-sm font-medium text-gray-700 mb-2">DM Delay</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              className={`w-20 border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus}`}
+                              value={settingsData.commentDmDelay}
+                              onChange={(e) => setSettingsData({ ...settingsData, commentDmDelay: Number(e.target.value) })}
+                            />
+                            <select
+                              className={`border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus} bg-white`}
+                              value={settingsData.commentDmDelayUnit}
+                              onChange={(e) => setSettingsData({ ...settingsData, commentDmDelayUnit: e.target.value as 'seconds' | 'minutes' | 'hours' })}
+                            >
+                              <option value="seconds">seconds</option>
+                              <option value="minutes">minutes</option>
+                              <option value="hours">hours</option>
+                            </select>
+                          </div>
                           <p className="text-xs text-gray-500 mt-1">How long to wait before sending the private DM</p>
                         </div>
                       </div>
@@ -858,13 +910,25 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Delay (seconds)</label>
-                        <input
-                          type="number"
-                          className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus}`}
-                          value={settingsData.storyReactionDelay}
-                          onChange={(e) => setSettingsData({ ...settingsData, storyReactionDelay: Number(e.target.value) })}
-                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Delay</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            className={`w-20 border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus}`}
+                            value={settingsData.storyReactionDelay}
+                            onChange={(e) => setSettingsData({ ...settingsData, storyReactionDelay: Number(e.target.value) })}
+                          />
+                          <select
+                            className={`border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus} bg-white`}
+                            value={settingsData.storyReactionDelayUnit}
+                            onChange={(e) => setSettingsData({ ...settingsData, storyReactionDelayUnit: e.target.value as 'seconds' | 'minutes' | 'hours' })}
+                          >
+                            <option value="seconds">seconds</option>
+                            <option value="minutes">minutes</option>
+                            <option value="hours">hours</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -883,13 +947,25 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Delay (seconds)</label>
-                        <input
-                          type="number"
-                          className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus}`}
-                          value={settingsData.followDmDelay}
-                          onChange={(e) => setSettingsData({ ...settingsData, followDmDelay: Number(e.target.value) })}
-                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Delay</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            className={`w-20 border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus}`}
+                            value={settingsData.followDmDelay}
+                            onChange={(e) => setSettingsData({ ...settingsData, followDmDelay: Number(e.target.value) })}
+                          />
+                          <select
+                            className={`border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus} bg-white`}
+                            value={settingsData.followDmDelayUnit}
+                            onChange={(e) => setSettingsData({ ...settingsData, followDmDelayUnit: e.target.value as 'seconds' | 'minutes' | 'hours' })}
+                          >
+                            <option value="seconds">seconds</option>
+                            <option value="minutes">minutes</option>
+                            <option value="hours">hours</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -994,18 +1070,26 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                                   <p className="text-xs text-gray-500 mt-1">This private DM will be sent when the keyword is detected</p>
                                 </div>
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">DM Delay (seconds)</label>
-                                  <input
-                                    type="number"
-                                    className={`w-full border border-gray-300 rounded-lg p-2 ${colors.focus}`}
-                                    value={trigger.delay}
-                                    onChange={(e) => {
-                                      const newTriggers = [...(settingsData.keywordTriggers || [])];
-                                      newTriggers[index].delay = Number(e.target.value);
-                                      setSettingsData({ ...settingsData, keywordTriggers: newTriggers });
-                                    }}
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">How long to wait before sending the private DM</p>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">Delay</label>
+                                  <div className="flex gap-2">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      className={`w-20 border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus}`}
+                                      value={trigger.delay}
+                                      onChange={(e) => updateKeywordTrigger('keywordTriggers', index, 'delay', Number(e.target.value))}
+                                    />
+                                    <select
+                                      className={`border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus} bg-white`}
+                                      value={trigger.delayUnit || 'seconds'}
+                                      onChange={(e) => updateKeywordTrigger('keywordTriggers', index, 'delayUnit', e.target.value as 'seconds' | 'minutes' | 'hours')}
+                                    >
+                                      <option value="seconds">seconds</option>
+                                      <option value="minutes">minutes</option>
+                                      <option value="hours">hours</option>
+                                    </select>
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-1">0 = instant response</p>
                                 </div>
                               </div>
 
@@ -1080,13 +1164,25 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Default Delay (seconds)</label>
-                          <input
-                            type="number"
-                            className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus}`}
-                            value={section.delay}
-                            onChange={(e) => setSettingsData({ ...settingsData, likeDmDelay: Number(e.target.value) })}
-                          />
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Default Delay</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              className={`w-20 border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus}`}
+                              value={section.delay}
+                              onChange={(e) => setSettingsData({ ...settingsData, likeDmDelay: Number(e.target.value) })}
+                            />
+                            <select
+                              className={`border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus} bg-white`}
+                              value={section.delayUnit}
+                              onChange={(e) => setSettingsData({ ...settingsData, likeDmDelayUnit: e.target.value as 'seconds' | 'minutes' | 'hours' })}
+                            >
+                              <option value="seconds">seconds</option>
+                              <option value="minutes">minutes</option>
+                              <option value="hours">hours</option>
+                            </select>
+                          </div>
                           <div className="mt-3">
                             <label className="flex items-center gap-2">
                               <input
@@ -1146,17 +1242,32 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                                 </div>
                                 <div>
                                   <label className="block text-sm font-medium text-gray-700 mb-2">Custom Delay</label>
-                                  <input
-                                    type="number"
-                                    className={`w-full border border-gray-300 rounded-lg p-2 ${colors.focus}`}
-                                    value={post.delay}
-                                    onChange={(e) => {
-                                      const newPosts = [...(settingsData.likeDmSpecificPosts || [])];
-                                      newPosts[index].delay = Number(e.target.value);
-                                      setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
-                                    }}
-                                    placeholder="Leave empty for default"
-                                  />
+                                  <div className="flex gap-2">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      className={`w-20 border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus}`}
+                                      value={post.delay}
+                                      onChange={(e) => {
+                                        const newPosts = [...(settingsData.likeDmSpecificPosts || [])];
+                                        newPosts[index].delay = Number(e.target.value);
+                                        setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
+                                      }}
+                                    />
+                                    <select
+                                      className={`border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus} bg-white`}
+                                      value={post.delayUnit || 'seconds'}
+                                      onChange={(e) => {
+                                        const newPosts = [...(settingsData.likeDmSpecificPosts || [])];
+                                        newPosts[index].delayUnit = e.target.value as 'seconds' | 'minutes' | 'hours';
+                                        setSettingsData({ ...settingsData, likeDmSpecificPosts: newPosts });
+                                      }}
+                                    >
+                                      <option value="seconds">seconds</option>
+                                      <option value="minutes">minutes</option>
+                                      <option value="hours">hours</option>
+                                    </select>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -1281,13 +1392,25 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Response Delay (seconds)</label>
-                          <input
-                            type="number"
-                            className={`w-full border border-gray-300 rounded-lg p-3 ${colors.focus}`}
-                            value={section.delay}
-                            onChange={(e) => setSettingsData({ ...settingsData, [delayField]: Number(e.target.value) })}
-                          />
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Response Delay</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              className={`w-20 border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus}`}
+                              value={section.delay}
+                              onChange={(e) => setSettingsData({ ...settingsData, [delayField]: Number(e.target.value) })}
+                            />
+                            <select
+                              className={`border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus} bg-white`}
+                              value={settingsData[`${section.id}DelayUnit`] || 'seconds'}
+                              onChange={(e) => setSettingsData({ ...settingsData, [`${section.id}DelayUnit`]: e.target.value as 'seconds' | 'minutes' | 'hours' })}
+                            >
+                              <option value="seconds">seconds</option>
+                              <option value="minutes">minutes</option>
+                              <option value="hours">hours</option>
+                            </select>
+                          </div>
                           <p className="text-xs text-gray-500 mt-1">How long to wait before sending the DM</p>
                         </div>
                       </div>
@@ -1434,14 +1557,25 @@ const InstagramReactions = ({ chatbot }: InstagramReactionsProps) => {
                                 <p className="text-xs text-gray-500 mt-1">This private DM will be sent when the keyword is detected</p>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">DM Delay (seconds)</label>
-                                <input
-                                  type="number"
-                                  className={`w-full border border-gray-300 rounded-lg p-2 ${colors.focus}`}
-                                  value={trigger.delay}
-                                  onChange={(e) => updateKeywordTrigger(fieldName, index, 'delay', Number(e.target.value))}
-                                  placeholder="0"
-                                />
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Delay</label>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    className={`w-20 border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus}`}
+                                    value={trigger.delay}
+                                    onChange={(e) => updateKeywordTrigger(fieldName, index, 'delay', Number(e.target.value))}
+                                  />
+                                  <select
+                                    className={`border border-gray-300 rounded-md px-3 py-2 text-sm ${colors.focus} bg-white`}
+                                    value={trigger.delayUnit || 'seconds'}
+                                    onChange={(e) => updateKeywordTrigger(fieldName, index, 'delayUnit', e.target.value as 'seconds' | 'minutes' | 'hours')}
+                                  >
+                                    <option value="seconds">seconds</option>
+                                    <option value="minutes">minutes</option>
+                                    <option value="hours">hours</option>
+                                  </select>
+                                </div>
                                 <p className="text-xs text-gray-500 mt-1">0 = instant response</p>
                               </div>
                             </div>
